@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { LogoutButton } from "@/components/auth/logout-button";
 import { useAuthStore } from "@/lib/auth/store";
 
@@ -14,7 +16,15 @@ export function DashboardContent() {
           <h1 className="text-2xl font-semibold">Dashboard</h1>
           <p className="text-sm opacity-70">Xin chào, {user?.displayName ?? user?.email ?? "bạn"}.</p>
         </div>
-        <LogoutButton />
+        <div className="flex items-center gap-2">
+          <Link
+            href="/chat"
+            className="inline-flex h-10 items-center rounded-md border border-black/15 px-4 text-sm font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+          >
+            Tin nhắn
+          </Link>
+          <LogoutButton />
+        </div>
       </div>
 
       <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-sm dark:border-white/15">

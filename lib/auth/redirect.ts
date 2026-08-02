@@ -1,4 +1,4 @@
-export const DEFAULT_REDIRECT = "/dashboard";
+export const DEFAULT_REDIRECT = "/chat";
 
 /**
  * Chỉ chấp nhận đường dẫn nội bộ. Không có hàm này thì

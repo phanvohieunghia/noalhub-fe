@@ -92,11 +92,33 @@ function refreshTokens(): Promise<AuthTokens> {
   return refreshPromise;
 }
 
+/**
+ * Trả về một access token còn dùng được, refresh nếu trong memory đang rỗng
+ * (vừa reload — access token chỉ nằm trong memory).
+ *
+ * Đây là cửa DUY NHẤT cho tầng socket lấy token. Socket KHÔNG được tự gọi
+ * `/auth/refresh`: backend xoay vòng refresh token và trình lại token cũ sẽ
+ * thu hồi TOÀN BỘ phiên — chạy song song với single-flight ở đây là mất phiên
+ * thật, không chỉ là lãng phí một request.
+ */
+export async function ensureAccessToken(): Promise<string | null> {
+  const current = tokenStore.getAccess();
+  if (current) return current;
+  if (!tokenStore.getRefresh()) return null;
+
+  try {
+    const tokens = await refreshTokens();
+    return tokens.accessToken;
+  } catch {
+    expireSession();
+    return null;
+  }
+}
+
 /** Gắn `Authorization: Bearer <access>` cho request có `authRequired`. */
 http.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (config.authRequired) {
     const accessToken = tokenStore.getAccess();
-    console.log("🚀 ~ accessToken:", accessToken, config);
     if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
   }
   return config;

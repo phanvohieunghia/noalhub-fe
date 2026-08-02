@@ -42,23 +42,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
    * rồi retry. Thiếu bước này, F5 là văng ra /login.
    */
   async bootstrap() {
-    console.log(1);
     if (get().status !== "idle") return;
 
-    console.log(2);
     if (!tokenStore.getRefresh()) {
       set({ status: "unauthenticated", user: null });
       return;
     }
-    console.log(3);
-
     const epoch = sessionEpoch;
     set({ status: "loading" });
     try {
       const user = await authApi.me();
       if (epoch !== sessionEpoch) return; // đã có phiên mới hơn
       set({ user, status: "authenticated" });
-      console.log(4);
     } catch {
       if (epoch !== sessionEpoch) return;
       tokenStore.clear();
