@@ -1,0 +1,112 @@
+"use client";
+
+import Link from "next/link";
+
+import { Avatar } from "@/components/ui/avatar";
+import { Drawer } from "@/components/ui/drawer";
+import { FormError } from "@/components/ui/form-error";
+import { Spinner } from "@/components/ui/spinner";
+import { lastSeenLabel } from "@/lib/chat/format";
+import { formatDate } from "@/lib/format-date";
+import { ApiError, ERROR_CODES } from "@/services/errors";
+import { usePresence } from "@/services/chat/hooks";
+import { usePublicProfile } from "@/services/users/hooks";
+import type { ConversationMember } from "@/services/chat/types";
+
+/**
+ * Hồ sơ công khai của một thành viên hội thoại.
+ *
+ * Hai nguồn, cố ý tách bạch: `GET /users/{username}` cho phần tĩnh (tên, ngày
+ * tham gia), còn online/offline lấy từ presence realtime — `lastSeenAt` của
+ * endpoint chỉ là mốc offline gần nhất, KHÔNG phải trạng thái hiện tại.
+ *
+ * Chỉ fetch khi drawer mở: sidebar có bao nhiêu hội thoại thì bấy nhiêu header
+ * cũng chỉ tốn đúng một request khi người dùng thực sự mở.
+ */
+export function MemberProfileDrawer({
+  member,
+  name,
+  open,
+  onClose,
+}: {
+  member: ConversationMember | null;
+  name: string;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const presence = usePresence(member?.userId);
+  const { data, isPending, error } = usePublicProfile(
+    open ? member?.username : undefined,
+  );
+
+  const statusLabel = !presence
+    ? "Không rõ trạng thái"
+    : presence.status === "online"
+      ? "Đang hoạt động"
+      : (lastSeenLabel(presence.lastSeenAt) ?? "Không hoạt động");
+
+  // Chưa có response thì dùng luôn dữ liệu member đã nằm sẵn trong cache chat
+  // — drawer mở ra là có nội dung, phần còn lại điền sau.
+  const displayName = data?.displayName ?? member?.displayName ?? name;
+  const avatarUrl = data?.avatarUrl ?? member?.avatarUrl ?? null;
+
+  return (
+    <Drawer open={open} onClose={onClose} title="Hồ sơ">
+      {member ? (
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <Avatar
+              name={displayName}
+              src={avatarUrl}
+              size="lg"
+              className="size-20 text-2xl"
+            />
+            <div>
+              <p className="text-lg font-semibold">{displayName}</p>
+              <p className="font-mono text-sm opacity-70">@{member.username}</p>
+              <p className="text-sm opacity-60">{statusLabel}</p>
+            </div>
+          </div>
+
+          {error ? (
+            <FormError
+              message={
+                error instanceof ApiError &&
+                error.code === ERROR_CODES.userNotFound
+                  ? "Người dùng này không còn tồn tại."
+                  : "Không tải được hồ sơ."
+              }
+            />
+          ) : null}
+
+          <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-sm dark:border-white/15">
+            <div className="flex justify-between gap-4">
+              <dt className="opacity-70">Vai trò</dt>
+              <dd>{member.role === "owner" ? "Chủ hội thoại" : "Thành viên"}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="opacity-70">Tham gia</dt>
+              <dd>
+                {isPending && !data ? (
+                  <span className="inline-flex items-center gap-2 opacity-60">
+                    <Spinner />
+                    Đang tải
+                  </span>
+                ) : (
+                  formatDate(data?.createdAt)
+                )}
+              </dd>
+            </div>
+          </dl>
+
+          <Link
+            href={`/profile/${member.username}`}
+            className="inline-flex h-10 items-center justify-center rounded-md border border-black/15 px-4 text-sm font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+          >
+            Xem hồ sơ đầy đủ
+          </Link>
+        </div>
+      ) : null}
+    </Drawer>
+  );
+}

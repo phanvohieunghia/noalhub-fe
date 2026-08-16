@@ -9,6 +9,15 @@ export type UserRole = "user" | "admin";
 export type User = {
   id: string;
   email: string;
+  /** Định danh công khai, duy nhất. Hệ thống cấp lúc tạo tài khoản. */
+  username: string;
+  /** Lần đổi username gần nhất. `null` = chưa từng đổi. */
+  usernameChangedAt: string | null;
+  /**
+   * Mốc sớm nhất được đổi username tiếp. `null` = đổi được ngay.
+   * Backend là nguồn sự thật — đừng tự cộng 6 tháng ở frontend.
+   */
+  nextUsernameChangeAt: string | null;
   emailVerified: boolean;
   role: UserRole;
   displayName: string | null;

@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 
 import { Avatar } from "@/components/ui/avatar";
+import { MemberProfileDrawer } from "./member-profile-drawer";
 import { PresenceDot, PresenceLabel } from "./presence-dot";
 import { useAuthStore } from "@/lib/auth/store";
 import { conversationDisplayName, otherMember } from "@/lib/chat/format";
@@ -13,6 +15,7 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
   const name = conversationDisplayName(conversation, currentUserId);
   const peer = otherMember(conversation, currentUserId);
   const isDirect = conversation.type === "direct";
+  const [profileOpen, setProfileOpen] = useState(false);
 
   return (
     <div className="flex shrink-0 items-center gap-3 border-b border-black/10 px-4 py-3 dark:border-white/10">
@@ -25,15 +28,27 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
         ◀
       </Link>
 
-      <span className="relative shrink-0">
-        <Avatar name={name} src={peer?.avatarUrl} size="sm" />
-        {isDirect ? (
-          <PresenceDot
-            userId={peer?.userId}
-            className="absolute -right-0.5 -bottom-0.5"
-          />
-        ) : null}
-      </span>
+      {/* Avatar mở hồ sơ; group chưa xác định được "người kia" nên chỉ là hình. */}
+      {peer ? (
+        <button
+          type="button"
+          onClick={() => setProfileOpen(true)}
+          aria-label={`Xem hồ sơ của ${name}`}
+          className="relative shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-foreground/60"
+        >
+          <Avatar name={name} src={peer.avatarUrl} size="sm" />
+          {isDirect ? (
+            <PresenceDot
+              userId={peer.userId}
+              className="absolute -right-0.5 -bottom-0.5"
+            />
+          ) : null}
+        </button>
+      ) : (
+        <span className="relative shrink-0">
+          <Avatar name={name} src={null} size="sm" />
+        </span>
+      )}
 
       <div className="flex min-w-0 flex-col">
         <span className="truncate text-sm font-semibold">{name}</span>
@@ -43,6 +58,15 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
           </span>
         )}
       </div>
+
+      {peer ? (
+        <MemberProfileDrawer
+          member={peer}
+          name={name}
+          open={profileOpen}
+          onClose={() => setProfileOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }

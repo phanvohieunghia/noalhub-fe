@@ -21,6 +21,7 @@ type AuthState = {
   register: (input: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
   setSession: (tokens: AuthTokens, user?: User) => Promise<void>;
+  setUser: (user: User) => void;
   reset: () => void;
 };
 
@@ -83,6 +84,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const resolved = user ?? (await authApi.me());
     if (epoch !== sessionEpoch) return;
     set({ user: resolved, status: "authenticated" });
+  },
+
+  /**
+   * Thay bản user trong store sau khi cập nhật hồ sơ. Chỉ ghi khi đang
+   * authenticated — tránh hồi sinh phiên vừa bị reset.
+   */
+  setUser(user) {
+    if (get().status !== "authenticated") return;
+    set({ user });
   },
 
   async logout() {

@@ -70,6 +70,15 @@ export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export const userSchema = z.object({
   id: z.string(),
   email: z.string(),
+  username: z.string(),
+  usernameChangedAt: z
+    .string()
+    .nullish()
+    .transform((v) => v ?? null),
+  nextUsernameChangeAt: z
+    .string()
+    .nullish()
+    .transform((v) => v ?? null),
   emailVerified: z.boolean(),
   role: z.enum(["user", "admin"]),
   displayName: z

@@ -39,6 +39,8 @@ export type Message = {
 export type ConversationMember = {
   userId: string;
   role: "member" | "owner";
+  /** Định danh công khai — đường vào `GET /users/{username}`, `userId` thì không. */
+  username: string;
   displayName: string | null;
   avatarUrl: string | null;
   lastReadMessageId: string | null;

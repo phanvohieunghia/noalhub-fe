@@ -18,6 +18,12 @@ export function DashboardContent() {
         </div>
         <div className="flex items-center gap-2">
           <Link
+            href="/profile"
+            className="inline-flex h-10 items-center rounded-md border border-black/15 px-4 text-sm font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+          >
+            Hồ sơ
+          </Link>
+          <Link
             href="/chat"
             className="inline-flex h-10 items-center rounded-md border border-black/15 px-4 text-sm font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
           >

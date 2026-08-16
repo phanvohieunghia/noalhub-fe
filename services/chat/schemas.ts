@@ -26,6 +26,7 @@ export const messageSchema = z.object({
 export const conversationMemberSchema = z.object({
   userId: z.string(),
   role: z.enum(["member", "owner"]),
+  username: z.string(),
   displayName: z.string().nullish().transform((value) => value ?? null),
   avatarUrl: z.string().nullish().transform((value) => value ?? null),
   lastReadMessageId: z.string().nullish().transform((value) => value ?? null),
