@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | Đã triển khai và căn lại theo OpenAPI spec thật của backend (`http://localhost:3101/docs`) — **chưa chạy lại E2E với backend thật** |
-| **Ngày** | 2026-07-25 |
+| **Status** | Đã triển khai và đang chạy. Contract căn theo OpenAPI spec thật (`http://localhost:3101/docs`) — bảng kịch bản §10.2 vẫn là kết quả chạy trên mock cũ, **chưa chạy lại đầy đủ với backend thật** |
+| **Ngày** | 2026-07-25 (rà lại theo code: 2026-08-17) |
 | **Phạm vi** | Login, logout, register, forgot/reset password, OAuth (Google, GitHub), bảo vệ route |
 | **Codebase** | Next.js 16.2.11 · React 19.2.4 · Tailwind v4 · App Router · TypeScript strict |
 
@@ -11,15 +11,15 @@
 
 ## 1. Bối cảnh
 
-`noalhub-fe` hiện là **bare `create-next-app`**: chỉ có `app/layout.tsx`, `app/page.tsx`, `app/globals.css`. Không có auth, state management, HTTP client, form/validation lib, không `.env`, không `middleware.ts`/`proxy.ts`. Toàn bộ feature này là greenfield.
+Tài liệu này viết khi `noalhub-fe` còn là **bare `create-next-app`** — auth là feature đầu tiên. Nay auth đã triển khai xong và các feature sau (`chat`, `friends`, `users`) đều dựng trên đúng những quyết định ở đây; phần "kế hoạch" (§9) giữ lại làm lịch sử.
 
-Authentication là tiền đề cho mọi feature có dữ liệu người dùng, nên cần chốt kiến trúc ngay từ đầu — đặc biệt là **nơi lưu session**, vì thay đổi nó về sau sẽ kéo theo viết lại data-fetching của cả app.
+Authentication là tiền đề cho mọi feature có dữ liệu người dùng, nên phải chốt kiến trúc ngay từ đầu — đặc biệt là **nơi lưu session**, vì thay đổi nó về sau sẽ kéo theo viết lại data-fetching của cả app.
 
 ### 1.1 Quyết định kiến trúc đã chốt
 
 | Quyết định | Lựa chọn |
 |---|---|
-| Nguồn auth | Backend REST riêng (chưa có OpenAPI spec) |
+| Nguồn auth | Backend REST riêng, contract là OpenAPI spec tại `/docs` |
 | Đường đi request | **Browser gọi thẳng backend** — không qua BFF proxy |
 | Nơi lưu token | Client (memory + `localStorage`) |
 | OAuth | Backend lo toàn bộ; Next chỉ redirect đi và nhận callback |
@@ -35,7 +35,7 @@ Authentication là tiền đề cho mọi feature có dữ liệu người dùng
 
 ### 1.3 Đường thoát (migration path)
 
-Nếu sau này muốn chuyển sang httpOnly cookie + BFF, toàn bộ việc chạm storage được cô lập trong **một file duy nhất** — `lib/auth/token-store.ts`. Việc migrate khi đó là: viết lại file đó, thêm route handlers `app/api/auth/*`, đổi `API_BASE_URL` trong `services/config.ts`. **Không component nào phải sửa** — không component nào được phép import `token-store` trực tiếp (xem §4.1).
+Nếu sau này muốn chuyển sang httpOnly cookie + BFF, toàn bộ việc chạm storage được cô lập trong **một file duy nhất** — `packages/api/src/auth/token-store.ts`. Việc migrate khi đó là: viết lại file đó, thêm route handlers `app/api/auth/*`, đổi `API_BASE_URL` trong `packages/api/src/config.ts`. **Không component nào phải sửa** — không component nào được phép import `token-store` trực tiếp (xem §4.1).
 
 ---
 
@@ -67,18 +67,18 @@ Nếu sau này muốn chuyển sang httpOnly cookie + BFF, toàn bộ việc ch�
 ```
 
 **Quy tắc phụ thuộc (bắt buộc):**
-- Component **chỉ** nói chuyện với hooks (`services/auth/hooks.ts`) và store. Không component nào import `token-store`, `services/client` hay `services/auth/api`.
-- `services/auth/api.ts` **chỉ** biết endpoint và shape, không biết storage, không biết cache.
+- Component **chỉ** nói chuyện với hooks (`packages/api/src/auth/hooks.ts`) và store. Không component nào import `token-store`, `client.ts` hay `auth/api.ts` — hai file sau không nằm trong `exports` của `@noalhub/api` nên ngoài package không có đường vào.
+- `packages/api/src/auth/api.ts` **chỉ** biết endpoint và shape, không biết storage, không biết cache.
 - Tầng phân chia theo `docs/data-layer.md` — auth là feature mẫu.
-- `lib/auth/token-store.ts` là nơi **duy nhất** chạm `localStorage`.
+- `packages/api/src/auth/token-store.ts` là nơi **duy nhất** chạm `localStorage`.
 
 ---
 
 ## 3. API contract
 
-Nguồn sự thật: OpenAPI spec của backend tại `http://localhost:3101/docs` (JSON thô: `/docs-json`). Toàn bộ contract được cô lập trong `services/auth/api.ts` — một hàm cho một operation.
+Nguồn sự thật: OpenAPI spec của backend tại `http://localhost:3101/docs` (JSON thô: `/docs-json`). Toàn bộ contract được cô lập trong `packages/api/src/auth/api.ts` — một hàm cho một operation.
 
-Path **không có tiền tố** (`/auth/login`, không phải `/api/auth/login`) → `NEXT_PUBLIC_API_BASE_URL=http://localhost:3101`.
+**Tiền tố `/api`:** mọi path trong spec đều nằm dưới `/api` (`/api/auth/login`). Tiền tố đó được gộp **một lần** vào `API_BASE_URL` trong `packages/api/src/config.ts`, nên tầng api viết path **không** kèm `/api` (`/auth/login`) và env chỉ chứa origin: `NEXT_PUBLIC_API_BASE_URL=http://localhost:3101`. Bảng dưới ghi path như tầng api viết.
 
 | Method | Endpoint | Auth | Body | Response |
 |---|---|---|---|---|
@@ -98,11 +98,14 @@ Path **không có tiền tố** (`/auth/login`, không phải `/api/auth/login`)
 
 Mọi endpoint đều có thể trả `429 RATE_LIMITED`.
 
-**Kiểu dữ liệu** (`services/auth/types.ts`, zod ở `services/auth/schemas.ts`):
+**Kiểu dữ liệu** (`packages/api/src/auth/types.ts`, zod ở `packages/api/src/auth/schemas.ts`):
 
 ```ts
 type User = {
   id: string; email: string; emailVerified: boolean;
+  username: string;                    // định danh công khai, hệ thống cấp lúc tạo
+  usernameChangedAt: string | null;    // null = chưa từng đổi
+  nextUsernameChangeAt: string | null; // null = đổi được ngay; BE là nguồn sự thật
   role: "user" | "admin";
   displayName: string | null; avatarUrl: string | null;
   createdAt: string;
@@ -128,7 +131,7 @@ type ApiErrorBody = {
 
 ### 3.2 Ba hành vi của backend ràng buộc thiết kế client
 
-1. **Refresh token xoay vòng, và trình lại token cũ thu hồi TOÀN BỘ phiên.** Nên single-flight ở `services/client.ts` không phải tối ưu hiệu năng mà là điều kiện đúng đắn: N request cùng 401 mà gọi refresh song song là mất phiên thật.
+1. **Refresh token xoay vòng, và trình lại token cũ thu hồi TOÀN BỘ phiên.** Nên single-flight ở `packages/api/src/client.ts` không phải tối ưu hiệu năng mà là điều kiện đúng đắn: N request cùng 401 mà gọi refresh song song là mất phiên thật.
 2. **`/auth/change-password` giết mọi phiên cũ và trả phiên mới.** Client bắt buộc ghi đè cặp token bằng cặp trả về (`useChangePassword` làm việc này), nếu không request kế tiếp sẽ 401.
 3. **`/auth/logout` chỉ thu hồi refresh token gửi lên**; access token hiện tại vẫn sống tới khi hết hạn (≤15 phút). Cần chặn ngay lập tức thì dùng `/auth/logout-all`.
 
@@ -153,14 +156,14 @@ OAuthButtons  ──window.location──▶  GET /auth/oauth/{provider}
 ```
 
 - Handoff code **dùng một lần, hết hạn 60 giây** → `OAuthCallback` chặn effect chạy lần hai bằng `useRef`, nếu không lần thứ hai nhận `INVALID_TOKEN` và ghi đè kết quả thành công.
-- Spec **không nhận `redirect_uri`** — callback URL do backend cấu hình. Muốn quay lại đúng trang sau đăng nhập thì gửi `next` qua `sessionStorage` (`rememberOAuthNext` / `takeOAuthNext` trong `lib/auth/redirect.ts`), không qua query string.
+- Spec **không nhận `redirect_uri`** — callback URL do backend cấu hình. Muốn quay lại đúng trang sau đăng nhập thì gửi `next` qua `sessionStorage` (`rememberOAuthNext` / `takeOAuthNext` trong `packages/core/src/auth/redirect.ts`), không qua query string.
 - Cookie `state`/PKCE là httpOnly, ngắn hạn, chỉ sống trong lúc bắt tay — đây là chỗ **duy nhất** trong API dùng cookie.
 
 ---
 
 ## 4. Thiết kế chi tiết
 
-### 4.1 `lib/auth/token-store.ts` — biên cô lập
+### 4.1 `packages/api/src/auth/token-store.ts` — biên cô lập
 
 Access token nằm trong biến module (memory): reload là mất, nhưng bù lại XSS kiểu "đọc storage" không lấy được nó. Refresh token buộc phải bền qua reload nên nằm ở `localStorage`.
 
@@ -185,19 +188,19 @@ export const tokenStore = {
 
 **Đồng bộ đa tab:** đăng ký `window.addEventListener("storage", …)`; khi `REFRESH_KEY` bị xoá ở tab khác → tab hiện tại `reset()` store và điều hướng về `/login`.
 
-### 4.2 `services/client.ts` — HTTP client (axios)
+### 4.2 `packages/api/src/client.ts` — HTTP client (axios)
 
 Nền là **axios**: một instance `http` (`baseURL = API_BASE_URL`) cộng hai interceptor. Tầng api dùng thẳng `http.get` / `http.post`; hai option riêng của app (`authRequired`, `schema`) được thêm vào `AxiosRequestConfig` bằng module augmentation nên không cần wrapper nào.
 
 Trách nhiệm:
-- `baseURL` = `API_BASE_URL` (`services/config.ts`, đọc từ `NEXT_PUBLIC_API_BASE_URL`).
+- `baseURL` = `API_BASE_URL` (`packages/api/src/config.ts`, đọc từ `NEXT_PUBLIC_API_BASE_URL`).
 - **Request interceptor**: gắn `Authorization: Bearer <access>` khi request có cờ `authRequired`.
 - **Response interceptor**: xử lý 401 → refresh → retry, và chuẩn hoá **mọi** lỗi thành `ApiError` mang `status`, `code`, `message`, `details` (dựng từ `ErrorResponseDto`).
 - Response interceptor còn lo hai quy ước: validate bằng zod khi config có `schema`, và `204 → undefined` (axios trả chuỗi rỗng cho body rỗng).
 
 Ba chi tiết riêng của axios, dễ sai:
 
-- **Không đặt tên cờ là `auth`.** Axios đã lấy key `auth` cho HTTP Basic (`{ username, password }`). Cờ nội bộ tên `authRequired`; `ApiFetchOptions.auth` chỉ là tên ở bề mặt API, được map sang.
+- **Không đặt tên cờ là `auth`.** Axios đã lấy key `auth` cho HTTP Basic (`{ username, password }`). Cờ tên `authRequired` được thêm vào `AxiosRequestConfig` bằng module augmentation — không có wrapper `apiFetch` nào ở giữa.
 - **Lỗi mạng không có `error.response`.** Nhánh đó → `ApiError(0, NETWORK_ERROR)`, không được đọc `error.response.status`.
 - **Huỷ request phải để nguyên.** `axios.isCancel(error)` → ném lại `CanceledError`, không bọc thành `ApiError`, nếu không React Query hiểu nhầm abort là lỗi thật.
 
@@ -223,11 +226,11 @@ Hai chi tiết dễ sai, phải làm đúng:
 
 `/auth/refresh` gọi bằng **instance axios riêng** (`refreshHttp`) — instance đó không gắn interceptor 401 nên không thể đệ quy vào chính nó.
 
-### 4.3 `services/auth/api.ts`
+### 4.3 `packages/api/src/auth/api.ts`
 
 Một hàm mỏng cho mỗi endpoint ở §3, gọi `http.get/post` rồi trả `data` đã typed và đã qua zod. Đây là toàn bộ bề mặt tiếp xúc với backend — chỗ duy nhất phải sửa khi có contract thật.
 
-### 4.4 `lib/auth/store.ts` — zustand
+### 4.4 `packages/api/src/auth/store.ts` — zustand
 
 ```ts
 type AuthStatus = "idle" | "loading" | "authenticated" | "unauthenticated";
@@ -277,7 +280,7 @@ Login xong đọc `?next=` để quay lại đúng trang. **Chỉ chấp nhận 
 
 ### 4.6 Form và validation
 
-Tất cả schema ở `services/auth/schemas.ts` (zod), type suy ra bằng `z.infer`. Form dùng `react-hook-form` + `zodResolver`.
+Tất cả schema ở `packages/api/src/auth/schemas.ts` (zod), type suy ra bằng `z.infer`. Form dùng `react-hook-form` + `zodResolver`.
 
 | Schema | Ràng buộc |
 |---|---|
@@ -334,7 +337,7 @@ Token **không đi qua URL** nữa (spec dùng handoff code), nên rủi ro rò 
 
 ## 6. Cấu trúc file
 
-Path alias `@/*` trỏ về **root** (không có `src/`) → import dạng `@/services/…`, `@/lib/…`, `@/components/…`.
+Path alias `@/*` trỏ về **gốc của app** (`apps/web/`, không có `src/`) và giờ chỉ còn dùng cho code riêng của app: `@/components/…`. Thứ dùng chung đi qua tên package — `@noalhub/api/auth`, `@noalhub/core/forms/apply-api-error`, `@noalhub/ui/button`.
 
 ```
 docs/auth.md                        ← tài liệu này
@@ -346,8 +349,8 @@ lib/forms/apply-api-error.ts        ← map ApiError → lỗi từng field
 lib/auth/token-store.ts             ← BIÊN CÔ LẬP, nơi duy nhất chạm localStorage
 lib/auth/store.ts                   ← zustand
 services/errors.ts                  ← ApiError + ERROR_CODES (dùng chung mọi feature)
-services/config.ts                  ← API_BASE_URL
-services/client.ts                  ← fetch wrapper + refresh single-flight
+services/config.ts                  ← API_BASE_URL (+ WS_URL, CHAT_NAMESPACE cho chat)
+services/client.ts                  ← axios instance + refresh single-flight
 services/auth/types.ts
 services/auth/schemas.ts            ← zod
 services/auth/api.ts                ← adapter tới backend (map 1-1 với OpenAPI)
@@ -376,6 +379,10 @@ app/(protected)/layout.tsx          ← bọc <AuthGuard>
 app/(protected)/dashboard/page.tsx  ← trang mẫu để verify
 ```
 
+Các feature sau dựng thêm `packages/api/src/{chat,friends,users}/*` và
+`app/(protected)/{chat,friends,profile}` — cùng khuôn, xem `docs/chat.md` và
+doc comment trong từng `api.ts`.
+
 `app/layout.tsx` giữ nguyên là server component — chỉ thêm import và bọc `{children}`.
 
 ---
@@ -401,7 +408,7 @@ pnpm add axios zod react-hook-form @hookform/resolvers zustand
 NEXT_PUBLIC_API_BASE_URL=http://localhost:3101
 ```
 
-Path trong spec không có tiền tố → **không** thêm `/api`. Bắt buộc prefix `NEXT_PUBLIC_` vì browser gọi thẳng. Next 16 đã **xoá** `serverRuntimeConfig`/`publicRuntimeConfig` — chỉ còn env vars.
+Giá trị là **origin thuần** — `/api` do `packages/api/src/config.ts` tự gắn (kèm sẵn `/api` cũng không sao, config tự cắt để không thành `/api/api`). Bắt buộc prefix `NEXT_PUBLIC_` vì browser gọi thẳng. Next 16 đã **xoá** `serverRuntimeConfig`/`publicRuntimeConfig` — chỉ còn env vars.
 
 ---
 
@@ -480,7 +487,7 @@ Cần chạy lại toàn bộ bảng §10.2 với backend thật, chú ý các �
 | 16 | OAuth bị từ chối | `/auth/callback?error=…` hiện lỗi + link về `/login` | ✅ |
 | 17 | `/login?next=https://evil.com` | **Không** redirect ra ngoài | ✅ |
 
-**#6 chưa verify được:** app chỉ phát sinh một request cần auth tại một thời điểm (`/auth/me`), nên không dựng được tình huống N request song song cùng 401 từ ngoài. Cơ chế single-flight đã có trong `services/client.ts` và đường đi một-request đã verify qua #5, nhưng **nhánh nhiều request đồng thời chưa được chạy thật**. Nên viết unit test cho interceptor của `http` khi thêm test runner.
+**#6 chưa verify được:** app chỉ phát sinh một request cần auth tại một thời điểm (`/auth/me`), nên không dựng được tình huống N request song song cùng 401 từ ngoài. Cơ chế single-flight đã có trong `packages/api/src/client.ts` và đường đi một-request đã verify qua #5, nhưng **nhánh nhiều request đồng thời chưa được chạy thật**. Nên viết unit test cho interceptor của `http` khi thêm test runner.
 
 **Bug đã phát hiện và sửa nhờ verify:** kịch bản #15 ban đầu hiện sai user (phiên cũ đè phiên OAuth) → dẫn tới cơ chế session epoch ở §4.4.
 
@@ -493,3 +500,5 @@ Cần chạy lại toàn bộ bảng §10.2 với backend thật, chú ý các �
 ## 11. Ngoài phạm vi lần này
 
 Service + hook đã có sẵn cho `change-password`, `verify-email`, `verify-email/resend`, `logout-all` — nhưng **chưa có màn hình nào dùng**. Còn thiếu hẳn: 2FA, phân quyền theo role, quản lý phiên đa thiết bị, rate limiting phía FE, remember-me.
+
+Đổi username **không** thuộc feature này: nó nằm ở `packages/api/src/users/*` (`PATCH /users/me/username`) dù trả về cùng `UserDto` — đổi xong phải ghi đè cache của `useMe()`.

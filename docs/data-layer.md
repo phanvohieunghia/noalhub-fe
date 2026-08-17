@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Status** | Bắt buộc áp dụng cho **mọi feature mới** |
-| **Ngày** | 2026-07-25 |
+| **Status** | Bắt buộc áp dụng cho **mọi feature mới**. Đang được `auth`, `chat`, `friends`, `users` tuân thủ |
+| **Ngày** | 2026-07-25 (rà lại theo code: 2026-08-17 · chuyển sang monorepo: 2026-08-17) |
 | **Phạm vi** | Cách định nghĩa kiểu dữ liệu, hàm gọi API, và React Query hooks |
-| **Liên quan** | [`docs/auth.md`](./auth.md) — auth là feature mẫu, đã theo đủ convention này |
+| **Liên quan** | [`docs/auth.md`](./auth.md) — feature mẫu, theo đủ convention này · [`docs/chat.md`](./chat.md) — feature duy nhất có ngoại lệ (đường ghi qua socket, xem §6) |
 | **Contract** | OpenAPI spec: `http://localhost:3101/docs` (JSON: `/docs-json`) |
 
 ---
@@ -18,34 +18,66 @@ Mỗi feature chạm backend được chia thành **ba tầng, ba file**, theo �
 types + schemas  ──▶  api (transport)  ──▶  hooks (React Query)  ──▶  components
 ```
 
-**Cả ba tầng nằm trong `services/<feature>/`** — types, api, hooks đi cùng nhau, không rải sang `lib/`:
+**Cả ba tầng nằm trong package `@noalhub/api`** (`packages/api/src/<feature>/`) — types,
+api, hooks đi cùng nhau, và vì là package dùng chung nên `apps/web` lẫn `apps/admin`
+xài đúng một contract, không có bản sao nào:
 
 ```
-services/
+packages/api/src/
   client.ts                 ← axios instance + interceptor (Bearer, 401 → refresh)
+                              + ensureAccessToken() cho tầng socket
   errors.ts                 ← ApiError, ERROR_CODES, ApiErrorBody
-  config.ts                 ← API_BASE_URL
+  config.ts                 ← API_BASE_URL, WS_URL, CHAT_NAMESPACE
   <feature>/
     types.ts
     schemas.ts
     api.ts
     hooks.ts
+    index.ts                ← barrel: CHỈ export hooks + types + schemas
 ```
+
+Bốn feature hiện có: `auth`, `users`, `friends`, `chat`. Riêng `chat` có thêm
+`socket.ts` — biên cô lập cho Socket.IO, cùng tầng với `api.ts` (xem `docs/chat.md` §2).
+
+Ngoài ra package này giữ luôn các **store thuộc tầng dữ liệu** — `auth/store.ts`,
+`auth/token-store.ts`, `chat/ephemeral-store.ts`, `chat/outbox.ts`. Chúng từng nằm ở
+`lib/`, nhưng `hooks.ts` phụ thuộc vào chúng còn chúng phụ thuộc ngược lại vào `api.ts`:
+để ở hai package khác nhau là tạo phụ thuộc vòng giữa hai package. Chúng là state của
+tầng dữ liệu chứ không phải của UI, nên chỗ đúng của chúng là ở đây.
+
+`API_BASE_URL` đã bao gồm tiền tố `/api`; **tầng api viết path không có `/api`**
+(`/auth/login`, `/chat/conversations`). Env chỉ chứa origin — và env do **app đang build**
+cung cấp, package không tự có `.env` (xem `docs/monorepo-plan.md` §2).
 
 | Tầng | File | Trách nhiệm | KHÔNG được làm |
 |---|---|---|---|
-| **Types** | `services/<feature>/types.ts`<br>`services/<feature>/schemas.ts` | Shape dữ liệu + zod schema (validate response, validate form input) | Không import React, không gọi fetch |
-| **API** | `services/<feature>/api.ts` | Một hàm cho một endpoint, gọi `http.get/post`. Nhận input đã typed, trả `Promise<T>` đã validate | Không biết React Query, không cache, không toast/redirect |
-| **Hooks** | `services/<feature>/hooks.ts` | `useQuery` / `useMutation`, query key, invalidate | Không gọi `axios`/`fetch` trực tiếp, không chứa JSX |
-| **Components** | `components/<feature>/*.tsx` | Render + gọi hook | **Không được import `api.ts` hay `client.ts`** |
+| **Types** | `<feature>/types.ts`<br>`<feature>/schemas.ts` | Shape dữ liệu + zod schema (validate response, validate form input) | Không import React, không gọi fetch |
+| **API** | `<feature>/api.ts` | Một hàm cho một endpoint, gọi `http.get/post`. Nhận input đã typed, trả `Promise<T>` đã validate | Không biết React Query, không cache, không toast/redirect |
+| **Hooks** | `<feature>/hooks.ts` | `useQuery` / `useMutation`, query key, invalidate | Không gọi `axios`/`fetch` trực tiếp, không chứa JSX |
+| **Components** | `apps/<app>/components/**` · `packages/ui/src/**` | Render + gọi hook | **Không được import `api.ts` hay `client.ts`** |
 
-`lib/` chỉ giữ thứ **không** thuộc data layer: state store, token store, helper form, tiện ích điều hướng.
+Luật cuối cùng giờ **không còn là quy ước mà là ranh giới package**: `packages/api/package.json`
+chỉ khai `exports` cho `./config`, `./errors`, và bốn barrel `./auth ./chat ./friends ./users`.
+`api.ts` và `client.ts` không có đường vào — viết `@noalhub/api/auth/api` là lỗi resolve
+ngay lúc build, không đợi ai review bắt.
 
-Quy tắc cứng: **component chỉ nói chuyện với `hooks.ts`** (cộng `types.ts` / `schemas.ts` khi cần kiểu và resolver, và `services/errors.ts` khi cần bắt `ApiError`). Nhờ vậy đổi transport (BFF proxy, đổi endpoint, đổi schema) chỉ sửa tầng dưới, không đụng UI.
+Import từ component vì vậy gọn lại một dòng cho mỗi feature:
+
+```ts
+import { useLogin, loginSchema, type LoginInput } from "@noalhub/api/auth";
+import { ApiError, ERROR_CODES } from "@noalhub/api/errors";
+```
+
+`packages/core` giữ thứ **không** thuộc tầng dữ liệu và không phải UI: helper form
+(`forms/apply-api-error`), định dạng ngày (`format-date`), điều hướng an toàn
+(`auth/redirect`), format hiển thị của chat (`chat/format`, `chat/error-message`).
+Nó được phép phụ thuộc **một chiều** vào `@noalhub/api`; chiều ngược lại thì không.
+
+Quy tắc cứng: **component chỉ nói chuyện với `hooks.ts`** (cộng `types.ts` / `schemas.ts` khi cần kiểu và resolver, và `packages/api/src/errors.ts` khi cần bắt `ApiError`). Nhờ vậy đổi transport (BFF proxy, đổi endpoint, đổi schema) chỉ sửa tầng dưới, không đụng UI.
 
 ### 1.1 Vì sao tách api ra khỏi hooks
 
-Tầng api là nơi duy nhất mô tả contract với backend. Mỗi hàm map 1-1 với một operation trong OpenAPI spec; backend đổi contract thì chỉ `services/*` phải sửa. Nếu nhét `fetch` vào trong `useQuery` thì contract bị rải khắp app và không test/tái dùng được ngoài React (script, server action, seed data).
+Tầng api là nơi duy nhất mô tả contract với backend. Mỗi hàm map 1-1 với một operation trong OpenAPI spec; backend đổi contract thì chỉ `packages/api/src/*` phải sửa. Nếu nhét `fetch` vào trong `useQuery` thì contract bị rải khắp app và không test/tái dùng được ngoài React (script, server action, seed data).
 
 ---
 
@@ -58,7 +90,7 @@ pnpm add -D @tanstack/react-query-devtools
 
 ### 2.1 Provider
 
-`components/providers/query-provider.tsx`:
+`packages/ui/src/query-provider.tsx`:
 
 ```tsx
 "use client";
@@ -66,7 +98,7 @@ pnpm add -D @tanstack/react-query-devtools
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { ApiError } from "@/services/errors";
+import { ApiError } from "@noalhub/api/errors";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -75,7 +107,7 @@ function makeQueryClient() {
         // Dữ liệu coi là "tươi" 30s — chặn refetch thừa khi điều hướng qua lại.
         staleTime: 30_000,
         // 4xx là lỗi contract/nghiệp vụ, retry chỉ tốn request. 401 đã được
-        // services/client.ts tự refresh + retry một lần ở tầng dưới rồi.
+        // packages/api/src/client.ts tự refresh + retry một lần ở tầng dưới rồi.
         retry: (failureCount, error) => {
           if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
             return false;
@@ -91,6 +123,7 @@ function makeQueryClient() {
   });
 }
 
+// Bản trong repo còn render <ReactQueryDevtools /> khi NODE_ENV === "development".
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   // useState → mỗi lần mount tạo đúng một client. KHÔNG khai báo ở module
   // scope: trên server sẽ bị chia sẻ giữa các request → rò rỉ dữ liệu user.
@@ -118,9 +151,9 @@ const queryClient = useQueryClient();
 queryClient.clear();
 ```
 
-### 2.3 `services/client.ts` — axios
+### 2.3 `packages/api/src/client.ts` — axios
 
-Transport là **axios**. `services/client.ts` giữ một instance `http` với `baseURL = API_BASE_URL` và hai interceptor:
+Transport là **axios**. `packages/api/src/client.ts` giữ một instance `http` với `baseURL = API_BASE_URL` và hai interceptor:
 
 - **request** — gắn `Authorization: Bearer <access>` khi request có cờ `authRequired`.
 - **response** — 401 → refresh (single-flight) → retry đúng một lần; mọi lỗi còn lại chuẩn hoá thành `ApiError`.
@@ -151,7 +184,7 @@ Ba điểm riêng của axios, ghi ở đây để khỏi vấp lại:
 
 Ví dụ feature `project`.
 
-### 3.1 `services/project/types.ts`
+### 3.1 `packages/api/src/project/types.ts`
 
 ```ts
 export type Project = {
@@ -167,7 +200,7 @@ export type ProjectListQuery = {
 };
 ```
 
-### 3.2 `services/project/schemas.ts`
+### 3.2 `packages/api/src/project/schemas.ts`
 
 ```ts
 import { z } from "zod";
@@ -193,7 +226,7 @@ export const createProjectSchema = z.object({
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 ```
 
-### 3.3 `services/project/api.ts`
+### 3.3 `packages/api/src/project/api.ts`
 
 ```ts
 import { http } from "../client";
@@ -249,10 +282,10 @@ Quy tắc tầng api:
 - Một hàm = một endpoint, đặt tên theo **hành động** (`listProjects`, `createProject`), không theo HTTP verb.
 - Luôn truyền `schema` cho response có body. Không có schema = không có bảo vệ khi backend đổi field.
 - Query function nhận `signal` để React Query huỷ được request.
-- `authRequired: true` cho mọi endpoint cần đăng nhập — `services/client.ts` lo gắn token, refresh 401 và single-flight.
+- `authRequired: true` cho mọi endpoint cần đăng nhập — `packages/api/src/client.ts` lo gắn token, refresh 401 và single-flight.
 - Trả `data` từ response axios, đừng trả cả `AxiosResponse` — tầng trên không cần biết transport.
 
-### 3.4 `services/project/hooks.ts`
+### 3.4 `packages/api/src/project/hooks.ts`
 
 ```ts
 "use client";
@@ -335,7 +368,7 @@ Quy tắc tầng hooks:
 ```tsx
 "use client";
 
-import { useProjects } from "@/services/project/hooks";
+import { useProjects } from "@noalhub/api/project";
 
 export function ProjectList() {
   const { data, isPending, error } = useProjects({ page: 1 });
@@ -357,7 +390,7 @@ export function ProjectList() {
 
 ## 4. Xử lý lỗi
 
-Mọi lỗi từ tầng api là `ApiError` (`services/errors.ts` — contract lỗi dùng chung, component/provider import trực tiếp được), dựng từ `ErrorResponseDto`:
+Mọi lỗi từ tầng api là `ApiError` (`packages/api/src/errors.ts` — contract lỗi dùng chung, component/provider import trực tiếp được), dựng từ `ErrorResponseDto`:
 
 | Trường | Dùng để |
 |---|---|
@@ -366,7 +399,7 @@ Mọi lỗi từ tầng api là `ApiError` (`services/errors.ts` — contract l�
 | `status` | HTTP status |
 | `details` | Chỉ có với `VALIDATION_FAILED`. Là **mảng câu** (`["email must be an email"]`), KHÔNG phải map field → message |
 
-- **Form + mutation**: dùng `applyApiError(error, setError, knownFields)` trong `lib/forms/apply-api-error.ts`. Nó lấy token đầu mỗi câu trong `details` làm tên field (quy ước class-validator); field nào không có trong `knownFields` thì dồn lên banner thay vì mất tăm. **Phải truyền `knownFields`** — thiếu là mọi lỗi validate rơi hết lên banner.
+- **Form + mutation**: dùng `applyApiError(error, setError, knownFields)` trong `packages/core/src/forms/apply-api-error.ts`. Nó lấy token đầu mỗi câu trong `details` làm tên field (quy ước class-validator); field nào không có trong `knownFields` thì dồn lên banner thay vì mất tăm. **Phải truyền `knownFields`** — thiếu là mọi lỗi validate rơi hết lên banner.
 
   ```tsx
   const { mutateAsync } = useCreateProject();
@@ -384,16 +417,16 @@ Mọi lỗi từ tầng api là `ApiError` (`services/errors.ts` — contract l�
   Dùng `mutateAsync` + `try/catch` khi cần map lỗi vào form; dùng `mutate` khi chỉ cần `onError` đơn giản.
 
 - **Query**: đọc `error` từ hook, render inline. Không nuốt lỗi im lặng.
-- **401**: không xử lý ở feature. `services/client.ts` tự refresh, và khi refresh hỏng thì gọi `onSessionExpired` → auth store logout + redirect.
+- **401**: không xử lý ở feature. `packages/api/src/client.ts` tự refresh, và khi refresh hỏng thì gọi `onSessionExpired` → auth store logout + redirect.
 
 ---
 
 ## 5. Checklist cho mỗi feature mới
 
-- [ ] `services/<feature>/types.ts` — type thuần, không phụ thuộc React/fetch
-- [ ] `services/<feature>/schemas.ts` — zod cho **cả** response và form input
-- [ ] `services/<feature>/api.ts` — một hàm/endpoint, có `schema`, có `auth`, nhận `signal`
-- [ ] `services/<feature>/hooks.ts` — `<feature>Keys` factory + hooks
+- [ ] `packages/api/src/<feature>/types.ts` — type thuần, không phụ thuộc React/fetch
+- [ ] `packages/api/src/<feature>/schemas.ts` — zod cho **cả** response và form input
+- [ ] `packages/api/src/<feature>/api.ts` — một hàm/endpoint, có `schema`, có `auth`, nhận `signal`
+- [ ] `packages/api/src/<feature>/hooks.ts` — `<feature>Keys` factory + hooks
 - [ ] Mutation nào đổi dữ liệu đều `invalidateQueries` đúng scope
 - [ ] Component **không** import `api.ts` / `client.ts` — chỉ `hooks.ts`
 - [ ] Đối chiếu lại với `/docs-json` — ràng buộc trong zod form schema (min/max) phải KHỚP DTO, nếu không backend trả `VALIDATION_FAILED` sau khi form đã báo hợp lệ
@@ -406,5 +439,10 @@ Mọi lỗi từ tầng api là `ApiError` (`services/errors.ts` — contract l�
 |---|---|
 | SSR prefetch / `HydrationBoundary` | Token nằm ở client (`docs/auth.md` §1.2) — server không đọc được, không fetch hộ được |
 | `useSuspenseQuery` | Cần streaming SSR để phát huy; với client-only fetch thì chỉ làm khó xử lý lỗi |
-| Optimistic update mặc định | Chỉ thêm khi UX thực sự cần (toggle, reorder). Mặc định là invalidate cho đúng |
-| Gọi `fetch`/`axios` thẳng, ngoài `services/<feature>/api.ts` | Mất refresh token, mất validate, mất chuẩn hoá lỗi |
+| Optimistic update mặc định | Chỉ thêm khi UX thực sự cần. Ngoại lệ duy nhất đang có: gửi tin nhắn (`docs/chat.md` §5.5) — mặc định vẫn là invalidate cho đúng |
+| Gọi `fetch`/`axios` thẳng, ngoài `packages/api/src/<feature>/api.ts` | Mất refresh token, mất validate, mất chuẩn hoá lỗi |
+
+**Ngoại lệ đã ghi nhận:** feature `chat` ghi dữ liệu qua `socket.emit` chứ không
+qua `api.ts`, và giữ state phù du (typing, presence) trong `packages/api/src/chat/ephemeral-store.ts`
+thay vì React Query. Cả hai đều có lý do chép trong `docs/chat.md` §1.3 — đừng
+nhân bản sang feature khác nếu không có ràng buộc tương tự từ backend.

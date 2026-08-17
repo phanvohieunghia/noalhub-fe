@@ -3,34 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "@hookform/resolvers": "^5.4.2",
-    "@tanstack/react-query": "^5.101.4",
-    "axios": "^1.18.1",
-    "date-fns": "^4.4.0",
-    "next": "16.2.11",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "react-hook-form": "^7.83.0",
-    "socket.io-client": "^4.8.3",
-    "uuid": "^14.0.1",
-    "zod": "^4.4.3",
-    "zustand": "^5.0.14"
+    "dev": "turbo run dev",
+    "dev:web": "pnpm --filter @noalhub/web dev",
+    "dev:admin": "pnpm --filter @noalhub/admin dev",
+    "build": "turbo run build",
+    "build:web": "turbo run build --filter=@noalhub/web...",
+    "build:admin": "turbo run build --filter=@noalhub/admin...",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@tanstack/react-query-devtools": "^5.101.4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.11",
-    "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+    "turbo": "^2.5.8"
+  },
+  "packageManager": "pnpm@9.11.0"
 }

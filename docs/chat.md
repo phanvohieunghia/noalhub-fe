@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | **FE chưa implement. BE đã có.** Đã đối chiếu `/docs-json` ngày 2026-07-26: 5 endpoint chat có thật, DTO đầy đủ, Socket.IO gateway đang chạy (handshake `/socket.io/` trả `pingInterval: 25000`). §3 dưới đây là **shape thật lấy từ spec**, không phải đề xuất |
-| **Ngày** | 2026-07-26 (đối chiếu spec: 2026-07-26) |
+| **Status** | **Đã implement** (giai đoạn 1): `packages/api/src/chat/*`, `packages/api/src/chat/*` + `packages/core/src/chat/*`, `apps/web/components/chat/*`, route `/chat` và `/chat/[conversationId]`. §3 là shape thật lấy từ spec, không phải đề xuất |
+| **Ngày** | 2026-07-26 (đối chiếu spec: 2026-07-26 · rà lại theo code: 2026-08-17) |
 | **Phạm vi (giai đoạn 1)** | DM 1-1, gửi/nhận tin realtime, lịch sử có cursor, unread count, read receipt, typing, presence online/offline |
 | **Ngoài phạm vi** | Group (giai đoạn 2 của BE), gửi file/ảnh, reaction, edit/xoá tin, E2EE, push notification — xem §12 |
 | **Nguồn sự thật của contract** | **REST: OpenAPI spec `http://localhost:3101/docs` (JSON `/docs-json`)** — spec thắng mọi tài liệu. **Socket: [`../noalhub-be/docs/chat.md`](../../noalhub-be/docs/chat.md)**, vì event Socket.IO không xuất hiện trong OpenAPI |
@@ -18,13 +18,13 @@ Kết quả đối chiếu `/docs-json` với những gì UI cần. Năm mục; 
 
 | # | Vấn đề | Ảnh hưởng |
 |---|---|---|
-| 1 | **FE đang gọi sai path auth.** Spec là `/api/auth/*`, `services/auth/api.ts` gọi `/auth/*`. Đã kiểm bằng curl: `GET /auth/me` → **404**, `GET /api/auth/me` → **401** | 🔴 Auth hiện không chạy với BE thật. Phải sửa trước chat |
-| 2 | **Không có endpoint tìm người dùng.** `POST /conversations/direct` cần `{ userId }` (uuid) và trả `404` nếu không tồn tại — nhưng spec **không có** `GET /api/users`. FE không có đường nào biết `userId` | 🔴 Không tạo được DM mới từ UI |
+| 1 | ~~FE gọi sai path auth~~ — **đã sửa**: `packages/api/src/config.ts` gộp tiền tố `/api` một lần vào `API_BASE_URL`, tầng api viết path không kèm `/api` | ✅ Đã xong |
+| 2 | ~~Không có endpoint tìm người dùng~~ — **đã có**: `GET /users/{username}` (`packages/api/src/users/api.ts`) và feature `friends`. UI tạo DM đi qua danh sách bạn bè / tra username rồi lấy `user.id` cho `POST /chat/conversations/direct` | ✅ Đã xong |
 | 3 | **`ConversationDto` không có `lastMessageAt`.** BE sort theo cột đó và `nextCursor` của danh sách hội thoại là `date-time`, nhưng trường đó không lộ ra trong DTO | 🟡 Sidebar không tự re-sort đúng sau `conversation:updated`. Workaround §5.3 |
 | 4 | **`MessageDto` không có `deletedAt`.** Bảng `messages` của BE có cột đó (soft delete) nhưng DTO không trả | 🟡 Không render được "tin đã xoá" → `MessageDeleted` dời sang §12 |
 | 5 | **Giới hạn `body` không có trong spec.** Vì gửi tin đi qua socket nên DTO của nó không nằm trong OpenAPI. BE doc ghi 4000 ký tự | 🟡 Lấy 4000 theo BE doc, nhưng đây là con số **chưa được spec bảo chứng** |
 
-Mục #2 quyết định `NewDirectConversationDialog` (§8.5) có làm được không. Nếu BE chưa kịp: giai đoạn 1 chỉ hiện các DM **đã tồn tại** — vẫn dùng được, chỉ là không tạo mới từ UI.
+Mục #1 và #2 đã được giải quyết; #3 #4 #5 vẫn còn nguyên. Việc tạo DM mới hiện đi qua feature `friends` (`components/friends/*`) thay vì một ô tìm kiếm người dùng tự do — backend chỉ nhận `userId`, còn `username` là thứ người dùng biết, nên phải tra qua `GET /users/{username}` trước.
 
 Mục #4 là loại sai lệch dễ bỏ qua nhất: schema DB có cột, DTO không trả, và FE viết theo schema DB thì zod sẽ **không** báo gì (field thiếu chỉ thành `undefined`) — UI cứ âm thầm không bao giờ hiện tin đã xoá.
 
@@ -34,7 +34,7 @@ Mục #4 là loại sai lệch dễ bỏ qua nhất: schema DB có cột, DTO kh
 
 ## 1. Bối cảnh và ràng buộc kế thừa
 
-App hiện có auth hoàn chỉnh (`services/auth/*`, `lib/auth/*`) và một `/dashboard` mẫu. Chat là feature có dữ liệu đầu tiên, và là chỗ đầu tiên phát sinh thứ auth chưa có: **một kết nối sống lâu**.
+App hiện có auth hoàn chỉnh (`packages/api/src/auth/*`, `packages/api/src/auth/*`) và một `/dashboard` mẫu. Chat là feature có dữ liệu đầu tiên, và là chỗ đầu tiên phát sinh thứ auth chưa có: **một kết nối sống lâu**.
 
 ### 1.1 Bốn quyết định của BE chi phối toàn bộ FE
 
@@ -48,7 +48,7 @@ App hiện có auth hoàn chỉnh (`services/auth/*`, `lib/auth/*`) và một `/
 ### 1.2 Ba ràng buộc từ `docs/auth.md`
 
 1. **Access token chỉ nằm trong memory, browser gọi thẳng backend.** → Không SSR được nội dung chat; mọi trang chat là client component. `app/(protected)/*` đã có `AuthGuard`.
-2. **Refresh token rotate — trình lại token cũ thu hồi TOÀN BỘ phiên.** → Tầng socket **không được** tự gọi `/api/auth/refresh`. Nó xin token qua một hàm dùng chung và dựa vào single-flight đã có trong `services/client.ts`.
+2. **Refresh token rotate — trình lại token cũ thu hồi TOÀN BỘ phiên.** → Tầng socket **không được** tự gọi `/api/auth/refresh`. Nó xin token qua một hàm dùng chung và dựa vào single-flight đã có trong `packages/api/src/client.ts`.
 3. **Access token chỉ ở memory nên sau F5 là rỗng.** → `socket.connect()` phải chờ auth `bootstrap()` xong. Connect sớm là handshake với `token: null` → bị disconnect ngay.
 
 ### 1.3 Quyết định kiến trúc phía FE
@@ -93,12 +93,12 @@ App hiện có auth hoàn chỉnh (`services/auth/*`, `lib/auth/*`) và một `/
 
 **Quy tắc phụ thuộc** (kế thừa `data-layer.md` §1):
 
-- Component **chỉ** import `services/chat/hooks.ts` (+ `types.ts`/`schemas.ts` cho kiểu, `services/errors.ts` khi bắt lỗi). **Không** import `api.ts`, `socket.ts`, `client.ts`.
+- Component **chỉ** import `packages/api/src/chat/hooks.ts` (+ `types.ts`/`schemas.ts` cho kiểu, `packages/api/src/errors.ts` khi bắt lỗi). **Không** import `api.ts`, `socket.ts`, `client.ts`.
 - `socket.ts` **không** import React, không biết React Query. Nó chỉ expose `emit`/`on`/`connect`/`disconnect`.
 - Cầu nối socket → cache nằm trong **đúng một** hook: `useChatSocket()` (§5.3). Gọi ở hai nơi là append tin hai lần.
 - `chatKeys` là nguồn sự thật duy nhất cho query key.
 
-**Lưu ý ngược dòng:** tầng ghi đi qua `socket.ts` chứ không qua `api.ts`, nên `services/chat/api.ts` sẽ **không có** hàm `sendMessage`. Đây là điểm feature chat lệch khỏi template trong `data-layer.md` §3 — cố ý, và chỉ ở đúng chỗ này.
+**Lưu ý ngược dòng:** tầng ghi đi qua `socket.ts` chứ không qua `api.ts`, nên `packages/api/src/chat/api.ts` sẽ **không có** hàm `sendMessage`. Đây là điểm feature chat lệch khỏi template trong `data-layer.md` §3 — cố ý, và chỉ ở đúng chỗ này.
 
 ---
 
@@ -106,7 +106,7 @@ App hiện có auth hoàn chỉnh (`services/auth/*`, `lib/auth/*`) và một `/
 
 ### 3.1 REST — chỉ để đọc
 
-Prefix **`/api`** (khác với cái `services/auth/api.ts` đang dùng — xem §0 #1). Lấy nguyên từ spec, kèm đủ mã lỗi đã khai báo:
+Path trong spec có prefix **`/api`**; prefix đó nằm sẵn trong `API_BASE_URL` nên `packages/api/src/chat/api.ts` viết `/chat/conversations`. Bảng dưới ghi nguyên path của spec, kèm đủ mã lỗi đã khai báo:
 
 | Method | Path | Query / Body | Trả về | Lỗi |
 |---|---|---|---|---|
@@ -149,11 +149,11 @@ Không có `POST /messages`, `DELETE /messages/{id}`, `/attachments`, hay API t�
 
 **Quy ước đặt tên của BE, phải tôn trọng:** client→server là **mệnh lệnh** (`send`, `mark-read`, `start`), server→client là **sự việc đã xảy ra** (`new`, `read`, `changed`, `updated`). Không tên nào dùng cho cả hai chiều. FE tuyệt đối không được `emit` một event mình đang `on` — Socket.IO cho phép và bug đó chạy được một nửa nên rất khó thấy.
 
-Mã lỗi trong ack dùng **cùng bộ hằng** `SCREAMING_SNAKE_CASE` với lỗi HTTP → tái dùng `ERROR_CODES` ở `services/errors.ts`, không dựng hệ thống lỗi thứ hai.
+Mã lỗi trong ack dùng **cùng bộ hằng** `SCREAMING_SNAKE_CASE` với lỗi HTTP → tái dùng `ERROR_CODES` ở `packages/api/src/errors.ts`, không dựng hệ thống lỗi thứ hai.
 
 ### 3.3 Kiểu dữ liệu
 
-`services/chat/types.ts`, zod tương ứng ở `schemas.ts`. **Chép đúng từ spec** — không phải suy từ schema DB của BE (hai thứ đó lệch nhau, xem §0 #3 #4):
+`packages/api/src/chat/types.ts`, zod tương ứng ở `schemas.ts`. **Chép đúng từ spec** — không phải suy từ schema DB của BE (hai thứ đó lệch nhau, xem §0 #3 #4):
 
 ```ts
 type ConversationType = "direct" | "group";
@@ -202,7 +202,7 @@ type MessageStatus = "sending" | "sent" | "failed";
 
 **Bốn cái bẫy, cả bốn đều là chỗ tôi đã viết sai ở bản trước khi đối chiếu spec:**
 
-- **`ConversationMember` KHÔNG lồng `UserDto`.** Nó phẳng: `userId`, `role`, `displayName`, `avatarUrl`, `lastReadMessageId`. Đừng tái dùng `User` từ `services/auth/types.ts` cho chỗ này — thiếu `email`, thiếu `emailVerified`, và không có `joinedAt`/`leftAt`. Tái dùng sai kiểu ở đây là zod fail ngay request đầu.
+- **`ConversationMember` KHÔNG lồng `UserDto`.** Nó phẳng: `userId`, `role`, `displayName`, `avatarUrl`, `lastReadMessageId`. Đừng tái dùng `User` từ `packages/api/src/auth/types.ts` cho chỗ này — thiếu `email`, thiếu `emailVerified`, và không có `joinedAt`/`leftAt`. Tái dùng sai kiểu ở đây là zod fail ngay request đầu.
 - **`Message` không mang tên/avatar người gửi**, chỉ có `senderId`. `MessageBubble` phải **tra `conversation.members` theo `senderId`** để lấy `displayName`/`avatarUrl`. → `ChatPane` phải truyền map `members` xuống, hoặc để bubble đọc từ `useConversation`. Thiết kế nhầm rằng message tự đủ thông tin là phải sửa lại cả `MessageGroup` (nó cần biết avatar để gộp).
 - **`senderId` nullable.** Phải chịu được `null` → "Người dùng đã xoá" (`MessageSenderFallback`). Đây là ca duy nhất trong ba ca "nhánh dữ liệu đặc biệt" mà spec **thật sự** có.
 - **`type: "system"`** render khác hẳn bubble thường: một dòng chữ nhỏ căn giữa, không avatar, không timestamp. Spec đã có enum này ở GĐ1 dù chưa có event nào sinh ra nó → làm `MessageSystemNotice` từ đầu, rẻ hơn mổ lại `MessageList` sau.
@@ -249,18 +249,18 @@ services/chat/api.ts         ← 5 hàm REST §3.1 (KHÔNG có sendMessage)
 services/chat/socket.ts      ← Socket.IO, KHÔNG import React
 services/chat/hooks.ts       ← chatKeys + hooks + useChatSocket
 lib/chat/ephemeral-store.ts  ← zustand: typing, presence
-lib/chat/outbox.ts           ← tin chờ gửi khi offline (§5.6)
+lib/chat/outbox.ts           ← tin chờ gửi khi offline (§5.6), giữ trong MEMORY
+lib/chat/error-message.ts    ← map mã lỗi ack/HTTP → câu hiển thị
+lib/chat/format.ts           ← nhãn thời gian, lastSeen
 ```
 
-Thay đổi cần làm ở file có sẵn:
+Ba sửa đổi ở file có sẵn (đã làm xong, ghi lại vì chúng là điều kiện tiên quyết):
 
 | File | Sửa gì | Vì sao |
 |---|---|---|
-| `services/auth/api.ts` | `/auth/*` → `/api/auth/*` | §0 #1 |
-| `lib/auth/token-store.ts` | Thêm `subscribe(cb)` | Socket cần biết khi access token đổi để emit `auth:refresh` (§5.4) |
-| `services/client.ts` | Export `ensureAccessToken()` | Socket cần token mới nhưng **không được** tự gọi refresh (§1.2) |
-
-Ba sửa đổi này nhỏ nhưng phải làm **trước**, không phải chen vào giữa.
+| `packages/api/src/config.ts` | Gộp tiền tố `/api` vào `API_BASE_URL`, thêm `WS_URL` + `CHAT_NAMESPACE` | §0 #1 |
+| `packages/api/src/auth/token-store.ts` | Thêm `subscribe(cb)` | Socket cần biết khi access token đổi để emit `auth:refresh` (§5.4) |
+| `packages/api/src/client.ts` | Export `ensureAccessToken()` | Socket cần token mới nhưng **không được** tự gọi refresh (§1.2) |
 
 ### 5.2 `chatKeys`
 
@@ -381,13 +381,13 @@ Race đã được xử lý sẵn: `message:new` của chính mình có thể v�
 
 Vì `id` ổn định và BE idempotent, retry tự động là **an toàn tuyệt đối** — không dựng cái này thì bỏ mất lợi ích lớn nhất của thiết kế BE.
 
-`lib/chat/outbox.ts`: các message `failed`/`sending` chưa có ack. Khi socket `online` trở lại → gửi lại tuần tự theo thứ tự `id`.
+`packages/api/src/chat/outbox.ts`: các message `failed`/`sending` chưa có ack. Khi socket `online` trở lại → gửi lại tuần tự theo thứ tự `id`.
 
 Giai đoạn 1 giữ outbox **trong memory** (F5 là mất, `MessageBubble` failed cũng mất). Bền qua reload cần `localStorage` — để §12, và khi làm thì phải giới hạn số tin + TTL, không thì outbox hỏng sẽ đập backend mãi mãi.
 
 ### 5.7 Typing và presence — ngoài React Query
 
-`lib/chat/ephemeral-store.ts` (zustand): `typingByConversation`, `presenceByUser`.
+`packages/api/src/chat/ephemeral-store.ts` (zustand): `typingByConversation`, `presenceByUser`.
 
 - **Typing TTL 5s phía client** (BE chốt: `typing` không persist, được phép rơi, client tự tắt). Mỗi `userId` một timeout, clear khi unmount — không thì "đang nhập…" treo vĩnh viễn.
 - **Emit `typing:start` throttle**, và `typing:stop` khi blur hoặc gửi xong. Đừng emit mỗi keystroke.
@@ -414,7 +414,7 @@ Con trỏ là `last_read_message_id` (không phải counter) → chỉ được 
 /chat/[conversationId]     → cửa sổ hội thoại
 ```
 
-Nằm trong `app/(protected)/chat/` → `AuthGuard` đã bảo vệ, không cần thêm gì. Không có `/chat/new` — tạo DM là dialog (và còn phụ thuộc §0 #2).
+Nằm trong `app/(protected)/chat/` → `AuthGuard` đã bảo vệ, không cần thêm gì. Không có `/chat/new` — tạo DM là dialog, mở từ trang `/friends` hoặc từ nút *Mới* trên sidebar.
 
 ### 6.2 Layout desktop (≥ 768px)
 
@@ -489,7 +489,7 @@ Làm bằng CSS (`hidden md:flex` / `flex md:hidden`) trong layout — **không*
 
 ## 7. Xử lý lỗi
 
-Lỗi HTTP và mã lỗi trong ack socket **dùng chung** bộ `code` (`services/errors.ts`).
+Lỗi HTTP và mã lỗi trong ack socket **dùng chung** bộ `code` (`packages/api/src/errors.ts`).
 
 | Tình huống | Hành vi |
 |---|---|
@@ -499,7 +499,7 @@ Lỗi HTTP và mã lỗi trong ack socket **dùng chung** bộ `code` (`services
 | Disconnect `TOKEN_EXPIRED` | `ensureAccessToken()` rồi reconnect. **Không** hiện lỗi cho người dùng — đây là việc nội bộ |
 | **404** (không tồn tại **hoặc** không phải thành viên) | Một màn hình duy nhất: "Hội thoại không tồn tại hoặc bạn không có quyền" + link `/chat`. **Không** logout. Spec không có `403` — đừng tách hai nhánh (§3.1 (2)) |
 | Rate limit khi gửi tin | Bubble `failed`, **không** auto-retry. Outbox phải tôn trọng: gặp rate limit thì dừng, không đập tiếp |
-| 401 bất kỳ | Không xử lý ở feature — `services/client.ts` lo (§1.2) |
+| 401 bất kỳ | Không xử lý ở feature — `packages/api/src/client.ts` lo (§1.2) |
 | Event socket sai shape | zod fail → log, **bỏ qua event**, socket vẫn sống |
 
 BE **không log nội dung tin nhắn**; FE cũng vậy — log `id`, `conversationId` là đủ. `console.log(body)` trong lúc debug thì phải xoá trước khi commit.
@@ -508,7 +508,7 @@ BE **không log nội dung tin nhắn**; FE cũng vậy — log `id`, `conversat
 
 ## 8. Danh sách component
 
-Tất cả ở `components/chat/*`. Cột "Hook" là hook **duy nhất** component đó được phép chạm. Cột "GĐ" = giai đoạn (1 = làm ngay, 2 = khi BE có group).
+Tất cả ở `apps/web/components/chat/*`. Cột "Hook" là hook **duy nhất** component đó được phép chạm. Cột "GĐ" = giai đoạn (1 = làm ngay, 2 = khi BE có group).
 
 ### 8.1 Khung
 
@@ -548,12 +548,13 @@ Tất cả ở `components/chat/*`. Cột "Hook" là hook **duy nhất** compone
 | `MessageBubble` | ✅ | 1 | Nội dung, trái/phải, timestamp, `status`, *Gửi lại* | `useSendMessage` |
 | `MessageBody` | ❌ | 1 | Linkify + `whitespace-pre-wrap`. **Không** render HTML thô | — |
 | `MessageSystemNotice` | ❌ | 1 | `type: "system"` — dòng nhỏ căn giữa (§3.3) | — |
-| `MessageSenderFallback` | ❌ | 1 | `senderId === null` → "Người dùng đã xoá" (§3.3) | — |
+| `MessageSenderFallback` | ❌ | 1 | `senderId === null` → "Người dùng đã xoá" (§3.3). **Khi implement gộp thẳng vào `MessageGroup`**, không tách file | — |
 | `DateSeparator` | ❌ | 1 | "Hôm nay" / "Hôm qua" / `dd/MM/yyyy` | — |
 | `ReadReceipt` | ❌ | 1 | `✓` / `✓✓` từ `lastReadMessageId` của thành viên | — |
 | `TypingIndicator` | ✅ | 1 | "An đang nhập…", TTL 5s, `aria-live` | `useTyping` |
 | `ScrollToBottomButton` | ✅ | 1 | Nút nổi + số tin mới | — |
 | `PresenceDot` | ❌ | 1 | Xanh/xám, `title` + `sr-only`, chịu được "không rõ" | `usePresence` |
+| `MemberProfileDrawer` | ✅ | 1 | Hồ sơ công khai của thành viên: phần tĩnh từ `GET /users/{username}`, online/offline từ presence | `usePublicProfile`, `usePresence` |
 
 `MessageSystemNotice` và `MessageSenderFallback` làm ở GĐ1 dù chưa có event sinh ra chúng: cả hai là nhánh dữ liệu **spec thật sự có** (`type: 'system'`, `senderId: null`), và thêm sau nghĩa là mổ lại `MessageList`.
 
@@ -573,18 +574,20 @@ Tất cả ở `components/chat/*`. Cột "Hook" là hook **duy nhất** compone
 
 ### 8.5 Tạo hội thoại
 
+Đã làm khác thiết kế ban đầu: **không** có ô tìm người dùng tự do (backend không có `GET /users?search=`, chỉ tra chính xác theo username). Việc mở DM đi qua feature `friends`, nên các component này nằm ở `components/friends/*` chứ không phải `apps/web/components/chat/*`:
+
 | Component | Client? | GĐ | Trách nhiệm | Hook |
 |---|---|---|---|---|
-| `NewDirectConversationDialog` | ✅ | 1* | `<dialog>` native, chọn 1 người → `POST /conversations/direct` | `useCreateDirectConversation` |
-| `UserSearchInput` | ✅ | 1* | Tìm người, debounce 300ms | `useUserSearch` |
-| `UserSearchResultList` | ✅ | 1* | Kết quả, 3 trạng thái | — |
+| `FindFriendDialog` | ✅ | 1 | Tra **đúng** username → gửi lời mời kết bạn | `useFindUserByUsername`, `useSendFriendRequest` |
+| `FriendListContent` | ✅ | 1 | Danh sách bạn → mở DM (`POST /chat/conversations/direct` với `user.id`) | `useFriends`, `useCreateDirectConversation` |
+| `FriendRequestsDialog` | ✅ | 1 | Lời mời đến/đi, chấp nhận / từ chối / huỷ | `useFriendRequests`, … |
 | `NewGroupDialog` / `MemberListDialog` / `SelectedUserChips` | ✅ | 2 | Group | (chờ API GĐ2) |
 
-**\* Chặn bởi §0 #2** — chưa có `GET /api/users?search=`. Nếu BE không kịp, ẩn nút *Mới* ở GĐ1; sidebar vẫn hiện các DM đã tồn tại. Vì `POST /conversations/direct` idempotent nên dialog **không cần** xử lý "hội thoại đã tồn tại" như lỗi — cứ điều hướng tới `id` trả về.
+Vì `POST /chat/conversations/direct` idempotent nên **không cần** xử lý "hội thoại đã tồn tại" như lỗi — cứ điều hướng tới `id` trả về.
 
 ### 8.6 UI primitive cần thêm vào `components/ui/`
 
-Hiện chỉ có `button`, `input`, `form-error`.
+Lúc viết doc mới có `button`, `input`, `form-error`. Nay đã có đủ bảng dưới trừ `dropdown-menu` (GĐ2), cộng thêm `drawer.tsx` (dùng cho `MemberProfileDrawer`).
 
 | Component | Vì sao cần |
 |---|---|
@@ -597,7 +600,7 @@ Hiện chỉ có `button`, `input`, `form-error`.
 
 `avatar` và `dialog` chặn đường: sáu component chat phụ thuộc vào chúng.
 
-**Tổng: 34 component chat (GĐ1: 28) + 6 UI primitive.**
+**Ước tính lúc thiết kế: 34 component chat (GĐ1: 28) + 6 UI primitive.** Thực tế GĐ1 dừng ở ~29 file trong `components/chat/` — chênh lệch chủ yếu do dialog tạo hội thoại dời sang `components/friends/` và vài component nhỏ gộp vào file cha.
 
 ---
 
@@ -666,7 +669,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:3101
 NEXT_PUBLIC_WS_URL=ws://localhost:3101
 ```
 
-Tách `WS_URL` vì production thường khác host/scheme (`wss://`).
+Tách `WS_URL` không chỉ vì scheme: **production không dùng chung host với REST**. Nginx bật `http2 on` cho domain API, mà HTTP/2 cấm header `Connection`/`Upgrade` nên WebSocket không bắt tay được (Engine.IO trả 400, client thấy close code 1006) → gateway cần domain riêng không bật h2. Bỏ trống thì `packages/api/src/config.ts` suy từ API origin (`http` → `ws`) — chỉ đúng ở local. Chi tiết ghi trong `.env.example`.
 
 ---
 
@@ -674,19 +677,21 @@ Tách `WS_URL` vì production thường khác host/scheme (`wss://`).
 
 Bám theo thứ tự của BE (`../noalhub-be/docs/chat.md` mục *Thứ tự implement*) để mỗi bước FE có backend tương ứng chạy được — không dựng UI cho endpoint chưa tồn tại.
 
+Bước 0–11 đã làm xong; bước 12 (group) vẫn ngoài phạm vi. Bảng giữ lại để tra thứ tự phụ thuộc khi mở rộng.
+
 | # | Bước FE | Cần BE xong bước | Kiểm được |
 |---|---|---|---|
-| 0 | Sửa path `/api/auth/*` (§0 #1); thêm `subscribe` vào token-store; export `ensureAccessToken`. Song song: xin BE `GET /api/users?search=` (§0 #2) + `lastMessageAt` vào `ConversationDto` (§0 #3) | — | Auth thật sự hoạt động với BE |
+| 0 | Sửa tiền tố `/api` (§0 #1); export `ensureAccessToken`. Endpoint tra người dùng (§0 #2) nay là `GET /users/{username}`; `lastMessageAt` (§0 #3) vẫn chưa có | — | Auth thật sự hoạt động với BE |
 | 1 | `components/ui/{avatar,dialog,skeleton,spinner,textarea}.tsx` | — | `pnpm build` pass |
-| 2 | `services/chat/{types,schemas}.ts` | 1 | — |
-| 3 | `services/chat/api.ts` (5 endpoint đọc) + `chatKeys` + `useConversations`/`useMessages` | 2 | — |
+| 2 | `packages/api/src/chat/{types,schemas}.ts` | 1 | — |
+| 3 | `packages/api/src/chat/api.ts` (5 endpoint đọc) + `chatKeys` + `useConversations`/`useMessages` | 2 | — |
 | 4 | `ChatLayoutShell` + `ChatSidebar` + `ConversationList` | 2 | **Thấy hội thoại thật từ BE** — mốc quan trọng nhất |
 | 5 | `ChatPane` + `MessageList` + `MessageBubble` + `MessageGroup` + `DateSeparator` (chưa realtime, F5 để thấy tin mới) | 2 | Đọc được lịch sử, phân trang chạy |
 | 6 | `socket.ts` + `useChatSocket` + `ConnectionBanner` + `auth:refresh` | 3 | Kết nối sống qua mốc 15 phút |
 | 7 | `MessageComposer` + `useSendMessage` (optimistic + ack) + outbox | 4 | **Gửi/nhận realtime hai chiều** |
 | 8 | Read receipt + unread badge + `useMarkRead` | 5 | — |
 | 9 | `TypingIndicator` + `PresenceDot` + store ephemeral | 6 | — |
-| 10 | `NewDirectConversationDialog` + `UserSearchInput` | Cần §0 #2 | Tạo được DM mới |
+| 10 | Tạo DM mới qua feature `friends` (`FindFriendDialog`, `FriendListContent`) | §0 #2 | Tạo được DM mới |
 | 11 | Mobile layout + a11y pass (§6.5) | — | — |
 | 12 | Group: `ChatHeaderMenu`, `NewGroupDialog`, `MemberListDialog` | 8 | — |
 

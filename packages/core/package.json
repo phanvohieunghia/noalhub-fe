@@ -1,0 +1,25 @@
+{
+  "name": "@noalhub/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "date-fns": "^4.4.0",
+    "@noalhub/api": "workspace:*"
+  },
+  "peerDependencies": {
+    "react-hook-form": "^7.83.0"
+  },
+  "devDependencies": {
+    "@noalhub/config": "workspace:*",
+    "react-hook-form": "^7.83.0",
+    "typescript": "^5",
+    "@types/node": "^20"
+  }
+}

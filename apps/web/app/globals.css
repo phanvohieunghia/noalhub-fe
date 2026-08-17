@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/**
+ * Tailwind v4 chỉ tự dò source trong cây thư mục chứa file CSS này, và bỏ qua
+ * `node_modules` — mà `@noalhub/ui` nằm ngoài app, chỉ được symlink vào
+ * node_modules. Không khai `@source` thì mọi class dùng riêng trong package ui
+ * (vd `bg-red-50` chỉ xuất hiện ở `form-error.tsx`) sẽ bị loại khỏi bundle và
+ * component mất style ở PRODUCTION nhưng vẫn ổn ở dev — bug rất khó thấy.
+ */
+@source "../../../packages/ui/src";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
