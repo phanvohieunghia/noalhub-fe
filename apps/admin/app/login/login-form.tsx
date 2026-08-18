@@ -1,11 +1,17 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { loginSchema, useLogin, type LoginInput } from "@noalhub/api/auth";
+import {
+  loginSchema,
+  useAuthStore,
+  useLogin,
+  type LoginInput,
+} from "@noalhub/api/auth";
+import { safeRedirect } from "@noalhub/core/auth/redirect";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { Button } from "@noalhub/ui/button";
 import { FormError } from "@noalhub/ui/form-error";
@@ -18,7 +24,9 @@ import { Input } from "@noalhub/ui/input";
  */
 export function AdminLoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const login = useLogin();
+  const logout = useAuthStore((s) => s.logout);
   const [formError, setFormError] = useState<string | null>(null);
 
   const {
@@ -32,7 +40,17 @@ export function AdminLoginForm() {
     setFormError(null);
     try {
       await login.mutateAsync(values);
-      router.replace("/dashboard");
+
+      // Chặn ngay tại cửa: user thường đăng nhập đúng mật khẩu vẫn là phiên hợp
+      // lệ, nhưng không có việc gì trong này. `RoleGuard` cũng chặn, chỗ này chỉ
+      // để họ đọc được lý do ở đúng form vừa bấm thay vì rơi vào màn hình chặn.
+      if (useAuthStore.getState().user?.role !== "admin") {
+        await logout();
+        setFormError("Tài khoản này không có quyền quản trị.");
+        return;
+      }
+
+      router.replace(safeRedirect(searchParams.get("next"), "/overview"));
     } catch (error) {
       setFormError(applyApiError(error, setError, ["email", "password"]));
     }

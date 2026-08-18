@@ -4,11 +4,19 @@ export const DEFAULT_REDIRECT = "/chat";
  * Chỉ chấp nhận đường dẫn nội bộ. Không có hàm này thì
  * `/login?next=https://evil.com` trở thành lỗ hổng open-redirect.
  */
-export function safeRedirect(next: string | null | undefined): string {
-  if (!next) return DEFAULT_REDIRECT;
-  if (!next.startsWith("/")) return DEFAULT_REDIRECT;
+export function safeRedirect(
+  next: string | null | undefined,
+  /**
+   * Đích khi `next` vắng hoặc không an toàn. `DEFAULT_REDIRECT` là route của
+   * `apps/web`; `apps/admin` truyền đích của nó vào đây thay vì tự viết lại
+   * phần kiểm tra open-redirect.
+   */
+  fallback: string = DEFAULT_REDIRECT,
+): string {
+  if (!next) return fallback;
+  if (!next.startsWith("/")) return fallback;
   // `//evil.com` và `/\evil.com` đều bị trình duyệt hiểu là protocol-relative.
-  if (next.startsWith("//") || next.startsWith("/\\")) return DEFAULT_REDIRECT;
+  if (next.startsWith("//") || next.startsWith("/\\")) return fallback;
   return next;
 }
 

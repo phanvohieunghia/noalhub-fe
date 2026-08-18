@@ -55,6 +55,38 @@ export const ERROR_CODES = {
   usernameChangeTooSoon: "USERNAME_CHANGE_TOO_SOON",
   passwordNotSet: "PASSWORD_NOT_SET",
   rateLimited: "RATE_LIMITED",
+  /**
+   * Đăng nhập hợp lệ nhưng không đủ quyền — mọi endpoint `/admin/*` trả 403 cho
+   * user thường. KHÁC `unauthenticated`: refresh token không cứu được, nên
+   * `client.ts` không đụng tới nó.
+   *
+   * ⚠️ Chưa đối chiếu được với `/docs-json` (backend chưa chạy lúc viết). Vì vậy
+   * `isForbidden()` dưới đây switch trên **status 403** trước, mã chỉ là lớp
+   * phụ — nếu backend đặt tên khác thì UI vẫn đúng.
+   */
+  forbidden: "FORBIDDEN",
   oauthProviderUnsupported: "OAUTH_PROVIDER_UNSUPPORTED",
   oauthAccountLinkForbidden: "OAUTH_ACCOUNT_LINK_FORBIDDEN",
 } as const;
+
+/**
+ * 403 = đủ phiên nhưng không đủ quyền. Dùng ở admin để phân biệt với 401
+ * (`client.ts` tự refresh) và với lỗi nghiệp vụ thường.
+ *
+ * Kiểm `status` trước `code` là cố ý: status do HTTP quy định nên ổn định hơn
+ * tên mã, và mã 403 của backend chưa đối chiếu được với spec.
+ */
+export function isForbidden(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    (error.status === 403 || error.code === ERROR_CODES.forbidden)
+  );
+}
+
+/** 429 — cả ba endpoint admin đều khai. Tách ra để UI khỏi so chuỗi rải rác. */
+export function isRateLimited(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    (error.status === 429 || error.code === ERROR_CODES.rateLimited)
+  );
+}

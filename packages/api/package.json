@@ -9,6 +9,7 @@
   "exports": {
     "./config": "./src/config.ts",
     "./errors": "./src/errors.ts",
+    "./admin": "./src/admin/index.ts",
     "./auth": "./src/auth/index.ts",
     "./chat": "./src/chat/index.ts",
     "./friends": "./src/friends/index.ts",
