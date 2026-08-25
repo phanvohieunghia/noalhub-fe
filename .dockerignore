@@ -1,0 +1,26 @@
+# Build image bằng context = GỐC REPO (pnpm workspace cần lockfile + toàn bộ
+# packages/*), nên file này gánh việc cắt bớt cho cả hai app.
+node_modules
+**/node_modules
+.next
+**/.next
+.turbo
+**/.turbo
+.git
+.gitignore
+docs
+*.log
+
+# `NEXT_PUBLIC_*` đi vào image qua build-arg của CI, không nướng file env vào
+# context — nếu để lọt, `next build` sẽ đọc .env.local của máy dev và ghi đè
+# build-arg, tức là image production trỏ về localhost mà không báo lỗi gì.
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+.DS_Store
+.idea
+.vscode

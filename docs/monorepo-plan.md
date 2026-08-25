@@ -232,6 +232,7 @@ diverge. Chỉ nên làm khi 2 sản phẩm đã thực sự khác contract.
    `transpilePackages` + provider React Query giống web, dựng route `/login` +
    `/dashboard` để verify end-to-end với `@noalhub/api`.
 7. **CI/nginx**: 2 job build, 2 server block, thêm origin admin vào CORS backend.
+   ⚠️ **Bước này chưa làm** — xem "Còn lại cho bạn quyết định" ngay dưới.
 
 Ngoài bảy bước trên, phần cưỡng chế ranh giới ở §4 cũng đã dựng:
 `packages/config/eslint.boundaries.mjs` cấm import thẳng vào `@noalhub/*/src/*` (phải qua

@@ -4,6 +4,19 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /**
+   * Docker: `standalone` cho ra `.next/standalone` — bản sao đã trace sẵn của
+   * server + đúng những file `node_modules` thực sự cần, nên image runtime
+   * không phải chạy `pnpm install` lần nữa.
+   *
+   * `outputFileTracingRoot` là BẮT BUỘC trong monorepo: mặc định Next trace từ
+   * thư mục app, mà `packages/*` nằm ngoài đó và pnpm còn symlink chúng vào
+   * `node_modules` — không ghim root lên gốc repo thì standalone thiếu file và
+   * container chết lúc khởi động chứ không phải lúc build.
+   */
+  output: "standalone",
+  outputFileTracingRoot: path.join(process.cwd(), "..", ".."),
+
+  /**
    * Package nội bộ được export dưới dạng TS THÔ (`./src/*.ts`), không build ra
    * `dist/`. Next phải tự compile chúng bằng SWC của app — đó là việc mà
    * `transpilePackages` bật lên. Đổi lại: sửa file trong `packages/` là HMR ăn
