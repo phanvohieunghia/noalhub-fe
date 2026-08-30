@@ -139,6 +139,24 @@ jobs:
 
             docker logout ghcr.io
 
+            # BẮT BUỘC, và đây là lý do web/admin từng đổi chỗ cho nhau sau mỗi lần
+            # deploy: `proxy_pass http://web:3000` viết thẳng tên, không qua biến và
+            # không khai `resolver`, nên nginx phân giải tên đó MỘT LẦN lúc nạp config
+            # rồi cache IP vĩnh viễn. `up -d web admin` recreate hai container đó và
+            # Docker cấp IP mới, tái sử dụng luôn IP vừa được giải phóng — nhưng nginx
+            # không nằm trong danh sách recreate nên vẫn gửi request theo IP cũ đã đổi
+            # chủ. Kết quả: noalhub.duckdns.org trả ra app admin và ngược lại, trong
+            # khi file config hoàn toàn đúng.
+            #
+            # `reload` nạp lại config nên phân giải lại toàn bộ tên upstream. Vòng lặp
+            # `nginx -s reload` mỗi 6 giờ trong compose cũng tự chữa được, nhưng nó chỉ
+            # che lỗi sau vài tiếng chứ không sửa.
+            #
+            # `-T` vì phiên ssh này không có TTY. `nginx -t` trước để một config hỏng
+            # (do repo BE sửa) bị bắt ngay ở đây thay vì làm chết nginx lúc reload.
+            docker compose -f docker-compose.prod.yml exec -T nginx nginx -t
+            docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload
+
             # Xác nhận container ĐANG chạy đúng tag vừa build. Health check ở
             # bước sau chỉ gọi domain, mà container cũ còn sống thì vẫn trả 200 —
             # nó không phân biệt được "deploy xong" với "deploy không làm gì".
@@ -160,15 +178,29 @@ jobs:
         # Gọi từ ngoài internet, đi qua đúng đường nginx/TLS mà client thật dùng —
         # bắt được cả lỗi cert lẫn lỗi app, thứ mà healthcheck nội bộ không thấy.
         run: |
-          check() {
+          # Chờ tới khi URL trả về đúng mã mong đợi.
+          expect() {
+            url="$1"; want="$2"
             for i in $(seq 1 10); do
-              code=$(curl -sS -o /dev/null -w '%{http_code}' "$1" || true)
-              [ "$code" = "200" ] && echo "$1 OK" && return 0
-              echo "lần $i: $1 → $code, thử lại sau 6s"
+              code=$(curl -sS -o /dev/null -w '%{http_code}' "$url" || true)
+              [ "$code" = "$want" ] && echo "$url → $code OK" && return 0
+              echo "lần $i: $url → $code (mong đợi $want), thử lại sau 6s"
               sleep 6
             done
-            echo "$1 không trả 200 sau 60s — kiểm tra logs trên VPS"
+            echo "$url không trả $want sau 60s — kiểm tra logs trên VPS"
             return 1
           }
-          check https://noalhub.duckdns.org/
-          check https://admin-noalhub.duckdns.org/login
+
+          # Route sống được ngay:
+          expect https://noalhub.duckdns.org/ 200
+          expect https://admin-noalhub.duckdns.org/login 200
+
+          # Và ĐÚNG app đứng sau mỗi domain. Chỉ kiểm tra 200 là không đủ: khi nginx
+          # cache IP upstream cũ, hai domain đổi chỗ cho nhau mà CẢ HAI vẫn trả 200 —
+          # deploy xanh trong khi khách vào trang chủ thì thấy trang quản trị. Hai
+          # route dưới đây chỉ tồn tại ở đúng một app, nên cặp 200/404 khoá chặt danh
+          # tính. Sửa cấu trúc route thì phải sửa cả bốn dòng này.
+          expect https://noalhub.duckdns.org/dashboard 200        # chỉ có ở apps/web
+          expect https://noalhub.duckdns.org/overview 404         # chỉ có ở apps/admin
+          expect https://admin-noalhub.duckdns.org/overview 200
+          expect https://admin-noalhub.duckdns.org/dashboard 404
