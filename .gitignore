@@ -43,3 +43,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# worktree tạm của Claude Code. Bắt buộc phải ignore: thư mục worktree có file
+# `.git` bên trong nên `git add -A` ghi nó thành gitlink (mode 160000), mà file
+# đó chứa đường dẫn TUYỆT ĐỐI — đổi tên thư mục repo là mọi lệnh `git status`
+# fatal exit 128 và VSCode Source Control hiện rỗng. Đã dính một lần ở 8ba3451.
+.claude/worktrees/
