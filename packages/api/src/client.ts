@@ -67,7 +67,10 @@ let refreshPromise: Promise<AuthTokens> | null = null;
 function refreshTokens(): Promise<AuthTokens> {
   if (refreshPromise) return refreshPromise;
 
-  refreshPromise = (async () => {
+  refreshPromise = withRefreshLock(async () => {
+    // ĐỌC LẠI storage SAU khi đã giành được khoá. Nếu một tab khác vừa xoay vòng
+    // trong lúc ta xếp hàng, token trong biến đọc trước khi khoá đã chết rồi —
+    // trình nó ra là tự tố cáo mình replay.
     const refreshToken = tokenStore.getRefresh();
     if (!refreshToken) {
       throw new ApiError(401, {
@@ -81,7 +84,7 @@ function refreshTokens(): Promise<AuthTokens> {
     const tokens = tokenPairSchema.parse(data);
     tokenStore.setTokens(tokens);
     return tokens;
-  })();
+  });
 
   refreshPromise
     .catch(() => {})
@@ -90,6 +93,29 @@ function refreshTokens(): Promise<AuthTokens> {
     });
 
   return refreshPromise;
+}
+
+/**
+ * Khoá liên tab quanh một lượt xoay vòng.
+ *
+ * `refreshPromise` ở trên chỉ chống được nhiều request TRONG CÙNG một tab. Nhưng
+ * access token chỉ nằm trong memory, nên **mỗi tab reload đều bắt buộc xoay vòng
+ * một lần** — hai tab cùng origin cùng F5 là hai lần xoay vòng song song trên cùng
+ * một refresh token. Backend khoá dòng DB nên chúng bị xếp hàng chứ không đua:
+ * tab thứ nhất xoay vòng thành công, tab thứ hai trình đúng token vừa bị thu hồi.
+ * Đó không phải race hiếm gặp mà là kết cục CHẮC CHẮN, và trước khi có cửa sổ ân
+ * hạn ở backend thì nó thu hồi cả family — đăng xuất vĩnh viễn.
+ *
+ * Web Locks API giữ khoá theo origin và tự nhả khi tab chết, kể cả khi tab bị đóng
+ * giữa chừng — thứ mà một cờ trong localStorage không làm được (tab chết là cờ kẹt
+ * lại mãi). Trình duyệt nào không có nó thì chạy thẳng: mất phần chống đa tab,
+ * nhưng vẫn còn cửa sổ ân hạn của backend đỡ.
+ */
+function withRefreshLock<T>(run: () => Promise<T>): Promise<T> {
+  const locks = globalThis.navigator?.locks;
+  if (!locks) return run();
+  // Cast: kiểu của `request` suy ra T = Promise<AuthTokens> nên lồng thêm một lớp.
+  return locks.request("noalhub.auth.refresh", run) as Promise<T>;
 }
 
 /**
