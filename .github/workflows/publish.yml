@@ -99,12 +99,18 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT || 22 }}
-          # BẮT BUỘC. Không có nó, ssh-action nuốt exit code của script: `cd` sai
-          # đường dẫn thì các lệnh sau vẫn chạy tiếp trong $HOME, compose không
-          # thấy file nên không deploy gì, mà job vẫn xanh. Đúng kịch bản đã làm
-          # bản FE đứng im nhiều ngày trong khi Actions báo thành công.
-          script_stop: true
           script: |
+            # BẮT BUỘC. Không có nó, ssh-action nuốt exit code: `cd` sai đường dẫn
+            # thì các lệnh sau vẫn chạy tiếp trong $HOME, compose không thấy file
+            # nên không deploy gì, mà job vẫn xanh vì lệnh CUỐI cùng thoát 0 —
+            # đúng kịch bản đã làm bản FE đứng im nhiều ngày.
+            #
+            # Dùng `set -e` chứ KHÔNG dùng input `script_stop` của ssh-action:
+            # `script_stop` chèn một đoạn kiểm tra `$?` vào sau TỪNG DÒNG, nên nó
+            # cắt đôi mọi khối nhiều dòng (`if`, `for`, `case`) ở dưới và bash chết
+            # ngay lúc parse: syntax error near unexpected token `;'.
+            set -e
+
             cd ${{ secrets.DEPLOY_PATH }}
             # Chốt chặn thứ hai: `cd` có thể thành công vào một thư mục đúng tên
             # nhưng rỗng (VPS cài lại, mount chưa gắn).
