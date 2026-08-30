@@ -99,9 +99,16 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT || 22 }}
-          # Mặc định `sh -e`: một lệnh fail là cả script dừng và job đỏ.
+          # BẮT BUỘC. Không có nó, ssh-action nuốt exit code của script: `cd` sai
+          # đường dẫn thì các lệnh sau vẫn chạy tiếp trong $HOME, compose không
+          # thấy file nên không deploy gì, mà job vẫn xanh. Đúng kịch bản đã làm
+          # bản FE đứng im nhiều ngày trong khi Actions báo thành công.
+          script_stop: true
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
+            # Chốt chặn thứ hai: `cd` có thể thành công vào một thư mục đúng tên
+            # nhưng rỗng (VPS cài lại, mount chưa gắn).
+            test -f docker-compose.prod.yml
 
             # Ghim đúng commit vừa build. Tag này khớp `type=sha,format=long`.
             TAG=sha-${{ github.sha }}
@@ -125,6 +132,20 @@ jobs:
             docker compose -f docker-compose.prod.yml up -d web admin
 
             docker logout ghcr.io
+
+            # Xác nhận container ĐANG chạy đúng tag vừa build. Health check ở
+            # bước sau chỉ gọi domain, mà container cũ còn sống thì vẫn trả 200 —
+            # nó không phân biệt được "deploy xong" với "deploy không làm gì".
+            for svc in web admin; do
+              cid=$(docker compose -f docker-compose.prod.yml ps -q "$svc")
+              [ -n "$cid" ] || { echo "$svc không có container nào đang chạy"; exit 1; }
+              img=$(docker inspect -f '{{.Config.Image}}' "$cid")
+              case "$img" in
+                *:"$TAG") echo "$svc → $img OK" ;;
+                *) echo "$svc đang chạy $img, mong đợi tag $TAG"; exit 1 ;;
+              esac
+            done
+
             # Image cũ tích lại mỗi lần deploy và VPS nhỏ hết đĩa rất nhanh. `-f`
             # chỉ xóa image không container nào tham chiếu.
             docker image prune -f
