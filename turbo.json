@@ -21,8 +21,7 @@
       "cache": false,
       "persistent": true,
       "passThroughEnv": [
-        "WEB_PORT",
-        "ADMIN_PORT"
+        "PORT"
       ]
     },
     "lint": {},

@@ -15,7 +15,7 @@ và `apps/admin` — dùng chung tầng dữ liệu, helper và UI trong `packag
 pnpm install
 cp apps/web/.env.example apps/web/.env.local       # sửa nếu backend không ở localhost:3101
 cp apps/admin/.env.example apps/admin/.env.local
-pnpm dev                                          # web :3000 + admin :3002 song song
+pnpm dev                                          # port lấy từ `PORT` trong .env.local mỗi app
 ```
 
 Mỗi app có `.env.local` RIÊNG. `NEXT_PUBLIC_*` bị inline lúc `next build`, nên hai app
@@ -25,7 +25,7 @@ Cần backend chạy song song ở `http://localhost:3101` (OpenAPI: `/docs`, JS
 
 | Script (chạy ở root) | Việc |
 |---|---|
-| `pnpm dev` | Dev server cả hai app: web `:3000`, admin `:3002` |
+| `pnpm dev` | Dev server cả hai app, mỗi app nghe port `PORT` trong `.env.local` của nó |
 | `pnpm dev:web` / `pnpm dev:admin` | Chỉ một app |
 | `pnpm build` | Build cả hai → `apps/web/.next` và `apps/admin/.next`, hai artifact tách rời |
 | `pnpm build:web` / `pnpm build:admin` | Chỉ build một app và các package nó phụ thuộc |
@@ -36,24 +36,40 @@ Chạy bản build: `pnpm --filter @noalhub/web start` (hoặc `@noalhub/admin`)
 
 ### Đổi port
 
-Mặc định web `3000`, admin `3002`, khai trong `apps/*/package.json`:
-
-```json
-"dev": "next dev -p ${WEB_PORT:-3000}"
-```
-
-Đổi tạm một lần bằng biến của shell:
+Port nằm trong `.env.local` của **từng app** — `apps/web/.env.local` và
+`apps/admin/.env.local`, mỗi file một dòng:
 
 ```bash
-WEB_PORT=4100 ADMIN_PORT=4102 pnpm dev
+# apps/web/.env.local
+PORT=3100
+# apps/admin/.env.local
+PORT=3002
 ```
 
-Đổi hẳn thì sửa số mặc định trong `package.json` của app đó.
+Next **không** tự đọc `PORT` từ `.env`: nó bind HTTP server trước khi env file được load
+(docs `next.md` §CLI). Nên script `dev`/`start` gọi qua một loader nạp file trước:
 
-Port **không** đặt trong `.env`: Next bind HTTP server trước khi load env file nên nó
-không đọc được (docs `next.md` §CLI), và `.env` là chỗ cho giá trị mà code của app đọc,
-còn port thì chỉ CLI dùng. Tên biến cũng không phải `PORT` — một biến `PORT` ở shell sẽ
-trúng cả hai app cùng lúc khi chạy `pnpm dev` ở root.
+```json
+"dev": "node ../../scripts/next-with-env.mjs dev"
+```
+
+Không dùng cờ `--env-file-if-exists` của Node cho việc này: `next dev` spawn worker và
+truyền `execArgv` của process cha qua `NODE_OPTIONS`, mà `--env-file*` không được phép
+nằm trong `NODE_OPTIONS` → worker chết ngay với exit code 9. `scripts/next-with-env.mjs`
+tự đọc file rồi `import` next bin in-process nên `NODE_OPTIONS` vẫn sạch.
+
+Thứ tự `.env` → `.env.local` (file sau đè file trước), và **biến của shell đè cả hai**,
+nên vẫn đổi tạm một lần được:
+
+```bash
+PORT=4100 pnpm dev:web
+```
+
+Thiếu file cũng không chết: loader bỏ qua file không tồn tại — lúc đó Next lấy mặc định
+`3000`, và hai app sẽ đá nhau khi `pnpm dev` ở root. Vì vậy `PORT` có sẵn trong cả hai
+`.env.example`; `cp` xong là mỗi app đã có port riêng.
+
+Đừng đặt `PORT` ở shell rồi chạy `pnpm dev` ở gốc: nó đè cả hai app cùng lúc.
 
 > Next 16 chỉ cho **một** dev server trên mỗi thư mục app, và khoá này tính theo thư mục
 > **chứ không theo port**: còn một `next dev` cũ của `apps/web` sống thì đổi port vẫn bị
