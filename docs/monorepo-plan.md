@@ -120,6 +120,20 @@ Hai thứ phát sinh khi chạy thật, cả hai đã được xử lý và ghi 
   class chỉ xuất hiện trong `packages/ui` bị loại khỏi bundle — **hỏng ở production nhưng
   vẫn đúng ở dev**. Mỗi `globals.css` khai `@source "../../../packages/ui/src"`.
 
+**Thêm một package mới vào `packages/` thì phải sửa BỐN chỗ**, và ba trong số đó chỉ nổ ở
+production:
+
+1. `transpilePackages` của **cả hai** `next.config.ts` — thiếu thì build chết ngay ở dòng
+   `import type` đầu tiên (đây là chỗ duy nhất hỏng sớm).
+2. `COPY packages/<tên>/package.json` trong **cả hai** Dockerfile. Danh sách ở đó là cứng,
+   không phải glob. Thiếu thì `pnpm install` không coi nó là workspace project, nên
+   `packages/<tên>/node_modules` không tồn tại — mà app vẫn import được nó (symlink từ
+   lockfile trỏ tới thư mục có thật sau `COPY . .`). Kết quả: `next build` trong Docker báo
+   `Module not found` cho những dependency hoàn toàn bình thường **của chính package đó**,
+   trong khi build ở máy dev xanh. Đã vấp thật với `@noalhub/i18n`.
+3. `@source` trong `globals.css` nếu package có class Tailwind.
+4. `pnpm-lock.yaml` phải được commit — CI chạy `--frozen-lockfile`.
+
 `apps/web/next.config.ts` và `apps/admin/next.config.ts`:
 ```ts
 const nextConfig: NextConfig = {

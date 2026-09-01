@@ -20,11 +20,17 @@ WORKDIR /repo
 FROM base AS build
 
 # Manifest trước, source sau: sửa code thì layer `pnpm install` vẫn được cache.
+#
+# ⚠️ Danh sách này phải liệt kê **mọi** package trong workspace. Thiếu một cái
+# thì `pnpm install` không tạo `node_modules` cho nó, và lỗi chỉ nổ ở bước
+# `next build` sau đó — dưới dạng `Module not found` cho những dependency hoàn
+# toàn bình thường (`next-intl`, `@noalhub/api/…`), rất dễ đi tìm nhầm chỗ.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/web/package.json ./apps/web/
 COPY apps/admin/package.json ./apps/admin/
 COPY packages/api/package.json ./packages/api/
 COPY packages/core/package.json ./packages/core/
+COPY packages/i18n/package.json ./packages/i18n/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/config/package.json ./packages/config/
 RUN pnpm install --frozen-lockfile
