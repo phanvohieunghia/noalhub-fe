@@ -9,7 +9,7 @@
 
 # Debian slim, khớp với image của backend. Alpine (musl) sẽ kéo theo chuyện phải
 # chọn đúng biến thể prebuilt của sharp — không đáng để đổi lấy vài chục MB.
-FROM node:22-bookworm-slim AS base
+FROM node:24-bookworm-slim AS base
 # Corepack lấy pnpm theo trường `packageManager` ở package.json gốc. Thiếu biến
 # này thì corepack hỏi xác nhận và CI (không TTY) treo.
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
