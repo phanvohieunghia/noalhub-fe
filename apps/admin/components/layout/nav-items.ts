@@ -17,6 +17,7 @@ export type NavItem = {
 export const NAV_ITEMS: NavItem[] = [
   { href: "/overview", label: "Tổng quan" },
   { href: "/users", label: "Người dùng" },
+  { href: "/posts", label: "Bài viết" },
   {
     href: "/conversations",
     label: "Hội thoại",
@@ -30,3 +31,17 @@ export const NAV_ITEMS: NavItem[] = [
     reason: "Chờ backend: chưa có luồng report (admin-plan §3.1)",
   },
 ];
+
+/**
+ * Nhãn cho segment KHÔNG phải mục nav — breadcrumb dùng làm lớp tra thứ hai,
+ * trước khi rơi về "Chi tiết".
+ *
+ * `/posts/categories` là ví dụ đúng của loại này: nó cố tình không lên sidebar
+ * (màn hình dùng vài lần một năm, vào từ trong `/posts` — `docs/blog-plan.md`
+ * §7.1), nhưng để breadcrumb hiện "Chi tiết" thì đọc như một trang bài viết nào
+ * đó, sai hẳn nghĩa.
+ */
+export const SEGMENT_LABELS: Record<string, string> = {
+  categories: "Chuyên mục",
+  new: "Bài mới",
+};

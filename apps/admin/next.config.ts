@@ -1,5 +1,9 @@
 import path from "node:path";
 
+import {
+  BLOG_IMAGE_ALLOW_LOCAL_IP,
+  blogImageRemotePatterns,
+} from "@noalhub/config/blog-image-hosts.mjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -26,6 +30,33 @@ const nextConfig: NextConfig = {
    * chết với lỗi cú pháp ngay ở dòng `import type` đầu tiên.
    */
   transpilePackages: ["@noalhub/api", "@noalhub/core", "@noalhub/ui"],
+
+  /**
+   * Admin cũng cần block này, dù nó không phải trang công khai: tab **Xem
+   * trước** của editor render bằng ĐÚNG `@noalhub/ui/blog/post-content`, và
+   * renderer đó dùng `next/image`. Không khai host ở đây thì preview trả 400
+   * cho mọi ảnh — ở production, trong khi `next dev` vẫn hiện bình thường vì
+   * dev không tối ưu ảnh.
+   *
+   * Dùng chung nguồn với `apps/web/next.config.ts` và với `isSafeImageSrc`
+   * (`packages/api/src/blog/schemas.ts`): `@noalhub/config/blog-image-hosts.mjs`.
+   * File đó là JS thuần vì config được nạp trước `transpilePackages`.
+   *
+   * `dangerouslyAllowSVG` + `contentDispositionType`: lý do đầy đủ ở
+   * `apps/web/next.config.ts` — ba lớp bảo vệ nằm ngoài cờ này.
+   */
+  images: {
+    remotePatterns: [...blogImageRemotePatterns],
+
+    /**
+     * Chỉ bật ngoài production — xem `BLOG_IMAGE_ALLOW_LOCAL_IP`. Không có nó
+     * thì ảnh từ MinIO local (`http://localhost:9000`) bị chặn ở lớp chống SSRF
+     * chứ không phải ở allowlist, và lỗi trả về trông y hệt lỗi allowlist.
+     */
+    dangerouslyAllowLocalIP: BLOG_IMAGE_ALLOW_LOCAL_IP,
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+  },
 
   turbopack: {
     /**

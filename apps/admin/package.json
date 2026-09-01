@@ -10,11 +10,20 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/modifiers": "^9.0.0",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.4.2",
     "@noalhub/api": "workspace:*",
+    "@noalhub/config": "workspace:*",
     "@noalhub/core": "workspace:*",
     "@noalhub/ui": "workspace:*",
     "@tanstack/react-query": "^5.101.4",
+    "@tiptap/extension-image": "^3.30.5",
+    "@tiptap/pm": "^3.30.5",
+    "@tiptap/react": "^3.30.5",
+    "@tiptap/starter-kit": "^3.30.5",
     "next": "16.2.11",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -22,7 +31,6 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@noalhub/config": "workspace:*",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

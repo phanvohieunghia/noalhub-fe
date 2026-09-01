@@ -67,6 +67,38 @@ export const ERROR_CODES = {
   forbidden: "FORBIDDEN",
   oauthProviderUnsupported: "OAUTH_PROVIDER_UNSUPPORTED",
   oauthAccountLinkForbidden: "OAUTH_ACCOUNT_LINK_FORBIDDEN",
+
+  /**
+   * Mã của feature `blog` (`docs/blog-plan.md` §2.3).
+   *
+   * Bảy mã dưới đây đã khớp `src/common/errors/error-codes.ts` bên repo
+   * `noalhub-be` và đều có e2e bắn ra thật.
+   */
+  postNotFound: "POST_NOT_FOUND",
+  slugTaken: "SLUG_TAKEN",
+  /** `version` gửi lên đã cũ — hai tab ghi đè nhau (§7.3). */
+  postConflict: "POST_CONFLICT",
+  /** Thiếu field bắt buộc lúc publish, gồm cả **thiếu chuyên mục** (§2.6). */
+  postNotPublishable: "POST_NOT_PUBLISHABLE",
+  categoryNotFound: "CATEGORY_NOT_FOUND",
+  categorySlugTaken: "CATEGORY_SLUG_TAKEN",
+  /** Xoá chuyên mục còn bài — 409, kèm số bài trong `message` (§2.2). */
+  categoryNotEmpty: "CATEGORY_NOT_EMPTY",
+
+  /**
+   * Mã của feature `media` (`docs/media.md` §5 bên `noalhub-be`).
+   *
+   * Lưu ý: **không có mã nào cho nhịp 2** (browser PUT thẳng lên storage).
+   * Storage trả XML của S3, không trả `ErrorResponseDto` — lỗi nhịp đó là
+   * `StorageUploadError` của `@noalhub/api/media`, không phải `ApiError`.
+   */
+  mediaMimeNotAllowed: "MEDIA_MIME_NOT_ALLOWED",
+  mediaTooLarge: "MEDIA_TOO_LARGE",
+  mediaAssetNotFound: "MEDIA_ASSET_NOT_FOUND",
+  /** `HeadObject` không thấy object: PUT chưa chạy hoặc hỏng giữa chừng. */
+  mediaNotUploaded: "MEDIA_NOT_UPLOADED",
+  /** Magic bytes không khớp mime đã khai, hoặc SVG không parse được. */
+  mediaContentMismatch: "MEDIA_CONTENT_MISMATCH",
 } as const;
 
 /**
@@ -89,4 +121,13 @@ export function isRateLimited(error: unknown): boolean {
     error instanceof ApiError &&
     (error.status === 429 || error.code === ERROR_CODES.rateLimited)
   );
+}
+
+/**
+ * Xung đột ghi đè ở editor blog: hai tab cùng sửa một bài, tab thứ hai gửi
+ * `version` đã cũ (§7.3). Tách hàm vì UI phải phản ứng khác hẳn lỗi 409 khác —
+ * không phải báo lỗi rồi thôi, mà phải mời tải lại bản trên server.
+ */
+export function isPostConflict(error: unknown): boolean {
+  return error instanceof ApiError && error.code === ERROR_CODES.postConflict;
 }

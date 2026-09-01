@@ -2,5 +2,10 @@
   "name": "@noalhub/config",
   "version": "0.0.0",
   "private": true,
-  "files": ["tsconfig.base.json"]
+  "files": [
+    "tsconfig.base.json",
+    "eslint.boundaries.mjs",
+    "blog-image-hosts.mjs",
+    "blog-image-hosts.d.mts"
+  ]
 }

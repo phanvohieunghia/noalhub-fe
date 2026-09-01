@@ -5,7 +5,7 @@
 | **Status** | Bắt buộc áp dụng cho **mọi feature mới**. Đang được `auth`, `chat`, `friends`, `users` tuân thủ |
 | **Ngày** | 2026-07-25 (rà lại theo code: 2026-08-17 · chuyển sang monorepo: 2026-08-17) |
 | **Phạm vi** | Cách định nghĩa kiểu dữ liệu, hàm gọi API, và React Query hooks |
-| **Liên quan** | [`docs/auth.md`](./auth.md) — feature mẫu, theo đủ convention này · [`docs/chat.md`](./chat.md) — feature duy nhất có ngoại lệ (đường ghi qua socket, xem §6) |
+| **Liên quan** | [`docs/auth.md`](./auth.md) — feature mẫu, theo đủ convention này · [`docs/chat.md`](./chat.md) — ngoại lệ đường **ghi** (qua socket, §6) · [`docs/blog-plan.md`](./blog-plan.md) — ngoại lệ đường **đọc** (server-only, §7) |
 | **Contract** | OpenAPI spec: `http://localhost:3101/docs` (JSON: `/docs-json`) |
 
 ---
@@ -36,7 +36,7 @@ packages/api/src/
     index.ts                ← barrel: CHỈ export hooks + types + schemas
 ```
 
-Bốn feature hiện có: `auth`, `users`, `friends`, `chat`. Riêng `chat` có thêm
+Feature hiện có: `auth`, `users`, `friends`, `chat`, `admin`, `blog`, `media`. Riêng `chat` có thêm
 `socket.ts` — biên cô lập cho Socket.IO, cùng tầng với `api.ts` (xem `docs/chat.md` §2).
 
 Ngoài ra package này giữ luôn các **store thuộc tầng dữ liệu** — `auth/store.ts`,
@@ -57,7 +57,8 @@ cung cấp, package không tự có `.env` (xem `docs/monorepo-plan.md` §2).
 | **Components** | `apps/<app>/components/**` · `packages/ui/src/**` | Render + gọi hook | **Không được import `api.ts` hay `client.ts`** |
 
 Luật cuối cùng giờ **không còn là quy ước mà là ranh giới package**: `packages/api/package.json`
-chỉ khai `exports` cho `./config`, `./errors`, và bốn barrel `./auth ./chat ./friends ./users`.
+chỉ khai `exports` cho `./config`, `./errors`, và một barrel cho mỗi feature
+(`./admin ./auth ./blog ./blog/server ./chat ./friends ./media ./users`).
 `api.ts` và `client.ts` không có đường vào — viết `@noalhub/api/auth/api` là lỗi resolve
 ngay lúc build, không đợi ai review bắt.
 
@@ -437,7 +438,7 @@ Mọi lỗi từ tầng api là `ApiError` (`packages/api/src/errors.ts` — con
 
 | Không dùng | Lý do |
 |---|---|
-| SSR prefetch / `HydrationBoundary` | Token nằm ở client (`docs/auth.md` §1.2) — server không đọc được, không fetch hộ được |
+| SSR prefetch / `HydrationBoundary` | Token nằm ở client (`docs/auth.md` §1.2) — server không đọc được, không fetch hộ được. **Chỉ đúng với dữ liệu cần token**; nội dung công khai thì ngược lại — xem §7 |
 | `useSuspenseQuery` | Cần streaming SSR để phát huy; với client-only fetch thì chỉ làm khó xử lý lỗi |
 | Optimistic update mặc định | Chỉ thêm khi UX thực sự cần. Ngoại lệ duy nhất đang có: gửi tin nhắn (`docs/chat.md` §5.5) — mặc định vẫn là invalidate cho đúng |
 | Gọi `fetch`/`axios` thẳng, ngoài `packages/api/src/<feature>/api.ts` | Mất refresh token, mất validate, mất chuẩn hoá lỗi |
@@ -446,3 +447,68 @@ Mọi lỗi từ tầng api là `ApiError` (`packages/api/src/errors.ts` — con
 qua `api.ts`, và giữ state phù du (typing, presence) trong `packages/api/src/chat/ephemeral-store.ts`
 thay vì React Query. Cả hai đều có lý do chép trong `docs/chat.md` §1.3 — đừng
 nhân bản sang feature khác nếu không có ràng buộc tương tự từ backend.
+
+Ngoại lệ thứ hai — feature `blog` **đọc** ở server, không qua React Query — có riêng §7.
+
+---
+
+## 7. Ngoại lệ `blog` — đường đọc server-only, vì SEO
+
+`blog` là feature đầu tiên có nội dung **công khai, không cần token**. Nó không đi qua
+`hooks.ts` ở trang public, và đó không phải tối ưu hoá — với SEO thì render ở server là
+**bắt buộc**:
+
+- Fetch ở client nghĩa là HTML đầu tiên rỗng; Googlebot phải chạy JS ở lượt render thứ hai
+  mới thấy chữ — chậm và không đảm bảo.
+- `generateMetadata` chạy **trước** khi render, ở server. Không có dữ liệu ở đó thì không
+  sinh được `<title>`, `description`, canonical, OG — tức là không có SEO, chấm hết.
+- JSON-LD (`BlogPosting`) cũng phải nằm trong HTML đầu tiên.
+
+Lý do §6 cấm SSR prefetch là **token nằm ở client**. Bài viết công khai không có token, nên
+lý do đó không áp dụng. Ranh giới: **chỉ dữ liệu không cần auth mới được đi đường này.**
+
+### 7.1 Tầng thứ tư: `server.ts`
+
+Song song với `api.ts`, **không thay** nó:
+
+```
+packages/api/src/blog/
+  types.ts  schemas.ts     ← dùng chung cả hai đường
+  api.ts    hooks.ts       ← đường CLIENT (axios + Bearer)  → apps/admin
+  server.ts                ← đường SERVER (fetch, không token) → apps/web
+  index.ts                 ← barrel như cũ: hooks + types + schemas
+```
+
+`packages/api/package.json` khai thêm `"./blog"` và `"./blog/server"`. `server.ts` là export
+riêng chứ không nằm trong barrel — trộn vào là kéo `server-only` vào mọi client component
+import `@noalhub/api/blog`.
+
+Bốn ràng buộc của `server.ts`, cả bốn đều là lý do kỹ thuật:
+
+1. **`import "server-only"` ở dòng đầu.** Lỡ import từ client component thì lỗi lúc build,
+   không đợi tới lúc chạy.
+2. **`fetch` thuần, KHÔNG dùng `http` (axios) của `client.ts`.** Next chỉ cắm cache/ISR vào
+   `fetch` của chính nó; đi qua axios là mất sạch `next: { revalidate, tags }` — trang fetch
+   lại mỗi request, ISR thành vô nghĩa mà build vẫn xanh nên rất khó phát hiện. Thêm nữa
+   `client.ts` kéo theo token-store (zustand, `localStorage`) — thứ không tồn tại trên server.
+3. **Vẫn `schema.parse` như tầng api.** Mất response interceptor thì phải tự validate; không
+   thì backend đổi shape sẽ làm hỏng trang public mà không ai biết.
+4. **Không `authRequired`, không refresh, không `ApiError` từ interceptor.** 404 phải nhận
+   được ở dạng phân biệt được để route gọi `notFound()` — trang 200 kèm chữ "không tìm thấy"
+   bị Google index như nội dung mỏng.
+
+### 7.2 Base URL khi fetch ở server
+
+`NEXT_PUBLIC_API_BASE_URL` bị inline lúc build và trỏ ra domain công khai. Container Next
+dùng chính nó để fetch ở server thì request đi ra internet, vòng qua nginx rồi quay lại cùng
+máy. `server.ts` đọc `process.env.API_INTERNAL_URL ?? API_BASE_URL` — biến **runtime**, không
+`NEXT_PUBLIC_`. Chi tiết triển khai và thay đổi kéo theo ở compose: `docs/blog-plan.md` §4.3.
+
+### 7.3 Ai dùng đường nào
+
+| Chỗ | Đường | Vì sao |
+|---|---|---|
+| `apps/web` trang blog công khai | `@noalhub/api/blog/server` trong Server Component | SEO — HTML đầu tiên phải có nội dung |
+| `apps/admin` editor, bảng bài viết | `@noalhub/api/blog` (hooks) như mọi feature khác | Cần token, cần cache/invalidate/mutation. Không có SEO ở đây (admin `disallow: /`) |
+
+Đừng bê ngoại lệ này sang feature có token: `chat`, `friends`, `users` vẫn theo §1–§5.

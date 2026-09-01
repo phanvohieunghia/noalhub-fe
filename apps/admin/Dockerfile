@@ -29,13 +29,16 @@ COPY . .
 
 # `NEXT_PUBLIC_*` bị INLINE vào bundle lúc `next build`, không đọc lúc chạy. Nên
 # chúng phải là build-arg, và đổi API origin = build lại image, không phải restart
-# container. Admin không có `NEXT_PUBLIC_APP_URL` (không dùng deep link), cũng
-# không dùng chat — `NEXT_PUBLIC_WS_URL` giữ lại chỉ vì `@noalhub/api/chat` nằm
-# trong package dùng chung.
+# container. Admin không dùng chat và không dựng URL tuyệt đối của web, nhưng vẫn
+# nhận đủ ba biến: `@noalhub/api/chat` và `@noalhub/core/blog/seo` nằm trong
+# package dùng chung nên cả hai app cùng đi qua chúng, và một build-arg không được
+# khai ở đây thì docker chỉ cảnh báo "unused" rồi biến rơi mất im lặng.
 ARG NEXT_PUBLIC_API_BASE_URL
 ARG NEXT_PUBLIC_WS_URL
+ARG NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL \
     NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL \
+    NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
     NEXT_TELEMETRY_DISABLED=1
 
 # `--filter=@noalhub/admin...` (ba chấm) = admin + các package nó phụ thuộc. Web

@@ -11,13 +11,22 @@ const RAW_API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3101";
 
 /**
- * Chuẩn hoá về ORIGIN thuần: cắt dấu `/` cuối và cắt cả hậu tố `/api` nếu env
- * đã kèm sẵn. Nhờ vậy `http://localhost:3101` và `http://localhost:3101/api`
- * đều cho ra một kết quả — env viết kiểu nào cũng không thành `/api/api`.
+ * Chuẩn hoá về ORIGIN thuần rồi gắn lại `/api`: cắt dấu `/` cuối và cắt cả hậu
+ * tố `/api` nếu env đã kèm sẵn. Nhờ vậy `http://localhost:3101` và
+ * `http://localhost:3101/api` đều cho ra một kết quả — env viết kiểu nào cũng
+ * không thành `/api/api`.
+ *
+ * Tách thành hàm vì `blog/server.ts` phải chuẩn hoá **một origin khác**:
+ * `API_INTERNAL_URL` (biến runtime trỏ vào docker network, xem
+ * `docs/blog-plan.md` §4.3). Hai chỗ cùng một luật thì phải cùng một hàm.
  */
+export function apiBaseUrlFrom(rawOrigin: string): string {
+  return `${rawOrigin.replace(/\/+$/, "").replace(/\/api$/, "")}/api`;
+}
+
 const API_ORIGIN = RAW_API_BASE_URL.replace(/\/+$/, "").replace(/\/api$/, "");
 
-export const API_BASE_URL = `${API_ORIGIN}/api`;
+export const API_BASE_URL = apiBaseUrlFrom(RAW_API_BASE_URL);
 
 /**
  * Socket.IO nối vào ORIGIN, không phải vào `/api`: handshake của nó đi qua
