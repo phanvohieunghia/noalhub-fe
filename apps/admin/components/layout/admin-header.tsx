@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -12,8 +13,10 @@ import { ThemeToggle } from "@noalhub/ui/theme/theme-toggle";
 import { Typography } from "@noalhub/ui/typography";
 
 import { AdminBreadcrumb } from "./admin-breadcrumb";
+import { AdminLanguageSwitcher } from "./language-switcher";
 
 export function AdminHeader() {
+  const t = useTranslations("nav");
   const me = useMe();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -43,7 +46,7 @@ export function AdminHeader() {
               variant="ghost"
               size="icon-sm"
               shape="circle"
-              aria-label="Tài khoản"
+              aria-label={t("account")}
               className="size-8 hover:bg-transparent hover:opacity-80"
             >
               <Avatar name={name} src={user?.avatarUrl} size="sm" />
@@ -62,18 +65,25 @@ export function AdminHeader() {
             </div>
           </div>
           <Typography variant="body-4" className="mt-2 opacity-70">
-            Vai trò: {user?.role}
+            {t("role", { role: user?.role ?? "—" })}
           </Typography>
 
           <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3">
             <Typography variant="body-4" className="opacity-70">
-              Giao diện
+              {t("appearance")}
             </Typography>
             <ThemeToggle />
           </div>
 
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <Typography variant="body-4" className="opacity-70">
+              {t("language")}
+            </Typography>
+            <AdminLanguageSwitcher />
+          </div>
+
           <Button variant="outline" onClick={onLogout} disabled={pending} className="mt-3 w-full">
-            {pending ? "Đang đăng xuất…" : "Đăng xuất"}
+            {pending ? t("loggingOut") : t("logout")}
           </Button>
         </DropdownMenu>
       </div>

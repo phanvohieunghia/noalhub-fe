@@ -1,0 +1,48 @@
+{
+  "title": "Friends",
+  "loading": "Loading your friends…",
+  "loadFailed": "Could not load your friends.",
+  "empty": "No friends yet. Use “Find friends” to send your first request.",
+  "friendSince": "Friends since {date}",
+  "openRequests": "Friend requests",
+  "find": "Find friends",
+  "messages": "Messages",
+  "requests": {
+    "title": "Friend requests",
+    "loading": "Loading…",
+    "loadFailed": "Could not load the requests.",
+    "empty": "No pending requests.",
+    "incomingHeading": "Waiting on you",
+    "outgoingHeading": "You sent",
+    "accept": "Accept",
+    "decline": "Decline",
+    "cancel": "Cancel request"
+  },
+  "request": {
+    "nowFriends": "You are now friends.",
+    "sent": "Friend request sent.",
+    "send": "Send friend request",
+    "sending": "Sending…",
+    "isYou": "That's you.",
+    "alreadyFriends": "You are already friends.",
+    "waitingReply": "Request sent, waiting for a reply.",
+    "theySentYou": "This person already sent you a request — open “Friend requests” to reply.",
+    "errors": {
+      "alreadyFriends": "You are already friends.",
+      "exists": "That request already exists.",
+      "self": "You cannot send yourself a friend request.",
+      "rateLimited": "You are going a bit fast, try again in a few minutes.",
+      "failed": "Could not send the request, try again later."
+    }
+  },
+  "search": {
+    "title": "Find someone by username",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "e.g. nghia-pham",
+    "submit": "Search",
+    "submitting": "Searching…",
+    "hint": "Enter the exact username — this does not search display names.",
+    "notFound": "Nobody found with the username @{username}.",
+    "failed": "Search failed, try again later."
+  }
+}

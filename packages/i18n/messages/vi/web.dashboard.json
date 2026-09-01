@@ -1,0 +1,9 @@
+{
+  "title": "Dashboard",
+  "greeting": "Xin chào, {name}.",
+  "you": "bạn",
+  "profile": "Hồ sơ",
+  "chat": "Tin nhắn",
+  "email": "Email",
+  "userId": "User ID"
+}

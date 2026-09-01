@@ -6,9 +6,13 @@ import { Avatar } from "@noalhub/ui/avatar";
 import { Button } from "@noalhub/ui/button";
 import { FormError } from "@noalhub/ui/form-error";
 import { Spinner } from "@noalhub/ui/spinner";
-import { formatDate } from "@noalhub/core/format-date";
-import { lastSeenLabel } from "@noalhub/core/chat/format";
+import { useDateFormat } from "@noalhub/i18n/use-date-format";
+import { useMessage } from "@noalhub/i18n/use-message";
+import { useTranslations } from "next-intl";
+
+import { useChatFormat } from "@/components/chat/use-chat-format";
 import { ApiError, ERROR_CODES } from "@noalhub/api/errors";
+import type { Message } from "@noalhub/api/message";
 import { useAuthStore } from "@noalhub/api/auth";
 import { useCreateDirectConversation } from "@noalhub/api/chat";
 import { usePublicProfile } from "@noalhub/api/users";
@@ -22,6 +26,9 @@ import { Typography } from "@noalhub/ui/typography";
  * cho mình là `/profile`.
  */
 export function PublicProfileContent({ username }: { username: string }) {
+  const t = useTranslations("web.profile");
+  const df = useDateFormat();
+  const cf = useChatFormat();
   const { data, isPending, error } = usePublicProfile(username);
 
   if (isPending) {
@@ -31,7 +38,7 @@ export function PublicProfileContent({ username }: { username: string }) {
         className="flex flex-1 items-center justify-center gap-2 p-8 text-body-3 opacity-70"
       >
         <Spinner />
-        Đang tải hồ sơ…
+        {t("loading")}
       </main>
     );
   }
@@ -41,7 +48,7 @@ export function PublicProfileContent({ username }: { username: string }) {
     return (
       <main className="mx-auto w-full max-w-3xl p-8">
         <FormError
-          message={notFound ? `Không tìm thấy người dùng @${username}.` : "Không tải được hồ sơ."}
+          message={notFound ? t("public.notFound", { username }) : t("loadFailed")}
         />
       </main>
     );
@@ -64,13 +71,13 @@ export function PublicProfileContent({ username }: { username: string }) {
 
       <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-body-3 dark:border-white/15">
         <div className="flex justify-between gap-4">
-          <dt className="opacity-70">Tham gia</dt>
-          <dd>{formatDate(data.createdAt)}</dd>
+          <dt className="opacity-70">{t("facts.joined")}</dt>
+          <dd>{df.date(data.createdAt)}</dd>
         </div>
         <div className="flex justify-between gap-4">
-          <dt className="opacity-70">Hoạt động gần nhất</dt>
+          <dt className="opacity-70">{t("facts.lastSeen")}</dt>
           {/* Mốc offline gần nhất, KHÔNG phải trạng thái online hiện tại. */}
-          <dd>{lastSeenLabel(data.lastSeenAt) ?? "Chưa từng online"}</dd>
+          <dd>{cf.lastSeenLabel(data.lastSeenAt) ?? t("facts.neverOnline")}</dd>
         </div>
       </dl>
     </main>
@@ -86,6 +93,8 @@ export function PublicProfileContent({ username }: { username: string }) {
  * danh sách, nên sidebar tự có mục mới.
  */
 function MessageButton({ user }: { user: PublicProfile }) {
+  const t = useTranslations("web.profile.public");
+  const m = useMessage();
   const router = useRouter();
   const myId = useAuthStore((s) => s.user?.id ?? null);
   const createDirect = useCreateDirectConversation();
@@ -103,7 +112,7 @@ function MessageButton({ user }: { user: PublicProfile }) {
           })
         }
       >
-        {createDirect.isPending ? "Đang mở…" : "Nhắn tin"}
+        {createDirect.isPending ? t("opening") : t("message")}
       </Button>
       {createDirect.isError ? (
         <Typography
@@ -112,23 +121,23 @@ function MessageButton({ user }: { user: PublicProfile }) {
           role="alert"
           className="text-red-600 dark:text-red-400"
         >
-          {dmErrorMessage(createDirect.error)}
+          {m(dmErrorText(createDirect.error))}
         </Typography>
       ) : null}
     </div>
   );
 }
 
-function dmErrorMessage(error: unknown): string {
+function dmErrorText(error: unknown): Message {
   if (error instanceof ApiError) {
     switch (error.code) {
       case ERROR_CODES.recipientNotFound:
-        return "Người này không còn tồn tại.";
+        return { key: "web.profile.public.errors.recipientNotFound" };
       case ERROR_CODES.cannotDmSelf:
-        return "Không thể tự nhắn cho chính mình.";
+        return { key: "web.profile.public.errors.self" };
       case ERROR_CODES.rateLimited:
-        return "Bạn thao tác hơi nhanh, thử lại sau ít phút.";
+        return { key: "web.profile.public.errors.rateLimited" };
     }
   }
-  return "Không mở được hội thoại, thử lại sau.";
+  return { key: "web.profile.public.errors.failed" };
 }

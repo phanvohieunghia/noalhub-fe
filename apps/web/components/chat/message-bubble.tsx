@@ -1,10 +1,13 @@
 "use client";
 
+import { useMessage } from "@noalhub/i18n/use-message";
+import { useTranslations } from "next-intl";
+
 import { Spinner } from "@noalhub/ui/spinner";
 import { MessageBody } from "./message-body";
 import { ReadReceipt } from "./read-receipt";
-import { ackErrorMessage } from "@noalhub/core/chat/error-message";
-import { messageTime } from "@noalhub/core/chat/format";
+import { useChatFormat } from "./use-chat-format";
+import { ackErrorText } from "@noalhub/core/chat/error-message";
 import type { ConversationMember, Message } from "@noalhub/api/chat";
 
 export function MessageBubble({
@@ -20,6 +23,9 @@ export function MessageBubble({
   currentUserId: string | null;
   onRetry: (message: Message) => void;
 }) {
+  const t = useTranslations("web.chat.messages");
+  const m = useMessage();
+  const cf = useChatFormat();
   const failed = message.status === "failed";
   const sending = message.status === "sending";
 
@@ -34,7 +40,7 @@ export function MessageBubble({
       </div>
 
       <div className="mt-0.5 flex items-center gap-1.5 px-1 text-[11px] opacity-60">
-        <time dateTime={message.createdAt}>{messageTime(message.createdAt)}</time>
+        <time dateTime={message.createdAt}>{cf.messageTime(message.createdAt)}</time>
         {sending ? <Spinner className="size-3" /> : null}
         {mine && message.status === "sent" ? (
           <ReadReceipt messageId={message.id} members={members} currentUserId={currentUserId} />
@@ -44,7 +50,7 @@ export function MessageBubble({
       {failed ? (
         <div className="mt-0.5 flex items-center gap-2 px-1">
           <span role="alert" className="text-[11px] text-red-600 dark:text-red-400">
-            {ackErrorMessage(message.errorCode)}
+            {m(ackErrorText(message.errorCode))}
           </span>
           {/* Gửi lại dùng ĐÚNG `id` cũ — backend idempotent theo id, nên retry
               không bao giờ tạo tin thứ hai. */}
@@ -53,7 +59,7 @@ export function MessageBubble({
             onClick={() => onRetry(message)}
             className="text-[11px] font-medium underline underline-offset-2"
           >
-            Gửi lại
+            {t("resend")}
           </button>
         </div>
       ) : null}

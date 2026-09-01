@@ -31,7 +31,10 @@ import {
   type BlogCategory,
   type BlogCategoryFormValues,
 } from "@noalhub/api/blog";
-import { blogErrorMessage } from "@noalhub/core/blog/error-message";
+import { blogErrorText } from "@noalhub/core/blog/error-message";
+import type { Message } from "@noalhub/api/message";
+import { useMessage } from "@noalhub/i18n/use-message";
+import { useTranslations } from "next-intl";
 import { slugify } from "@noalhub/core/blog/slugify";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { Button } from "@noalhub/ui/button";
@@ -63,6 +66,9 @@ const FIELDS = ["name", "slug", "description", "order"] as const;
  * (§11 bước 4).
  */
 export function CategoryManager() {
+  const t = useTranslations("admin.posts.categories");
+  const m = useMessage();
+
   const categories = useAdminBlogCategories();
   const reorder = useReorderBlogCategories();
   const [editing, setEditing] = useState<BlogCategory | "new" | null>(null);
@@ -101,14 +107,13 @@ export function CategoryManager() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Typography variant="h4" as="h1">
-            Chuyên mục
+            {t("title")}
           </Typography>
           <Typography variant="body-3" className="mt-1 opacity-70">
-            Mỗi bài thuộc đúng một chuyên mục, và bắt buộc có chuyên mục mới đăng được. Chuyên mục
-            hiện trên thanh menu của trang blog công khai — kéo hàng để đổi thứ tự hiện ở đó.
+            {t("intro")}
           </Typography>
         </div>
-        <Button onClick={() => setEditing("new")}>Thêm chuyên mục</Button>
+        <Button onClick={() => setEditing("new")}>{t("add")}</Button>
       </div>
 
       {categories.isError ? (
@@ -125,18 +130,18 @@ export function CategoryManager() {
             modifiers={[restrictToVerticalAxis, restrictToParentElement]}
             onDragEnd={onDragEnd}
           >
-            <TableRoot caption="Danh sách chuyên mục">
+            <TableRoot caption={t("caption")}>
               <TableHead>
                 <TableRow>
                   <TableHeaderCell>
-                    <span className="sr-only">Kéo để sắp xếp</span>
+                    <span className="sr-only">{t("dragColumn")}</span>
                   </TableHeaderCell>
-                  <TableHeaderCell>Tên</TableHeaderCell>
-                  <TableHeaderCell>Slug</TableHeaderCell>
-                  <TableHeaderCell>Thứ tự</TableHeaderCell>
-                  <TableHeaderCell>Số bài</TableHeaderCell>
+                  <TableHeaderCell>{t("columns.name")}</TableHeaderCell>
+                  <TableHeaderCell>{t("columns.slug")}</TableHeaderCell>
+                  <TableHeaderCell>{t("columns.order")}</TableHeaderCell>
+                  <TableHeaderCell>{t("columns.postCount")}</TableHeaderCell>
                   <TableHeaderCell>
-                    <span className="sr-only">Hành động</span>
+                    <span className="sr-only">{t("actionsColumn")}</span>
                   </TableHeaderCell>
                 </TableRow>
               </TableHead>
@@ -145,7 +150,7 @@ export function CategoryManager() {
                   <SkeletonRows />
                 ) : rows.length === 0 ? (
                   <TableEmptyRow colSpan={6}>
-                    Chưa có chuyên mục nào. Tạo ít nhất một cái trước khi viết bài.
+                    {t("empty")}
                   </TableEmptyRow>
                 ) : (
                   <SortableContext
@@ -168,7 +173,7 @@ export function CategoryManager() {
 
           {reorder.isError ? (
             <Typography variant="body-3" className="mt-2 text-red-600 dark:text-red-400">
-              {blogErrorMessage(reorder.error)} Thứ tự đã được trả về như cũ.
+              {t("reorderFailed", { message: m(blogErrorText(reorder.error)) ?? "" })}
             </Typography>
           ) : null}
         </div>
@@ -195,9 +200,12 @@ function CategoryDialog({
   category: BlogCategory | null;
   onClose: () => void;
 }) {
+  const t = useTranslations("admin.posts.categories");
+  const tc = useTranslations("common");
+  const m = useMessage();
   const create = useCreateBlogCategory();
   const update = useUpdateBlogCategory();
-  const [formError, setFormError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<Message | string | null>(null);
 
   const {
     control,
@@ -237,12 +245,12 @@ function CategoryDialog({
   });
 
   return (
-    <Dialog open onClose={onClose} title={category ? "Sửa chuyên mục" : "Thêm chuyên mục"}>
+    <Dialog open onClose={onClose} title={category ? t("edit") : t("add")}>
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
-        <Input label="Tên" {...register("name")} error={errors.name?.message} />
+        <Input label={t("nameLabel")} {...register("name")} error={m(errors.name?.message)} />
 
         <div className="flex flex-col gap-1.5">
-          <Input label="Slug" {...register("slug")} error={errors.slug?.message} />
+          <Input label={t("columns.slug")} {...register("slug")} error={m(errors.slug?.message)} />
           <button
             type="button"
             className="w-fit text-body-4 underline underline-offset-2 opacity-70 hover:opacity-100"
@@ -252,7 +260,7 @@ function CategoryDialog({
               setValue("slug", slugify(getValues("name")), { shouldValidate: true })
             }
           >
-            Sinh slug từ tên
+            {t("slugFromName")}
           </button>
         </div>
 
@@ -268,38 +276,39 @@ function CategoryDialog({
             role="alert"
             className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300"
           >
-            Đổi slug sẽ làm <strong>/blogs/category/{category?.slug}</strong> trả 404 vĩnh viễn.
-            Không có chuyển hướng nào được tạo — mọi link cũ tới trang chuyên mục này sẽ hỏng.
+            {t.rich("slugWarning", {
+              slug: category?.slug ?? "",
+              path: (chunks) => <strong>{chunks}</strong>,
+            })}
           </Typography>
         ) : null}
 
         <Textarea
-          label="Mô tả"
+          label={t("descriptionLabel")}
           rows={3}
           {...register("description")}
-          error={errors.description?.message}
+          error={m(errors.description?.message)}
         />
         <Typography variant="body-4" className="-mt-2 opacity-60">
-          Hiện ở đầu trang chuyên mục. Đây là thứ làm trang đó không bị Google coi là nội dung mỏng
-          — nên viết một câu thật.
+          {t("descriptionHint")}
         </Typography>
 
         <Input
-          label="Thứ tự trên menu"
+          label={t("orderLabel")}
           type="number"
           min={0}
           {...register("order", { valueAsNumber: true })}
-          error={errors.order?.message}
+          error={m(errors.order?.message)}
         />
 
-        <FormError message={formError} />
+        <FormError message={m(formError)} />
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
-            Huỷ
+            {tc("actions.cancel")}
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Đang lưu…" : "Lưu"}
+            {isSubmitting ? tc("states.saving") : tc("actions.save")}
           </Button>
         </div>
       </form>
@@ -319,22 +328,24 @@ function DeleteCategoryDialog({
   category: BlogCategory;
   onClose: () => void;
 }) {
+  const t = useTranslations("admin.posts.categories");
+  const tc = useTranslations("common");
+  const m = useMessage();
   const remove = useDeleteBlogCategory();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Message | string | null>(null);
 
   return (
-    <Dialog open onClose={onClose} title={`Xoá chuyên mục “${category.name}”?`}>
+    <Dialog open onClose={onClose} title={t("deleteTitle", { name: category.name })}>
       <div className="flex flex-col gap-4">
         <Typography variant="body-3" className="opacity-80">
-          Chỉ xoá được chuyên mục không còn bài nào. Bài không có chuyên mục thì không đăng được,
-          nên hãy dời bài sang mục khác trước.
+          {t("deleteBody")}
         </Typography>
 
-        <FormError message={error} />
+        <FormError message={m(error)} />
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
-            Huỷ
+            {tc("actions.cancel")}
           </Button>
           <Button
             disabled={remove.isPending}
@@ -344,11 +355,11 @@ function DeleteCategoryDialog({
                 await remove.mutateAsync(category.id);
                 onClose();
               } catch (cause) {
-                setError(blogErrorMessage(cause));
+                setError(blogErrorText(cause));
               }
             }}
           >
-            {remove.isPending ? "Đang xoá…" : "Xoá"}
+            {remove.isPending ? tc("states.deleting") : tc("actions.delete")}
           </Button>
         </div>
       </div>
@@ -373,6 +384,8 @@ function CategoryRow({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const t = useTranslations("admin.posts.categories");
+  const tc = useTranslations("common");
   const {
     attributes,
     listeners,
@@ -397,7 +410,7 @@ function CategoryRow({
           ref={setActivatorNodeRef}
           {...attributes}
           {...listeners}
-          aria-label={`Kéo để sắp xếp ${category.name}`}
+          aria-label={t("dragRow", { name: category.name })}
           className="cursor-grab rounded px-1 text-body-2 leading-none opacity-40 hover:opacity-80 focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:outline-none active:cursor-grabbing dark:focus-visible:ring-white/40"
         >
           ⠿
@@ -412,10 +425,10 @@ function CategoryRow({
       <TableCell>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onEdit}>
-            Sửa
+            {tc("actions.edit")}
           </Button>
           <Button variant="outline" onClick={onDelete}>
-            Xoá
+            {tc("actions.delete")}
           </Button>
         </div>
       </TableCell>

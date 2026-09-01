@@ -1,0 +1,54 @@
+{
+  "breadcrumb": {
+    "label": "Breadcrumb",
+    "blog": "Blog"
+  },
+  "list": {
+    "title": "Posts",
+    "titleWithPage": "Posts — Page {page}",
+    "metaDescription": "Writing about product, engineering, and what we learn building Noalhub.",
+    "subtitle": "Notes on product, engineering, and what we learn building Noalhub.",
+    "empty": "No posts published yet. Check back soon.",
+    "pagination": "Post list pagination"
+  },
+  "post": {
+    "fallbackTitle": "Post",
+    "tagsHeading": "Tags",
+    "relatedHeading": "Related posts",
+    "readingTime": "{minutes} min read"
+  },
+  "category": {
+    "fallbackTitle": "Category",
+    "titleWithPage": "{name} — Page {page}",
+    "metaDescription": "Posts in the {name} category.",
+    "empty": "This category has no posts yet.",
+    "pagination": "Pagination for category {name}"
+  },
+  "tag": {
+    "indexTitle": "Tags",
+    "indexDescription": "Tags in use on the Noalhub blog.",
+    "indexSubtitle": "Tags describe narrow topics and cross-link posts. The main navigation lives in the categories on the menu bar.",
+    "indexEmpty": "No tags yet.",
+    "fallbackTitle": "Tag",
+    "titleWithPage": "#{name} — Page {page}",
+    "metaDescription": "Posts tagged {name}.",
+    "empty": "No posts carry this tag yet.",
+    "pagination": "Pagination for tag {name}"
+  },
+  "error": {
+    "title": "Could not load the post",
+    "message": "The server is having trouble, so the content did not come through. Please try again in a few minutes.",
+    "retry": "Try again",
+    "backToList": "Back to all posts"
+  },
+  "notFound": {
+    "title": "Post not found",
+    "message": "This post does not exist, has been taken down, or the link was mistyped.",
+    "backToList": "← Back to all posts",
+    "latestHeading": "Latest posts"
+  },
+  "rss": {
+    "title": "Noalhub Blog",
+    "description": "Latest posts from Noalhub."
+  }
+}

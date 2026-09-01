@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Button } from "@noalhub/ui/button";
 import { Icon, ICONS } from "@noalhub/ui/icons";
 import { rememberOAuthNext } from "@noalhub/core/auth/redirect";
@@ -12,6 +14,8 @@ const PROVIDERS: { id: OAuthProvider; label: string; icon: string }[] = [
 ];
 
 export function OAuthButtons({ next }: { next?: string }) {
+  const t = useTranslations("web.auth.oauth");
+
   // Điều hướng ra ngoài origin → dùng window.location, không dùng <Link>.
   const go = (provider: OAuthProvider) => {
     rememberOAuthNext(next);
@@ -22,7 +26,7 @@ export function OAuthButtons({ next }: { next?: string }) {
     <div className="flex flex-col gap-3">
       <div className="text-body-4 flex items-center gap-3 uppercase tracking-wide opacity-50">
         <span className="h-px flex-1 bg-current" />
-        hoặc
+        {t("divider")}
         <span className="h-px flex-1 bg-current" />
       </div>
 

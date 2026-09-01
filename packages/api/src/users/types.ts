@@ -4,7 +4,7 @@
  * `UserDto` (hồ sơ của CHÍNH MÌNH) dùng chung với auth — re-export lại đây cho
  * component không phải nhớ nó nằm ở feature nào.
  */
-export type { User, UserRole } from "../auth/types";
+export type { User, UserLanguage, UserRole } from "../auth/types";
 
 /**
  * `PublicProfileDto` — hồ sơ của người khác. Ít trường hơn `User` rất nhiều:

@@ -1,16 +1,14 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@noalhub/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 import { Avatar } from "@noalhub/ui/avatar";
 import { PresenceDot } from "./presence-dot";
 import { UnreadBadge } from "./unread-badge";
+import { useChatFormat } from "./use-chat-format";
 import { useAuthStore } from "@noalhub/api/auth";
-import {
-  conversationDisplayName,
-  conversationTimestamp,
-  otherMember,
-} from "@noalhub/core/chat/format";
+import { otherMember } from "@noalhub/core/chat/format";
 import type { Conversation } from "@noalhub/api/chat";
 import { Typography } from "@noalhub/ui/typography";
 
@@ -21,15 +19,19 @@ export function ConversationListItem({
   conversation: Conversation;
   active: boolean;
 }) {
+  const t = useTranslations("web.chat.sidebar");
+  const cf = useChatFormat();
   const currentUserId = useAuthStore((state) => state.user?.id ?? null);
-  const name = conversationDisplayName(conversation, currentUserId);
+  const name = cf.conversationName(conversation, currentUserId);
   const peer = otherMember(conversation, currentUserId);
   const last = conversation.lastMessage;
 
   // "Bạn: …" để phân biệt tin mình gửi mà không phải mở hội thoại ra xem.
-  const preview = last
-    ? `${last.senderId === currentUserId ? "Bạn: " : ""}${last.body}`
-    : "Chưa có tin nhắn";
+  const preview = !last
+    ? t("noMessages")
+    : last.senderId === currentUserId
+      ? t("youPrefix", { body: last.body })
+      : last.body;
 
   return (
     <li>
@@ -57,7 +59,7 @@ export function ConversationListItem({
               {name}
             </Typography>
             <span className="shrink-0 text-[11px] opacity-50">
-              {conversationTimestamp(last?.createdAt ?? null)}
+              {cf.conversationTimestamp(last?.createdAt ?? null)}
             </span>
           </span>
           <span className="flex items-center justify-between gap-2">

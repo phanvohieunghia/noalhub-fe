@@ -1,16 +1,19 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Link, useRouter } from "@noalhub/i18n/navigation";
+import { useMessage } from "@noalhub/i18n/use-message";
+import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef } from "react";
 
 import { FormError } from "@noalhub/ui/form-error";
 import { useOAuthExchange } from "@noalhub/api/auth";
 import { takeOAuthNext } from "@noalhub/core/auth/redirect";
 import { ApiError } from "@noalhub/api/errors";
+import type { Message } from "@noalhub/api/message";
 import { Typography } from "@noalhub/ui/typography";
 
-type CallbackParams = { ok: true; code: string } | { ok: false; error: string };
+type CallbackParams = { ok: true; code: string } | { ok: false; error: Message };
 
 /**
  * Backend redirect về đây kèm `?code=` — handoff code dùng MỘT lần, hết hạn
@@ -21,19 +24,21 @@ function parseCallback(params: URLSearchParams): CallbackParams {
   if (oauthError) {
     return {
       ok: false,
-      error: `Đăng nhập bằng mạng xã hội thất bại (${oauthError}).`,
+      error: { key: "web.auth.oauth.failed", values: { reason: oauthError } },
     };
   }
 
   const code = params.get("code");
   if (!code) {
-    return { ok: false, error: "Liên kết callback thiếu mã đăng nhập." };
+    return { ok: false, error: { key: "web.auth.oauth.missingCode" } };
   }
 
   return { ok: true, code };
 }
 
 export function OAuthCallback() {
+  const t = useTranslations("web.auth.oauth");
+  const m = useMessage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const exchange = useOAuthExchange();
@@ -55,14 +60,14 @@ export function OAuthCallback() {
     });
   }, [parsed, mutate, router]);
 
-  const error = parsed.ok ? exchangeErrorMessage(exchange.error) : parsed.error;
+  const error = parsed.ok ? exchangeErrorText(exchange.error) : parsed.error;
 
   if (error) {
     return (
       <div className="flex w-full max-w-sm flex-col gap-4">
-        <FormError message={error} />
+        <FormError message={m(error)} />
         <Link href="/login" className="text-body-3 underline underline-offset-4">
-          Quay lại đăng nhập
+          {t("backToLogin")}
         </Link>
       </div>
     );
@@ -70,13 +75,14 @@ export function OAuthCallback() {
 
   return (
     <Typography variant="body-3" className="opacity-70">
-      Đang hoàn tất đăng nhập…
+      {t("finishing")}
     </Typography>
   );
 }
 
-function exchangeErrorMessage(error: unknown): string | null {
+function exchangeErrorText(error: unknown): Message | string | null {
   if (!error) return null;
+  // Câu của backend, không có bản dịch — hiện nguyên văn (§7.3).
   if (error instanceof ApiError) return error.message;
-  return "Không hoàn tất được đăng nhập.";
+  return { key: "web.auth.oauth.exchangeFailed" };
 }

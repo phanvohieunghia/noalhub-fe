@@ -1,0 +1,47 @@
+{
+  "email": {
+    "invalid": "That email address is not valid",
+    "tooLong": "That email address is too long"
+  },
+  "password": {
+    "tooShort": "Password must be at least 12 characters",
+    "tooLong": "Password must be at most 128 characters",
+    "mismatch": "The two passwords do not match",
+    "currentRequired": "Enter your current password"
+  },
+  "displayName": {
+    "tooLong": "That name is too long"
+  },
+  "username": {
+    "tooShort": "Username must be at least 3 characters",
+    "tooLong": "Username must be at most 32 characters",
+    "pattern": "Use only letters, numbers, `_` and `-`",
+    "patternStrict": "Use only letters, numbers, `_` and `-`; it must start and end with a letter or number"
+  },
+  "slug": {
+    "required": "Slug cannot be empty",
+    "tooLong": "Slug must be at most 120 characters",
+    "pattern": "A slug may only contain lowercase letters, numbers and hyphens",
+    "reserved": "This slug collides with an existing blog path"
+  },
+  "post": {
+    "titleRequired": "Title cannot be empty",
+    "contentInvalid": "That content is not valid",
+    "tooManyTags": "At most 20 tags per post"
+  },
+  "category": {
+    "nameRequired": "Category name cannot be empty",
+    "orderNumber": "Order must be a number"
+  },
+  "message": {
+    "required": "Type a message"
+  },
+  "url": {
+    "invalid": "That URL is not valid"
+  },
+  "file": {
+    "typeNotAllowed": "The format \"{type}\" is not allowed. Allowed: {allowed}",
+    "tooLarge": "This {size} file is over the {max} limit for that format.",
+    "empty": "That file is empty."
+  }
+}

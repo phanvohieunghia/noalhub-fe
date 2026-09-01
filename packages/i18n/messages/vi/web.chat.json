@@ -1,0 +1,86 @@
+{
+  "header": {
+    "backToList": "Về danh sách hội thoại",
+    "viewProfile": "Xem hồ sơ của {name}",
+    "accountMenu": "Menu tài khoản",
+    "memberCount": "{count} thành viên",
+    "profile": "Hồ sơ",
+    "friends": "Bạn bè",
+    "appearance": "Giao diện"
+  },
+  "connection": {
+    "reconnecting": "Đang kết nối lại…",
+    "offline": "Mất kết nối — tin nhắn mới có thể chưa tới.",
+    "composerOffline": "Mất kết nối — tin nhắn sẽ được gửi khi kết nối lại."
+  },
+  "sidebar": {
+    "empty": "Chưa có cuộc trò chuyện",
+    "loading": "Đang tải danh sách hội thoại…",
+    "searchPlaceholder": "Tìm hội thoại đã tải…",
+    "searchLabel": "Tìm hội thoại",
+    "noMatch": "Không có hội thoại nào khớp “{query}”.",
+    "noMessages": "Chưa có tin nhắn",
+    "youPrefix": "Bạn: {body}",
+    "unread": "{count} tin chưa đọc",
+    "emptyHint": "Các cuộc trò chuyện của bạn sẽ xuất hiện ở đây.",
+    "title": "Tin nhắn"
+  },
+  "conversation": {
+    "fallbackName": "Người dùng",
+    "unnamedGroup": "Nhóm không tên",
+    "untitled": "Hội thoại",
+    "notFound": "Hội thoại không tồn tại hoặc bạn không có quyền truy cập",
+    "backToList": "Về danh sách hội thoại",
+    "emptyState": "Chọn hội thoại ở danh sách bên trái để bắt đầu đọc và trả lời tin nhắn.",
+    "noMessagesYet": "Chưa có tin nhắn nào. Nói gì đó đi.",
+    "emptyTitle": "Chọn một cuộc trò chuyện"
+  },
+  "messages": {
+    "label": "Tin nhắn",
+    "loading": "Đang tải tin nhắn…",
+    "deletedUser": "Người dùng đã xoá",
+    "unknownUser": "Người dùng",
+    "read": "Đã đọc",
+    "sent": "Đã gửi",
+    "resend": "Gửi lại",
+    "conversationStart": "Đầu cuộc trò chuyện",
+    "newMessages": "{count} tin mới",
+    "toBottom": "Xuống cuối"
+  },
+  "composer": {
+    "label": "Nội dung tin nhắn",
+    "placeholder": "Nhập tin nhắn…",
+    "placeholderOffline": "Đang mất kết nối…",
+    "tooLong": "Tin nhắn tối đa {max} ký tự (đang {length})."
+  },
+  "typing": {
+    "one": "{name} đang nhập…",
+    "two": "{first} và {second} đang nhập…",
+    "many": "{first} và {count} người khác đang nhập…"
+  },
+  "presence": {
+    "unknown": "Không rõ trạng thái",
+    "online": "Đang hoạt động",
+    "offline": "Không hoạt động",
+    "justNow": "Vừa mới đây",
+    "minutesAgo": "Hoạt động {minutes} phút trước",
+    "hoursAgo": "Hoạt động {hours} giờ trước",
+    "daysAgo": "Hoạt động {days} ngày trước",
+    "onDate": "Hoạt động {date}"
+  },
+  "day": {
+    "today": "Hôm nay",
+    "yesterday": "Hôm qua"
+  },
+  "profile": {
+    "title": "Hồ sơ",
+    "gone": "Người dùng này không còn tồn tại.",
+    "loadFailed": "Không tải được hồ sơ.",
+    "owner": "Chủ hội thoại",
+    "member": "Thành viên",
+    "role": "Vai trò",
+    "joined": "Tham gia",
+    "loading": "Đang tải",
+    "viewFull": "Xem hồ sơ đầy đủ"
+  }
+}

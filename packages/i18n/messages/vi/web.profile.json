@@ -1,0 +1,43 @@
+{
+  "title": "Hồ sơ",
+  "loading": "Đang tải hồ sơ…",
+  "loadFailed": "Không tải được hồ sơ.",
+  "noData": "Không có dữ liệu hồ sơ.",
+  "dashboard": "Dashboard",
+  "facts": {
+    "email": "Email",
+    "verified": "· đã xác thực",
+    "unverified": "· chưa xác thực",
+    "role": "Vai trò",
+    "admin": "Quản trị viên",
+    "member": "Thành viên",
+    "joined": "Tham gia",
+    "usernameChangedAt": "Đổi username lần cuối",
+    "neverChanged": "Chưa từng đổi",
+    "userId": "User ID",
+    "lastSeen": "Hoạt động gần nhất",
+    "neverOnline": "Chưa từng online"
+  },
+  "username": {
+    "heading": "Đổi username",
+    "label": "Username",
+    "saved": "Đã cập nhật username.",
+    "taken": "Username này đã có người dùng",
+    "tooSoon": "Bạn vừa đổi username gần đây, chưa tới hạn đổi tiếp.",
+    "lockedUntil": "Chỉ đổi được mỗi 6 tháng một lần. Lần đổi tiếp theo: {date}.",
+    "hint": "Chỉ đổi được mỗi 6 tháng một lần — cân nhắc trước khi lưu.",
+    "submit": "Lưu username",
+    "submitting": "Đang lưu…"
+  },
+  "public": {
+    "notFound": "Không tìm thấy người dùng @{username}.",
+    "message": "Nhắn tin",
+    "opening": "Đang mở…",
+    "errors": {
+      "recipientNotFound": "Người này không còn tồn tại.",
+      "self": "Không thể tự nhắn cho chính mình.",
+      "rateLimited": "Bạn thao tác hơi nhanh, thử lại sau ít phút.",
+      "failed": "Không mở được hội thoại, thử lại sau."
+    }
+  }
+}

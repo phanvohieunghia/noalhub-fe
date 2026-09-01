@@ -1,13 +1,15 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@noalhub/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 import { Avatar } from "@noalhub/ui/avatar";
 import { Drawer } from "@noalhub/ui/drawer";
 import { FormError } from "@noalhub/ui/form-error";
 import { Spinner } from "@noalhub/ui/spinner";
-import { lastSeenLabel } from "@noalhub/core/chat/format";
-import { formatDate } from "@noalhub/core/format-date";
+import { useDateFormat } from "@noalhub/i18n/use-date-format";
+
+import { useChatFormat } from "./use-chat-format";
 import { ApiError, ERROR_CODES } from "@noalhub/api/errors";
 import { usePresence } from "@noalhub/api/chat";
 import { usePublicProfile } from "@noalhub/api/users";
@@ -35,14 +37,17 @@ export function MemberProfileDrawer({
   open: boolean;
   onClose: () => void;
 }) {
+  const t = useTranslations("web.chat");
+  const cf = useChatFormat();
+  const df = useDateFormat();
   const presence = usePresence(member?.userId);
   const { data, isPending, error } = usePublicProfile(open ? member?.username : undefined);
 
   const statusLabel = !presence
-    ? "Không rõ trạng thái"
+    ? t("presence.unknown")
     : presence.status === "online"
-      ? "Đang hoạt động"
-      : (lastSeenLabel(presence.lastSeenAt) ?? "Không hoạt động");
+      ? t("presence.online")
+      : (cf.lastSeenLabel(presence.lastSeenAt) ?? t("presence.offline"));
 
   // Chưa có response thì dùng luôn dữ liệu member đã nằm sẵn trong cache chat
   // — drawer mở ra là có nội dung, phần còn lại điền sau.
@@ -50,7 +55,7 @@ export function MemberProfileDrawer({
   const avatarUrl = data?.avatarUrl ?? member?.avatarUrl ?? null;
 
   return (
-    <Drawer open={open} onClose={onClose} title="Hồ sơ">
+    <Drawer open={open} onClose={onClose} title={t("profile.title")}>
       {member ? (
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-center gap-3 text-center">
@@ -70,27 +75,27 @@ export function MemberProfileDrawer({
             <FormError
               message={
                 error instanceof ApiError && error.code === ERROR_CODES.userNotFound
-                  ? "Người dùng này không còn tồn tại."
-                  : "Không tải được hồ sơ."
+                  ? t("profile.gone")
+                  : t("profile.loadFailed")
               }
             />
           ) : null}
 
           <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-body-3 dark:border-white/15">
             <div className="flex justify-between gap-4">
-              <dt className="opacity-70">Vai trò</dt>
-              <dd>{member.role === "owner" ? "Chủ hội thoại" : "Thành viên"}</dd>
+              <dt className="opacity-70">{t("profile.role")}</dt>
+              <dd>{t(member.role === "owner" ? "profile.owner" : "profile.member")}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="opacity-70">Tham gia</dt>
+              <dt className="opacity-70">{t("profile.joined")}</dt>
               <dd>
                 {isPending && !data ? (
                   <span className="inline-flex items-center gap-2 opacity-60">
                     <Spinner />
-                    Đang tải
+                    {t("profile.loading")}
                   </span>
                 ) : (
-                  formatDate(data?.createdAt)
+                  df.date(data?.createdAt)
                 )}
               </dd>
             </div>
@@ -100,7 +105,7 @@ export function MemberProfileDrawer({
             href={`/profile/${member.username}`}
             className="inline-flex h-10 items-center justify-center rounded-md border border-black/15 px-4 text-body-3 font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
           >
-            Xem hồ sơ đầy đủ
+            {t("profile.viewFull")}
           </Link>
         </div>
       ) : null}

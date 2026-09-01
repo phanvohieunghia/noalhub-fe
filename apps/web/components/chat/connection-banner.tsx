@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Spinner } from "@noalhub/ui/spinner";
 import { useChatRealtime } from "./chat-realtime-provider";
 
@@ -8,6 +10,8 @@ import { useChatRealtime } from "./chat-realtime-provider";
  * mất khả năng gửi — người dùng phải thấy điều đó, không phải đoán.
  */
 export function ConnectionBanner() {
+  const t = useTranslations("web.chat.connection");
+  const tc = useTranslations("common");
   const { status, reconnect } = useChatRealtime();
   if (status === "online") return null;
 
@@ -20,7 +24,7 @@ export function ConnectionBanner() {
     >
       {connecting ? <Spinner /> : <span aria-hidden>⚠</span>}
       <span>
-        {connecting ? "Đang kết nối lại…" : "Mất kết nối — tin nhắn mới có thể chưa tới."}
+        {connecting ? t("reconnecting") : t("offline")}
       </span>
       {connecting ? null : (
         <button
@@ -28,7 +32,7 @@ export function ConnectionBanner() {
           onClick={reconnect}
           className="rounded-md border border-current/30 px-2 py-0.5 text-body-4 font-medium hover:bg-current/10"
         >
-          Thử lại
+          {tc("actions.retry")}
         </button>
       )}
     </div>

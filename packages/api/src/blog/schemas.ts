@@ -415,14 +415,14 @@ export const blogSitemapEntryListSchema = z.array(blogSitemapEntrySchema);
 export const blogSlugSchema = z
   .string()
   .trim()
-  .min(1, "Slug không được để trống")
-  .max(120, "Slug tối đa 120 ký tự")
-  .regex(SLUG_PATTERN, "Slug chỉ gồm chữ thường, số và dấu gạch ngang")
+  .min(1, "validation.slug.required")
+  .max(120, "validation.slug.tooLong")
+  .regex(SLUG_PATTERN, "validation.slug.pattern")
   .refine(
     (slug) => !(RESERVED_POST_SLUGS as readonly string[]).includes(slug),
     // Không phải quy ước thẩm mỹ: ba chuỗi này là segment tĩnh dưới `/blogs`,
     // Next luôn cho segment tĩnh thắng segment động nên bài sẽ không mở được.
-    { message: "Slug này trùng đường dẫn có sẵn của trang blog" },
+    { message: "validation.slug.reserved" },
   );
 
 /**
@@ -437,7 +437,7 @@ const linkUrlField = z
   .string()
   .trim()
   .max(2048)
-  .refine((v) => v === "" || isSafeLinkHref(v), "URL không hợp lệ");
+  .refine((v) => v === "" || isSafeLinkHref(v), "validation.url.invalid");
 
 const imageUrlField = z
   .string()
@@ -461,18 +461,18 @@ const imageUrlField = z
  * chuyện chưa nghĩ tới (§2.6, §7.4).
  */
 export const blogPostFormSchema = z.object({
-  title: z.string().trim().min(1, "Tiêu đề không được để trống").max(200),
+  title: z.string().trim().min(1, "validation.post.titleRequired").max(200),
   slug: blogSlugSchema,
   excerpt: z.string().trim().max(500),
   // Nội dung không validate từng node ở đây — `sanitizeBlogDoc` lo phần đó lúc
   // dựng payload, và nó LỌC chứ không từ chối (§3.1).
   content: z.custom<BlogDoc>(
     (value) => typeof value === "object" && value !== null,
-    "Nội dung không hợp lệ",
+    "validation.post.contentInvalid",
   ),
   coverImageUrl: imageUrlField,
   categorySlug: z.string(),
-  tagSlugs: z.array(z.string()).max(20, "Tối đa 20 thẻ mỗi bài"),
+  tagSlugs: z.array(z.string()).max(20, "validation.post.tooManyTags"),
   metaTitle: z.string().trim().max(120),
   metaDescription: z.string().trim().max(320),
   canonicalUrl: linkUrlField,
@@ -556,18 +556,18 @@ export function emptyBlogDoc(): BlogDoc {
 }
 
 export const blogCategoryFormSchema = z.object({
-  name: z.string().trim().min(1, "Tên chuyên mục không được để trống").max(120),
+  name: z.string().trim().min(1, "validation.category.nameRequired").max(120),
   slug: z
     .string()
     .trim()
-    .min(1, "Slug không được để trống")
+    .min(1, "validation.slug.required")
     .max(120)
-    .regex(SLUG_PATTERN, "Slug chỉ gồm chữ thường, số và dấu gạch ngang"),
+    .regex(SLUG_PATTERN, "validation.slug.pattern"),
   description: z.string().trim().max(320),
   // `z.number()` + `valueAsNumber` ở chỗ register, KHÔNG `z.coerce.number()`:
   // coerce làm kiểu VÀO của schema thành `unknown`, và react-hook-form giữ giá
   // trị theo kiểu vào — resolver sẽ không khớp `useForm<BlogCategoryFormValues>`.
-  order: z.number("Thứ tự phải là một số").int().min(0).max(999),
+  order: z.number("validation.category.orderNumber").int().min(0).max(999),
 });
 
 export type BlogCategoryFormValues = z.infer<typeof blogCategoryFormSchema>;

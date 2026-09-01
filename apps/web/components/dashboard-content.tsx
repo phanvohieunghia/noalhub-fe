@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@noalhub/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { useAuthStore } from "@noalhub/api/auth";
@@ -9,6 +10,7 @@ import { Typography } from "@noalhub/ui/typography";
 
 /** Trang mẫu để verify luồng auth end-to-end. */
 export function DashboardContent() {
+  const t = useTranslations("web.dashboard");
   const user = useAuthStore((s) => s.user);
 
   return (
@@ -16,10 +18,10 @@ export function DashboardContent() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <Typography variant="h3" as="h1">
-            Dashboard
+            {t("title")}
           </Typography>
           <Typography variant="body-3" className="opacity-70">
-            Xin chào, {user?.displayName ?? user?.email ?? "bạn"}.
+            {t("greeting", { name: user?.displayName ?? user?.email ?? t("you") })}
           </Typography>
         </div>
         <div className="flex items-center gap-2">
@@ -28,13 +30,13 @@ export function DashboardContent() {
             href="/profile"
             className="inline-flex h-10 items-center rounded-md border border-border px-4 text-body-3 font-medium hover:bg-muted"
           >
-            Hồ sơ
+            {t("profile")}
           </Link>
           <Link
             href="/chat"
             className="inline-flex h-10 items-center rounded-md border border-border px-4 text-body-3 font-medium hover:bg-muted"
           >
-            Tin nhắn
+            {t("chat")}
           </Link>
           <LogoutButton />
         </div>
@@ -42,11 +44,11 @@ export function DashboardContent() {
 
       <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-body-3 dark:border-white/15">
         <div className="flex justify-between gap-4">
-          <dt className="opacity-70">Email</dt>
+          <dt className="opacity-70">{t("email")}</dt>
           <dd className="font-mono">{user?.email ?? "—"}</dd>
         </div>
         <div className="flex justify-between gap-4">
-          <dt className="opacity-70">User ID</dt>
+          <dt className="opacity-70">{t("userId")}</dt>
           <dd className="font-mono">{user?.id ?? "—"}</dd>
         </div>
       </dl>

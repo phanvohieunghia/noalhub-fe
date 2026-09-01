@@ -1,26 +1,31 @@
 import { ApiError, ERROR_CODES } from "@noalhub/api/errors";
+import type { Message } from "@noalhub/api/message";
 
-import { adminErrorMessage } from "../admin/error-message";
+import { adminErrorText } from "../admin/error-message";
 
 /**
- * Thông điệp lỗi cho các màn hình blog trong `apps/admin`.
+ * Thông điệp lỗi cho các màn hình blog trong `apps/admin`. Trả về khoá i18n —
+ * xem `adminErrorText`.
  *
- * Bọc ngoài `adminErrorMessage` chứ không thay nó: 403/429/404/mất mạng vẫn nói
+ * Bọc ngoài `adminErrorText` chứ không thay nó: 403/429/404/mất mạng vẫn nói
  * đúng câu cũ, ở đây chỉ thêm những mã riêng của blog (§2.3) mà người viết bài
  * cần một hành động cụ thể chứ không phải một câu chung chung.
  */
-export function blogErrorMessage(error: unknown): string {
+export function blogErrorText(error: unknown): Message | string {
   if (error instanceof ApiError) {
     switch (error.code) {
       case ERROR_CODES.postConflict:
-        return "Bản trên máy chủ đã thay đổi (có thể bạn đang mở bài này ở tab khác). Tải lại để lấy bản mới — thay đổi chưa lưu ở đây sẽ mất.";
+        return { key: "common.errors.postConflict" };
       case ERROR_CODES.slugTaken:
-        return "Slug này đã có bài khác dùng. Đổi sang slug khác rồi lưu lại.";
+        return { key: "common.errors.slugTaken" };
       case ERROR_CODES.postNotPublishable:
         // Backend liệt kê field còn thiếu trong `message`; giữ nguyên câu đó.
-        return `Chưa đăng được: ${error.message}`;
+        return {
+          key: "common.errors.postNotPublishable",
+          values: { message: error.message },
+        };
       case ERROR_CODES.categorySlugTaken:
-        return "Slug chuyên mục này đã tồn tại.";
+        return { key: "common.errors.categorySlugTaken" };
       case ERROR_CODES.categoryNotEmpty:
         // `message` của backend kèm số bài — đúng thứ người dùng cần biết.
         return error.message;
@@ -29,5 +34,5 @@ export function blogErrorMessage(error: unknown): string {
     }
   }
 
-  return adminErrorMessage(error);
+  return adminErrorText(error);
 }

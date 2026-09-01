@@ -93,3 +93,30 @@ export function truncateForSeo(text: string, max: number): string {
 export function listItemDescription(item: BlogPostListItem): string {
   return truncateForSeo(item.excerpt, 180);
 }
+
+/**
+ * `alternates` đa ngữ cho một đường dẫn công khai (`docs/i18n-plan.md` §8).
+ *
+ * `canonical` trỏ về **chính locale đang render**, không phải về `vi`: mỗi bản
+ * ngôn ngữ là một URL riêng, gộp canonical về một bản là bảo Google bỏ bản kia.
+ *
+ * `x-default` trỏ về `vi` — đó là bản dành cho người dùng không khớp ngôn ngữ
+ * nào trong danh sách.
+ *
+ * ⚠️ Chỉ dùng cho phần **chrome** đã dịch. KHÔNG dùng cho nội dung bài viết:
+ * bài vẫn là tiếng Việt ở cả hai locale, khai `hreflang` như thể có bản dịch là
+ * lỗi trong mắt Google (§8.1).
+ */
+export function localeAlternates(
+  path: string,
+  locale: string,
+  locales: readonly string[],
+  defaultLocale: string,
+) {
+  const languages = Object.fromEntries(locales.map((l) => [l, `/${l}${path}`]));
+
+  return {
+    canonical: `/${locale}${path}`,
+    languages: { ...languages, "x-default": `/${defaultLocale}${path}` },
+  };
+}

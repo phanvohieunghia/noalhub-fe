@@ -6,6 +6,8 @@ import { useCallback, useRef, useState } from "react";
 import * as mediaApi from "./api";
 import { describeMediaRejection } from "./schemas";
 import type { MediaAsset, UploadProgress } from "./types";
+import { MessageError } from "../message";
+
 
 /**
  * Upload một file qua đủ ba nhịp, kèm tiến độ và một đường huỷ.
@@ -31,7 +33,7 @@ export function useUploadMedia(options: { allow?: readonly string[] } = {}) {
        * đã đẩy hết 40MB lên mạng.
        */
       const rejection = describeMediaRejection(file, { allow });
-      if (rejection) throw new Error(rejection);
+      if (rejection) throw new MessageError(rejection);
 
       const controller = new AbortController();
       abortRef.current = controller;

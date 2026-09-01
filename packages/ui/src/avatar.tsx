@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Avatar as RadixAvatar } from "radix-ui";
 
 const SIZES = {
@@ -34,7 +35,8 @@ function initials(name: string): string {
  * hai lần là nhiễu cho screen reader.
  */
 export function Avatar({ name, src, size = "md", className = "" }: AvatarProps) {
-  const label = name?.trim() || "Người dùng";
+  const t = useTranslations("common.avatar");
+  const label = name?.trim() || t("fallback");
 
   return (
     <RadixAvatar.Root

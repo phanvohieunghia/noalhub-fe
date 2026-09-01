@@ -1,0 +1,54 @@
+{
+  "siteDescription": "Noalhub — nhắn tin, kết bạn và những bài viết về sản phẩm, kỹ thuật của chúng tôi.",
+  "adminTitle": "Noalhub Admin",
+  "adminDescription": "Bảng điều khiển quản trị Noalhub",
+  "blogBrand": "Noalhub Blog",
+  "categoriesNav": "Chuyên mục",
+  "login": "Đăng nhập",
+  "register": "Đăng ký",
+  "logout": "Đăng xuất",
+  "loggingOut": "Đang đăng xuất…",
+  "account": "Tài khoản",
+  "appearance": "Giao diện",
+  "language": "Ngôn ngữ",
+  "role": "Vai trò: {role}",
+  "footer": {
+    "tagline": "Blog và không gian trò chuyện của Noalhub. Ghi lại những gì học được khi dựng sản phẩm, và chỗ để bàn tiếp về chúng.",
+    "latestPosts": "Bài viết mới",
+    "noPosts": "Chưa có bài viết.",
+    "categories": "Chuyên mục",
+    "noCategories": "Chưa có chuyên mục.",
+    "allCategories": "Tất cả chuyên mục",
+    "explore": "Khám phá",
+    "allPosts": "Tất cả bài viết",
+    "tags": "Thẻ",
+    "rss": "RSS",
+    "sitemap": "Sitemap",
+    "nav": "Liên kết chân trang",
+    "chat": "Tin nhắn",
+    "friends": "Bạn bè"
+  },
+  "admin": {
+    "mainNav": "Điều hướng chính",
+    "breadcrumb": "Breadcrumb",
+    "detail": "Chi tiết",
+    "items": {
+      "overview": "Tổng quan",
+      "users": "Người dùng",
+      "posts": "Bài viết",
+      "conversations": "Hội thoại",
+      "reports": "Báo cáo",
+      "categories": "Chuyên mục",
+      "new": "Bài mới"
+    },
+    "disabled": {
+      "conversations": "Chờ backend: chưa có endpoint /admin/conversations (admin-plan §3)",
+      "reports": "Chờ backend: chưa có luồng report (admin-plan §3.1)"
+    }
+  },
+  "languageSwitcher": {
+    "label": "Đổi ngôn ngữ",
+    "vi": "Tiếng Việt",
+    "en": "English"
+  }
+}

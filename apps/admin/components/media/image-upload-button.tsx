@@ -3,6 +3,9 @@
 import { useId, useRef, useState } from "react";
 
 import { ApiError, ERROR_CODES } from "@noalhub/api/errors";
+import { messageOf, type Message } from "@noalhub/api/message";
+import { useMessage } from "@noalhub/i18n/use-message";
+import { useTranslations } from "next-intl";
 import {
   MEDIA_IMAGE_MIMES,
   isStorageUploadError,
@@ -25,16 +28,20 @@ import { FormError } from "@noalhub/ui/form-error";
  */
 export function ImageUploadButton({
   onUploaded,
-  label = "Tải ảnh lên",
+  label,
   disabled = false,
 }: {
   onUploaded: (asset: MediaAsset) => void;
+  /** Bỏ trống thì dùng nhãn chung "Tải ảnh lên". */
   label?: string;
   disabled?: boolean;
 }) {
+  const t = useTranslations("admin.posts.upload");
+  const tc = useTranslations("common.actions");
+  const m = useMessage();
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Message | string | null>(null);
   const upload = useUploadMedia({ allow: MEDIA_IMAGE_MIMES });
 
   const pick = (file: File | undefined) => {
@@ -42,7 +49,7 @@ export function ImageUploadButton({
     setError(null);
     upload.mutate(file, {
       onSuccess: onUploaded,
-      onError: (err) => setError(describeUploadError(err)),
+      onError: (err) => setError(uploadErrorText(err)),
     });
   };
 
@@ -70,11 +77,11 @@ export function ImageUploadButton({
           disabled={disabled || upload.isPending}
           onClick={() => inputRef.current?.click()}
         >
-          {upload.isPending ? `Đang tải lên… ${percent}%` : label}
+          {upload.isPending ? t("uploading", { percent }) : (label ?? t("label"))}
         </Button>
         {upload.isPending ? (
           <Button variant="outline" onClick={upload.cancel}>
-            Huỷ
+            {tc("cancel")}
           </Button>
         ) : null}
       </div>
@@ -94,7 +101,7 @@ export function ImageUploadButton({
         </div>
       ) : null}
 
-      <FormError message={error} />
+      <FormError message={m(error)} />
     </div>
   );
 }
@@ -103,28 +110,28 @@ export function ImageUploadButton({
  * Ba họ lỗi, ba cách nói — trộn chúng thành "Tải lên thất bại" là lấy mất đúng
  * phần thông tin giúp người dùng biết phải làm gì tiếp.
  *
- * 1. `Error` thường: file bị chính FE từ chối trước khi gọi API (sai định dạng,
- *    quá nặng) — `message` đã là câu tiếng Việt hoàn chỉnh.
+ * 1. `MessageError`: file bị chính FE từ chối trước khi gọi API (sai định dạng,
+ *    quá nặng) — nó mang sẵn khoá i18n, `messageOf` lấy ra.
  * 2. `StorageUploadError`: nhịp 2, tức MinIO. Không có mã lỗi nào trong contract.
  * 3. `ApiError`: nhịp 1 hoặc 3.
  */
-function describeUploadError(error: unknown): string {
+function uploadErrorText(error: unknown): Message | string {
   if (isStorageUploadError(error)) return error.message;
 
   if (error instanceof ApiError) {
     switch (error.code) {
       case ERROR_CODES.mediaContentMismatch:
-        return "Nội dung file không khớp với định dạng của nó. File có thể đã hỏng, hoặc chỉ được đổi đuôi.";
+        return { key: "admin.posts.upload.contentMismatch" };
       case ERROR_CODES.mediaNotUploaded:
-        return "Máy chủ không tìm thấy file vừa tải lên. Thử lại từ đầu.";
+        return { key: "admin.posts.upload.notUploaded" };
       case ERROR_CODES.mediaTooLarge:
       case ERROR_CODES.mediaMimeNotAllowed:
         // Backend trả kèm allowlist và con số thật trong `message`.
         return error.message;
       default:
-        return error.message || "Không tải được ảnh lên.";
+        return error.message || { key: "admin.posts.upload.failed" };
     }
   }
 
-  return error instanceof Error ? error.message : "Không tải được ảnh lên.";
+  return messageOf(error);
 }

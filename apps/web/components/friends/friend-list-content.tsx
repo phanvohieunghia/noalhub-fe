@@ -1,6 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@noalhub/i18n/navigation";
+import { useDateFormat } from "@noalhub/i18n/use-date-format";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { FindFriendDialog } from "./find-friend-dialog";
@@ -9,7 +11,6 @@ import { Avatar } from "@noalhub/ui/avatar";
 import { Button } from "@noalhub/ui/button";
 import { FormError } from "@noalhub/ui/form-error";
 import { Spinner } from "@noalhub/ui/spinner";
-import { formatDate } from "@noalhub/core/format-date";
 import { useFriendRequests, useFriends } from "@noalhub/api/friends";
 import { Typography } from "@noalhub/ui/typography";
 
@@ -20,6 +21,8 @@ import { Typography } from "@noalhub/ui/typography";
  * kết bạn.
  */
 export function FriendListContent() {
+  const t = useTranslations("web.friends");
+  const df = useDateFormat();
   const [requestsOpen, setRequestsOpen] = useState(false);
   const [findOpen, setFindOpen] = useState(false);
 
@@ -32,12 +35,12 @@ export function FriendListContent() {
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <Typography variant="h3" as="h1">
-          Bạn bè
+          {t("title")}
         </Typography>
 
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" onClick={() => setRequestsOpen(true)}>
-            Lời mời kết bạn
+            {t("openRequests")}
             {incomingCount > 0 ? (
               <Typography
                 variant="body-4"
@@ -48,12 +51,12 @@ export function FriendListContent() {
               </Typography>
             ) : null}
           </Button>
-          <Button onClick={() => setFindOpen(true)}>Tìm bạn</Button>
+          <Button onClick={() => setFindOpen(true)}>{t("find")}</Button>
           <Link
             href="/chat"
             className="inline-flex h-10 items-center rounded-md border border-black/15 px-4 text-body-3 font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
           >
-            Tin nhắn
+            {t("messages")}
           </Link>
         </div>
       </header>
@@ -61,13 +64,13 @@ export function FriendListContent() {
       {isPending ? (
         <Typography variant="body-3" role="status" className="flex items-center gap-2 opacity-70">
           <Spinner />
-          Đang tải danh sách bạn bè…
+          {t("loading")}
         </Typography>
       ) : error ? (
-        <FormError message="Không tải được danh sách bạn bè." />
+        <FormError message={t("loadFailed")} />
       ) : data.items.length === 0 ? (
         <div className="text-body-3 rounded-lg border border-dashed border-black/15 p-8 text-center opacity-70 dark:border-white/20">
-          Chưa có bạn nào. Dùng “Tìm bạn” để gửi lời mời đầu tiên.
+          {t("empty")}
         </div>
       ) : (
         <ul className="flex flex-col divide-y divide-black/10 rounded-lg border border-black/10 dark:divide-white/10 dark:border-white/15">
@@ -93,7 +96,7 @@ export function FriendListContent() {
                     </Typography>
                   </span>
                   <Typography variant="body-4" as="span" className="shrink-0 opacity-50">
-                    {friend.since ? `Bạn từ ${formatDate(friend.since)}` : ""}
+                    {friend.since ? t("friendSince", { date: df.date(friend.since) }) : ""}
                   </Typography>
                 </Link>
               </li>

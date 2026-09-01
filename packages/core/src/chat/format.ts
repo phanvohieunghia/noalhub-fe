@@ -1,26 +1,40 @@
-import { format, isThisYear, isToday, isYesterday } from "date-fns";
-import { vi } from "date-fns/locale";
+import { isThisYear, isToday, isYesterday } from "date-fns";
 
 import type { Conversation, ConversationMember } from "@noalhub/api/chat";
 
 /**
- * Hiển thị tên hội thoại.
+ * Phần **tính toán** của hiển thị chat. Không có chuỗi người dùng đọc nào ở
+ * đây: file này là module cấp app, nạp một lần lúc import, nên nó không biết
+ * locale nào cả (`docs/i18n-plan.md` §7.3).
+ *
+ * Chữ và định dạng ngày nằm ở `useChatFormat()` trong `apps/web` — nó cầm cả
+ * `t` lẫn locale, và gọi đúng những hàm dưới đây.
+ */
+
+/**
+ * Tên hội thoại, hoặc `null` nếu phải rơi về nhãn mặc định.
  *
  * DM (`type: "direct"`) không có `title` — tên lấy từ thành viên CÒN LẠI, nên
  * hàm này cần biết ai là mình. Logic này xuất hiện ở sidebar, header, tab title
  * nên viết một lần ở đây.
+ *
+ * `null` có hai nghĩa khác nhau mà chỗ gọi phải phân biệt, nên trả kèm `kind`:
+ * DM không rõ tên người kia thì hiện "Người dùng", còn group không tên thì hiện
+ * "Nhóm không tên".
  */
-export function conversationDisplayName(
+export function conversationName(
   conversation: Conversation,
   currentUserId: string | null,
-): string {
-  if (conversation.title) return conversation.title;
+): { name: string } | { fallback: "user" | "group" | "conversation" } {
+  if (conversation.title) return { name: conversation.title };
 
   const other = otherMember(conversation, currentUserId);
-  if (other) return other.displayName ?? "Người dùng";
+  if (other) {
+    return other.displayName ? { name: other.displayName } : { fallback: "user" };
+  }
 
   // DM với chính mình, hoặc members rỗng vì lý do nào đó.
-  return conversation.type === "group" ? "Nhóm không tên" : "Hội thoại";
+  return { fallback: conversation.type === "group" ? "group" : "conversation" };
 }
 
 /** Thành viên còn lại của một DM. `undefined` với group. */
@@ -41,56 +55,58 @@ export function memberMap(
   return map;
 }
 
-/** Giờ của một tin: "14:32". */
-export function messageTime(iso: string): string {
-  return safeFormat(iso, "HH:mm");
+/**
+ * Ngày của một mốc thời gian, đã quy về ba nhóm mà giao diện cần phân biệt.
+ * `date` là `Date` đã parse để chỗ gọi khỏi parse lần nữa.
+ */
+export type DayKind =
+  | { kind: "invalid" }
+  | { kind: "today"; date: Date }
+  | { kind: "yesterday"; date: Date }
+  | { kind: "date"; date: Date; thisYear: boolean };
+
+export function dayKind(iso: string | null): DayKind {
+  if (!iso) return { kind: "invalid" };
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return { kind: "invalid" };
+  if (isToday(date)) return { kind: "today", date };
+  if (isYesterday(date)) return { kind: "yesterday", date };
+  return { kind: "date", date, thisYear: isThisYear(date) };
 }
 
-/** Nhãn cho `DateSeparator`. */
-export function dayLabel(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  if (isToday(date)) return "Hôm nay";
-  if (isYesterday(date)) return "Hôm qua";
-  return format(date, isThisYear(date) ? "d MMMM" : "d MMMM yyyy", { locale: vi });
-}
+/**
+ * "Hoạt động 3 giờ trước" — chỉ có khi người đó offline.
+ *
+ * Trả về đơn vị + con số, không trả câu: số nhiều và trật tự từ khác nhau giữa
+ * các ngôn ngữ, ghép chuỗi ở đây là ghép sai ở ngôn ngữ thứ hai (§7.2).
+ */
+export type LastSeen =
+  | { kind: "unknown" }
+  | { kind: "justNow" }
+  | { kind: "minutes"; value: number }
+  | { kind: "hours"; value: number }
+  | { kind: "days"; value: number }
+  | { kind: "date"; date: Date };
 
-/** Timestamp cạnh mỗi hội thoại ở sidebar: giờ nếu hôm nay, còn lại là ngày. */
-export function conversationTimestamp(iso: string | null): string {
-  if (!iso) return "";
+export function lastSeen(iso: string | null): LastSeen {
+  if (!iso) return { kind: "unknown" };
   const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  if (isToday(date)) return format(date, "HH:mm");
-  if (isYesterday(date)) return "Hôm qua";
-  return format(date, isThisYear(date) ? "d/M" : "d/M/yy");
-}
-
-/** "Hoạt động 3 giờ trước" — chỉ có khi người đó offline. */
-export function lastSeenLabel(iso: string | null): string | null {
-  if (!iso) return null;
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return null;
+  if (Number.isNaN(date.getTime())) return { kind: "unknown" };
 
   const minutes = Math.floor((Date.now() - date.getTime()) / 60_000);
-  if (minutes < 1) return "Vừa mới đây";
-  if (minutes < 60) return `Hoạt động ${minutes} phút trước`;
+  if (minutes < 1) return { kind: "justNow" };
+  if (minutes < 60) return { kind: "minutes", value: minutes };
 
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `Hoạt động ${hours} giờ trước`;
+  if (hours < 24) return { kind: "hours", value: hours };
 
   const days = Math.floor(hours / 24);
-  if (days < 7) return `Hoạt động ${days} ngày trước`;
-  return `Hoạt động ${format(date, "d/M/yyyy")}`;
+  if (days < 7) return { kind: "days", value: days };
+  return { kind: "date", date };
 }
 
 /** Hai tin cùng người, cách nhau dưới 5 phút thì gộp một nhóm. */
 export const GROUP_WINDOW_MS = 5 * 60_000;
-
-function safeFormat(iso: string, pattern: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  return format(date, pattern, { locale: vi });
-}
 
 /** Hai ISO string có cùng ngày dương lịch? */
 export function isSameDay(a: string, b: string): boolean {

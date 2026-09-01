@@ -1,0 +1,29 @@
+{
+  "title": "Users",
+  "detailTitle": "User detail",
+  "search": "Search",
+  "searchPlaceholder": "Email or username",
+  "role": "Role",
+  "allRoles": "All",
+  "tableCaption": "User list",
+  "columns": {
+    "user": "User",
+    "email": "Email",
+    "role": "Role",
+    "joined": "Joined",
+    "lastSeen": "Last active"
+  },
+  "emptyFiltered": "No users match these filters.",
+  "empty": "No users yet.",
+  "unverified": "Unverified",
+  "verifiedAt": "Verified {date}",
+  "neverOnline": "Never online",
+  "neverChanged": "Never changed",
+  "detail": {
+    "id": "ID",
+    "usernameChangedAt": "Username last changed",
+    "lastSeenNote": "Most recent time they went offline, not their current online status.",
+    "noActions": "No admin actions exist for this account yet — suspending, changing roles and revoking sessions all need endpoints the backend does not have (see <doc>docs/admin-plan.md</doc> §3b).",
+    "backToList": "Back to the user list"
+  }
+}

@@ -1,9 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect } from "react";
-
-const CONFIRM_MESSAGE =
-  "Bài viết còn thay đổi chưa lưu. Rời trang bây giờ là mất phần đang gõ. Vẫn rời?";
 
 /**
  * Chặn rời trang khi còn thay đổi chưa lưu.
@@ -27,6 +25,8 @@ const CONFIRM_MESSAGE =
  * chứ không phải bỏ sót.
  */
 export function useUnsavedChanges(isDirty: boolean) {
+  const t = useTranslations("admin.posts");
+
   useEffect(() => {
     if (!isDirty) return;
 
@@ -50,7 +50,7 @@ export function useUnsavedChanges(isDirty: boolean) {
       if (!href.startsWith("/")) return;
       if (href === window.location.pathname) return;
 
-      if (!window.confirm(CONFIRM_MESSAGE)) {
+      if (!window.confirm(t("unsavedChanges"))) {
         event.preventDefault();
         event.stopPropagation();
       }
@@ -63,5 +63,5 @@ export function useUnsavedChanges(isDirty: boolean) {
       window.removeEventListener("beforeunload", onBeforeUnload);
       document.removeEventListener("click", onClickCapture, true);
     };
-  }, [isDirty]);
+  }, [isDirty, t]);
 }

@@ -105,7 +105,7 @@ export function putToStorage(params: {
         new StorageUploadError(
           xhr.status,
           xhr.status === 403
-            ? "Storage từ chối (403). Thường là link upload đã hết hạn — thử lại từ đầu; nếu lặp lại thì là cấu hình host/đồng hồ của server."
+            ? "common.errors.storageForbidden"
             : `Storage trả ${xhr.status} khi tải file lên.`,
         ),
       );
@@ -113,8 +113,8 @@ export function putToStorage(params: {
 
     // Lỗi mạng: `status` là 0 và không có body nào để đọc.
     xhr.onerror = () =>
-      reject(new StorageUploadError(0, "Mất kết nối khi đang tải file lên."));
-    xhr.onabort = () => reject(new StorageUploadError(0, "Đã huỷ tải lên."));
+      reject(new StorageUploadError(0, "common.errors.uploadDisconnected"));
+    xhr.onabort = () => reject(new StorageUploadError(0, "common.errors.uploadAborted"));
 
     if (signal) {
       if (signal.aborted) {

@@ -1,7 +1,7 @@
 import { http } from "../client";
 import { userSchema } from "../auth/schemas";
 import { publicProfileSchema } from "./schemas";
-import type { ChangeUsernameInput } from "./schemas";
+import type { ChangeLanguageInput, ChangeUsernameInput } from "./schemas";
 import type { PublicProfile, User } from "./types";
 
 /**
@@ -34,6 +34,20 @@ export async function changeUsername(
   input: ChangeUsernameInput,
 ): Promise<User> {
   const { data } = await http.patch<User>("/users/me/username", input, {
+    authRequired: true,
+    schema: userSchema,
+  });
+  return data;
+}
+
+/**
+ * PATCH /users/me/language → 200 UserDto.
+ *
+ * Không có mã lỗi riêng: enum sai thì 400 VALIDATION_FAILED, chưa đăng nhập thì
+ * 401. Trả về user sau khi đổi, cùng shape `/auth/me` → thay thẳng bản cache.
+ */
+export async function changeLanguage(input: ChangeLanguageInput): Promise<User> {
+  const { data } = await http.patch<User>("/users/me/language", input, {
     authRequired: true,
     schema: userSchema,
   });

@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 
 import { useCreateBlogPost } from "@noalhub/api/blog";
 import { Button } from "@noalhub/ui/button";
+import { useTranslations } from "next-intl";
 
 import { AdminErrorState } from "../admin-error-state";
 import { Typography } from "@noalhub/ui/typography";
@@ -21,6 +22,8 @@ import { Typography } from "@noalhub/ui/typography";
  * quay lại đây rồi tạo thêm một bản nháp rỗng nữa.
  */
 export function NewPostRedirect() {
+  const t = useTranslations("admin.posts");
+  const tc = useTranslations("common");
   const router = useRouter();
   const create = useCreateBlogPost();
   // StrictMode ở dev chạy effect hai lần — không có chốt này là mỗi lần mở
@@ -61,7 +64,7 @@ export function NewPostRedirect() {
               start();
             }}
           >
-            Thử lại
+            {tc("actions.retry")}
           </Button>
         </div>
       </main>
@@ -71,7 +74,7 @@ export function NewPostRedirect() {
   return (
     <main className="w-full p-6">
       <Typography variant="body-3" className="opacity-70">
-        Đang tạo bản nháp…
+        {t("new.creating")}
       </Typography>
     </main>
   );

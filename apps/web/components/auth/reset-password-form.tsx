@@ -1,8 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link, useRouter } from "@noalhub/i18n/navigation";
+import { useMessage } from "@noalhub/i18n/use-message";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -12,11 +13,14 @@ import { Input } from "@noalhub/ui/input";
 import { useResetPassword } from "@noalhub/api/auth";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { Typography } from "@noalhub/ui/typography";
+import type { Message } from "@noalhub/api/message";
 import { resetPasswordSchema, type ResetPasswordInput } from "@noalhub/api/auth";
 
 export function ResetPasswordForm({ token }: { token: string }) {
+  const t = useTranslations("web.auth.resetPassword");
+  const m = useMessage();
   const router = useRouter();
-  const [formError, setFormError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<Message | string | null>(null);
   const [done, setDone] = useState(false);
   const resetPassword = useResetPassword(token);
 
@@ -42,11 +46,11 @@ export function ResetPasswordForm({ token }: { token: string }) {
     return (
       <div className="flex flex-col gap-4">
         <Typography variant="h3" as="h1">
-          Liên kết không hợp lệ
+          {t("invalidLinkTitle")}
         </Typography>
-        <FormError message="Liên kết đặt lại mật khẩu thiếu mã xác thực hoặc đã hỏng." />
+        <FormError message={t("invalidLink")} />
         <Link href="/forgot-password" className="text-body-3 underline underline-offset-4">
-          Gửi lại liên kết
+          {t("requestNewLink")}
         </Link>
       </div>
     );
@@ -56,36 +60,36 @@ export function ResetPasswordForm({ token }: { token: string }) {
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <Typography variant="h3" as="h1">
-          Đặt lại mật khẩu
+          {t("title")}
         </Typography>
         <Typography variant="body-3" className="opacity-70">
-          Chọn mật khẩu mới cho tài khoản.
+          {t("subtitle")}
         </Typography>
       </header>
 
       {done ? (
-        <FormSuccess message="Đổi mật khẩu thành công. Đang chuyển tới trang đăng nhập…" />
+        <FormSuccess message={t("done")} />
       ) : (
         <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-          <FormError message={formError} />
+          <FormError message={m(formError)} />
 
           <Input
-            label="Mật khẩu mới"
+            label={t("newPassword")}
             type="password"
             autoComplete="new-password"
-            error={errors.newPassword?.message}
+            error={m(errors.newPassword?.message)}
             {...register("newPassword")}
           />
           <Input
-            label="Nhập lại mật khẩu"
+            label={t("confirmPassword")}
             type="password"
             autoComplete="new-password"
-            error={errors.confirmPassword?.message}
+            error={m(errors.confirmPassword?.message)}
             {...register("confirmPassword")}
           />
 
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Đang lưu…" : "Đổi mật khẩu"}
+            {isSubmitting ? t("submitting") : t("submit")}
           </Button>
         </form>
       )}

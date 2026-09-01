@@ -1,0 +1,54 @@
+{
+  "breadcrumb": {
+    "label": "Đường dẫn",
+    "blog": "Blog"
+  },
+  "list": {
+    "title": "Bài viết",
+    "titleWithPage": "Bài viết — Trang {page}",
+    "metaDescription": "Bài viết về sản phẩm, kỹ thuật và những thứ chúng tôi học được khi xây Noalhub.",
+    "subtitle": "Ghi chép về sản phẩm, kỹ thuật và những thứ chúng tôi học được khi xây Noalhub.",
+    "empty": "Chưa có bài viết nào được đăng. Quay lại sau nhé.",
+    "pagination": "Phân trang danh sách bài viết"
+  },
+  "post": {
+    "fallbackTitle": "Bài viết",
+    "tagsHeading": "Thẻ",
+    "relatedHeading": "Bài liên quan",
+    "readingTime": "{minutes} phút đọc"
+  },
+  "category": {
+    "fallbackTitle": "Chuyên mục",
+    "titleWithPage": "{name} — Trang {page}",
+    "metaDescription": "Các bài viết trong chuyên mục {name}.",
+    "empty": "Chuyên mục này chưa có bài viết nào.",
+    "pagination": "Phân trang chuyên mục {name}"
+  },
+  "tag": {
+    "indexTitle": "Thẻ",
+    "indexDescription": "Các thẻ đang dùng trên blog Noalhub.",
+    "indexSubtitle": "Thẻ mô tả chủ đề nhỏ và liên kết chéo giữa các bài. Điều hướng chính nằm ở chuyên mục trên thanh menu.",
+    "indexEmpty": "Chưa có thẻ nào.",
+    "fallbackTitle": "Thẻ",
+    "titleWithPage": "#{name} — Trang {page}",
+    "metaDescription": "Các bài viết gắn thẻ {name}.",
+    "empty": "Chưa có bài viết nào gắn thẻ này.",
+    "pagination": "Phân trang thẻ {name}"
+  },
+  "error": {
+    "title": "Không tải được bài viết",
+    "message": "Máy chủ đang gặp sự cố nên phần nội dung chưa lấy về được. Thử lại sau ít phút giúp chúng tôi nhé.",
+    "retry": "Thử lại",
+    "backToList": "Về danh sách bài viết"
+  },
+  "notFound": {
+    "title": "Không tìm thấy bài viết",
+    "message": "Bài viết này không tồn tại, đã được gỡ, hoặc đường dẫn bị gõ sai.",
+    "backToList": "← Về danh sách bài viết",
+    "latestHeading": "Bài mới nhất"
+  },
+  "rss": {
+    "title": "Noalhub Blog",
+    "description": "Bài viết mới nhất từ Noalhub."
+  }
+}

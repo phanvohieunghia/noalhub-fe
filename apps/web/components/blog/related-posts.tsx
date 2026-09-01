@@ -1,7 +1,8 @@
-import Link from "next/link";
+import { Link } from "@noalhub/i18n/navigation";
+import { useDateFormat } from "@noalhub/i18n/use-date-format";
+import { useTranslations } from "next-intl";
 
 import type { BlogPostListItem } from "@noalhub/api/blog";
-import { formatDate } from "@noalhub/core/format-date";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
@@ -12,6 +13,9 @@ import { Typography } from "@noalhub/ui/typography";
  * chỉ là thẻ nào người viết gõ trước (`docs/blog-plan.md` §2.5, §2.6).
  */
 export function RelatedPosts({ posts }: { posts: BlogPostListItem[] }) {
+  const t = useTranslations("web.blog.post");
+  const df = useDateFormat();
+
   // Bài duy nhất trong chuyên mục thì không có gì để hiện — bỏ hẳn khối, đừng
   // để một tiêu đề trống lơ lửng.
   if (posts.length === 0) return null;
@@ -27,7 +31,7 @@ export function RelatedPosts({ posts }: { posts: BlogPostListItem[] }) {
         id="related-heading"
         className="uppercase tracking-wide opacity-60"
       >
-        Bài liên quan
+        {t("relatedHeading")}
       </Typography>
       <ul className="mt-4 grid gap-4 sm:grid-cols-3">
         {posts.map((post) => (
@@ -36,7 +40,7 @@ export function RelatedPosts({ posts }: { posts: BlogPostListItem[] }) {
               {post.title}
             </Link>
             <time dateTime={post.publishedAt} className="text-body-4 opacity-60">
-              {formatDate(post.publishedAt)}
+              {df.date(post.publishedAt)}
             </time>
           </li>
         ))}

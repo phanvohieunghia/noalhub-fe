@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import type { BlogCategory } from "@noalhub/api/blog";
+import { useTranslations } from "next-intl";
 import { Select } from "@noalhub/ui/select";
 import { Typography } from "@noalhub/ui/typography";
 
@@ -33,11 +34,13 @@ export function CategorySelect({
    */
   required?: boolean;
 }) {
+  const t = useTranslations("admin.posts");
+
   return (
     <div className="flex flex-col gap-1.5">
       <Select
-        label="Chuyên mục"
-        placeholder={required ? undefined : "— Chưa chọn —"}
+        label={t("categorySelect.label")}
+        placeholder={required ? undefined : t("categorySelect.unset")}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         error={error}
@@ -48,18 +51,16 @@ export function CategorySelect({
       />
       {categories.length === 0 ? (
         <Typography variant="body-4" className="text-amber-700 dark:text-amber-300">
-          Chưa có chuyên mục nào — chưa đăng được bài nào cả.{" "}
+          {t("categorySelect.none")}{" "}
           <Link href="/posts/categories" className="underline underline-offset-2">
-            Tạo chuyên mục
+            {t("categorySelect.create")}
           </Link>
         </Typography>
       ) : (
         <Typography variant="body-4" className="opacity-60">
-          {required
-            ? "Bài đang đăng bắt buộc có chuyên mục — gỡ bài khỏi công khai trước nếu muốn bỏ trống. "
-            : "Bắt buộc khi đăng bài, để trống khi lưu nháp thì vẫn lưu được. "}
+          {required ? t("categorySelect.requiredHint") : t("categorySelect.optionalHint")}{" "}
           <Link href="/posts/categories" className="underline underline-offset-2">
-            Quản lý chuyên mục
+            {t("categorySelect.manage")}
           </Link>
         </Typography>
       )}

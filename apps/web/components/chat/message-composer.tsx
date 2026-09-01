@@ -7,10 +7,12 @@ import { MessageTextarea } from "./message-textarea";
 import { SendButton } from "./send-button";
 import { useChatRealtime } from "./chat-realtime-provider";
 import { MESSAGE_BODY_MAX } from "@noalhub/api/chat";
+import { useTranslations } from "next-intl";
 import { useSendMessage, useTyping } from "@noalhub/api/chat";
 import { Typography } from "@noalhub/ui/typography";
 
 export function MessageComposer({ conversationId }: { conversationId: string }) {
+  const t = useTranslations("web.chat.composer");
   const [body, setBody] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { status } = useChatRealtime();
@@ -49,8 +51,8 @@ export function MessageComposer({ conversationId }: { conversationId: string }) 
         <MessageTextarea
           ref={textareaRef}
           value={body}
-          aria-label="Nội dung tin nhắn"
-          placeholder={offline ? "Đang mất kết nối…" : "Nhập tin nhắn…"}
+          aria-label={t("label")}
+          placeholder={offline ? t("placeholderOffline") : t("placeholder")}
           // KHÔNG disable textarea khi offline: đang gõ mà bị khoá là tệ. Chỉ
           // chặn ở nút gửi, và nội dung vẫn được giữ nguyên.
           onChange={(event) => {
@@ -76,7 +78,7 @@ export function MessageComposer({ conversationId }: { conversationId: string }) 
           role="alert"
           className="px-1 pt-1 text-red-600 dark:text-red-400"
         >
-          Tin nhắn tối đa {MESSAGE_BODY_MAX} ký tự (đang {trimmed.length}).
+          {t("tooLong", { max: MESSAGE_BODY_MAX, length: trimmed.length })}
         </Typography>
       ) : null}
     </form>

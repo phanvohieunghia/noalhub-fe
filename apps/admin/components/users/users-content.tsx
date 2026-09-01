@@ -3,7 +3,8 @@
 import Link from "next/link";
 
 import { useAdminUsers, type AdminUser } from "@noalhub/api/admin";
-import { formatDate, formatDateTime } from "@noalhub/core/format-date";
+import { useDateFormat } from "@noalhub/i18n/use-date-format";
+import { useTranslations } from "next-intl";
 import { Badge } from "@noalhub/ui/badge";
 import { Input } from "@noalhub/ui/input";
 import { Pagination } from "@noalhub/ui/pagination";
@@ -26,27 +27,28 @@ import { Typography } from "@noalhub/ui/typography";
 const COLUMN_COUNT = 5;
 
 export function UsersContent() {
+  const t = useTranslations("admin.users");
   const { query, searchInput, setSearchInput, setRole, setPage } = useUserFilters();
   const users = useAdminUsers(query);
 
   return (
     <main className="w-full p-6">
       <Typography variant="h4" as="h1">
-        Người dùng
+        {t("title")}
       </Typography>
 
       <div className="mt-4 flex flex-wrap items-end gap-3">
         <div className="min-w-56 flex-1">
           <Input
-            label="Tìm kiếm"
-            placeholder="Email hoặc username"
+            label={t("search")}
+            placeholder={t("searchPlaceholder")}
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
           />
         </div>
         <Select
-          label="Vai trò"
-          placeholder="Tất cả"
+          label={t("role")}
+          placeholder={t("allRoles")}
           value={query.role ?? ""}
           onChange={(event) => setRole(event.target.value)}
           options={[
@@ -62,14 +64,14 @@ export function UsersContent() {
         </div>
       ) : (
         <div className="mt-4">
-          <TableRoot caption="Danh sách người dùng">
+          <TableRoot caption={t("tableCaption")}>
             <TableHead>
               <TableRow>
-                <TableHeaderCell>Người dùng</TableHeaderCell>
-                <TableHeaderCell>Email</TableHeaderCell>
-                <TableHeaderCell>Vai trò</TableHeaderCell>
-                <TableHeaderCell>Tham gia</TableHeaderCell>
-                <TableHeaderCell>Hoạt động lần cuối</TableHeaderCell>
+                <TableHeaderCell>{t("columns.user")}</TableHeaderCell>
+                <TableHeaderCell>{t("columns.email")}</TableHeaderCell>
+                <TableHeaderCell>{t("columns.role")}</TableHeaderCell>
+                <TableHeaderCell>{t("columns.joined")}</TableHeaderCell>
+                <TableHeaderCell>{t("columns.lastSeen")}</TableHeaderCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -77,9 +79,7 @@ export function UsersContent() {
                 <SkeletonRows />
               ) : users.data.items.length === 0 ? (
                 <TableEmptyRow colSpan={COLUMN_COUNT}>
-                  {query.q || query.role
-                    ? "Không có người dùng nào khớp bộ lọc."
-                    : "Chưa có người dùng nào."}
+                  {query.q || query.role ? t("emptyFiltered") : t("empty")}
                 </TableEmptyRow>
               ) : (
                 users.data.items.map((user) => <UserRow key={user.id} user={user} />)
@@ -103,6 +103,9 @@ export function UsersContent() {
 }
 
 function UserRow({ user }: { user: AdminUser }) {
+  const t = useTranslations("admin.users");
+  const df = useDateFormat();
+
   return (
     <TableRow>
       <TableCell>
@@ -116,17 +119,17 @@ function UserRow({ user }: { user: AdminUser }) {
       <TableCell>
         <span className="flex items-center gap-2">
           {user.email}
-          {user.emailVerifiedAt ? null : <Badge tone="warning">Chưa verify</Badge>}
+          {user.emailVerifiedAt ? null : <Badge tone="warning">{t("unverified")}</Badge>}
         </span>
       </TableCell>
       <TableCell>
         <Badge tone={user.role === "admin" ? "info" : "neutral"}>{user.role}</Badge>
       </TableCell>
-      <TableCell className="whitespace-nowrap">{formatDate(user.createdAt)}</TableCell>
+      <TableCell className="whitespace-nowrap">{df.date(user.createdAt)}</TableCell>
       {/* KHÔNG phải trạng thái online — endpoint admin không đọc presence, nên
           ở đây là mốc thời gian, không phải dot xanh/xám. */}
       <TableCell className="whitespace-nowrap opacity-70">
-        {user.lastSeenAt ? formatDateTime(user.lastSeenAt) : "Chưa từng online"}
+        {user.lastSeenAt ? df.dateTime(user.lastSeenAt) : t("neverOnline")}
       </TableCell>
     </TableRow>
   );

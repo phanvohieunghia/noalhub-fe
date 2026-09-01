@@ -1,13 +1,14 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@noalhub/i18n/navigation";
+import { useDateFormat } from "@noalhub/i18n/use-date-format";
+import { useTranslations } from "next-intl";
 
 import { ChangeUsernameForm } from "@/components/profile/change-username-form";
 import { Avatar } from "@noalhub/ui/avatar";
 import { FormError } from "@noalhub/ui/form-error";
 import { Spinner } from "@noalhub/ui/spinner";
 import { useAuthStore } from "@noalhub/api/auth";
-import { formatDate } from "@noalhub/core/format-date";
 import { useMe } from "@noalhub/api/auth";
 import type { User } from "@noalhub/api/users";
 import { Typography } from "@noalhub/ui/typography";
@@ -19,6 +20,7 @@ import { Typography } from "@noalhub/ui/typography";
  * `PATCH /users/me/username`), nên trang này mới chỉ phục vụ user hiện tại.
  */
 export function ProfileContent() {
+  const t = useTranslations("web.profile");
   const { data, isPending, error } = useMe();
   // Store đã có bản user từ lúc bootstrap/login — dùng làm nền để trang không
   // nháy skeleton khi query đang revalidate.
@@ -33,13 +35,13 @@ export function ProfileContent() {
           className="flex flex-1 items-center justify-center gap-2 p-8 text-body-3 opacity-70"
         >
           <Spinner />
-          Đang tải hồ sơ…
+          {t("loading")}
         </main>
       );
     }
     return (
       <main className="mx-auto w-full max-w-3xl p-8">
-        <FormError message={error ? "Không tải được hồ sơ." : "Không có dữ liệu hồ sơ."} />
+        <FormError message={error ? t("loadFailed") : t("noData")} />
       </main>
     );
   }
@@ -60,7 +62,7 @@ export function ProfileContent() {
           href="/dashboard"
           className="ml-auto inline-flex h-10 items-center rounded-md border border-black/15 px-4 text-body-3 font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
         >
-          Dashboard
+          {t("dashboard")}
         </Link>
       </header>
 
@@ -68,7 +70,7 @@ export function ProfileContent() {
 
       <section className="flex flex-col gap-4 rounded-lg border border-black/10 p-4 dark:border-white/15">
         <Typography variant="h5" as="h2">
-          Đổi username
+          {t("username.heading")}
         </Typography>
         <ChangeUsernameForm user={user} />
       </section>
@@ -77,22 +79,25 @@ export function ProfileContent() {
 }
 
 function ProfileFacts({ user }: { user: User }) {
+  const t = useTranslations("web.profile.facts");
+  const df = useDateFormat();
+
   return (
     <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-body-3 dark:border-white/15">
-      <Fact label="Email">
+      <Fact label={t("email")}>
         <span className="font-mono">{user.email}</span>{" "}
         {user.emailVerified ? (
-          <span className="text-green-700 dark:text-green-400">· đã xác thực</span>
+          <span className="text-green-700 dark:text-green-400">{t("verified")}</span>
         ) : (
-          <span className="text-amber-700 dark:text-amber-400">· chưa xác thực</span>
+          <span className="text-amber-700 dark:text-amber-400">{t("unverified")}</span>
         )}
       </Fact>
-      <Fact label="Vai trò">{user.role === "admin" ? "Quản trị viên" : "Thành viên"}</Fact>
-      <Fact label="Tham gia">{formatDate(user.createdAt)}</Fact>
-      <Fact label="Đổi username lần cuối">
-        {user.usernameChangedAt ? formatDate(user.usernameChangedAt) : "Chưa từng đổi"}
+      <Fact label={t("role")}>{t(user.role === "admin" ? "admin" : "member")}</Fact>
+      <Fact label={t("joined")}>{df.date(user.createdAt)}</Fact>
+      <Fact label={t("usernameChangedAt")}>
+        {user.usernameChangedAt ? df.date(user.usernameChangedAt) : t("neverChanged")}
       </Fact>
-      <Fact label="User ID">
+      <Fact label={t("userId")}>
         <span className="font-mono">{user.id}</span>
       </Fact>
     </dl>

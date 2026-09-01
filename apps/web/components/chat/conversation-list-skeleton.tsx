@@ -1,9 +1,13 @@
+import { useTranslations } from "next-intl";
+
 import { Skeleton } from "@noalhub/ui/skeleton";
 
 export function ConversationListSkeleton() {
+  const t = useTranslations("web.chat.sidebar");
+
   return (
     <div role="status" aria-busy className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden p-2">
-      <span className="sr-only">Đang tải danh sách hội thoại…</span>
+      <span className="sr-only">{t("loading")}</span>
       {Array.from({ length: 6 }, (_, index) => (
         <div key={index} className="flex items-center gap-3 rounded-lg p-2">
           <Skeleton className="size-10 shrink-0 rounded-full" />

@@ -6,29 +6,49 @@
  * §3). Hiện mục ra nhưng khoá lại là cố ý: giấu đi thì mỗi lần review lại có
  * người hỏi "sao không có phần hội thoại", còn cho bấm vào thì ra trang 404.
  */
+/**
+ * `labelKey`/`reasonKey` là **khoá** trong `nav.admin.*`, không phải chữ: file
+ * này là module cấp app, nạp một lần lúc import, không biết locale nào
+ * (`docs/i18n-plan.md` §7.3). Sidebar và breadcrumb dịch lúc render.
+ */
+/**
+ * Union chứ không phải `string`: nhờ vậy `t(labelKey)` được kiểm kiểu, và một
+ * khoá gõ sai là lỗi biên dịch chứ không phải chữ lạ trên sidebar (§9).
+ */
+export type NavLabelKey =
+  | "items.overview"
+  | "items.users"
+  | "items.posts"
+  | "items.conversations"
+  | "items.reports"
+  | "items.categories"
+  | "items.new";
+
+export type NavReasonKey = "disabled.conversations" | "disabled.reports";
+
 export type NavItem = {
   href: string;
-  label: string;
+  labelKey: NavLabelKey;
   disabled?: boolean;
   /** Lý do khoá, hiện dưới dạng tooltip. */
-  reason?: string;
+  reasonKey?: NavReasonKey;
 };
 
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/overview", label: "Tổng quan" },
-  { href: "/users", label: "Người dùng" },
-  { href: "/posts", label: "Bài viết" },
+  { href: "/overview", labelKey: "items.overview" },
+  { href: "/users", labelKey: "items.users" },
+  { href: "/posts", labelKey: "items.posts" },
   {
     href: "/conversations",
-    label: "Hội thoại",
+    labelKey: "items.conversations",
     disabled: true,
-    reason: "Chờ backend: chưa có endpoint /admin/conversations (admin-plan §3)",
+    reasonKey: "disabled.conversations",
   },
   {
     href: "/reports",
-    label: "Báo cáo",
+    labelKey: "items.reports",
     disabled: true,
-    reason: "Chờ backend: chưa có luồng report (admin-plan §3.1)",
+    reasonKey: "disabled.reports",
   },
 ];
 
@@ -41,7 +61,7 @@ export const NAV_ITEMS: NavItem[] = [
  * §7.1), nhưng để breadcrumb hiện "Chi tiết" thì đọc như một trang bài viết nào
  * đó, sai hẳn nghĩa.
  */
-export const SEGMENT_LABELS: Record<string, string> = {
-  categories: "Chuyên mục",
-  new: "Bài mới",
+export const SEGMENT_LABEL_KEYS: Record<string, NavLabelKey> = {
+  categories: "items.categories",
+  new: "items.new",
 };

@@ -1,0 +1,54 @@
+{
+  "siteDescription": "Noalhub — messaging, friends, and our writing about product and engineering.",
+  "adminTitle": "Noalhub Admin",
+  "adminDescription": "Noalhub admin dashboard",
+  "blogBrand": "Noalhub Blog",
+  "categoriesNav": "Categories",
+  "login": "Sign in",
+  "register": "Sign up",
+  "logout": "Sign out",
+  "loggingOut": "Signing out…",
+  "account": "Account",
+  "appearance": "Appearance",
+  "language": "Language",
+  "role": "Role: {role}",
+  "footer": {
+    "tagline": "Noalhub's blog and chat space. Notes on what we learn building the product, and a place to keep talking about it.",
+    "latestPosts": "Latest posts",
+    "noPosts": "No posts yet.",
+    "categories": "Categories",
+    "noCategories": "No categories yet.",
+    "allCategories": "All categories",
+    "explore": "Explore",
+    "allPosts": "All posts",
+    "tags": "Tags",
+    "rss": "RSS",
+    "sitemap": "Sitemap",
+    "nav": "Footer links",
+    "chat": "Messages",
+    "friends": "Friends"
+  },
+  "admin": {
+    "mainNav": "Main navigation",
+    "breadcrumb": "Breadcrumb",
+    "detail": "Details",
+    "items": {
+      "overview": "Overview",
+      "users": "Users",
+      "posts": "Posts",
+      "conversations": "Conversations",
+      "reports": "Reports",
+      "categories": "Categories",
+      "new": "New post"
+    },
+    "disabled": {
+      "conversations": "Waiting on backend: no /admin/conversations endpoint yet (admin-plan §3)",
+      "reports": "Waiting on backend: no report flow yet (admin-plan §3.1)"
+    }
+  },
+  "languageSwitcher": {
+    "label": "Change language",
+    "vi": "Tiếng Việt",
+    "en": "English"
+  }
+}

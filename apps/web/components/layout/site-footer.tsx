@@ -1,9 +1,12 @@
-import Link from "next/link";
-
 import { getBlogCategories, getLatestPosts } from "@noalhub/api/blog/server";
+import { DEFAULT_LOCALE } from "@noalhub/i18n/config";
+import { Link } from "@noalhub/i18n/navigation";
+import { getTranslations } from "next-intl/server";
 import { Icon, ICONS } from "@noalhub/ui/icons";
 import { ThemeToggle } from "@noalhub/ui/theme/theme-toggle";
 import { Typography } from "@noalhub/ui/typography";
+
+import { WebLanguageSwitcher } from "./language-switcher";
 
 /**
  * Chân trang dùng chung cho vùng công khai (blog) và trang chủ.
@@ -52,7 +55,8 @@ function FooterLink({
   return (
     <li>
       {/* RSS và sitemap là route handler trả file, không phải trang React —
-          <Link> prefetch chúng là tải rác. Dùng <a> thường. */}
+          <Link> prefetch chúng là tải rác. Dùng <a> thường; đường dẫn cũng đã
+          gồm sẵn locale nên không cần <Link> gắn tiền tố hộ. */}
       {external ? (
         <a href={href} className={className}>
           {content}
@@ -67,6 +71,8 @@ function FooterLink({
 }
 
 export async function SiteFooter() {
+  const t = await getTranslations("nav");
+
   // Footer không được làm chết trang: backend sập thì vẫn phải render đủ khung
   // với các link tĩnh — cùng lý do với nav ở `(public)/layout.tsx`.
   const [categories, latestPosts] = await Promise.all([
@@ -83,12 +89,11 @@ export async function SiteFooter() {
               Noalhub
             </Typography>
             <Typography variant="body-3" className="max-w-xs opacity-70">
-              Blog và không gian trò chuyện của Noalhub. Ghi lại những gì học được
-              khi dựng sản phẩm, và chỗ để bàn tiếp về chúng.
+              {t("footer.tagline")}
             </Typography>
           </div>
 
-          <FooterColumn title="Bài viết mới">
+          <FooterColumn title={t("footer.latestPosts")}>
             {latestPosts.length > 0 ? (
               latestPosts.map((post) => (
                 <FooterLink key={post.slug} href={`/blogs/${post.slug}`}>
@@ -97,12 +102,12 @@ export async function SiteFooter() {
               ))
             ) : (
               <Typography variant="body-3" className="opacity-50">
-                Chưa có bài viết.
+                {t("footer.noPosts")}
               </Typography>
             )}
           </FooterColumn>
 
-          <FooterColumn title="Chuyên mục">
+          <FooterColumn title={t("footer.categories")}>
             {categories.length > 0 ? (
               <>
                 {/* Cắt 4 mục: footer là lối tắt, không phải bản sao của trang
@@ -113,28 +118,28 @@ export async function SiteFooter() {
                   </FooterLink>
                 ))}
                 <FooterLink href="/blogs/category" icon={ICONS.chevronRight}>
-                  Tất cả chuyên mục
+                  {t("footer.allCategories")}
                 </FooterLink>
               </>
             ) : (
               <Typography variant="body-3" className="opacity-50">
-                Chưa có chuyên mục.
+                {t("footer.noCategories")}
               </Typography>
             )}
           </FooterColumn>
 
-          <FooterColumn title="Khám phá">
+          <FooterColumn title={t("footer.explore")}>
             <FooterLink href="/blogs" icon={ICONS.post}>
-              Tất cả bài viết
+              {t("footer.allPosts")}
             </FooterLink>
             <FooterLink href="/blogs/tag" icon={ICONS.tag}>
-              Thẻ
+              {t("footer.tags")}
             </FooterLink>
-            <FooterLink href="/blogs/rss.xml" icon={ICONS.rss} external>
-              RSS
+            <FooterLink href={`/${DEFAULT_LOCALE}/blogs/rss.xml`} icon={ICONS.rss} external>
+              {t("footer.rss")}
             </FooterLink>
             <FooterLink href="/sitemap.xml" icon={ICONS.map} external>
-              Sitemap
+              {t("footer.sitemap")}
             </FooterLink>
           </FooterColumn>
         </div>
@@ -146,24 +151,25 @@ export async function SiteFooter() {
 
           {/* Các trang này nằm sau `AuthGuard`; khách chưa đăng nhập bấm vào sẽ
               được đưa về /login rồi quay lại — chủ ý, không phải link hỏng. */}
-          <nav aria-label="Liên kết chân trang" className="flex flex-wrap items-center gap-4">
+          <nav aria-label={t("footer.nav")} className="flex flex-wrap items-center gap-4">
             <Link href="/login" className="text-body-4 opacity-60 hover:opacity-100">
-              Đăng nhập
+              {t("login")}
             </Link>
             <Link href="/register" className="text-body-4 opacity-60 hover:opacity-100">
-              Đăng ký
+              {t("register")}
             </Link>
             <Link href="/chat" className="text-body-4 opacity-60 hover:opacity-100">
-              Tin nhắn
+              {t("footer.chat")}
             </Link>
             <Link href="/friends" className="text-body-4 opacity-60 hover:opacity-100">
-              Bạn bè
+              {t("footer.friends")}
             </Link>
           </nav>
 
           {/* `ml-auto` đẩy sang mép phải; khi xuống dòng trên màn hẹp thì nó tự
               thành dòng riêng, không cần breakpoint. */}
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-3">
+            <WebLanguageSwitcher />
             <ThemeToggle />
           </div>
         </div>

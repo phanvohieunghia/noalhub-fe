@@ -1,0 +1,12 @@
+{
+  "title": "Overview",
+  "updatedAt": "Updated {date}",
+  "refresh": "Refresh",
+  "refreshing": "Loading…",
+  "totalUsers": "Total users",
+  "totalUsersHint": "Includes accounts with unverified email",
+  "verifiedUsers": "Verified email",
+  "newUsers": "New in 7 days",
+  "newUsersHint": "The 7-day window is computed by the backend",
+  "admins": "Administrators"
+}

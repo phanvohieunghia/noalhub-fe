@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import {
@@ -20,7 +20,12 @@ import {
   type BlogPostFormValues,
 } from "@noalhub/api/blog";
 import { isPostConflict } from "@noalhub/api/errors";
-import { blogErrorMessage } from "@noalhub/core/blog/error-message";
+import { blogErrorText } from "@noalhub/core/blog/error-message";
+import type { Message } from "@noalhub/api/message";
+import { useMessage } from "@noalhub/i18n/use-message";
+import { DEFAULT_LOCALE, isLocale } from "@noalhub/i18n/config";
+import { intlLocale } from "@noalhub/i18n/formats";
+import { useLocale, useTranslations } from "next-intl";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { PostContent } from "@noalhub/ui/blog/post-content";
 import { TableOfContents } from "@noalhub/ui/blog/table-of-contents";
@@ -136,7 +141,10 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
   const unpublish = useUnpublishBlogPost(post.id);
   const archive = useArchiveBlogPost();
 
-  const [formError, setFormError] = useState<string | null>(null);
+  const t = useTranslations("admin.posts");
+  const tc = useTranslations("common");
+  const m = useMessage();
+  const [formError, setFormError] = useState<Message | string | null>(null);
   const [conflict, setConflict] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [publishOpen, setPublishOpen] = useState(false);
@@ -201,7 +209,7 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Typography variant="h4" as="h1">
-              {values.title.trim() || "Bài viết không tên"}
+              {values.title.trim() || t("editor.untitled")}
             </Typography>
             <PostStatusBadge status={post.status} />
           </div>
@@ -209,7 +217,7 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
           <div className="flex flex-wrap items-center gap-2">
             <SaveState isDirty={formState.isDirty} savedAt={savedAt} />
             <Button type="submit" disabled={busy || !formState.isDirty}>
-              {update.isPending ? "Đang lưu…" : "Lưu"}
+              {update.isPending ? tc("states.saving") : tc("actions.save")}
             </Button>
             {post.status === "published" ? (
               <Button
@@ -220,15 +228,15 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
                   try {
                     applyFresh(await unpublish.mutateAsync());
                   } catch (error) {
-                    setFormError(blogErrorMessage(error));
+                    setFormError(blogErrorText(error));
                   }
                 }}
               >
-                Gỡ khỏi công khai
+                {t("editor.unpublish")}
               </Button>
             ) : (
               <Button variant="outline" disabled={busy} onClick={() => setPublishOpen(true)}>
-                Đăng bài
+                {t("editor.publish")}
               </Button>
             )}
           </div>
@@ -244,28 +252,29 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
             role="alert"
             className="text-body-3 flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300"
           >
-            <span>
-              Bản trên máy chủ đã thay đổi (có thể bạn đang mở bài này ở tab khác). Tải lại để lấy
-              bản mới — thay đổi chưa lưu ở đây sẽ mất.
-            </span>
+            <span>{t("editor.conflict")}</span>
             <Button variant="outline" onClick={async () => applyFresh(await onReloadPost())}>
-              Tải lại bản trên máy chủ
+              {t("editor.reload")}
             </Button>
           </div>
         ) : null}
 
-        <FormError message={formError} />
+        <FormError message={m(formError)} />
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="flex flex-col gap-4">
-            <Input label="Tiêu đề" {...register("title")} error={formState.errors.title?.message} />
+            <Input
+              label={t("editor.titleLabel")}
+              {...register("title")}
+              error={m(formState.errors.title?.message)}
+            />
 
             <Textarea
-              label="Tóm tắt"
+              label={t("editor.excerptLabel")}
               rows={2}
-              placeholder="Bỏ trống thì backend tự sinh từ nội dung bài"
+              placeholder={t("editor.excerptPlaceholder")}
               {...register("excerpt")}
-              error={formState.errors.excerpt?.message}
+              error={m(formState.errors.excerpt?.message)}
             />
 
             {/*
@@ -275,7 +284,7 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
             */}
             <CoverImageField
               value={values.coverImageUrl}
-              error={formState.errors.coverImageUrl?.message}
+              error={m(formState.errors.coverImageUrl?.message)}
               onChange={(url) =>
                 setValue("coverImageUrl", url, {
                   shouldDirty: true,
@@ -286,10 +295,10 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
 
             <div className="flex items-center gap-1 border-b border-black/10 dark:border-white/15">
               <TabButton active={tab === "edit"} onClick={() => setTab("edit")}>
-                Soạn thảo
+                {t("editor.tabWrite")}
               </TabButton>
               <TabButton active={tab === "preview"} onClick={() => setTab("preview")}>
-                Xem trước
+                {t("editor.tabPreview")}
               </TabButton>
             </div>
 
@@ -380,12 +389,13 @@ function CoverImageField({
   error?: string;
   onChange: (url: string) => void;
 }) {
+  const t = useTranslations("admin.posts");
   const url = value.trim();
 
   return (
     <div className="flex flex-col gap-2">
       <Typography variant="title-4" as="span">
-        Ảnh bìa
+        {t("editor.coverLabel")}
       </Typography>
 
       {url ? (
@@ -399,22 +409,28 @@ function CoverImageField({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={url}
-              alt="Ảnh bìa của bài viết"
+              alt={t("editor.coverAlt")}
               className="aspect-[16/9] w-full bg-black/5 object-cover dark:bg-white/5"
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <ImageUploadButton label="Đổi ảnh bìa" onUploaded={(asset) => onChange(asset.url)} />
+            <ImageUploadButton
+              label={t("editor.changeCover")}
+              onUploaded={(asset) => onChange(asset.url)}
+            />
             <Button variant="outline" onClick={() => onChange("")}>
-              Xoá ảnh bìa
+              {t("editor.removeCover")}
             </Button>
           </div>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          <ImageUploadButton label="Tải ảnh bìa lên" onUploaded={(asset) => onChange(asset.url)} />
+          <ImageUploadButton
+            label={t("editor.uploadCover")}
+            onUploaded={(asset) => onChange(asset.url)}
+          />
           <Input
-            label="Hoặc dán URL ảnh"
+            label={t("editor.coverUrlLabel")}
             placeholder="https://images.unsplash.com/…"
             value={value}
             onChange={(event) => onChange(event.target.value)}
@@ -432,23 +448,37 @@ function CoverImageField({
  * biết công của mình đã an toàn hay chưa (§7.3).
  */
 function SaveState({ isDirty, savedAt }: { isDirty: boolean; savedAt: Date | null }) {
+  const t = useTranslations("admin.posts");
+  const locale = useLocale();
+  /*
+   * Giờ lưu gần nhất, theo locale đang xem. Formatter dựng ở đây chứ không ở
+   * module scope: locale chỉ biết được lúc chạy (`docs/i18n-plan.md` §7.1).
+   */
+  const timeFormat = useMemo(
+    () => new Intl.DateTimeFormat(intlLocale(isLocale(locale) ? locale : DEFAULT_LOCALE), {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    [locale],
+  );
+
   if (isDirty) {
     return (
       <Typography variant="body-3" as="span" className="text-amber-700 dark:text-amber-300">
-        Có thay đổi chưa lưu
+        {t("editor.unsaved")}
       </Typography>
     );
   }
   if (savedAt) {
     return (
       <Typography variant="body-3" as="span" className="opacity-60">
-        Đã lưu {savedAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+        {t("editor.savedAt", { time: timeFormat.format(savedAt) })}
       </Typography>
     );
   }
   return (
     <Typography variant="body-3" as="span" className="opacity-60">
-      Chưa có thay đổi
+      {t("editor.noChanges")}
     </Typography>
   );
 }
@@ -491,13 +521,15 @@ function ArchiveButton({
   disabled: boolean;
   onArchive: () => Promise<void>;
 }) {
+  const t = useTranslations("admin.posts");
+  const tc = useTranslations("common");
   const [confirming, setConfirming] = useState(false);
   const isDraft = status === "draft";
 
   if (!confirming) {
     return (
       <Button variant="outline" disabled={disabled} onClick={() => setConfirming(true)}>
-        {isDraft ? "Bỏ bài nháp này" : "Gỡ bài này"}
+        {isDraft ? t("editor.archiveDraftTitle") : t("editor.archiveTitle")}
       </Button>
     );
   }
@@ -506,15 +538,15 @@ function ArchiveButton({
     <div className="text-body-3 flex flex-col gap-2 rounded-md border border-black/15 p-3 dark:border-white/20">
       <Typography variant="body-3" className="opacity-80">
         {isDraft
-          ? "Bài nháp chuyển sang trạng thái “Đã gỡ” và không còn trong danh sách đang soạn. Nội dung vẫn còn và slug vẫn bị giữ — không có xoá vĩnh viễn."
-          : "Bài sẽ chuyển sang trạng thái “Đã gỡ” và biến mất khỏi trang công khai. Nội dung vẫn còn và slug vẫn bị giữ — không có xoá vĩnh viễn."}
+          ? t("editor.archiveDraftBody")
+          : t("editor.archiveBody")}
       </Typography>
       <div className="flex gap-2">
         <Button variant="outline" onClick={() => setConfirming(false)}>
-          Huỷ
+          {tc("actions.cancel")}
         </Button>
         <Button disabled={disabled} onClick={() => void onArchive()}>
-          {isDraft ? "Bỏ bài nháp" : "Gỡ bài"}
+          {isDraft ? t("editor.archiveDraftAction") : t("editor.archiveAction")}
         </Button>
       </div>
     </div>

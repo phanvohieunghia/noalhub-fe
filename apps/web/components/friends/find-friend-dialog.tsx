@@ -1,7 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
+import { Link } from "@noalhub/i18n/navigation";
+import { useMessage } from "@noalhub/i18n/use-message";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -13,6 +15,7 @@ import { Input } from "@noalhub/ui/input";
 import { Spinner } from "@noalhub/ui/spinner";
 import { useAuthStore } from "@noalhub/api/auth";
 import { ApiError, ERROR_CODES } from "@noalhub/api/errors";
+import type { Message } from "@noalhub/api/message";
 import {
   useFindUserByUsername,
   useFriendRequests,
@@ -32,6 +35,8 @@ import { Typography } from "@noalhub/ui/typography";
  * vừa luôn 404.
  */
 export function FindFriendDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useTranslations("web.friends");
+  const m = useMessage();
   const [submitted, setSubmitted] = useState<string | undefined>();
   const { data, isFetching, error } = useFindUserByUsername(submitted);
   const state = useFriendState(data?.username);
@@ -55,38 +60,38 @@ export function FindFriendDialog({ open, onClose }: { open: boolean; onClose: ()
   const notFound = error instanceof ApiError && error.code === ERROR_CODES.userNotFound;
 
   return (
-    <Dialog open={open} onClose={close} title="Tìm bạn theo username">
+    <Dialog open={open} onClose={close} title={t("search.title")}>
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <div className="flex items-end gap-2">
           <span className="flex-1">
             <Input
-              label="Username"
-              placeholder="vd: nghia-pham"
+              label={t("search.usernameLabel")}
+              placeholder={t("search.usernamePlaceholder")}
               autoComplete="off"
               spellCheck={false}
-              error={errors.username?.message}
+              error={m(errors.username?.message)}
               {...register("username")}
             />
           </span>
           <Button type="submit" disabled={isFetching} className="mb-[1px]">
-            {isFetching ? "Đang tìm…" : "Tìm"}
+            {isFetching ? t("search.submitting") : t("search.submit")}
           </Button>
         </div>
 
         <Typography variant="body-4" className="opacity-60">
-          Phải nhập đúng username, không tìm theo tên hiển thị.
+          {t("search.hint")}
         </Typography>
       </form>
 
       {isFetching ? (
         <Typography variant="body-3" role="status" className="flex items-center gap-2 opacity-70">
           <Spinner />
-          Đang tìm…
+          {t("search.submitting")}
         </Typography>
       ) : notFound ? (
-        <FormError message={`Không tìm thấy ai với username @${submitted}.`} />
+        <FormError message={t("search.notFound", { username: submitted ?? "" })} />
       ) : error ? (
-        <FormError message="Không tìm được, thử lại sau." />
+        <FormError message={t("search.failed")} />
       ) : data ? (
         <SearchResult user={data} state={state} />
       ) : null}
@@ -119,6 +124,8 @@ function useFriendState(username: string | undefined): FriendState | null {
 }
 
 function SearchResult({ user, state }: { user: PublicProfile; state: FriendState | null }) {
+  const t = useTranslations("web.friends");
+  const m = useMessage();
   const sendRequest = useSendFriendRequest();
   const name = user.displayName ?? user.username;
 
@@ -140,15 +147,13 @@ function SearchResult({ user, state }: { user: PublicProfile; state: FriendState
       </div>
 
       {sendRequest.isError ? (
-        <FormError message={sendErrorMessage(sendRequest.error)} />
+        <FormError message={m(sendErrorText(sendRequest.error))} />
       ) : sendRequest.isSuccess ? (
         // Hai bên cùng bấm kết bạn thì backend nối luôn — đọc `state` của
         // response chứ đừng đoán là "đang chờ".
         <FormSuccess
           message={
-            sendRequest.data.state === "friends"
-              ? "Hai bạn đã thành bạn bè."
-              : "Đã gửi lời mời kết bạn."
+            sendRequest.data.state === "friends" ? t("request.nowFriends") : t("request.sent")
           }
         />
       ) : null}
@@ -162,20 +167,20 @@ function SearchResult({ user, state }: { user: PublicProfile; state: FriendState
   );
 }
 
-function sendErrorMessage(error: unknown): string {
+function sendErrorText(error: unknown): Message {
   if (error instanceof ApiError) {
     switch (error.code) {
       case ERROR_CODES.alreadyFriends:
-        return "Hai bạn đã là bạn bè.";
+        return { key: "web.friends.request.errors.alreadyFriends" };
       case ERROR_CODES.friendRequestExists:
-        return "Lời mời đã tồn tại.";
+        return { key: "web.friends.request.errors.exists" };
       case ERROR_CODES.cannotFriendSelf:
-        return "Không thể tự kết bạn với chính mình.";
+        return { key: "web.friends.request.errors.self" };
       case ERROR_CODES.rateLimited:
-        return "Bạn thao tác hơi nhanh, thử lại sau ít phút.";
+        return { key: "web.friends.request.errors.rateLimited" };
     }
   }
-  return "Không gửi được lời mời, thử lại sau.";
+  return { key: "web.friends.request.errors.failed" };
 }
 
 /** Trạng thái quan hệ quyết định hiện gì — không phải lúc nào cũng "Kết bạn". */
@@ -188,36 +193,38 @@ function FriendshipAction({
   pending: boolean;
   onSend: () => void;
 }) {
+  const t = useTranslations("web.friends");
+
   switch (state) {
     case null:
       return (
         <Typography variant="body-3" className="opacity-70">
-          Đây là bạn.
+          {t("request.isYou")}
         </Typography>
       );
     case "friends":
       return (
         <Typography variant="body-3" className="opacity-70">
-          Hai bạn đã là bạn bè.
+          {t("request.alreadyFriends")}
         </Typography>
       );
     case "pending_outgoing":
       return (
         <Typography variant="body-3" className="opacity-70">
-          Đã gửi lời mời, đang chờ phản hồi.
+          {t("request.waitingReply")}
         </Typography>
       );
     case "pending_incoming":
       return (
         <Typography variant="body-3" className="opacity-70">
-          Người này đã gửi lời mời cho bạn — mở “Lời mời kết bạn” để phản hồi.
+          {t("request.theySentYou")}
         </Typography>
       );
     default:
       return (
         <div>
           <Button onClick={onSend} disabled={pending}>
-            {pending ? "Đang gửi…" : "Gửi lời mời kết bạn"}
+            {pending ? t("request.sending") : t("request.send")}
           </Button>
         </div>
       );

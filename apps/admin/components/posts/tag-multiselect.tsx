@@ -3,7 +3,10 @@
 import { useMemo, useState } from "react";
 
 import { useCreateBlogTag, type BlogTag } from "@noalhub/api/blog";
-import { blogErrorMessage } from "@noalhub/core/blog/error-message";
+import { blogErrorText } from "@noalhub/core/blog/error-message";
+import type { Message } from "@noalhub/api/message";
+import { useMessage } from "@noalhub/i18n/use-message";
+import { useTranslations } from "next-intl";
 import { slugify } from "@noalhub/core/blog/slugify";
 import { FormError } from "@noalhub/ui/form-error";
 import { Input } from "@noalhub/ui/input";
@@ -30,8 +33,10 @@ export function TagMultiselect({
   value: string[];
   onChange: (slugs: string[]) => void;
 }) {
+  const t = useTranslations("admin.posts");
+  const m = useMessage();
   const [search, setSearch] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Message | string | null>(null);
   const createTag = useCreateBlogTag();
 
   const bySlug = useMemo(() => new Map(tags.map((tag) => [tag.slug, tag])), [tags]);
@@ -58,16 +63,16 @@ export function TagMultiselect({
       const tag = await createTag.mutateAsync(search.trim());
       add(tag.slug);
     } catch (cause) {
-      setError(blogErrorMessage(cause));
+      setError(blogErrorText(cause));
     }
   };
 
   return (
     <div className="flex flex-col gap-2">
       <Input
-        label="Thẻ"
+        label={t("tags.label")}
         value={search}
-        placeholder="Gõ để tìm, Enter để tạo thẻ mới"
+        placeholder={t("tags.searchPlaceholder")}
         onChange={(event) => setSearch(event.target.value)}
         onKeyDown={(event) => {
           if (event.key !== "Enter") return;
@@ -90,7 +95,7 @@ export function TagMultiselect({
               >
                 <span>#{bySlug.get(slug)?.name ?? slug}</span>
                 <span aria-hidden>×</span>
-                <span className="sr-only">Bỏ thẻ</span>
+                <span className="sr-only">{t("tags.remove")}</span>
               </button>
             </li>
           ))}
@@ -117,14 +122,14 @@ export function TagMultiselect({
               className="rounded-full border border-dashed border-black/25 px-2.5 py-1 text-body-4 disabled:opacity-50 dark:border-white/30"
             >
               {createTag.isPending
-                ? "Đang tạo…"
-                : `Tạo thẻ “${search.trim()}” (/${slugify(search)})`}
+                ? t("tags.creating")
+                : t("tags.create", { name: search.trim(), slug: slugify(search) })}
             </button>
           ) : null}
         </div>
       ) : null}
 
-      <FormError message={error} />
+      <FormError message={m(error)} />
     </div>
   );
 }

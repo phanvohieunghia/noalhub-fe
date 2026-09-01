@@ -1,5 +1,7 @@
 import type { BlogDoc } from "@noalhub/api/blog";
 import { collectHeadings, TOC_MIN_HEADINGS } from "@noalhub/core/blog/headings";
+import { useTranslations } from "next-intl";
+
 import { Typography } from "../typography";
 
 /**
@@ -10,6 +12,9 @@ import { Typography } from "../typography";
  * phải thêm hậu tố.
  */
 export function TableOfContents({ doc }: { doc: BlogDoc }) {
+  // `common`: component này dùng ở cả trang bài viết (web) lẫn tab Xem trước
+  // của editor (admin), nên không được ghim namespace của riêng một app (§6).
+  const t = useTranslations("common");
   const headings = collectHeadings(doc);
 
   // Mục lục hai dòng chỉ tốn chỗ (§3.3).
@@ -27,7 +32,7 @@ export function TableOfContents({ doc }: { doc: BlogDoc }) {
         id="toc-heading"
         className="uppercase tracking-wide opacity-60"
       >
-        Trong bài này
+        {t("tocHeading")}
       </Typography>
       <ol className="mt-2 flex flex-col gap-1.5">
         {headings.map((heading) => (

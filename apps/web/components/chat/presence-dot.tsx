@@ -1,8 +1,11 @@
 "use client";
 
 import { usePresence } from "@noalhub/api/chat";
-import { lastSeenLabel } from "@noalhub/core/chat/format";
+import { useTranslations } from "next-intl";
+
 import { Typography } from "@noalhub/ui/typography";
+
+import { useChatFormat } from "./use-chat-format";
 
 /**
  * Đốm trạng thái. Ba trạng thái, không phải hai: presence chỉ được backend phát
@@ -18,13 +21,15 @@ export function PresenceDot({
   userId: string | null | undefined;
   className?: string;
 }) {
+  const t = useTranslations("web.chat.presence");
+  const cf = useChatFormat();
   const presence = usePresence(userId);
 
   const label = !presence
-    ? "Không rõ trạng thái"
+    ? t("unknown")
     : presence.status === "online"
-      ? "Đang hoạt động"
-      : (lastSeenLabel(presence.lastSeenAt) ?? "Không hoạt động");
+      ? t("online")
+      : (cf.lastSeenLabel(presence.lastSeenAt) ?? t("offline"));
 
   const color =
     presence?.status === "online"
@@ -43,11 +48,12 @@ export function PresenceDot({
 
 /** Text trạng thái cho `ChatHeader` — cùng nguồn dữ liệu với đốm màu. */
 export function PresenceLabel({ userId }: { userId: string | null | undefined }) {
+  const t = useTranslations("web.chat.presence");
+  const cf = useChatFormat();
   const presence = usePresence(userId);
   if (!presence) return null;
 
-  const label =
-    presence.status === "online" ? "Đang hoạt động" : lastSeenLabel(presence.lastSeenAt);
+  const label = presence.status === "online" ? t("online") : cf.lastSeenLabel(presence.lastSeenAt);
 
   if (!label) return null;
   return (

@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { Link } from "@noalhub/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 import { JsonLd } from "./json-ld";
 import { absoluteUrl } from "@noalhub/core/blog/seo";
@@ -17,9 +18,11 @@ export type Crumb = { label: string; href?: string };
  * gần như vô nghĩa (§6.2).
  */
 export function Breadcrumb({ items }: { items: Crumb[] }) {
+  const t = useTranslations("web.blog.breadcrumb");
+
   return (
     <>
-      <nav aria-label="Đường dẫn" className="text-body-3 opacity-70">
+      <nav aria-label={t("label")} className="text-body-3 opacity-70">
         <ol className="flex flex-wrap items-center gap-1.5">
           {items.map((item, index) => (
             <li key={index} className="flex items-center gap-1.5">

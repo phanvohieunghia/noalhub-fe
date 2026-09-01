@@ -1,33 +1,32 @@
 import { ApiError } from "@noalhub/api/errors";
+import type { Message } from "@noalhub/api/message";
 
 /**
- * Thông điệp hiển thị cho một lỗi bất kỳ.
+ * Thông điệp hiển thị cho một lỗi bất kỳ, dưới dạng khoá i18n (§7.3).
  *
  * `ApiError.message` do backend soạn nên ưu tiên dùng — nhưng chỉ để HIỂN THỊ.
  * Muốn phân nhánh logic thì switch trên `code`, không parse message.
  */
-export function errorMessage(error: unknown): string {
+export function errorText(error: unknown): Message | string {
   if (error instanceof ApiError) {
-    if (error.status === 404) {
-      return "Hội thoại không tồn tại hoặc bạn không có quyền truy cập.";
-    }
+    if (error.status === 404) return { key: "common.errors.conversationNotFound" };
     return error.message;
   }
-  return "Đã có lỗi xảy ra. Vui lòng thử lại.";
+  return { key: "common.errors.generic" };
 }
 
 /** Thông điệp cho mã lỗi trong ack socket (`{ ok: false, code }`). */
-export function ackErrorMessage(code: string | undefined): string {
+export function ackErrorText(code: string | undefined): Message {
   switch (code) {
     case "SOCKET_OFFLINE":
-      return "Mất kết nối — tin sẽ được gửi lại khi kết nối lại.";
+      return { key: "common.errors.socket.offline" };
     case "RATE_LIMITED":
-      return "Bạn gửi quá nhanh. Chờ một chút rồi thử lại.";
+      return { key: "common.errors.socket.rateLimited" };
     case "NOT_FOUND":
-      return "Hội thoại không còn khả dụng.";
+      return { key: "common.errors.socket.notFound" };
     case "VALIDATION_FAILED":
-      return "Nội dung tin nhắn không hợp lệ.";
+      return { key: "common.errors.socket.validationFailed" };
     default:
-      return "Không gửi được tin nhắn.";
+      return { key: "common.errors.socket.sendFailed" };
   }
 }

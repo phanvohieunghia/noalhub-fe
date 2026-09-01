@@ -1,12 +1,15 @@
+import { useTranslations } from "next-intl";
+
 import { Skeleton } from "@noalhub/ui/skeleton";
 
 /** Bubble giả, xen trái/phải để khung giống nội dung thật. */
 export function MessageListSkeleton() {
+  const t = useTranslations("web.chat.messages");
   const widths = ["w-40", "w-56", "w-32", "w-48", "w-24"];
 
   return (
     <div role="status" aria-busy className="flex flex-1 flex-col justify-end gap-3 p-4">
-      <span className="sr-only">Đang tải tin nhắn…</span>
+      <span className="sr-only">{t("loading")}</span>
       {widths.map((width, index) => (
         <div
           key={index}

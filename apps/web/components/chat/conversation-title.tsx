@@ -1,8 +1,9 @@
 "use client";
 
-import { conversationDisplayName } from "@noalhub/core/chat/format";
 import { useAuthStore } from "@noalhub/api/auth";
 import type { Conversation } from "@noalhub/api/chat";
+
+import { useChatFormat } from "./use-chat-format";
 
 /**
  * Tên hội thoại. DM không có `title` nên tên phải lấy từ thành viên còn lại —
@@ -18,8 +19,6 @@ export function ConversationTitle({
 }) {
   const currentUserId = useAuthStore((state) => state.user?.id ?? null);
   return (
-    <span className={className}>
-      {conversationDisplayName(conversation, currentUserId)}
-    </span>
+    <span className={className}>{useChatFormat().conversationName(conversation, currentUserId)}</span>
   );
 }

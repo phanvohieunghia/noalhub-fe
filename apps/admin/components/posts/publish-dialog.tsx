@@ -3,7 +3,10 @@
 import { useState } from "react";
 
 import type { BlogPostFormValues } from "@noalhub/api/blog";
-import { blogErrorMessage } from "@noalhub/core/blog/error-message";
+import { blogErrorText } from "@noalhub/core/blog/error-message";
+import type { Message } from "@noalhub/api/message";
+import { useMessage } from "@noalhub/i18n/use-message";
+import { useTranslations } from "next-intl";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
 import { FormError } from "@noalhub/ui/form-error";
@@ -30,15 +33,21 @@ export function PublishDialog({
   onConfirm: () => Promise<unknown>;
   onClose: () => void;
 }) {
-  const [error, setError] = useState<string | null>(null);
+  const t = useTranslations("admin.posts.publish");
+  const m = useMessage();
+  const tc = useTranslations("common.actions");
+  const [error, setError] = useState<Message | string | null>(null);
   const issues = publishChecklist(values, { hasUnsavedChanges });
   const blocked = issues.some((issue) => issue.blocking);
 
   return (
-    <Dialog open onClose={onClose} title="Đăng bài này?">
+    <Dialog open onClose={onClose} title={t("dialogTitle")}>
       <div className="flex flex-col gap-4">
         <Typography variant="body-3" className="opacity-80">
-          Đăng xong bài sẽ xuất hiện ngay ở <strong>/blogs/{values.slug}</strong> và trong sitemap.
+          {t.rich("intro", {
+            slug: values.slug,
+            path: (chunks) => <strong>{chunks}</strong>,
+          })}
         </Typography>
 
         {issues.length > 0 ? (
@@ -52,7 +61,7 @@ export function PublishDialog({
                     : "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300"
                 }`}
               >
-                {issue.message}
+                {t(`issues.${issue.messageKey}` as "issues.category")}
               </li>
             ))}
           </ul>
@@ -61,15 +70,15 @@ export function PublishDialog({
             variant="body-3"
             className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-emerald-700 dark:text-emerald-300"
           >
-            Mọi thứ đã sẵn sàng.
+            {t("ready")}
           </Typography>
         )}
 
-        <FormError message={error} />
+        <FormError message={m(error)} />
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
-            Huỷ
+            {tc("cancel")}
           </Button>
           <Button
             disabled={blocked || isPending}
@@ -79,11 +88,11 @@ export function PublishDialog({
                 await onConfirm();
                 onClose();
               } catch (cause) {
-                setError(blogErrorMessage(cause));
+                setError(blogErrorText(cause));
               }
             }}
           >
-            {isPending ? "Đang đăng…" : "Đăng bài"}
+            {isPending ? t("submitting") : t("submit")}
           </Button>
         </div>
       </div>

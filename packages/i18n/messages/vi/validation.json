@@ -1,0 +1,47 @@
+{
+  "email": {
+    "invalid": "Email không hợp lệ",
+    "tooLong": "Email quá dài"
+  },
+  "password": {
+    "tooShort": "Mật khẩu tối thiểu 12 ký tự",
+    "tooLong": "Mật khẩu tối đa 128 ký tự",
+    "mismatch": "Mật khẩu nhập lại không khớp",
+    "currentRequired": "Vui lòng nhập mật khẩu hiện tại"
+  },
+  "displayName": {
+    "tooLong": "Tên quá dài"
+  },
+  "username": {
+    "tooShort": "Username tối thiểu 3 ký tự",
+    "tooLong": "Username tối đa 32 ký tự",
+    "pattern": "Chỉ dùng chữ, số, `_` và `-`",
+    "patternStrict": "Chỉ dùng chữ, số, `_` và `-`; phải bắt đầu và kết thúc bằng chữ hoặc số"
+  },
+  "slug": {
+    "required": "Slug không được để trống",
+    "tooLong": "Slug tối đa 120 ký tự",
+    "pattern": "Slug chỉ gồm chữ thường, số và dấu gạch ngang",
+    "reserved": "Slug này trùng đường dẫn có sẵn của trang blog"
+  },
+  "post": {
+    "titleRequired": "Tiêu đề không được để trống",
+    "contentInvalid": "Nội dung không hợp lệ",
+    "tooManyTags": "Tối đa 20 thẻ mỗi bài"
+  },
+  "category": {
+    "nameRequired": "Tên chuyên mục không được để trống",
+    "orderNumber": "Thứ tự phải là một số"
+  },
+  "message": {
+    "required": "Nhập nội dung tin nhắn"
+  },
+  "url": {
+    "invalid": "URL không hợp lệ"
+  },
+  "file": {
+    "typeNotAllowed": "Định dạng \"{type}\" không được phép. Cho phép: {allowed}",
+    "tooLarge": "File {size} vượt giới hạn {max} cho định dạng này.",
+    "empty": "File rỗng."
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "header": {
+    "backToList": "Back to conversations",
+    "viewProfile": "View {name}'s profile",
+    "accountMenu": "Account menu",
+    "memberCount": "{count} members",
+    "profile": "Profile",
+    "friends": "Friends",
+    "appearance": "Appearance"
+  },
+  "connection": {
+    "reconnecting": "Reconnecting…",
+    "offline": "Connection lost — new messages may not arrive.",
+    "composerOffline": "Connection lost — your message will be sent once you are back online."
+  },
+  "sidebar": {
+    "empty": "No conversations yet",
+    "loading": "Loading conversations…",
+    "searchPlaceholder": "Search loaded conversations…",
+    "searchLabel": "Search conversations",
+    "noMatch": "No conversation matches “{query}”.",
+    "noMessages": "No messages yet",
+    "youPrefix": "You: {body}",
+    "unread": "{count} unread messages",
+    "emptyHint": "Your conversations will show up here.",
+    "title": "Messages"
+  },
+  "conversation": {
+    "fallbackName": "User",
+    "unnamedGroup": "Unnamed group",
+    "untitled": "Conversation",
+    "notFound": "This conversation does not exist, or you do not have access to it",
+    "backToList": "Back to conversations",
+    "emptyState": "Pick a conversation on the left to start reading and replying.",
+    "noMessagesYet": "No messages yet. Say something.",
+    "emptyTitle": "Pick a conversation"
+  },
+  "messages": {
+    "label": "Messages",
+    "loading": "Loading messages…",
+    "deletedUser": "Deleted user",
+    "unknownUser": "User",
+    "read": "Read",
+    "sent": "Sent",
+    "resend": "Send again",
+    "conversationStart": "Start of the conversation",
+    "newMessages": "{count} new messages",
+    "toBottom": "Jump to latest"
+  },
+  "composer": {
+    "label": "Message body",
+    "placeholder": "Type a message…",
+    "placeholderOffline": "You are offline…",
+    "tooLong": "Messages are limited to {max} characters (currently {length})."
+  },
+  "typing": {
+    "one": "{name} is typing…",
+    "two": "{first} and {second} are typing…",
+    "many": "{first} and {count} others are typing…"
+  },
+  "presence": {
+    "unknown": "Status unknown",
+    "online": "Active now",
+    "offline": "Not active",
+    "justNow": "Active just now",
+    "minutesAgo": "Active {minutes} minutes ago",
+    "hoursAgo": "Active {hours} hours ago",
+    "daysAgo": "Active {days} days ago",
+    "onDate": "Active {date}"
+  },
+  "day": {
+    "today": "Today",
+    "yesterday": "Yesterday"
+  },
+  "profile": {
+    "title": "Profile",
+    "gone": "This user no longer exists.",
+    "loadFailed": "Could not load this profile.",
+    "owner": "Conversation owner",
+    "member": "Member",
+    "role": "Role",
+    "joined": "Joined",
+    "loading": "Loading",
+    "viewFull": "View full profile"
+  }
+}

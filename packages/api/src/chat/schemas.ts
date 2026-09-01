@@ -112,7 +112,7 @@ export const composerSchema = z.object({
   body: z
     .string()
     .trim()
-    .min(1, "Nhập nội dung tin nhắn")
+    .min(1, "validation.message.required")
     .max(MESSAGE_BODY_MAX, `Tin nhắn tối đa ${MESSAGE_BODY_MAX} ký tự`),
 });
 

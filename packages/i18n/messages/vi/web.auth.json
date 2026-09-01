@@ -1,0 +1,56 @@
+{
+  "login": {
+    "title": "Đăng nhập",
+    "subtitle": "Chào mừng quay lại.",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "forgot": "Quên mật khẩu?",
+    "submit": "Đăng nhập",
+    "submitting": "Đang đăng nhập…",
+    "noAccount": "Chưa có tài khoản?",
+    "register": "Đăng ký"
+  },
+  "register": {
+    "title": "Tạo tài khoản",
+    "subtitle": "Chỉ mất chưa tới một phút.",
+    "displayName": "Họ tên",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "confirmPassword": "Nhập lại mật khẩu",
+    "submit": "Đăng ký",
+    "submitting": "Đang tạo tài khoản…",
+    "hasAccount": "Đã có tài khoản?",
+    "login": "Đăng nhập"
+  },
+  "forgotPassword": {
+    "title": "Quên mật khẩu",
+    "subtitle": "Nhập email, chúng tôi sẽ gửi liên kết đặt lại mật khẩu.",
+    "email": "Email",
+    "submit": "Gửi liên kết",
+    "submitting": "Đang gửi…",
+    "sent": "Nếu email tồn tại trong hệ thống, liên kết đặt lại đã được gửi. Vui lòng kiểm tra hộp thư.",
+    "backToLogin": "Quay lại đăng nhập"
+  },
+  "resetPassword": {
+    "title": "Đặt lại mật khẩu",
+    "subtitle": "Chọn mật khẩu mới cho tài khoản.",
+    "newPassword": "Mật khẩu mới",
+    "confirmPassword": "Nhập lại mật khẩu",
+    "submit": "Đổi mật khẩu",
+    "submitting": "Đang lưu…",
+    "done": "Đổi mật khẩu thành công. Đang chuyển tới trang đăng nhập…",
+    "invalidLinkTitle": "Liên kết không hợp lệ",
+    "invalidLink": "Liên kết đặt lại mật khẩu thiếu mã xác thực hoặc đã hỏng.",
+    "requestNewLink": "Gửi lại liên kết"
+  },
+  "oauth": {
+    "divider": "hoặc",
+    "failed": "Đăng nhập bằng mạng xã hội thất bại ({reason}).",
+    "missingCode": "Liên kết callback thiếu mã đăng nhập.",
+    "exchangeFailed": "Không hoàn tất được đăng nhập.",
+    "finishing": "Đang hoàn tất đăng nhập…",
+    "processing": "Đang xử lý…",
+    "backToLogin": "Quay lại đăng nhập",
+    "pageTitle": "Đang đăng nhập…"
+  }
+}

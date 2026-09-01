@@ -1,0 +1,48 @@
+{
+  "title": "Bạn bè",
+  "loading": "Đang tải danh sách bạn bè…",
+  "loadFailed": "Không tải được danh sách bạn bè.",
+  "empty": "Chưa có bạn nào. Dùng “Tìm bạn” để gửi lời mời đầu tiên.",
+  "friendSince": "Bạn từ {date}",
+  "openRequests": "Lời mời kết bạn",
+  "find": "Tìm bạn",
+  "messages": "Tin nhắn",
+  "requests": {
+    "title": "Lời mời kết bạn",
+    "loading": "Đang tải…",
+    "loadFailed": "Không tải được danh sách lời mời.",
+    "empty": "Chưa có lời mời nào đang chờ.",
+    "incomingHeading": "Đang chờ bạn phản hồi",
+    "outgoingHeading": "Bạn đã gửi",
+    "accept": "Chấp nhận",
+    "decline": "Từ chối",
+    "cancel": "Huỷ lời mời"
+  },
+  "request": {
+    "nowFriends": "Hai bạn đã thành bạn bè.",
+    "sent": "Đã gửi lời mời kết bạn.",
+    "send": "Gửi lời mời kết bạn",
+    "sending": "Đang gửi…",
+    "isYou": "Đây là bạn.",
+    "alreadyFriends": "Hai bạn đã là bạn bè.",
+    "waitingReply": "Đã gửi lời mời, đang chờ phản hồi.",
+    "theySentYou": "Người này đã gửi lời mời cho bạn — mở “Lời mời kết bạn” để phản hồi.",
+    "errors": {
+      "alreadyFriends": "Hai bạn đã là bạn bè.",
+      "exists": "Lời mời đã tồn tại.",
+      "self": "Không thể tự kết bạn với chính mình.",
+      "rateLimited": "Bạn thao tác hơi nhanh, thử lại sau ít phút.",
+      "failed": "Không gửi được lời mời, thử lại sau."
+    }
+  },
+  "search": {
+    "title": "Tìm bạn theo username",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "vd: nghia-pham",
+    "submit": "Tìm",
+    "submitting": "Đang tìm…",
+    "hint": "Phải nhập đúng username, không tìm theo tên hiển thị.",
+    "notFound": "Không tìm thấy ai với username @{username}.",
+    "failed": "Không tìm được, thử lại sau."
+  }
+}

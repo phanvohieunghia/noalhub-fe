@@ -4,6 +4,8 @@ import type { UseFormReturn } from "react-hook-form";
 
 import type { BlogPostFormValues } from "@noalhub/api/blog";
 import { slugify } from "@noalhub/core/blog/slugify";
+import { useMessage } from "@noalhub/i18n/use-message";
+import { useTranslations } from "next-intl";
 import { appUrl, SEO_LIMITS, truncateForSeo } from "@noalhub/core/blog/seo";
 import { Input } from "@noalhub/ui/input";
 import { Textarea } from "@noalhub/ui/textarea";
@@ -29,21 +31,21 @@ export function SeoPanel({
   /** Slug đang chạy công khai; `null` nếu bài chưa từng publish. */
   publishedSlug: string | null;
 }) {
+  const t = useTranslations("admin.posts.seo");
+  const m = useMessage();
   const { register, watch, setValue, formState } = form;
   const values = watch();
 
-  const previewTitle = values.metaTitle.trim() || values.title.trim() || "Chưa có tiêu đề";
+  const previewTitle = values.metaTitle.trim() || values.title.trim() || t("noTitle");
   const previewDescription =
-    values.metaDescription.trim() ||
-    values.excerpt.trim() ||
-    "Chưa có mô tả — Google sẽ tự cắt một đoạn trong bài, thường không hay bằng.";
+    values.metaDescription.trim() || values.excerpt.trim() || t("noDescription");
 
   const slugChangedAfterPublish = publishedSlug !== null && values.slug.trim() !== publishedSlug;
 
   return (
     <aside className="flex flex-col gap-5">
       <Typography variant="title-4" as="h2" className="uppercase tracking-wide opacity-60">
-        SEO
+        {t("heading")}
       </Typography>
 
       {/* Preview kết quả Google */}
@@ -60,7 +62,7 @@ export function SeoPanel({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Input label="Slug" {...register("slug")} error={formState.errors.slug?.message} />
+        <Input label={t("slugLabel")} {...register("slug")} error={m(formState.errors.slug?.message)} />
         <button
           type="button"
           className="w-fit text-body-4 underline underline-offset-2 opacity-70 hover:opacity-100"
@@ -71,7 +73,7 @@ export function SeoPanel({
             })
           }
         >
-          Sinh slug từ tiêu đề
+          {t("slugFromTitle")}
         </button>
 
         {/*
@@ -86,29 +88,31 @@ export function SeoPanel({
             role="alert"
             className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300"
           >
-            Bài này đang chạy ở <strong>/blogs/{publishedSlug}</strong>. Đổi slug thì URL cũ sẽ được
-            chuyển hướng 301 sang slug mới — link cũ vẫn dùng được, nhưng nên có lý do để đổi.
+            {t.rich("slugChanged", {
+              slug: publishedSlug ?? "",
+              path: (chunks) => <strong>{chunks}</strong>,
+            })}
           </Typography>
         ) : null}
       </div>
 
       <div className="flex flex-col gap-1.5">
         <Input
-          label="Meta title"
-          placeholder={values.title || "Bỏ trống sẽ dùng tiêu đề bài"}
+          label={t("metaTitle")}
+          placeholder={values.title || t("metaTitlePlaceholder")}
           {...register("metaTitle")}
-          error={formState.errors.metaTitle?.message}
+          error={m(formState.errors.metaTitle?.message)}
         />
         <CharCount value={values.metaTitle || values.title} limit={SEO_LIMITS.title} />
       </div>
 
       <div className="flex flex-col gap-1.5">
         <Textarea
-          label="Meta description"
+          label={t("metaDescription")}
           rows={3}
-          placeholder="Bỏ trống sẽ dùng tóm tắt bài"
+          placeholder={t("metaDescriptionPlaceholder")}
           {...register("metaDescription")}
-          error={formState.errors.metaDescription?.message}
+          error={m(formState.errors.metaDescription?.message)}
         />
         <CharCount
           value={values.metaDescription || values.excerpt}
@@ -118,13 +122,13 @@ export function SeoPanel({
 
       <div className="flex flex-col gap-1.5">
         <Input
-          label="Ảnh OG"
-          placeholder="Bỏ trống sẽ dùng ảnh bìa"
+          label={t("ogImage")}
+          placeholder={t("ogImagePlaceholder")}
           {...register("ogImageUrl")}
-          error={formState.errors.ogImageUrl?.message}
+          error={m(formState.errors.ogImageUrl?.message)}
         />
         <ImageUploadButton
-          label="Tải ảnh OG lên"
+          label={t("uploadOg")}
           onUploaded={(asset) =>
             setValue("ogImageUrl", asset.url, {
               shouldDirty: true,
@@ -141,22 +145,22 @@ export function SeoPanel({
 
       <div className="flex flex-col gap-1.5">
         <Input
-          label="Canonical URL"
-          placeholder="Chỉ điền khi bài này đăng lại từ nguồn khác"
+          label={t("canonical")}
+          placeholder={t("canonicalPlaceholder")}
           {...register("canonicalUrl")}
-          error={formState.errors.canonicalUrl?.message}
+          error={m(formState.errors.canonicalUrl?.message)}
         />
         <Typography variant="body-4" className="opacity-60">
-          Bỏ trống là đúng trong hầu hết trường hợp — canonical mặc định trỏ về chính bài này.
+          {t("canonicalHint")}
         </Typography>
       </div>
 
       <Typography variant="body-3" as="label" className="flex items-start gap-2">
         <input type="checkbox" {...register("noindex")} className="mt-1" />
         <span>
-          <span className="font-medium">Không cho Google index bài này</span>
+          <span className="font-medium">{t("noindex")}</span>
           <Typography variant="body-4" as="span" className="block opacity-60">
-            Bài vẫn công khai và vẫn có trong sitemap — chỉ là bảo công cụ tìm kiếm bỏ qua.
+            {t("noindexHint")}
           </Typography>
         </span>
       </Typography>
@@ -165,6 +169,7 @@ export function SeoPanel({
 }
 
 function CharCount({ value, limit }: { value: string; limit: number }) {
+  const t = useTranslations("admin.posts.seo");
   const length = value.trim().length;
   const over = length > limit;
 
@@ -174,7 +179,7 @@ function CharCount({ value, limit }: { value: string; limit: number }) {
         over ? "text-amber-700 dark:text-amber-300" : "opacity-60"
       }`}
     >
-      {length}/{limit} ký tự{over ? " — Google nhiều khả năng sẽ cắt bớt" : ""}
+      {t(over ? "charCountOver" : "charCount", { length, limit })}
     </p>
   );
 }
@@ -188,6 +193,8 @@ function OgPreview({
   title: string;
   description: string;
 }) {
+  const t = useTranslations("admin.posts.seo");
+
   return (
     <div className="overflow-hidden rounded-lg border border-black/10 dark:border-white/15">
       {image ? (
@@ -198,7 +205,7 @@ function OgPreview({
         <img src={image} alt="" className="aspect-[1200/630] w-full object-cover" />
       ) : (
         <div className="text-body-4 flex aspect-[1200/630] w-full items-center justify-center bg-black/5 opacity-50 dark:bg-white/5">
-          Chưa có ảnh — thẻ chia sẻ sẽ chỉ có chữ
+          {t("ogEmpty")}
         </div>
       )}
       <div className="border-t border-black/10 p-2.5 dark:border-white/15">

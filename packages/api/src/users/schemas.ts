@@ -9,17 +9,24 @@ export const changeUsernameSchema = z.object({
   username: z
     .string()
     .trim()
-    .min(3, "Username tối thiểu 3 ký tự")
-    .max(32, "Username tối đa 32 ký tự")
+    .min(3, "validation.username.tooShort")
+    .max(32, "validation.username.tooLong")
     .regex(
       /^[a-zA-Z0-9](?:[a-zA-Z0-9_-]*[a-zA-Z0-9])?$/,
-      "Chỉ dùng chữ, số, `_` và `-`; phải bắt đầu và kết thúc bằng chữ hoặc số",
+      "validation.username.patternStrict",
     )
     // Backend hạ chữ hoa — hạ luôn ở client để giá trị hiển thị khớp bản lưu.
     .transform((v) => v.toLowerCase()),
 });
 
 export type ChangeUsernameInput = z.infer<typeof changeUsernameSchema>;
+
+/** Khớp `ChangeLanguageDto` — enum, không có ràng buộc nào khác. */
+export const changeLanguageSchema = z.object({
+  language: z.enum(["vi", "en"]),
+});
+
+export type ChangeLanguageInput = z.infer<typeof changeLanguageSchema>;
 
 /** `UserDto` — dùng lại schema của auth, cùng một DTO. */
 export { userSchema } from "../auth/schemas";

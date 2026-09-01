@@ -75,7 +75,7 @@ function refreshTokens(): Promise<AuthTokens> {
     if (!refreshToken) {
       throw new ApiError(401, {
         code: ERROR_CODES.unauthenticated,
-        message: "Phiên đã hết hạn",
+        message: "common.errors.sessionExpired",
         statusCode: 401,
       });
     }
@@ -177,7 +177,7 @@ http.interceptors.response.use(
     if (!error.response) {
       throw new ApiError(0, {
         code: "NETWORK_ERROR",
-        message: "Không kết nối được máy chủ",
+        message: "common.errors.noConnection",
         statusCode: 0,
       });
     }
@@ -191,7 +191,7 @@ http.interceptors.response.use(
         expireSession();
         throw new ApiError(401, {
           code: ERROR_CODES.unauthenticated,
-          message: "Phiên đăng nhập đã hết hạn",
+          message: "common.errors.sessionExpired",
           statusCode: 401,
         });
       }
@@ -230,11 +230,18 @@ function fallbackCodeFor(status: number): string {
   return "UNKNOWN";
 }
 
+/**
+ * Câu dự phòng khi backend không gửi `message` nào.
+ *
+ * Trả về **khoá i18n**, không phải câu: `client.ts` là module cấp app, không
+ * biết locale. `useMessage()` ở component dịch nó; câu do backend gửi thì không
+ * khớp khoá nào nên đi thẳng qua (`docs/i18n-plan.md` §7.3).
+ */
 function defaultMessageFor(status: number): string {
-  if (status === 401) return "Phiên đăng nhập đã hết hạn";
-  if (status === 403) return "Bạn không có quyền thực hiện thao tác này";
-  if (status === 404) return "Không tìm thấy tài nguyên";
-  if (status === 429) return "Bạn thao tác quá nhanh, vui lòng thử lại sau";
-  if (status >= 500) return "Máy chủ đang gặp sự cố, vui lòng thử lại";
-  return "Đã có lỗi xảy ra";
+  if (status === 401) return "common.errors.sessionExpired";
+  if (status === 403) return "common.errors.forbiddenAction";
+  if (status === 404) return "common.errors.resourceNotFound";
+  if (status === 429) return "common.errors.tooFast";
+  if (status >= 500) return "common.errors.serverError";
+  return "common.errors.unknown";
 }

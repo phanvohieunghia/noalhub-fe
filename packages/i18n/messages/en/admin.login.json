@@ -1,0 +1,9 @@
+{
+  "title": "Noalhub Admin",
+  "subtitle": "Admin area.",
+  "email": "Email",
+  "password": "Password",
+  "submit": "Sign in",
+  "submitting": "Signing in…",
+  "notAdmin": "This account does not have admin access."
+}

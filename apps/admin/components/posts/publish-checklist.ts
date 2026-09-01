@@ -5,7 +5,8 @@ const DEFAULT_SLUG_PREFIX = "bai-viet-khong-ten";
 
 export type PublishIssue = {
   id: string;
-  message: string;
+  /** Khoá i18n trong `admin.posts.publish.issues.*` — file này không biết locale. */
+  messageKey: string;
   /** `true` = không cho bấm Đăng. `false` = cảnh báo mềm, vẫn đăng được. */
   blocking: boolean;
 };
@@ -30,7 +31,7 @@ export function publishChecklist(
   if (!values.categorySlug) {
     issues.push({
       id: "category",
-      message: "Chưa chọn chuyên mục. Bài không có chuyên mục thì không đăng được.",
+      messageKey: "category",
       blocking: true,
     });
   }
@@ -40,7 +41,7 @@ export function publishChecklist(
   if (hasUnsavedChanges) {
     issues.push({
       id: "unsaved",
-      message: "Còn thay đổi chưa lưu. Lưu trước rồi hãy đăng, nếu không bản lên sóng là bản cũ.",
+      messageKey: "unsaved",
       blocking: true,
     });
   }
@@ -48,8 +49,7 @@ export function publishChecklist(
   if (!values.metaDescription.trim() && !values.excerpt.trim()) {
     issues.push({
       id: "description",
-      message:
-        "Chưa có meta description lẫn tóm tắt. Google sẽ tự cắt một đoạn trong bài, thường không hay bằng.",
+      messageKey: "description",
       blocking: false,
     });
   }
@@ -57,7 +57,7 @@ export function publishChecklist(
   if (!values.coverImageUrl.trim()) {
     issues.push({
       id: "cover",
-      message: "Chưa có ảnh bìa. Link chia sẻ lên mạng xã hội sẽ chỉ có chữ.",
+      messageKey: "cover",
       blocking: false,
     });
   }
@@ -65,8 +65,7 @@ export function publishChecklist(
   if (values.slug.startsWith(DEFAULT_SLUG_PREFIX)) {
     issues.push({
       id: "slug",
-      message:
-        "Slug vẫn là slug mặc định. Đổi trước khi đăng — sau khi đăng thì đổi slug là chuyện của redirect 301.",
+      messageKey: "slug",
       blocking: false,
     });
   }

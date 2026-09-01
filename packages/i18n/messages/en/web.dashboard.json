@@ -1,0 +1,9 @@
+{
+  "title": "Dashboard",
+  "greeting": "Hello, {name}.",
+  "you": "there",
+  "profile": "Profile",
+  "chat": "Messages",
+  "email": "Email",
+  "userId": "User ID"
+}

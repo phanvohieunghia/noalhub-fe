@@ -8,30 +8,30 @@ import { z } from "zod";
  * - Response schema: parse body backend, bắt lỗi đổi shape ngay tại chỗ.
  */
 
-const email = z.email("Email không hợp lệ").max(320, "Email quá dài");
+const email = z.email("validation.email.invalid").max(320, "validation.email.tooLong");
 
 /** Backend: minLength 12, maxLength 128, không ép ký tự đặc biệt. */
 const password = z
   .string()
-  .min(12, "Mật khẩu tối thiểu 12 ký tự")
-  .max(128, "Mật khẩu tối đa 128 ký tự");
+  .min(12, "validation.password.tooShort")
+  .max(128, "validation.password.tooLong");
 
 /* ---- Form schemas ---- */
 
 export const loginSchema = z.object({
   email,
-  password: z.string().min(1, "Vui lòng nhập mật khẩu"),
+  password: z.string().min(1, "validation.password.currentRequired"),
 });
 
 export const registerSchema = z
   .object({
-    displayName: z.string().max(255, "Tên quá dài").optional(),
+    displayName: z.string().max(255, "validation.displayName.tooLong").optional(),
     email,
     password,
     confirmPassword: z.string(),
   })
   .refine((v) => v.password === v.confirmPassword, {
-    message: "Mật khẩu nhập lại không khớp",
+    message: "validation.password.mismatch",
     path: ["confirmPassword"],
   });
 
@@ -43,18 +43,18 @@ export const resetPasswordSchema = z
     confirmPassword: z.string(),
   })
   .refine((v) => v.newPassword === v.confirmPassword, {
-    message: "Mật khẩu nhập lại không khớp",
+    message: "validation.password.mismatch",
     path: ["confirmPassword"],
   });
 
 export const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, "Vui lòng nhập mật khẩu hiện tại"),
+    currentPassword: z.string().min(1, "validation.password.currentRequired"),
     newPassword: password,
     confirmPassword: z.string(),
   })
   .refine((v) => v.newPassword === v.confirmPassword, {
-    message: "Mật khẩu nhập lại không khớp",
+    message: "validation.password.mismatch",
     path: ["confirmPassword"],
   });
 
@@ -81,6 +81,12 @@ export const userSchema = z.object({
     .transform((v) => v ?? null),
   emailVerified: z.boolean(),
   role: z.enum(["user", "admin"]),
+  /*
+   * `catch` chứ không phải `default`: backend luôn trả trường này (cột NOT NULL
+   * có DEFAULT), nhưng token phát trước migration vẫn còn hiệu lực và
+   * `/auth/me` cũ có thể thiếu nó — parse hỏng ở đây là đăng xuất cả phiên.
+   */
+  language: z.enum(["vi", "en"]).catch("vi"),
   displayName: z
     .string()
     .nullish()

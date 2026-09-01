@@ -11,11 +11,11 @@ export const findFriendSchema = z.object({
   username: z
     .string()
     .trim()
-    .min(3, "Username tối thiểu 3 ký tự")
-    .max(32, "Username tối đa 32 ký tự")
+    .min(3, "validation.username.tooShort")
+    .max(32, "validation.username.tooLong")
     .regex(
       /^[a-zA-Z0-9](?:[a-zA-Z0-9_-]*[a-zA-Z0-9])?$/,
-      "Chỉ dùng chữ, số, `_` và `-`",
+      "validation.username.pattern",
     )
     .transform((v) => v.toLowerCase()),
 });

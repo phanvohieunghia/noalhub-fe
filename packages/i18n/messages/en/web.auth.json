@@ -1,0 +1,56 @@
+{
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Welcome back.",
+    "email": "Email",
+    "password": "Password",
+    "forgot": "Forgot your password?",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "noAccount": "Don't have an account?",
+    "register": "Sign up"
+  },
+  "register": {
+    "title": "Create an account",
+    "subtitle": "It takes less than a minute.",
+    "displayName": "Full name",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "submit": "Sign up",
+    "submitting": "Creating your account…",
+    "hasAccount": "Already have an account?",
+    "login": "Sign in"
+  },
+  "forgotPassword": {
+    "title": "Forgot password",
+    "subtitle": "Enter your email and we'll send you a reset link.",
+    "email": "Email",
+    "submit": "Send link",
+    "submitting": "Sending…",
+    "sent": "If that email exists in our system, a reset link is on its way. Check your inbox.",
+    "backToLogin": "Back to sign in"
+  },
+  "resetPassword": {
+    "title": "Reset password",
+    "subtitle": "Choose a new password for your account.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "submit": "Change password",
+    "submitting": "Saving…",
+    "done": "Password changed. Taking you to the sign-in page…",
+    "invalidLinkTitle": "Invalid link",
+    "invalidLink": "This reset link is missing its token, or the link is broken.",
+    "requestNewLink": "Send a new link"
+  },
+  "oauth": {
+    "divider": "or",
+    "failed": "Social sign-in failed ({reason}).",
+    "missingCode": "The callback link is missing its sign-in code.",
+    "exchangeFailed": "Could not finish signing you in.",
+    "finishing": "Finishing sign-in…",
+    "processing": "Working…",
+    "backToLogin": "Back to sign in",
+    "pageTitle": "Signing in…"
+  }
+}

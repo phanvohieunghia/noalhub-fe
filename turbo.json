@@ -29,6 +29,7 @@
       "dependsOn": [
         "^typecheck"
       ]
-    }
+    },
+    "check-messages": {}
   }
 }

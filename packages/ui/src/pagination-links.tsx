@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { Link } from "@noalhub/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 /**
  * Phân trang bằng **`<a href>` thật**, cho trang công khai.
@@ -11,21 +12,28 @@ import Link from "next/link";
  *
  * Hai component chứ không sửa cái cũ: bảng admin phải giữ state ở client, hai
  * nhu cầu khác nhau.
+ *
+ * `Link` lấy từ `@noalhub/i18n/navigation` (bản của next-intl) chứ không phải
+ * `next/link`: component này chỉ dùng ở phần công khai của `apps/web`, nơi URL
+ * có tiền tố locale. Dùng `next/link` thì trang 2 mất tiền tố và người đọc
+ * tiếng Anh bị đá về bản tiếng Việt ngay khi lật trang.
  */
 export function PaginationLinks({
   basePath,
   page,
   limit,
   total,
-  label = "Phân trang",
+  label,
 }: {
   /** Đường dẫn không kèm query, ví dụ `/blogs` hoặc `/blogs/category/huong-dan`. */
   basePath: string;
   page: number;
   limit: number;
   total: number;
+  /** Bỏ trống thì dùng nhãn chung "Phân trang". */
   label?: string;
 }) {
+  const t = useTranslations("common.pagination");
   const pageCount = Math.max(1, Math.ceil(total / Math.max(1, limit)));
   if (pageCount <= 1) return null;
 
@@ -34,7 +42,10 @@ export function PaginationLinks({
   const hrefFor = (target: number) => (target <= 1 ? basePath : `${basePath}?page=${target}`);
 
   return (
-    <nav aria-label={label} className="flex items-center justify-between gap-3 pt-8 text-body-3">
+    <nav
+      aria-label={label ?? t("label")}
+      className="flex items-center justify-between gap-3 pt-8 text-body-3"
+    >
       <PageLink
         href={hrefFor(page - 1)}
         // `rel="prev"/"next"`: Google đã bỏ dùng từ 2019, nhưng Bing và RSS
@@ -42,15 +53,13 @@ export function PaginationLinks({
         rel="prev"
         disabled={page <= 1}
       >
-        ← Trang trước
+        ← {t("previous")}
       </PageLink>
 
-      <span className="tabular-nums opacity-60">
-        Trang {page}/{pageCount}
-      </span>
+      <span className="tabular-nums opacity-60">{t("current", { page, total: pageCount })}</span>
 
       <PageLink href={hrefFor(page + 1)} rel="next" disabled={page >= pageCount}>
-        Trang sau →
+        {t("next")} →
       </PageLink>
     </nav>
   );

@@ -3,7 +3,8 @@
 import Link from "next/link";
 
 import { useAdminBlogPosts, type BlogPost } from "@noalhub/api/blog";
-import { formatDateTime } from "@noalhub/core/format-date";
+import { useDateFormat } from "@noalhub/i18n/use-date-format";
+import { useTranslations } from "next-intl";
 import { Input } from "@noalhub/ui/input";
 import { Pagination } from "@noalhub/ui/pagination";
 import { Select } from "@noalhub/ui/select";
@@ -33,6 +34,7 @@ const COLUMN_COUNT = 5;
  * crawler nào cần đi qua. Bản `<a href>` là cho trang công khai (§4.5).
  */
 export function PostTable() {
+  const t = useTranslations("admin.posts");
   const { query, searchInput, setSearchInput, setStatus, setPage } = usePostFilters();
   const posts = useAdminBlogPosts(query);
 
@@ -40,20 +42,20 @@ export function PostTable() {
     <main className="w-full p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Typography variant="h4" as="h1">
-          Bài viết
+          {t("title")}
         </Typography>
         <div className="flex items-center gap-2">
           <Link
             href="/posts/categories"
             className="inline-flex h-10 items-center rounded-md border border-black/15 px-4 text-body-3 font-medium transition-colors hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
           >
-            Chuyên mục
+            {t("table.categories")}
           </Link>
           <Link
             href="/posts/new"
             className="inline-flex h-10 items-center rounded-md bg-foreground px-4 text-body-3 font-medium text-background transition-opacity hover:opacity-90"
           >
-            Viết bài mới
+            {t("table.new")}
           </Link>
         </div>
       </div>
@@ -61,21 +63,21 @@ export function PostTable() {
       <div className="mt-4 flex flex-wrap items-end gap-3">
         <div className="min-w-56 flex-1">
           <Input
-            label="Tìm kiếm"
-            placeholder="Tiêu đề hoặc slug"
+            label={t("table.search")}
+            placeholder={t("table.searchPlaceholder")}
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
           />
         </div>
         <Select
-          label="Trạng thái"
-          placeholder="Tất cả"
+          label={t("table.statusLabel")}
+          placeholder={t("table.allStatuses")}
           value={query.status ?? ""}
           onChange={(event) => setStatus(event.target.value)}
           options={[
-            { value: "draft", label: "Nháp" },
-            { value: "published", label: "Đã đăng" },
-            { value: "archived", label: "Đã gỡ" },
+            { value: "draft", label: t("status.draft") },
+            { value: "published", label: t("status.published") },
+            { value: "archived", label: t("status.archived") },
           ]}
         />
       </div>
@@ -86,14 +88,14 @@ export function PostTable() {
         </div>
       ) : (
         <div className="mt-4">
-          <TableRoot caption="Danh sách bài viết">
+          <TableRoot caption={t("table.caption")}>
             <TableHead>
               <TableRow>
-                <TableHeaderCell>Tiêu đề</TableHeaderCell>
-                <TableHeaderCell>Trạng thái</TableHeaderCell>
-                <TableHeaderCell>Chuyên mục</TableHeaderCell>
-                <TableHeaderCell>Tác giả</TableHeaderCell>
-                <TableHeaderCell>Cập nhật</TableHeaderCell>
+                <TableHeaderCell>{t("table.columns.title")}</TableHeaderCell>
+                <TableHeaderCell>{t("table.columns.status")}</TableHeaderCell>
+                <TableHeaderCell>{t("table.columns.category")}</TableHeaderCell>
+                <TableHeaderCell>{t("table.columns.author")}</TableHeaderCell>
+                <TableHeaderCell>{t("table.columns.updatedAt")}</TableHeaderCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -102,8 +104,8 @@ export function PostTable() {
               ) : posts.data.items.length === 0 ? (
                 <TableEmptyRow colSpan={COLUMN_COUNT}>
                   {query.q || query.status
-                    ? "Không có bài viết nào khớp bộ lọc."
-                    : "Chưa có bài viết nào. Bấm “Viết bài mới” để bắt đầu."}
+                    ? t("table.emptyFiltered")
+                    : t("table.empty")}
                 </TableEmptyRow>
               ) : (
                 posts.data.items.map((post) => <PostRow key={post.id} post={post} />)
@@ -127,6 +129,9 @@ export function PostTable() {
 }
 
 function PostRow({ post }: { post: BlogPost }) {
+  const t = useTranslations("admin.posts");
+  const df = useDateFormat();
+
   return (
     <TableRow>
       <TableCell>
@@ -142,13 +147,13 @@ function PostRow({ post }: { post: BlogPost }) {
       </TableCell>
       <TableCell className="whitespace-nowrap">
         {/* `null` chỉ hợp lệ với bài nháp — publish bắt buộc có chuyên mục (§2.6). */}
-        {post.category?.name ?? <span className="opacity-40">— chưa chọn</span>}
+        {post.category?.name ?? <span className="opacity-40">{t("table.noCategory")}</span>}
       </TableCell>
       <TableCell className="whitespace-nowrap">{post.author.displayName}</TableCell>
       {/* Sort của bảng này là `updatedAt DESC`, khác public (`publishedAt DESC`) —
           nên cột hiện đúng thứ đang được sort (§2.1a). */}
       <TableCell className="whitespace-nowrap opacity-70">
-        {formatDateTime(post.updatedAt)}
+        {df.dateTime(post.updatedAt)}
       </TableCell>
     </TableRow>
   );

@@ -2,6 +2,8 @@
 
 import { Dialog as RadixDialog } from "radix-ui";
 
+import { useTranslations } from "next-intl";
+
 import { Button } from "./button";
 import { Icon, ICONS } from "./icons";
 import { Typography } from "./typography";
@@ -21,6 +23,8 @@ type DialogProps = {
  * cũ không phải sửa; Radix chỉ phát `onOpenChange(false)` nên map thẳng được.
  */
 export function Dialog({ open, onClose, title, children }: DialogProps) {
+  const t = useTranslations("common");
+
   return (
     <RadixDialog.Root open={open} onOpenChange={(next) => !next && onClose()}>
       <RadixDialog.Portal>
@@ -35,7 +39,7 @@ export function Dialog({ open, onClose, title, children }: DialogProps) {
                 </Typography>
               </RadixDialog.Title>
               <RadixDialog.Close asChild>
-                <Button variant="ghost" size="icon-sm" aria-label="Đóng" className="-m-1">
+                <Button variant="ghost" size="icon-sm" aria-label={t("actions.close")} className="-m-1">
                   <Icon icon={ICONS.close} />
                 </Button>
               </RadixDialog.Close>

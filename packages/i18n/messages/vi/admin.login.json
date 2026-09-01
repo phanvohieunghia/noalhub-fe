@@ -1,0 +1,9 @@
+{
+  "title": "Noalhub Admin",
+  "subtitle": "Khu vực quản trị.",
+  "email": "Email",
+  "password": "Mật khẩu",
+  "submit": "Đăng nhập",
+  "submitting": "Đang đăng nhập…",
+  "notAdmin": "Tài khoản này không có quyền quản trị."
+}

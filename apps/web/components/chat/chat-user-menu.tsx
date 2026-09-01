@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@noalhub/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { useAuthStore } from "@noalhub/api/auth";
@@ -23,6 +24,7 @@ import { Typography } from "@noalhub/ui/typography";
  * đều do Radix lo.
  */
 export function ChatUserMenu() {
+  const t = useTranslations("web.chat.header");
   const user = useAuthStore((s) => s.user);
   const name = user?.displayName || user?.username || "";
 
@@ -31,7 +33,7 @@ export function ChatUserMenu() {
       align="start"
       className="w-64"
       trigger={
-        <Button variant="ghost" size="icon-sm" aria-label="Menu tài khoản">
+        <Button variant="ghost" size="icon-sm" aria-label={t("accountMenu")}>
           <Icon icon={ICONS.menu} />
         </Button>
       }
@@ -54,20 +56,20 @@ export function ChatUserMenu() {
           className="flex items-center gap-2 rounded-md px-2 py-1.5 text-body-3 hover:bg-muted"
         >
           <Icon icon={ICONS.user} />
-          Hồ sơ
+          {t("profile")}
         </Link>
         <Link
           href="/friends"
           className="flex items-center gap-2 rounded-md px-2 py-1.5 text-body-3 hover:bg-muted"
         >
           <Icon icon={ICONS.users} />
-          Bạn bè
+          {t("friends")}
         </Link>
       </nav>
 
       <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3">
         <Typography variant="body-4" className="opacity-70">
-          Giao diện
+          {t("appearance")}
         </Typography>
         <ThemeToggle />
       </div>

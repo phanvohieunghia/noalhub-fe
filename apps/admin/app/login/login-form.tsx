@@ -1,11 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { loginSchema, useAuthStore, useLogin, type LoginInput } from "@noalhub/api/auth";
+import type { Message } from "@noalhub/api/message";
+import { useMessage } from "@noalhub/i18n/use-message";
 import { safeRedirect } from "@noalhub/core/auth/redirect";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { Button } from "@noalhub/ui/button";
@@ -19,11 +22,13 @@ import { Typography } from "@noalhub/ui/typography";
  * mở đường đăng ký / OAuth: cửa vào admin chỉ có một.
  */
 export function AdminLoginForm() {
+  const t = useTranslations("admin.login");
+  const m = useMessage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const login = useLogin();
   const logout = useAuthStore((s) => s.logout);
-  const [formError, setFormError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<Message | string | null>(null);
 
   const {
     register,
@@ -42,7 +47,7 @@ export function AdminLoginForm() {
       // để họ đọc được lý do ở đúng form vừa bấm thay vì rơi vào màn hình chặn.
       if (useAuthStore.getState().user?.role !== "admin") {
         await logout();
-        setFormError("Tài khoản này không có quyền quản trị.");
+        setFormError({ key: "admin.login.notAdmin" });
         return;
       }
 
@@ -56,31 +61,31 @@ export function AdminLoginForm() {
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <Typography variant="h3" as="h1">
-          Noalhub Admin
+          {t("title")}
         </Typography>
         <Typography variant="body-3" className="opacity-70">
-          Khu vực quản trị.
+          {t("subtitle")}
         </Typography>
       </header>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-        <FormError message={formError} />
+        <FormError message={m(formError)} />
         <Input
-          label="Email"
+          label={t("email")}
           type="email"
           autoComplete="email"
-          error={errors.email?.message}
+          error={m(errors.email?.message)}
           {...register("email")}
         />
         <Input
-          label="Mật khẩu"
+          label={t("password")}
           type="password"
           autoComplete="current-password"
-          error={errors.password?.message}
+          error={m(errors.password?.message)}
           {...register("password")}
         />
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Đang đăng nhập…" : "Đăng nhập"}
+          {isSubmitting ? t("submitting") : t("submit")}
         </Button>
       </form>
     </div>

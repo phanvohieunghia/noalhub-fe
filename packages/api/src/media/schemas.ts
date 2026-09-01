@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import type { Message } from "../message";
+
 import type { MediaKind } from "./types";
 
 /* ------------------------------------------------------------------------- *
@@ -64,7 +66,9 @@ function formatBytes(bytes: number): string {
 }
 
 /**
- * `null` = file dùng được. Ngược lại là câu giải thích cho người dùng.
+ * `null` = file dùng được. Ngược lại là khoá i18n + tham số để component dịch
+ * (`Message`), không phải câu đã dịch sẵn: hàm này chạy ở module scope, không
+ * biết locale nào cả.
  *
  * Nhận `File` chứ không nhận `{ type, size }` rời: hai tham số cùng đến từ một
  * vật thể thì tách ra chỉ tạo cơ hội truyền chéo nhau.
@@ -72,18 +76,25 @@ function formatBytes(bytes: number): string {
 export function describeMediaRejection(
   file: File,
   options: { allow?: readonly string[] } = {},
-): string | null {
+): Message | null {
   const allow = options.allow ?? Object.keys(MEDIA_MIME_TO_KIND);
   if (!allow.includes(file.type)) {
-    return `Định dạng "${file.type || "không xác định"}" không được phép. Cho phép: ${allow
-      .map((mime) => mime.replace(/^[a-z]+\//, ""))
-      .join(", ")}.`;
+    return {
+      key: "validation.file.typeNotAllowed",
+      values: {
+        type: file.type,
+        allowed: allow.map((mime) => mime.replace(/^[a-z]+\//, "")).join(", "),
+      },
+    };
   }
   const max = maxBytesForMime(file.type);
   if (max !== null && file.size > max) {
-    return `File ${formatBytes(file.size)} vượt giới hạn ${formatBytes(max)} cho định dạng này.`;
+    return {
+      key: "validation.file.tooLarge",
+      values: { size: formatBytes(file.size), max: formatBytes(max) },
+    };
   }
-  if (file.size === 0) return "File rỗng.";
+  if (file.size === 0) return { key: "validation.file.empty" };
   return null;
 }
 

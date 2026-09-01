@@ -1,0 +1,12 @@
+{
+  "title": "Tổng quan",
+  "updatedAt": "Cập nhật {date}",
+  "refresh": "Làm mới",
+  "refreshing": "Đang tải…",
+  "totalUsers": "Tổng người dùng",
+  "totalUsersHint": "Gồm cả tài khoản chưa verify email",
+  "verifiedUsers": "Đã verify email",
+  "newUsers": "Mới trong 7 ngày",
+  "newUsersHint": "Cửa sổ 7 ngày do backend tính",
+  "admins": "Quản trị viên"
+}

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Avatar } from "@noalhub/ui/avatar";
 import { MessageBubble } from "./message-bubble";
 import type { ConversationMember, Message } from "@noalhub/api/chat";
@@ -24,11 +26,13 @@ export function MessageGroup({
   currentUserId: string | null;
   onRetry: (message: Message) => void;
 }) {
+  const t = useTranslations("web.chat.messages");
   const mine = senderId !== null && senderId === currentUserId;
   const sender = senderId ? members.get(senderId) : undefined;
 
   // senderId null = người gửi đã bị xoá khỏi hệ thống (ON DELETE SET NULL).
-  const name = senderId === null ? "Người dùng đã xoá" : (sender?.displayName ?? "Người dùng");
+  const name =
+    senderId === null ? t("deletedUser") : (sender?.displayName ?? t("unknownUser"));
 
   const memberList = [...members.values()];
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -22,6 +23,7 @@ import { Typography } from "../typography";
  * cũng sửa được trong devtools. Ranh giới thật vẫn là 403 của backend.
  */
 export function RoleGuard({ role, children }: { role: UserRole; children: React.ReactNode }) {
+  const t = useTranslations("common.guard");
   const me = useMe();
   const router = useRouter();
 
@@ -43,8 +45,8 @@ export function RoleGuard({ role, children }: { role: UserRole; children: React.
   if (me.isError) {
     return (
       <GuardScreen
-        title="Không tải được phiên đăng nhập"
-        message="Thử tải lại trang. Nếu vẫn lỗi thì backend đang không phản hồi."
+        title={t("sessionErrorTitle")}
+        message={t("sessionErrorMessage")}
       />
     );
   }
@@ -52,10 +54,10 @@ export function RoleGuard({ role, children }: { role: UserRole; children: React.
   if (isDenied) {
     return (
       <GuardScreen
-        title="Bạn không có quyền truy cập"
-        message={`Khu vực này chỉ dành cho tài khoản ${role}. Tài khoản đang đăng nhập là ${me.data.email}.`}
+        title={t("deniedTitle")}
+        message={t("deniedMessage", { role, email: me.data.email })}
         action={
-          <Button onClick={() => router.replace("/login")}>Đăng nhập bằng tài khoản khác</Button>
+          <Button onClick={() => router.replace("/login")}>{t("signInAsOther")}</Button>
         }
       />
     );

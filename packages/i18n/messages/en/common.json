@@ -1,0 +1,81 @@
+{
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "delete": "Delete",
+    "edit": "Edit",
+    "retry": "Try again",
+    "search": "Search",
+    "confirm": "Confirm",
+    "back": "Back",
+    "add": "Add",
+    "viewAll": "View all",
+    "copy": "Copy",
+    "copied": "Copied"
+  },
+  "states": {
+    "loading": "Loading…",
+    "saving": "Saving…",
+    "deleting": "Deleting…",
+    "empty": "Nothing here yet",
+    "none": "—"
+  },
+  "pagination": {
+    "previous": "Previous page",
+    "next": "Next page",
+    "page": "Page {page}",
+    "current": "Page {page} of {total}",
+    "prevShort": "Previous",
+    "nextShort": "Next",
+    "label": "Pagination",
+    "empty": "No results",
+    "range": "{from}–{to} of {total}"
+  },
+  "errors": {
+    "unknown": "Something went wrong",
+    "generic": "Something went wrong. Please try again.",
+    "network": "Could not reach the server. Check your connection and try again.",
+    "forbidden": "Your account no longer has admin access. Sign in again with an admin account.",
+    "rateLimited": "You are going too fast, so the server paused you. Wait a moment and try again.",
+    "notFound": "This record could not be found. It may have just been deleted.",
+    "conversationNotFound": "This conversation does not exist, or you do not have access to it.",
+    "postConflict": "The server copy has changed (you may have this post open in another tab). Reload to get the latest version — unsaved changes here will be lost.",
+    "slugTaken": "Another post already uses this slug. Pick a different one and save again.",
+    "postNotPublishable": "Cannot publish yet: {message}",
+    "categorySlugTaken": "That category slug already exists.",
+    "socket": {
+      "offline": "Connection lost — your message will be sent once you are back online.",
+      "rateLimited": "You are sending too fast. Wait a moment and try again.",
+      "notFound": "This conversation is no longer available.",
+      "validationFailed": "That message content is not valid.",
+      "sendFailed": "Could not send the message."
+    },
+    "sessionExpired": "Your session has expired",
+    "noConnection": "Could not reach the server",
+    "forbiddenAction": "You do not have permission to do that",
+    "resourceNotFound": "Resource not found",
+    "tooFast": "You are going too fast, please try again shortly",
+    "serverError": "The server is having trouble, please try again",
+    "storageForbidden": "Storage refused the upload (403). Usually the upload link expired — start over; if it keeps happening it is the server's host or clock configuration.",
+    "uploadDisconnected": "The connection dropped while uploading.",
+    "uploadAborted": "Upload cancelled."
+  },
+  "theme": {
+    "label": "Appearance",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "guard": {
+    "sessionErrorTitle": "Could not load your session",
+    "sessionErrorMessage": "Try reloading the page. If it keeps failing, the backend is not responding.",
+    "deniedTitle": "You do not have access",
+    "deniedMessage": "This area is only for {role} accounts. You are signed in as {email}.",
+    "signInAsOther": "Sign in with a different account"
+  },
+  "avatar": {
+    "fallback": "User"
+  },
+  "tocHeading": "In this post"
+}

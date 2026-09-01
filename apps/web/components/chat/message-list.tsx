@@ -8,8 +8,10 @@ import { MessageGroup } from "./message-group";
 import { MessageListSkeleton } from "./message-list-skeleton";
 import { MessageSystemNotice } from "./message-system-notice";
 import { ScrollToBottomButton } from "./scroll-to-bottom-button";
-import { errorMessage } from "@noalhub/core/chat/error-message";
+import { errorText } from "@noalhub/core/chat/error-message";
 import { GROUP_WINDOW_MS, isSameDay } from "@noalhub/core/chat/format";
+import { useMessage } from "@noalhub/i18n/use-message";
+import { useTranslations } from "next-intl";
 import type { ConversationMember, Message } from "@noalhub/api/chat";
 import { Typography } from "@noalhub/ui/typography";
 
@@ -44,6 +46,9 @@ export function MessageList({
   onRetry: (message: Message) => void;
   onReachBottom: (latestMessageId: string) => void;
 }) {
+  const t = useTranslations("web.chat.messages");
+  const tc = useTranslations("web.chat.conversation");
+  const m = useMessage();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [atBottom, setAtBottom] = useState(true);
   const [anchorLength, setAnchorLength] = useState<number | null>(null);
@@ -161,7 +166,7 @@ export function MessageList({
     return (
       <div className="flex flex-1 items-center justify-center p-6">
         <Typography variant="body-3" role="alert" className="text-red-600 dark:text-red-400">
-          {errorMessage(error)}
+          {m(errorText(error))}
         </Typography>
       </div>
     );
@@ -171,7 +176,7 @@ export function MessageList({
     return (
       <div className="flex flex-1 items-center justify-center p-6">
         <Typography variant="body-3" className="opacity-60">
-          Chưa có tin nhắn nào. Nói gì đó đi.
+          {tc("noMessagesYet")}
         </Typography>
       </div>
     );
@@ -187,13 +192,13 @@ export function MessageList({
         role="log"
         aria-live="polite"
         aria-relevant="additions"
-        aria-label="Tin nhắn"
+        aria-label={t("label")}
         className="flex-1 overflow-y-auto px-4 py-3"
       >
         <div ref={sentinelRef} className="flex justify-center py-1">
           {isFetchingOlder ? <Spinner /> : null}
           {!hasOlder && ordered.length > 0 ? (
-            <span className="text-[11px] opacity-40">Đầu cuộc trò chuyện</span>
+            <span className="text-[11px] opacity-40">{t("conversationStart")}</span>
           ) : null}
         </div>
 

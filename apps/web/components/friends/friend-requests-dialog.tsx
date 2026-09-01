@@ -5,7 +5,8 @@ import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
 import { FormError } from "@noalhub/ui/form-error";
 import { Spinner } from "@noalhub/ui/spinner";
-import { formatDate } from "@noalhub/core/format-date";
+import { useDateFormat } from "@noalhub/i18n/use-date-format";
+import { useTranslations } from "next-intl";
 import {
   useAcceptFriendRequest,
   useFriendRequests,
@@ -21,6 +22,7 @@ import { Typography } from "@noalhub/ui/typography";
  * là thứ cần hành động, để lên trên.
  */
 export function FriendRequestsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useTranslations("web.friends.requests");
   const incoming = useFriendRequests("incoming");
   const outgoing = useFriendRequests("outgoing");
 
@@ -29,7 +31,7 @@ export function FriendRequestsDialog({ open, onClose }: { open: boolean; onClose
   const empty = (incoming.data?.total ?? 0) === 0 && (outgoing.data?.total ?? 0) === 0;
 
   return (
-    <Dialog open={open} onClose={onClose} title="Lời mời kết bạn">
+    <Dialog open={open} onClose={onClose} title={t("title")}>
       {isPending ? (
         <Typography
           variant="body-3"
@@ -37,13 +39,13 @@ export function FriendRequestsDialog({ open, onClose }: { open: boolean; onClose
           className="flex items-center gap-2 py-4 opacity-70"
         >
           <Spinner />
-          Đang tải…
+          {t("loading")}
         </Typography>
       ) : error ? (
-        <FormError message="Không tải được danh sách lời mời." />
+        <FormError message={t("loadFailed")} />
       ) : empty ? (
         <Typography variant="body-3" className="py-4 opacity-70">
-          Chưa có lời mời nào đang chờ.
+          {t("empty")}
         </Typography>
       ) : (
         <div className="flex flex-col gap-5">
@@ -55,7 +57,7 @@ export function FriendRequestsDialog({ open, onClose }: { open: boolean; onClose
                 as="h3"
                 className="tracking-wide uppercase opacity-60"
               >
-                Đang chờ bạn phản hồi
+                {t("incomingHeading")}
               </Typography>
               <ul className="flex flex-col gap-2">
                 {incoming.data.items.map((friend) => (
@@ -73,7 +75,7 @@ export function FriendRequestsDialog({ open, onClose }: { open: boolean; onClose
                 as="h3"
                 className="tracking-wide uppercase opacity-60"
               >
-                Bạn đã gửi
+                {t("outgoingHeading")}
               </Typography>
               <ul className="flex flex-col gap-2">
                 {outgoing.data.items.map((friend) => (
@@ -89,6 +91,7 @@ export function FriendRequestsDialog({ open, onClose }: { open: boolean; onClose
 }
 
 function IncomingRow({ friend }: { friend: Friend }) {
+  const t = useTranslations("web.friends.requests");
   const accept = useAcceptFriendRequest();
   const remove = useRemoveFriendRequest();
   // Khoá cả hai nút khi một trong hai đang chạy: bấm chồng lên nhau là gửi hai
@@ -104,7 +107,7 @@ function IncomingRow({ friend }: { friend: Friend }) {
           disabled={busy}
           onClick={() => accept.mutate(friend.user.username)}
         >
-          Chấp nhận
+          {t("accept")}
         </Button>
         <Button
           variant="outline"
@@ -112,7 +115,7 @@ function IncomingRow({ friend }: { friend: Friend }) {
           disabled={busy}
           onClick={() => remove.mutate(friend.user.username)}
         >
-          Từ chối
+          {t("decline")}
         </Button>
       </span>
     </li>
@@ -120,6 +123,7 @@ function IncomingRow({ friend }: { friend: Friend }) {
 }
 
 function OutgoingRow({ friend }: { friend: Friend }) {
+  const t = useTranslations("web.friends.requests");
   const remove = useRemoveFriendRequest();
 
   return (
@@ -131,13 +135,14 @@ function OutgoingRow({ friend }: { friend: Friend }) {
         disabled={remove.isPending}
         onClick={() => remove.mutate(friend.user.username)}
       >
-        Huỷ lời mời
+        {t("cancel")}
       </Button>
     </li>
   );
 }
 
 function Identity({ friend }: { friend: Friend }) {
+  const df = useDateFormat();
   const name = friend.user.displayName ?? friend.user.username;
 
   return (
@@ -149,7 +154,7 @@ function Identity({ friend }: { friend: Friend }) {
         </Typography>
         <Typography variant="body-4" as="span" className="truncate font-mono opacity-60">
           @{friend.user.username}
-          {friend.since ? ` · ${formatDate(friend.since)}` : ""}
+          {friend.since ? ` · ${df.date(friend.since)}` : ""}
         </Typography>
       </span>
     </>

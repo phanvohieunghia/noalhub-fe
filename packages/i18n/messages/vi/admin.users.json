@@ -1,0 +1,29 @@
+{
+  "title": "Người dùng",
+  "detailTitle": "Chi tiết người dùng",
+  "search": "Tìm kiếm",
+  "searchPlaceholder": "Email hoặc username",
+  "role": "Vai trò",
+  "allRoles": "Tất cả",
+  "tableCaption": "Danh sách người dùng",
+  "columns": {
+    "user": "Người dùng",
+    "email": "Email",
+    "role": "Vai trò",
+    "joined": "Tham gia",
+    "lastSeen": "Hoạt động lần cuối"
+  },
+  "emptyFiltered": "Không có người dùng nào khớp bộ lọc.",
+  "empty": "Chưa có người dùng nào.",
+  "unverified": "Chưa verify",
+  "verifiedAt": "Verify {date}",
+  "neverOnline": "Chưa từng online",
+  "neverChanged": "Chưa từng đổi",
+  "detail": {
+    "id": "ID",
+    "usernameChangedAt": "Đổi username lần cuối",
+    "lastSeenNote": "Mốc offline gần nhất, không phải trạng thái online hiện tại.",
+    "noActions": "Chưa có hành động quản trị nào cho tài khoản này — khoá, đổi vai trò và thu hồi phiên đều cần endpoint chưa có ở backend (xem <doc>docs/admin-plan.md</doc> §3b).",
+    "backToList": "Về danh sách người dùng"
+  }
+}

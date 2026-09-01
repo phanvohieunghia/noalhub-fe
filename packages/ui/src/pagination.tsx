@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Button } from "./button";
 import { Typography } from "./typography";
 
@@ -24,19 +26,20 @@ export function Pagination({
   onPageChange: (page: number) => void;
   isLoading?: boolean;
 }) {
+  const t = useTranslations("common.pagination");
   const pageCount = Math.max(1, Math.ceil(total / Math.max(1, limit)));
   const from = total === 0 ? 0 : (page - 1) * limit + 1;
   const to = Math.min(page * limit, total);
 
   return (
     <nav
-      aria-label="Phân trang"
+      aria-label={t("label")}
       className="flex flex-wrap items-center justify-between gap-3 pt-3 text-body-3"
     >
       {/* aria-live: đổi trang bằng nút không làm focus nhảy, screen reader cần
           được báo phạm vi mới. */}
       <Typography variant="body-2" aria-live="polite" className="opacity-70">
-        {total === 0 ? "Không có kết quả" : `${from}–${to} trên ${total}`}
+        {total === 0 ? t("empty") : t("range", { from, to, total })}
       </Typography>
 
       <div className="flex items-center gap-2">
@@ -45,7 +48,7 @@ export function Pagination({
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1 || isLoading}
         >
-          Trước
+          {t("prevShort")}
         </Button>
         <span className="px-1 tabular-nums opacity-70">
           {page}/{pageCount}
@@ -55,7 +58,7 @@ export function Pagination({
           onClick={() => onPageChange(page + 1)}
           disabled={page >= pageCount || isLoading}
         >
-          Sau
+          {t("nextShort")}
         </Button>
       </div>
     </nav>

@@ -1,0 +1,81 @@
+{
+  "actions": {
+    "save": "Lưu",
+    "cancel": "Huỷ",
+    "close": "Đóng",
+    "delete": "Xoá",
+    "edit": "Sửa",
+    "retry": "Thử lại",
+    "search": "Tìm kiếm",
+    "confirm": "Xác nhận",
+    "back": "Quay lại",
+    "add": "Thêm",
+    "viewAll": "Xem tất cả",
+    "copy": "Sao chép",
+    "copied": "Đã sao chép"
+  },
+  "states": {
+    "loading": "Đang tải…",
+    "saving": "Đang lưu…",
+    "deleting": "Đang xoá…",
+    "empty": "Chưa có dữ liệu",
+    "none": "—"
+  },
+  "pagination": {
+    "previous": "Trang trước",
+    "next": "Trang sau",
+    "page": "Trang {page}",
+    "current": "Trang {page} / {total}",
+    "prevShort": "Trước",
+    "nextShort": "Sau",
+    "label": "Phân trang",
+    "empty": "Không có kết quả",
+    "range": "{from}–{to} trên {total}"
+  },
+  "errors": {
+    "unknown": "Đã có lỗi xảy ra",
+    "generic": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+    "network": "Không kết nối được tới máy chủ. Kiểm tra mạng rồi thử lại.",
+    "forbidden": "Tài khoản của bạn không còn quyền quản trị. Hãy đăng nhập lại bằng tài khoản admin.",
+    "rateLimited": "Bạn thao tác quá nhanh nên máy chủ tạm chặn. Chờ một chút rồi thử lại.",
+    "notFound": "Không tìm thấy bản ghi này. Có thể nó vừa bị xoá.",
+    "conversationNotFound": "Hội thoại không tồn tại hoặc bạn không có quyền truy cập.",
+    "postConflict": "Bản trên máy chủ đã thay đổi (có thể bạn đang mở bài này ở tab khác). Tải lại để lấy bản mới — thay đổi chưa lưu ở đây sẽ mất.",
+    "slugTaken": "Slug này đã có bài khác dùng. Đổi sang slug khác rồi lưu lại.",
+    "postNotPublishable": "Chưa đăng được: {message}",
+    "categorySlugTaken": "Slug chuyên mục này đã tồn tại.",
+    "socket": {
+      "offline": "Mất kết nối — tin sẽ được gửi lại khi kết nối lại.",
+      "rateLimited": "Bạn gửi quá nhanh. Chờ một chút rồi thử lại.",
+      "notFound": "Hội thoại không còn khả dụng.",
+      "validationFailed": "Nội dung tin nhắn không hợp lệ.",
+      "sendFailed": "Không gửi được tin nhắn."
+    },
+    "sessionExpired": "Phiên đăng nhập đã hết hạn",
+    "noConnection": "Không kết nối được máy chủ",
+    "forbiddenAction": "Bạn không có quyền thực hiện thao tác này",
+    "resourceNotFound": "Không tìm thấy tài nguyên",
+    "tooFast": "Bạn thao tác quá nhanh, vui lòng thử lại sau",
+    "serverError": "Máy chủ đang gặp sự cố, vui lòng thử lại",
+    "storageForbidden": "Storage từ chối (403). Thường là link upload đã hết hạn — thử lại từ đầu; nếu lặp lại thì là cấu hình host/đồng hồ của server.",
+    "uploadDisconnected": "Mất kết nối khi đang tải file lên.",
+    "uploadAborted": "Đã huỷ tải lên."
+  },
+  "theme": {
+    "label": "Giao diện",
+    "light": "Sáng",
+    "dark": "Tối",
+    "system": "Hệ thống"
+  },
+  "guard": {
+    "sessionErrorTitle": "Không tải được phiên đăng nhập",
+    "sessionErrorMessage": "Thử tải lại trang. Nếu vẫn lỗi thì backend đang không phản hồi.",
+    "deniedTitle": "Bạn không có quyền truy cập",
+    "deniedMessage": "Khu vực này chỉ dành cho tài khoản {role}. Tài khoản đang đăng nhập là {email}.",
+    "signInAsOther": "Đăng nhập bằng tài khoản khác"
+  },
+  "avatar": {
+    "fallback": "Người dùng"
+  },
+  "tocHeading": "Trong bài này"
+}

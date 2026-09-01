@@ -5,6 +5,7 @@ import {
   blogImageRemotePatterns,
 } from "@noalhub/config/blog-image-hosts.mjs";
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
   /**
@@ -29,7 +30,12 @@ const nextConfig: NextConfig = {
    * Thêm package mới vào `packages/` thì PHẢI khai ở đây, nếu không build sẽ
    * chết với lỗi cú pháp ngay ở dòng `import type` đầu tiên.
    */
-  transpilePackages: ["@noalhub/api", "@noalhub/core", "@noalhub/ui"],
+  transpilePackages: [
+    "@noalhub/api",
+    "@noalhub/core",
+    "@noalhub/i18n",
+    "@noalhub/ui",
+  ],
 
   /**
    * Host được phép cho ảnh trong bài viết và ảnh bìa (`docs/blog-plan.md` §6.2).
@@ -71,6 +77,21 @@ const nextConfig: NextConfig = {
     contentDispositionType: "attachment",
   },
 
+  /**
+   * `/blogs/rss.xml` là đường **cũ**, có người đã đăng ký trong reader từ trước
+   * khi có tiền tố locale. Feed thật giờ ở `/vi/blogs/rss.xml` (một bản duy
+   * nhất — `docs/i18n-plan.md` §8), nên đường cũ phải chuyển hướng vĩnh viễn
+   * chứ không được 404: reader thấy 404 vài lần là tự huỷ đăng ký.
+   *
+   * Không làm được ở `proxy.ts`: matcher ở đó loại mọi đường dẫn có dấu chấm để
+   * file tĩnh không bị đụng tới.
+   */
+  async redirects() {
+    return [
+      { source: "/blogs/rss.xml", destination: "/vi/blogs/rss.xml", permanent: true },
+    ];
+  },
+
   turbopack: {
     /**
      * Turbopack KHÔNG resolve file nằm ngoài root, mà root nó tự dò bằng cách
@@ -85,4 +106,9 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+/**
+ * Plugin của next-intl trỏ `next-intl/config` về `./i18n/request.ts`. Không có
+ * nó thì mọi `getTranslations`/`useTranslations` chạy với cấu hình rỗng và ném
+ * lỗi "no messages" ngay ở trang đầu tiên.
+ */
+export default createNextIntlPlugin()(nextConfig);

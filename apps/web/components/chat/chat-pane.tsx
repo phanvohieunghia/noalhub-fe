@@ -1,7 +1,8 @@
 "use client";
 
+import { Link } from "@noalhub/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import Link from "next/link";
 
 import { ChatHeader } from "./chat-header";
 import { MessageComposer } from "./message-composer";
@@ -24,6 +25,7 @@ import { Typography } from "@noalhub/ui/typography";
 const MARK_READ_DEBOUNCE_MS = 500;
 
 export function ChatPane({ conversationId }: { conversationId: string }) {
+  const t = useTranslations("web.chat.conversation");
   const currentUserId = useAuthStore((state) => state.user?.id ?? null);
 
   const conversationQuery = useConversation(conversationId);
@@ -69,10 +71,10 @@ export function ChatPane({ conversationId }: { conversationId: string }) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
         <Typography variant="title-4">
-          Hội thoại không tồn tại hoặc bạn không có quyền truy cập
+          {t("notFound")}
         </Typography>
         <Link href="/chat" className="text-body-3 underline underline-offset-2">
-          Về danh sách hội thoại
+          {t("backToList")}
         </Link>
       </div>
     );

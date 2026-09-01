@@ -1,10 +1,10 @@
+import { Link } from "@noalhub/i18n/navigation";
+import { useDateFormat } from "@noalhub/i18n/use-date-format";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
-import Link from "next/link";
 
 import type { BlogPostListItem } from "@noalhub/api/blog";
-import { formatReadingTime } from "@noalhub/core/blog/reading-time";
 import { listItemDescription } from "@noalhub/core/blog/seo";
-import { formatDate } from "@noalhub/core/format-date";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
@@ -15,6 +15,9 @@ import { Typography } from "@noalhub/ui/typography";
  * không có gì để tính (`docs/blog-plan.md` §2.3a).
  */
 export function PostCard({ post }: { post: BlogPostListItem }) {
+  const t = useTranslations("web.blog.post");
+  const df = useDateFormat();
+
   return (
     <article className="flex flex-col gap-3">
       {post.coverImageUrl ? (
@@ -56,9 +59,9 @@ export function PostCard({ post }: { post: BlogPostListItem }) {
         >
           <span>{post.author.displayName}</span>
           <span aria-hidden>·</span>
-          <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
+          <time dateTime={post.publishedAt}>{df.date(post.publishedAt)}</time>
           <span aria-hidden>·</span>
-          <span>{formatReadingTime(post.readingMinutes)}</span>
+          <span>{t("readingTime", { minutes: post.readingMinutes })}</span>
         </Typography>
       </div>
     </article>

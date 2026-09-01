@@ -9,12 +9,19 @@ import { ConversationListItem } from "./conversation-list-item";
 import { ConversationListSkeleton } from "./conversation-list-skeleton";
 import { ConversationSearch } from "./conversation-search";
 import { useConversations } from "@noalhub/api/chat";
-import { conversationDisplayName } from "@noalhub/core/chat/format";
 import { useAuthStore } from "@noalhub/api/auth";
-import { errorMessage } from "@noalhub/core/chat/error-message";
+import { errorText } from "@noalhub/core/chat/error-message";
+import { useMessage } from "@noalhub/i18n/use-message";
+import { useTranslations } from "next-intl";
 import { Typography } from "@noalhub/ui/typography";
 
+import { useChatFormat } from "./use-chat-format";
+
 export function ConversationList() {
+  const t = useTranslations("web.chat.sidebar");
+  const tc = useTranslations("common");
+  const m = useMessage();
+  const cf = useChatFormat();
   const params = useParams<{ conversationId?: string }>();
   const activeId = params?.conversationId;
   const currentUserId = useAuthStore((state) => state.user?.id ?? null);
@@ -32,9 +39,9 @@ export function ConversationList() {
     const needle = query.trim().toLowerCase();
     if (!needle) return conversations;
     return conversations.filter((conversation) =>
-      conversationDisplayName(conversation, currentUserId).toLowerCase().includes(needle),
+      cf.conversationName(conversation, currentUserId).toLowerCase().includes(needle),
     );
-  }, [conversations, query, currentUserId]);
+  }, [conversations, query, currentUserId, cf]);
 
   const sentinelRef = useInfiniteScroll(
     () => void fetchNextPage(),
@@ -47,14 +54,14 @@ export function ConversationList() {
     return (
       <div className="flex flex-col items-start gap-2 p-4">
         <Typography variant="body-3" role="alert" className="text-red-600 dark:text-red-400">
-          {errorMessage(error)}
+          {m(errorText(error))}
         </Typography>
         <button
           type="button"
           onClick={() => void refetch()}
           className="rounded-md border border-black/15 px-2 py-1 text-body-4 dark:border-white/20"
         >
-          Thử lại
+          {tc("actions.retry")}
         </button>
       </div>
     );
@@ -69,7 +76,7 @@ export function ConversationList() {
       <div className="min-h-0 flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
           <Typography variant="body-4" className="p-4 text-center opacity-60">
-            Không có hội thoại nào khớp “{query}”.
+            {t("noMatch", { query })}
           </Typography>
         ) : (
           <ul className="flex flex-col gap-0.5 px-2 pb-2">

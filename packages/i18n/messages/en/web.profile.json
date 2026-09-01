@@ -1,0 +1,43 @@
+{
+  "title": "Profile",
+  "loading": "Loading profile…",
+  "loadFailed": "Could not load this profile.",
+  "noData": "No profile data.",
+  "dashboard": "Dashboard",
+  "facts": {
+    "email": "Email",
+    "verified": "· verified",
+    "unverified": "· not verified",
+    "role": "Role",
+    "admin": "Administrator",
+    "member": "Member",
+    "joined": "Joined",
+    "usernameChangedAt": "Username last changed",
+    "neverChanged": "Never changed",
+    "userId": "User ID",
+    "lastSeen": "Last active",
+    "neverOnline": "Never online"
+  },
+  "username": {
+    "heading": "Change username",
+    "label": "Username",
+    "saved": "Username updated.",
+    "taken": "That username is already taken",
+    "tooSoon": "You changed your username recently and cannot change it again yet.",
+    "lockedUntil": "You can change this once every 6 months. Next change: {date}.",
+    "hint": "You can change this once every 6 months — think it over before saving.",
+    "submit": "Save username",
+    "submitting": "Saving…"
+  },
+  "public": {
+    "notFound": "No user found with the username @{username}.",
+    "message": "Message",
+    "opening": "Opening…",
+    "errors": {
+      "recipientNotFound": "This person no longer exists.",
+      "self": "You cannot message yourself.",
+      "rateLimited": "You are going a bit fast, try again in a few minutes.",
+      "failed": "Could not open the conversation, try again later."
+    }
+  }
+}

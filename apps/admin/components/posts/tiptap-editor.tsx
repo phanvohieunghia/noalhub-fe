@@ -13,6 +13,9 @@ import {
   type BlogDoc,
 } from "@noalhub/api/blog";
 import { MEDIA_IMAGE_MIMES, useUploadMedia, type MediaAsset } from "@noalhub/api/media";
+import { messageOf, type Message } from "@noalhub/api/message";
+import { useMessage } from "@noalhub/i18n/use-message";
+import { useTranslations } from "next-intl";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
 import { FormError } from "@noalhub/ui/form-error";
@@ -59,7 +62,8 @@ export function TiptapEditor({
 }) {
   const [linkOpen, setLinkOpen] = useState(false);
   const [imageOpen, setImageOpen] = useState(false);
-  const [dropError, setDropError] = useState<string | null>(null);
+  const m = useMessage();
+  const [dropError, setDropError] = useState<Message | string | null>(null);
   /*
    * `editorProps` được đóng gói lúc TẠO editor, nên handler bên trong không thể
    * đóng bao lên biến `editor` (lúc đó nó còn chưa tồn tại). Ref là đường duy
@@ -88,7 +92,7 @@ export function TiptapEditor({
           void insertImageAsset(editorInstance, asset, file.name);
         },
         onError: (error) =>
-          setDropError(error instanceof Error ? error.message : "Không tải được ảnh lên."),
+          setDropError(messageOf(error)),
       });
     },
     [dropUpload],
@@ -178,7 +182,7 @@ export function TiptapEditor({
           {dropUpload.progress ? `${Math.round(dropUpload.progress.ratio * 100)}%` : ""}
         </Typography>
       ) : null}
-      <FormError message={dropError} />
+      <FormError message={m(dropError)} />
 
       {linkOpen ? <LinkDialog editor={editor} onClose={() => setLinkOpen(false)} /> : null}
       {imageOpen ? <ImageDialog editor={editor} onClose={() => setImageOpen(false)} /> : null}
@@ -195,33 +199,34 @@ function Toolbar({
   onLink: () => void;
   onImage: () => void;
 }) {
+  const t = useTranslations("admin.posts.editorToolbar");
   const inCodeBlock = editor.isActive("codeBlock");
 
   return (
     <div className="flex flex-wrap items-center gap-1 rounded-md border border-black/10 p-1.5 dark:border-white/15">
       <ToolbarButton
-        label="Đậm"
+        label={t("bold")}
         active={editor.isActive("bold")}
         onClick={() => editor.chain().focus().toggleBold().run()}
       >
         <strong>B</strong>
       </ToolbarButton>
       <ToolbarButton
-        label="Nghiêng"
+        label={t("italic")}
         active={editor.isActive("italic")}
         onClick={() => editor.chain().focus().toggleItalic().run()}
       >
         <em>I</em>
       </ToolbarButton>
       <ToolbarButton
-        label="Gạch ngang"
+        label={t("strike")}
         active={editor.isActive("strike")}
         onClick={() => editor.chain().focus().toggleStrike().run()}
       >
         <s>S</s>
       </ToolbarButton>
       <ToolbarButton
-        label="Mã inline"
+        label={t("code")}
         active={editor.isActive("code")}
         onClick={() => editor.chain().focus().toggleCode().run()}
       >
@@ -231,14 +236,14 @@ function Toolbar({
       <Divider />
 
       <ToolbarButton
-        label="Tiêu đề mức 2"
+        label={t("h2")}
         active={editor.isActive("heading", { level: 2 })}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
       >
         H2
       </ToolbarButton>
       <ToolbarButton
-        label="Tiêu đề mức 3"
+        label={t("h3")}
         active={editor.isActive("heading", { level: 3 })}
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
       >
@@ -248,35 +253,35 @@ function Toolbar({
       <Divider />
 
       <ToolbarButton
-        label="Danh sách chấm"
+        label={t("bulletList")}
         active={editor.isActive("bulletList")}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
       >
         •
       </ToolbarButton>
       <ToolbarButton
-        label="Danh sách số"
+        label={t("orderedList")}
         active={editor.isActive("orderedList")}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
       >
         1.
       </ToolbarButton>
       <ToolbarButton
-        label="Trích dẫn"
+        label={t("quote")}
         active={editor.isActive("blockquote")}
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
       >
         ❞
       </ToolbarButton>
       <ToolbarButton
-        label="Khối mã"
+        label={t("codeBlock")}
         active={inCodeBlock}
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
       >
         {"{ }"}
       </ToolbarButton>
       <ToolbarButton
-        label="Đường kẻ ngang"
+        label={t("hr")}
         active={false}
         onClick={() => editor.chain().focus().setHorizontalRule().run()}
       >
@@ -285,18 +290,18 @@ function Toolbar({
 
       <Divider />
 
-      <ToolbarButton label="Chèn liên kết" active={editor.isActive("link")} onClick={onLink}>
-        Link
+      <ToolbarButton label={t("link")} active={editor.isActive("link")} onClick={onLink}>
+        {t("linkText")}
       </ToolbarButton>
-      <ToolbarButton label="Chèn ảnh" active={false} onClick={onImage}>
-        Ảnh
+      <ToolbarButton label={t("image")} active={false} onClick={onImage}>
+        {t("imageText")}
       </ToolbarButton>
 
       {/* Chỉ hiện khi con trỏ đang trong khối mã — một ô select luôn hiện nhưng
           hầu như luôn vô tác dụng là mời gọi bấm nhầm. */}
       {inCodeBlock ? (
         <select
-          aria-label="Ngôn ngữ của khối mã"
+          aria-label={t("codeLanguage")}
           className="ml-auto h-8 rounded-md border border-black/15 bg-transparent px-2 text-body-4 dark:border-white/20"
           value={(editor.getAttributes("codeBlock").language as string) ?? ""}
           onChange={(event) =>
@@ -308,7 +313,7 @@ function Toolbar({
           }
         >
           <option value="" className="bg-background">
-            Không rõ
+            {t("codeLanguageNone")}
           </option>
           {BLOG_CODE_LANGUAGES.map((language) => (
             <option key={language} value={language} className="bg-background">
@@ -357,6 +362,8 @@ function Divider() {
  * mobile thì gần như không dùng nổi.
  */
 function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }) {
+  const t = useTranslations("admin.posts.editorToolbar");
+  const tc = useTranslations("common");
   const [href, setHref] = useState((editor.getAttributes("link").href as string) ?? "");
   const [error, setError] = useState<string | null>(null);
 
@@ -368,7 +375,7 @@ function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }
       return;
     }
     if (!isSafeLinkHref(value)) {
-      setError("Chỉ nhận http, https, mailto hoặc đường dẫn nội bộ bắt đầu bằng /.");
+      setError(t("linkInvalid"));
       return;
     }
     // KHÔNG đặt `target`/`rel` ở đây: renderer tự quyết định (§3.1a), và ghi
@@ -378,24 +385,23 @@ function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }
   };
 
   return (
-    <Dialog open onClose={onClose} title="Liên kết">
+    <Dialog open onClose={onClose} title={t("linkDialogTitle")}>
       <div className="flex flex-col gap-4">
         <Input
-          label="URL"
+          label={t("linkUrl")}
           value={href}
           onChange={(event) => setHref(event.target.value)}
           placeholder="https://…"
         />
         <Typography variant="body-4" className="-mt-2 opacity-60">
-          Để trống rồi bấm Áp dụng để gỡ liên kết. Link ra ngoài tự động mang
-          <code className="mx-1">rel=&quot;nofollow noopener&quot;</code> khi hiển thị.
+          {t.rich("linkHint", { code: (chunks) => <code className="mx-1">{chunks}</code> })}
         </Typography>
         <FormError message={error} />
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
-            Huỷ
+            {tc("actions.cancel")}
           </Button>
-          <Button onClick={apply}>Áp dụng</Button>
+          <Button onClick={apply}>{t("apply")}</Button>
         </div>
       </div>
     </Dialog>
@@ -416,6 +422,7 @@ function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }
  * điều đó trước khi bài lên sóng.
  */
 function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void }) {
+  const t = useTranslations("admin.posts.editorToolbar");
   const [src, setSrc] = useState("");
   const [alt, setAlt] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -429,7 +436,7 @@ function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void 
 
     if (!isSafeImageSrc(value)) {
       setError(
-        "Ảnh phải dùng https và nằm trong danh sách host được phép. Host ngoài danh sách sẽ chết ở production vì next/image chặn.",
+        t("imageHostInvalid"),
       );
       return;
     }
@@ -440,7 +447,7 @@ function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void 
 
     if (!size) {
       setNotice(
-        "Không đo được kích thước ảnh (ảnh không tải được hoặc bị chặn CORS). Vẫn chèn được, nhưng ảnh sẽ hiển thị trong khung 16:9 thay vì kích thước thật.",
+        t("imageMeasureFailed"),
       );
     }
 
@@ -462,10 +469,10 @@ function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void 
   };
 
   return (
-    <Dialog open onClose={onClose} title="Chèn ảnh">
+    <Dialog open onClose={onClose} title={t("imageDialogTitle")}>
       <div className="flex flex-col gap-4">
         <ImageUploadButton
-          label="Chọn ảnh từ máy"
+          label={t("imagePick")}
           onUploaded={(asset) => {
             setSrc(asset.url);
             setError(null);
@@ -477,16 +484,16 @@ function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void 
         />
 
         <Input
-          label="URL ảnh"
+          label={t("imageUrl")}
           value={src}
           onChange={(event) => setSrc(event.target.value)}
-          placeholder="Tải lên ở trên, hoặc dán https://images.unsplash.com/…"
+          placeholder={t("imageUrlPlaceholder")}
         />
         <Input
-          label="Mô tả ảnh (alt)"
+          label={t("imageAlt")}
           value={alt}
           onChange={(event) => setAlt(event.target.value)}
-          placeholder="Để trống nếu ảnh chỉ để trang trí"
+          placeholder={t("imageAltPlaceholder")}
         />
         <FormError message={error} />
         {notice ? (
@@ -500,10 +507,10 @@ function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void 
         ) : null}
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
-            Đóng
+            {t("close")}
           </Button>
           <Button onClick={insert} disabled={measuring}>
-            {measuring ? "Đang đo ảnh…" : "Chèn"}
+            {measuring ? t("measuring") : t("insert")}
           </Button>
         </div>
       </div>

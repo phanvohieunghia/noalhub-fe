@@ -1,19 +1,23 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@noalhub/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Avatar } from "@noalhub/ui/avatar";
 import { MemberProfileDrawer } from "./member-profile-drawer";
 import { PresenceDot, PresenceLabel } from "./presence-dot";
+import { useChatFormat } from "./use-chat-format";
 import { useAuthStore } from "@noalhub/api/auth";
-import { conversationDisplayName, otherMember } from "@noalhub/core/chat/format";
+import { otherMember } from "@noalhub/core/chat/format";
 import type { Conversation } from "@noalhub/api/chat";
 import { Typography } from "@noalhub/ui/typography";
 
 export function ChatHeader({ conversation }: { conversation: Conversation }) {
+  const t = useTranslations("web.chat.header");
+  const cf = useChatFormat();
   const currentUserId = useAuthStore((state) => state.user?.id ?? null);
-  const name = conversationDisplayName(conversation, currentUserId);
+  const name = cf.conversationName(conversation, currentUserId);
   const peer = otherMember(conversation, currentUserId);
   const isDirect = conversation.type === "direct";
   const [profileOpen, setProfileOpen] = useState(false);
@@ -23,7 +27,7 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
       {/* Nút back chỉ có nghĩa ở mobile — desktop luôn thấy sidebar. */}
       <Link
         href="/chat"
-        aria-label="Về danh sách hội thoại"
+        aria-label={t("backToList")}
         className="-ml-1 rounded-md px-1 py-0.5 text-title-2 leading-none opacity-70 hover:opacity-100 md:hidden"
       >
         ◀
@@ -34,7 +38,7 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
         <button
           type="button"
           onClick={() => setProfileOpen(true)}
-          aria-label={`Xem hồ sơ của ${name}`}
+          aria-label={t("viewProfile", { name })}
           className="relative shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-foreground/60"
         >
           <Avatar name={name} src={peer.avatarUrl} size="sm" />
@@ -56,7 +60,7 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
           <PresenceLabel userId={peer?.userId} />
         ) : (
           <Typography variant="body-4" as="span" className="opacity-60">
-            {conversation.members.length} thành viên
+            {t("memberCount", { count: conversation.members.length })}
           </Typography>
         )}
       </div>

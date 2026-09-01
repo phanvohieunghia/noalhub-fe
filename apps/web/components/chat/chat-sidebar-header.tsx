@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Typography } from "@noalhub/ui/typography";
 
 import { ChatUserMenu } from "./chat-user-menu";
@@ -14,12 +16,14 @@ import { ChatUserMenu } from "./chat-user-menu";
  * "Bạn bè" đã nằm trong `ChatUserMenu` nên không lặp lại ở đây.
  */
 export function ChatSidebarHeader() {
+  const t = useTranslations("web.chat.sidebar");
+
   return (
     <div className="flex shrink-0 items-center gap-2 px-4 py-3">
       <ChatUserMenu />
 
       <Typography variant="h6" as="h1">
-        Tin nhắn
+        {t("title")}
       </Typography>
     </div>
   );

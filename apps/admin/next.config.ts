@@ -5,6 +5,7 @@ import {
   blogImageRemotePatterns,
 } from "@noalhub/config/blog-image-hosts.mjs";
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
   /**
@@ -29,7 +30,12 @@ const nextConfig: NextConfig = {
    * Thêm package mới vào `packages/` thì PHẢI khai ở đây, nếu không build sẽ
    * chết với lỗi cú pháp ngay ở dòng `import type` đầu tiên.
    */
-  transpilePackages: ["@noalhub/api", "@noalhub/core", "@noalhub/ui"],
+  transpilePackages: [
+    "@noalhub/api",
+    "@noalhub/core",
+    "@noalhub/i18n",
+    "@noalhub/ui",
+  ],
 
   /**
    * Admin cũng cần block này, dù nó không phải trang công khai: tab **Xem
@@ -72,4 +78,9 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+/**
+ * Plugin của next-intl trỏ `next-intl/config` về `./i18n/request.ts`. Không có
+ * nó thì mọi `getTranslations`/`useTranslations` chạy với cấu hình rỗng và ném
+ * lỗi "no messages" ngay ở trang đầu tiên.
+ */
+export default createNextIntlPlugin()(nextConfig);

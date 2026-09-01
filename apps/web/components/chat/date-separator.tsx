@@ -1,9 +1,12 @@
-import { dayLabel } from "@noalhub/core/chat/format";
+"use client";
+
 import { Typography } from "@noalhub/ui/typography";
+
+import { useChatFormat } from "./use-chat-format";
 
 /** "Hôm nay" / "Hôm qua" / "3 tháng bảy". */
 export function DateSeparator({ iso }: { iso: string }) {
-  const label = dayLabel(iso);
+  const label = useChatFormat().dayLabel(iso);
   if (!label) return null;
 
   return (

@@ -8,8 +8,11 @@ import { Button } from "@noalhub/ui/button";
 import { FormError, FormSuccess } from "@noalhub/ui/form-error";
 import { Input } from "@noalhub/ui/input";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
-import { formatDateTime } from "@noalhub/core/format-date";
+import { useDateFormat } from "@noalhub/i18n/use-date-format";
+import { useMessage } from "@noalhub/i18n/use-message";
+import { useTranslations } from "next-intl";
 import { ApiError, ERROR_CODES } from "@noalhub/api/errors";
+import type { Message } from "@noalhub/api/message";
 import { useChangeUsername } from "@noalhub/api/users";
 import { changeUsernameSchema, type ChangeUsernameInput } from "@noalhub/api/users";
 import type { User } from "@noalhub/api/users";
@@ -22,7 +25,10 @@ import { Typography } from "@noalhub/ui/typography";
  * frontend vì hai nguồn sự thật sẽ lệch.
  */
 export function ChangeUsernameForm({ user }: { user: User }) {
-  const [formError, setFormError] = useState<string | null>(null);
+  const t = useTranslations("web.profile.username");
+  const m = useMessage();
+  const df = useDateFormat();
+  const [formError, setFormError] = useState<Message | string | null>(null);
   const [saved, setSaved] = useState(false);
   const changeUsername = useChangeUsername();
 
@@ -48,11 +54,11 @@ export function ChangeUsernameForm({ user }: { user: User }) {
     } catch (error) {
       // Hai lỗi nghiệp vụ này gắn đúng vào ô username, không đẩy lên banner.
       if (error instanceof ApiError && error.code === ERROR_CODES.usernameTaken) {
-        setError("username", { message: "Username này đã có người dùng" });
+        setError("username", { message: "web.profile.username.taken" });
         return;
       }
       if (error instanceof ApiError && error.code === ERROR_CODES.usernameChangeTooSoon) {
-        setFormError("Bạn vừa đổi username gần đây, chưa tới hạn đổi tiếp.");
+        setFormError({ key: "web.profile.username.tooSoon" });
         return;
       }
       setFormError(applyApiError(error, setError, ["username"]));
@@ -61,27 +67,25 @@ export function ChangeUsernameForm({ user }: { user: User }) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-      <FormError message={formError} />
-      {saved ? <FormSuccess message="Đã cập nhật username." /> : null}
+      <FormError message={m(formError)} />
+      {saved ? <FormSuccess message={t("saved")} /> : null}
 
       <Input
-        label="Username"
+        label={t("label")}
         autoComplete="username"
         spellCheck={false}
         disabled={locked}
-        error={errors.username?.message}
+        error={m(errors.username?.message)}
         {...register("username")}
       />
 
       <Typography variant="body-3" className="opacity-70">
-        {locked
-          ? `Chỉ đổi được mỗi 6 tháng một lần. Lần đổi tiếp theo: ${formatDateTime(lockedUntil)}.`
-          : "Chỉ đổi được mỗi 6 tháng một lần — cân nhắc trước khi lưu."}
+        {locked ? t("lockedUntil", { date: df.dateTime(lockedUntil) }) : t("hint")}
       </Typography>
 
       <div>
         <Button type="submit" disabled={locked || isSubmitting}>
-          {isSubmitting ? "Đang lưu…" : "Lưu username"}
+          {isSubmitting ? t("submitting") : t("submit")}
         </Button>
       </div>
     </form>
