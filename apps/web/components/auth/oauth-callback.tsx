@@ -8,6 +8,7 @@ import { FormError } from "@noalhub/ui/form-error";
 import { useOAuthExchange } from "@noalhub/api/auth";
 import { takeOAuthNext } from "@noalhub/core/auth/redirect";
 import { ApiError } from "@noalhub/api/errors";
+import { Typography } from "@noalhub/ui/typography";
 
 type CallbackParams = { ok: true; code: string } | { ok: false; error: string };
 
@@ -60,14 +61,18 @@ export function OAuthCallback() {
     return (
       <div className="flex w-full max-w-sm flex-col gap-4">
         <FormError message={error} />
-        <Link href="/login" className="text-sm underline underline-offset-4">
+        <Link href="/login" className="text-body-3 underline underline-offset-4">
           Quay lại đăng nhập
         </Link>
       </div>
     );
   }
 
-  return <p className="text-sm opacity-70">Đang hoàn tất đăng nhập…</p>;
+  return (
+    <Typography variant="body-3" className="opacity-70">
+      Đang hoàn tất đăng nhập…
+    </Typography>
+  );
 }
 
 function exchangeErrorMessage(error: unknown): string | null {

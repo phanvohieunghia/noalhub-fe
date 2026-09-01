@@ -1,4 +1,5 @@
 import { forwardRef, useId } from "react";
+import { Typography } from "./typography";
 
 type InputProps = React.ComponentPropsWithoutRef<"input"> & {
   label: string;
@@ -15,16 +16,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={inputId} className="text-sm font-medium">
+      <Typography variant="title-4" as="label" htmlFor={inputId}>
         {label}
-      </label>
+      </Typography>
       <input
         {...props}
         id={inputId}
         ref={ref}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
-        className={`rounded-md border px-3 py-2 text-sm outline-none transition-colors
+        className={`rounded-md border px-3 py-2 text-body-3 outline-none transition-colors
           border-black/15 dark:border-white/20
           bg-transparent
           focus:border-foreground/60
@@ -33,9 +34,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           ${className}`}
       />
       {error ? (
-        <p id={errorId} role="alert" className="text-sm text-red-600 dark:text-red-400">
+        <Typography
+          variant="body-3"
+          id={errorId}
+          role="alert"
+          className="text-red-600 dark:text-red-400"
+        >
           {error}
-        </p>
+        </Typography>
       ) : null}
     </div>
   );

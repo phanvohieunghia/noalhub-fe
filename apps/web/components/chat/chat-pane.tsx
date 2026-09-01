@@ -18,6 +18,7 @@ import {
 } from "@noalhub/api/chat";
 import { ApiError } from "@noalhub/api/errors";
 import type { Message } from "@noalhub/api/chat";
+import { Typography } from "@noalhub/ui/typography";
 
 /** Gộp nhiều lần "đã tới đáy" thành một request. */
 const MARK_READ_DEBOUNCE_MS = 500;
@@ -38,10 +39,7 @@ export function ChatPane({ conversationId }: { conversationId: string }) {
 
   // `Message` chỉ mang `senderId`; tên/avatar nằm ở `members` của hội thoại.
   // Dựng map một lần ở đây thay vì để mỗi bubble tự tìm trong mảng.
-  const members = useMemo(
-    () => memberMap(conversationQuery.data),
-    [conversationQuery.data],
-  );
+  const members = useMemo(() => memberMap(conversationQuery.data), [conversationQuery.data]);
 
   const markReadDebounced = useDebouncedMarkRead(markRead);
 
@@ -65,16 +63,15 @@ export function ChatPane({ conversationId }: { conversationId: string }) {
   // Spec không có 403: người không phải thành viên nhận 404 y như hội thoại
   // không tồn tại. Một màn hình cho cả hai, và KHÔNG logout.
   const notFound =
-    conversationQuery.error instanceof ApiError &&
-    conversationQuery.error.status === 404;
+    conversationQuery.error instanceof ApiError && conversationQuery.error.status === 404;
 
   if (notFound) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-        <p className="text-sm font-medium">
+        <Typography variant="title-4">
           Hội thoại không tồn tại hoặc bạn không có quyền truy cập
-        </p>
-        <Link href="/chat" className="text-sm underline underline-offset-2">
+        </Typography>
+        <Link href="/chat" className="text-body-3 underline underline-offset-2">
           Về danh sách hội thoại
         </Link>
       </div>

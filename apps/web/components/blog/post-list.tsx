@@ -1,6 +1,7 @@
 import type { BlogPostListItem } from "@noalhub/api/blog";
 
 import { PostCard } from "./post-card";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * Lưới bài + **trạng thái rỗng có chữ**.
@@ -19,9 +20,12 @@ export function PostList({
 }) {
   if (posts.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-black/15 px-4 py-12 text-center text-sm opacity-60 dark:border-white/20">
+      <Typography
+        variant="body-3"
+        className="rounded-lg border border-dashed border-black/15 px-4 py-12 text-center opacity-60 dark:border-white/20"
+      >
         {emptyMessage}
-      </p>
+      </Typography>
     );
   }
 

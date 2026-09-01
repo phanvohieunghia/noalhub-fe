@@ -31,11 +31,10 @@ export function PaginationLinks({
 
   // Trang 1 KHÔNG kèm `?page=1` — phải khớp canonical, nếu không `/blogs` và
   // `/blogs?page=1` là hai URL cùng nội dung (§4.5).
-  const hrefFor = (target: number) =>
-    target <= 1 ? basePath : `${basePath}?page=${target}`;
+  const hrefFor = (target: number) => (target <= 1 ? basePath : `${basePath}?page=${target}`);
 
   return (
-    <nav aria-label={label} className="flex items-center justify-between gap-3 pt-8 text-sm">
+    <nav aria-label={label} className="flex items-center justify-between gap-3 pt-8 text-body-3">
       <PageLink
         href={hrefFor(page - 1)}
         // `rel="prev"/"next"`: Google đã bỏ dùng từ 2019, nhưng Bing và RSS
@@ -81,7 +80,7 @@ function PageLink({
     <Link
       href={href}
       rel={rel}
-      className="rounded-md border border-black/15 px-3 py-1.5 transition-colors hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+      className="rounded-md border border-border px-3 py-1.5 transition-colors hover:bg-muted"
     >
       {children}
     </Link>

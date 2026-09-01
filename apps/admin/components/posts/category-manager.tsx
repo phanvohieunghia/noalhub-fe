@@ -10,10 +10,7 @@ import {
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import {
-  restrictToParentElement,
-  restrictToVerticalAxis,
-} from "@dnd-kit/modifiers";
+import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
   SortableContext,
   sortableKeyboardCoordinates,
@@ -54,6 +51,7 @@ import {
 import { Textarea } from "@noalhub/ui/textarea";
 
 import { AdminErrorState } from "../admin-error-state";
+import { Typography } from "@noalhub/ui/typography";
 
 const FIELDS = ["name", "slug", "description", "order"] as const;
 
@@ -99,25 +97,23 @@ export function CategoryManager() {
   };
 
   return (
-    <main className="w-full max-w-4xl p-6">
+    <main className="w-full p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Chuyên mục</h1>
-          <p className="mt-1 text-sm opacity-70">
-            Mỗi bài thuộc đúng một chuyên mục, và bắt buộc có chuyên mục mới đăng
-            được. Chuyên mục hiện trên thanh menu của trang blog công khai — kéo
-            hàng để đổi thứ tự hiện ở đó.
-          </p>
+          <Typography variant="h4" as="h1">
+            Chuyên mục
+          </Typography>
+          <Typography variant="body-3" className="mt-1 opacity-70">
+            Mỗi bài thuộc đúng một chuyên mục, và bắt buộc có chuyên mục mới đăng được. Chuyên mục
+            hiện trên thanh menu của trang blog công khai — kéo hàng để đổi thứ tự hiện ở đó.
+          </Typography>
         </div>
         <Button onClick={() => setEditing("new")}>Thêm chuyên mục</Button>
       </div>
 
       {categories.isError ? (
         <div className="mt-4">
-          <AdminErrorState
-            error={categories.error}
-            onRetry={() => categories.refetch()}
-          />
+          <AdminErrorState error={categories.error} onRetry={() => categories.refetch()} />
         </div>
       ) : (
         <div className="mt-4">
@@ -130,50 +126,50 @@ export function CategoryManager() {
             onDragEnd={onDragEnd}
           >
             <TableRoot caption="Danh sách chuyên mục">
-            <TableHead>
-              <TableRow>
-                <TableHeaderCell>
-                  <span className="sr-only">Kéo để sắp xếp</span>
-                </TableHeaderCell>
-                <TableHeaderCell>Tên</TableHeaderCell>
-                <TableHeaderCell>Slug</TableHeaderCell>
-                <TableHeaderCell>Thứ tự</TableHeaderCell>
-                <TableHeaderCell>Số bài</TableHeaderCell>
-                <TableHeaderCell>
-                  <span className="sr-only">Hành động</span>
-                </TableHeaderCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {categories.isPending ? (
-                <SkeletonRows />
-              ) : rows.length === 0 ? (
-                <TableEmptyRow colSpan={6}>
-                  Chưa có chuyên mục nào. Tạo ít nhất một cái trước khi viết bài.
-                </TableEmptyRow>
-              ) : (
-                <SortableContext
-                  items={rows.map((row) => row.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  {rows.map((category) => (
-                    <CategoryRow
-                      key={category.id}
-                      category={category}
-                      onEdit={() => setEditing(category)}
-                      onDelete={() => setDeleting(category)}
-                    />
-                  ))}
-                </SortableContext>
-              )}
-            </TableBody>
+              <TableHead>
+                <TableRow>
+                  <TableHeaderCell>
+                    <span className="sr-only">Kéo để sắp xếp</span>
+                  </TableHeaderCell>
+                  <TableHeaderCell>Tên</TableHeaderCell>
+                  <TableHeaderCell>Slug</TableHeaderCell>
+                  <TableHeaderCell>Thứ tự</TableHeaderCell>
+                  <TableHeaderCell>Số bài</TableHeaderCell>
+                  <TableHeaderCell>
+                    <span className="sr-only">Hành động</span>
+                  </TableHeaderCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {categories.isPending ? (
+                  <SkeletonRows />
+                ) : rows.length === 0 ? (
+                  <TableEmptyRow colSpan={6}>
+                    Chưa có chuyên mục nào. Tạo ít nhất một cái trước khi viết bài.
+                  </TableEmptyRow>
+                ) : (
+                  <SortableContext
+                    items={rows.map((row) => row.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {rows.map((category) => (
+                      <CategoryRow
+                        key={category.id}
+                        category={category}
+                        onEdit={() => setEditing(category)}
+                        onDelete={() => setDeleting(category)}
+                      />
+                    ))}
+                  </SortableContext>
+                )}
+              </TableBody>
             </TableRoot>
           </DndContext>
 
           {reorder.isError ? (
-            <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+            <Typography variant="body-3" className="mt-2 text-red-600 dark:text-red-400">
               {blogErrorMessage(reorder.error)} Thứ tự đã được trả về như cũ.
-            </p>
+            </Typography>
           ) : null}
         </div>
       )}
@@ -241,11 +237,7 @@ function CategoryDialog({
   });
 
   return (
-    <Dialog
-      open
-      onClose={onClose}
-      title={category ? "Sửa chuyên mục" : "Thêm chuyên mục"}
-    >
+    <Dialog open onClose={onClose} title={category ? "Sửa chuyên mục" : "Thêm chuyên mục"}>
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <Input label="Tên" {...register("name")} error={errors.name?.message} />
 
@@ -253,7 +245,7 @@ function CategoryDialog({
           <Input label="Slug" {...register("slug")} error={errors.slug?.message} />
           <button
             type="button"
-            className="w-fit text-xs underline underline-offset-2 opacity-70 hover:opacity-100"
+            className="w-fit text-body-4 underline underline-offset-2 opacity-70 hover:opacity-100"
             onClick={() =>
               // `getValues` chứ không `useWatch`: đọc một lần lúc bấm, không
               // cần component render lại theo ô Tên.
@@ -271,14 +263,14 @@ function CategoryDialog({
           phải nói đúng điều đó, không được viết thành "sẽ được chuyển hướng".
         */}
         {slugChanged ? (
-          <p
+          <Typography
+            variant="body-3"
             role="alert"
-            className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300"
+            className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300"
           >
-            Đổi slug sẽ làm <strong>/blogs/category/{category?.slug}</strong> trả
-            404 vĩnh viễn. Không có chuyển hướng nào được tạo — mọi link cũ tới
-            trang chuyên mục này sẽ hỏng.
-          </p>
+            Đổi slug sẽ làm <strong>/blogs/category/{category?.slug}</strong> trả 404 vĩnh viễn.
+            Không có chuyển hướng nào được tạo — mọi link cũ tới trang chuyên mục này sẽ hỏng.
+          </Typography>
         ) : null}
 
         <Textarea
@@ -287,10 +279,10 @@ function CategoryDialog({
           {...register("description")}
           error={errors.description?.message}
         />
-        <p className="-mt-2 text-xs opacity-60">
-          Hiện ở đầu trang chuyên mục. Đây là thứ làm trang đó không bị Google coi
-          là nội dung mỏng — nên viết một câu thật.
-        </p>
+        <Typography variant="body-4" className="-mt-2 opacity-60">
+          Hiện ở đầu trang chuyên mục. Đây là thứ làm trang đó không bị Google coi là nội dung mỏng
+          — nên viết một câu thật.
+        </Typography>
 
         <Input
           label="Thứ tự trên menu"
@@ -333,10 +325,10 @@ function DeleteCategoryDialog({
   return (
     <Dialog open onClose={onClose} title={`Xoá chuyên mục “${category.name}”?`}>
       <div className="flex flex-col gap-4">
-        <p className="text-sm opacity-80">
-          Chỉ xoá được chuyên mục không còn bài nào. Bài không có chuyên mục thì
-          không đăng được, nên hãy dời bài sang mục khác trước.
-        </p>
+        <Typography variant="body-3" className="opacity-80">
+          Chỉ xoá được chuyên mục không còn bài nào. Bài không có chuyên mục thì không đăng được,
+          nên hãy dời bài sang mục khác trước.
+        </Typography>
 
         <FormError message={error} />
 
@@ -406,7 +398,7 @@ function CategoryRow({
           {...attributes}
           {...listeners}
           aria-label={`Kéo để sắp xếp ${category.name}`}
-          className="cursor-grab rounded px-1 text-base leading-none opacity-40 hover:opacity-80 focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:outline-none active:cursor-grabbing dark:focus-visible:ring-white/40"
+          className="cursor-grab rounded px-1 text-body-2 leading-none opacity-40 hover:opacity-80 focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:outline-none active:cursor-grabbing dark:focus-visible:ring-white/40"
         >
           ⠿
         </button>

@@ -1,5 +1,6 @@
 import type { BlogDoc } from "@noalhub/api/blog";
 import { collectHeadings, TOC_MIN_HEADINGS } from "@noalhub/core/blog/headings";
+import { Typography } from "../typography";
 
 /**
  * Mục lục dựng **thẳng từ JSON**, không cần backend và không parse HTML (§3.3).
@@ -17,11 +18,17 @@ export function TableOfContents({ doc }: { doc: BlogDoc }) {
   return (
     <nav
       aria-labelledby="toc-heading"
-      className="rounded-lg border border-black/10 p-4 text-sm dark:border-white/15"
+      className="rounded-lg border border-black/10 p-4 text-body-3 dark:border-white/15"
     >
-      <h2 id="toc-heading" className="text-xs font-medium uppercase tracking-wide opacity-60">
+      <Typography
+        variant="body-4"
+        weight={500}
+        as="h2"
+        id="toc-heading"
+        className="uppercase tracking-wide opacity-60"
+      >
         Trong bài này
-      </h2>
+      </Typography>
       <ol className="mt-2 flex flex-col gap-1.5">
         {headings.map((heading) => (
           <li key={heading.id} className={heading.level === 3 ? "pl-4" : undefined}>

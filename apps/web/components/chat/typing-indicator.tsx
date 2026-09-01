@@ -17,9 +17,7 @@ export function TypingIndicator({
   // Giữ chiều cao cố định để bubble cuối không nhảy lên xuống mỗi lần ai đó gõ.
   if (userIds.length === 0) return <div className="h-5" />;
 
-  const names = userIds.map(
-    (id) => members.get(id)?.displayName ?? "Người dùng",
-  );
+  const names = userIds.map((id) => members.get(id)?.displayName ?? "Người dùng");
 
   const label =
     names.length === 1
@@ -29,7 +27,7 @@ export function TypingIndicator({
         : `${names[0]} và ${names.length - 1} người khác đang nhập…`;
 
   return (
-    <div className="h-5 shrink-0 px-4 text-xs opacity-60" aria-live="polite">
+    <div className="text-body-4 h-5 shrink-0 px-4 opacity-60" aria-live="polite">
       {label}
     </div>
   );

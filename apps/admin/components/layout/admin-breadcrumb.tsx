@@ -25,14 +25,13 @@ export function AdminBreadcrumb() {
     const navLabel = NAV_ITEMS.find((item) => item.href === href)?.label;
     return {
       href,
-      label:
-        navLabel ?? SEGMENT_LABELS[segment] ?? (index === 0 ? segment : "Chi tiết"),
+      label: navLabel ?? SEGMENT_LABELS[segment] ?? (index === 0 ? segment : "Chi tiết"),
       isLast: index === segments.length - 1,
     };
   });
 
   return (
-    <nav aria-label="Breadcrumb" className="text-sm">
+    <nav aria-label="Breadcrumb" className="text-body-3">
       <ol className="flex items-center gap-1.5">
         {crumbs.map((crumb) => (
           <li key={crumb.href} className="flex items-center gap-1.5">

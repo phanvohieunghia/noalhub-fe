@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import type { BlogCategory } from "@noalhub/api/blog";
 import { Select } from "@noalhub/ui/select";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * Chuyên mục = **select một giá trị, không cho gõ tự do** (§7.1a).
@@ -46,21 +47,21 @@ export function CategorySelect({
         }))}
       />
       {categories.length === 0 ? (
-        <p className="text-xs text-amber-700 dark:text-amber-300">
+        <Typography variant="body-4" className="text-amber-700 dark:text-amber-300">
           Chưa có chuyên mục nào — chưa đăng được bài nào cả.{" "}
           <Link href="/posts/categories" className="underline underline-offset-2">
             Tạo chuyên mục
           </Link>
-        </p>
+        </Typography>
       ) : (
-        <p className="text-xs opacity-60">
+        <Typography variant="body-4" className="opacity-60">
           {required
             ? "Bài đang đăng bắt buộc có chuyên mục — gỡ bài khỏi công khai trước nếu muốn bỏ trống. "
             : "Bắt buộc khi đăng bài, để trống khi lưu nháp thì vẫn lưu được. "}
           <Link href="/posts/categories" className="underline underline-offset-2">
             Quản lý chuyên mục
           </Link>
-        </p>
+        </Typography>
       )}
     </div>
   );

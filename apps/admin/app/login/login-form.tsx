@@ -5,17 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import {
-  loginSchema,
-  useAuthStore,
-  useLogin,
-  type LoginInput,
-} from "@noalhub/api/auth";
+import { loginSchema, useAuthStore, useLogin, type LoginInput } from "@noalhub/api/auth";
 import { safeRedirect } from "@noalhub/core/auth/redirect";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { Button } from "@noalhub/ui/button";
 import { FormError } from "@noalhub/ui/form-error";
 import { Input } from "@noalhub/ui/input";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * Admin dùng LẠI nguyên tầng dữ liệu của web (`useLogin`, `loginSchema`) —
@@ -59,8 +55,12 @@ export function AdminLoginForm() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Noalhub Admin</h1>
-        <p className="text-sm opacity-70">Khu vực quản trị.</p>
+        <Typography variant="h3" as="h1">
+          Noalhub Admin
+        </Typography>
+        <Typography variant="body-3" className="opacity-70">
+          Khu vực quản trị.
+        </Typography>
       </header>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>

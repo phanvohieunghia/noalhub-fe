@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/** Bảng màu + biến thể `dark` bám class — xem chú thích ở `apps/web/app/globals.css`. */
+@import "../../../packages/config/theme.css";
+
 /**
  * Giống bên web: Tailwind không tự dò `packages/ui` vì nó nằm ngoài cây thư
  * mục của app và chỉ được symlink qua node_modules. Xem chú thích dài hơn ở
@@ -7,25 +10,19 @@
  */
 @source "../../../packages/ui/src";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/** Xem chú thích ở `apps/web/app/globals.css`. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-open-sans);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body {
+    transition: background-color 150ms ease, color 150ms ease;
+  }
 }

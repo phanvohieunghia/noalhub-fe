@@ -16,19 +16,17 @@ export function ConnectionBanner() {
   return (
     <div
       role="status"
-      className="flex shrink-0 items-center justify-center gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-800 dark:text-amber-200"
+      className="text-body-3 flex shrink-0 items-center justify-center gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-amber-800 dark:text-amber-200"
     >
       {connecting ? <Spinner /> : <span aria-hidden>⚠</span>}
       <span>
-        {connecting
-          ? "Đang kết nối lại…"
-          : "Mất kết nối — tin nhắn mới có thể chưa tới."}
+        {connecting ? "Đang kết nối lại…" : "Mất kết nối — tin nhắn mới có thể chưa tới."}
       </span>
       {connecting ? null : (
         <button
           type="button"
           onClick={reconnect}
-          className="rounded-md border border-current/30 px-2 py-0.5 text-xs font-medium hover:bg-current/10"
+          className="rounded-md border border-current/30 px-2 py-0.5 text-body-4 font-medium hover:bg-current/10"
         >
           Thử lại
         </button>

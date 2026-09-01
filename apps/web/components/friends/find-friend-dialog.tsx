@@ -19,12 +19,10 @@ import {
   useFriends,
   useSendFriendRequest,
 } from "@noalhub/api/friends";
-import {
-  findFriendSchema,
-  type FindFriendInput,
-} from "@noalhub/api/friends";
+import { findFriendSchema, type FindFriendInput } from "@noalhub/api/friends";
 import type { FriendState } from "@noalhub/api/friends";
 import type { PublicProfile } from "@noalhub/api/users";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * Tìm bạn theo username.
@@ -33,13 +31,7 @@ import type { PublicProfile } from "@noalhub/api/users";
  * có tìm mờ. Vì vậy chỉ tìm khi submit — gõ dở dang mà bắn request thì vừa tốn
  * vừa luôn 404.
  */
-export function FindFriendDialog({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
+export function FindFriendDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [submitted, setSubmitted] = useState<string | undefined>();
   const { data, isFetching, error } = useFindUserByUsername(submitted);
   const state = useFriendState(data?.username);
@@ -60,8 +52,7 @@ export function FindFriendDialog({
     onClose();
   }
 
-  const notFound =
-    error instanceof ApiError && error.code === ERROR_CODES.userNotFound;
+  const notFound = error instanceof ApiError && error.code === ERROR_CODES.userNotFound;
 
   return (
     <Dialog open={open} onClose={close} title="Tìm bạn theo username">
@@ -82,16 +73,16 @@ export function FindFriendDialog({
           </Button>
         </div>
 
-        <p className="text-xs opacity-60">
+        <Typography variant="body-4" className="opacity-60">
           Phải nhập đúng username, không tìm theo tên hiển thị.
-        </p>
+        </Typography>
       </form>
 
       {isFetching ? (
-        <p role="status" className="flex items-center gap-2 text-sm opacity-70">
+        <Typography variant="body-3" role="status" className="flex items-center gap-2 opacity-70">
           <Spinner />
           Đang tìm…
-        </p>
+        </Typography>
       ) : notFound ? (
         <FormError message={`Không tìm thấy ai với username @${submitted}.`} />
       ) : error ? (
@@ -127,13 +118,7 @@ function useFriendState(username: string | undefined): FriendState | null {
   return "none";
 }
 
-function SearchResult({
-  user,
-  state,
-}: {
-  user: PublicProfile;
-  state: FriendState | null;
-}) {
+function SearchResult({ user, state }: { user: PublicProfile; state: FriendState | null }) {
   const sendRequest = useSendFriendRequest();
   const name = user.displayName ?? user.username;
 
@@ -142,10 +127,12 @@ function SearchResult({
       <div className="flex items-center gap-3">
         <Avatar name={name} src={user.avatarUrl} />
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-sm font-medium">{name}</span>
+          <Typography variant="title-4" as="span" className="truncate">
+            {name}
+          </Typography>
           <Link
             href={`/profile/${user.username}`}
-            className="truncate font-mono text-xs opacity-60 underline-offset-4 hover:underline"
+            className="truncate font-mono text-body-4 opacity-60 underline-offset-4 hover:underline"
           >
             @{user.username}
           </Link>
@@ -203,16 +190,28 @@ function FriendshipAction({
 }) {
   switch (state) {
     case null:
-      return <p className="text-sm opacity-70">Đây là bạn.</p>;
+      return (
+        <Typography variant="body-3" className="opacity-70">
+          Đây là bạn.
+        </Typography>
+      );
     case "friends":
-      return <p className="text-sm opacity-70">Hai bạn đã là bạn bè.</p>;
+      return (
+        <Typography variant="body-3" className="opacity-70">
+          Hai bạn đã là bạn bè.
+        </Typography>
+      );
     case "pending_outgoing":
-      return <p className="text-sm opacity-70">Đã gửi lời mời, đang chờ phản hồi.</p>;
+      return (
+        <Typography variant="body-3" className="opacity-70">
+          Đã gửi lời mời, đang chờ phản hồi.
+        </Typography>
+      );
     case "pending_incoming":
       return (
-        <p className="text-sm opacity-70">
+        <Typography variant="body-3" className="opacity-70">
           Người này đã gửi lời mời cho bạn — mở “Lời mời kết bạn” để phản hồi.
-        </p>
+        </Typography>
       );
     default:
       return (

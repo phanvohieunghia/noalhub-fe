@@ -11,6 +11,7 @@ import { FormError } from "@noalhub/ui/form-error";
 import { Spinner } from "@noalhub/ui/spinner";
 import { formatDate } from "@noalhub/core/format-date";
 import { useFriendRequests, useFriends } from "@noalhub/api/friends";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * Danh sách bạn bè.
@@ -30,21 +31,27 @@ export function FriendListContent() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Bạn bè</h1>
+        <Typography variant="h3" as="h1">
+          Bạn bè
+        </Typography>
 
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" onClick={() => setRequestsOpen(true)}>
             Lời mời kết bạn
             {incomingCount > 0 ? (
-              <span className="rounded-full bg-foreground px-1.5 text-xs text-background">
+              <Typography
+                variant="body-4"
+                as="span"
+                className="rounded-full bg-foreground px-1.5 text-background"
+              >
                 {incomingCount}
-              </span>
+              </Typography>
             ) : null}
           </Button>
           <Button onClick={() => setFindOpen(true)}>Tìm bạn</Button>
           <Link
             href="/chat"
-            className="inline-flex h-10 items-center rounded-md border border-black/15 px-4 text-sm font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+            className="inline-flex h-10 items-center rounded-md border border-black/15 px-4 text-body-3 font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
           >
             Tin nhắn
           </Link>
@@ -52,14 +59,14 @@ export function FriendListContent() {
       </header>
 
       {isPending ? (
-        <p role="status" className="flex items-center gap-2 text-sm opacity-70">
+        <Typography variant="body-3" role="status" className="flex items-center gap-2 opacity-70">
           <Spinner />
           Đang tải danh sách bạn bè…
-        </p>
+        </Typography>
       ) : error ? (
         <FormError message="Không tải được danh sách bạn bè." />
       ) : data.items.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-black/15 p-8 text-center text-sm opacity-70 dark:border-white/20">
+        <div className="text-body-3 rounded-lg border border-dashed border-black/15 p-8 text-center opacity-70 dark:border-white/20">
           Chưa có bạn nào. Dùng “Tìm bạn” để gửi lời mời đầu tiên.
         </div>
       ) : (
@@ -74,14 +81,20 @@ export function FriendListContent() {
                 >
                   <Avatar name={name} src={friend.user.avatarUrl} />
                   <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-sm font-medium">{name}</span>
-                    <span className="truncate font-mono text-xs opacity-60">
+                    <Typography variant="title-4" as="span" className="truncate">
+                      {name}
+                    </Typography>
+                    <Typography
+                      variant="body-4"
+                      as="span"
+                      className="truncate font-mono opacity-60"
+                    >
                       @{friend.user.username}
-                    </span>
+                    </Typography>
                   </span>
-                  <span className="shrink-0 text-xs opacity-50">
+                  <Typography variant="body-4" as="span" className="shrink-0 opacity-50">
                     {friend.since ? `Bạn từ ${formatDate(friend.since)}` : ""}
-                  </span>
+                  </Typography>
                 </Link>
               </li>
             );
@@ -89,10 +102,7 @@ export function FriendListContent() {
         </ul>
       )}
 
-      <FriendRequestsDialog
-        open={requestsOpen}
-        onClose={() => setRequestsOpen(false)}
-      />
+      <FriendRequestsDialog open={requestsOpen} onClose={() => setRequestsOpen(false)} />
       <FindFriendDialog open={findOpen} onClose={() => setFindOpen(false)} />
     </main>
   );

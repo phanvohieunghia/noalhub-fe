@@ -11,6 +11,7 @@ import { ScrollToBottomButton } from "./scroll-to-bottom-button";
 import { errorMessage } from "@noalhub/core/chat/error-message";
 import { GROUP_WINDOW_MS, isSameDay } from "@noalhub/core/chat/format";
 import type { ConversationMember, Message } from "@noalhub/api/chat";
+import { Typography } from "@noalhub/ui/typography";
 
 /** "Đang ở đáy" — 0 tuyệt đối không dùng được vì sub-pixel rounding. */
 const BOTTOM_THRESHOLD_PX = 80;
@@ -64,8 +65,7 @@ export function MessageList({
    * effect là thứ ESLint v16 chặn thẳng (`react-hooks/set-state-in-effect`), và
    * chặn đúng: đó là state suy ra được.
    */
-  const newCount =
-    anchorLength === null ? 0 : Math.max(0, ordered.length - anchorLength);
+  const newCount = anchorLength === null ? 0 : Math.max(0, ordered.length - anchorLength);
 
   /* --- Giữ vị trí đọc khi prepend trang cũ --------------------------------
      Thêm nội dung vào ĐẦU làm scrollHeight tăng; nếu không bù lại thì màn hình
@@ -160,9 +160,9 @@ export function MessageList({
   if (error) {
     return (
       <div className="flex flex-1 items-center justify-center p-6">
-        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+        <Typography variant="body-3" role="alert" className="text-red-600 dark:text-red-400">
           {errorMessage(error)}
-        </p>
+        </Typography>
       </div>
     );
   }
@@ -170,7 +170,9 @@ export function MessageList({
   if (ordered.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center p-6">
-        <p className="text-sm opacity-60">Chưa có tin nhắn nào. Nói gì đó đi.</p>
+        <Typography variant="body-3" className="opacity-60">
+          Chưa có tin nhắn nào. Nói gì đó đi.
+        </Typography>
       </div>
     );
   }
@@ -201,9 +203,7 @@ export function MessageList({
               return <DateSeparator key={item.key} iso={item.iso} />;
             }
             if (item.kind === "system") {
-              return (
-                <MessageSystemNotice key={item.key} body={item.message.body} />
-              );
+              return <MessageSystemNotice key={item.key} body={item.message.body} />;
             }
             return (
               <MessageGroup
@@ -220,10 +220,7 @@ export function MessageList({
       </div>
 
       {atBottom ? null : (
-        <ScrollToBottomButton
-          newCount={newCount}
-          onClick={() => scrollToBottom(true)}
-        />
+        <ScrollToBottomButton newCount={newCount} onClick={() => scrollToBottom(true)} />
       )}
     </div>
   );
@@ -272,8 +269,7 @@ function groupMessages(ordered: Message[]): Item[] {
     const sameSender = current?.senderId === message.senderId;
     const withinWindow =
       previous !== undefined &&
-      new Date(message.createdAt).getTime() -
-        new Date(previous.createdAt).getTime() <
+      new Date(message.createdAt).getTime() - new Date(previous.createdAt).getTime() <
         GROUP_WINDOW_MS;
 
     if (current && sameSender && withinWindow) {

@@ -1,6 +1,13 @@
 @import "tailwindcss";
 
 /**
+ * Bảng màu + biến thể `dark` bám class: xem `../../../packages/config/theme.css`.
+ * Import bằng đường dẫn tương đối chứ không qua tên package vì `@noalhub/config`
+ * không khai `exports`, và Tailwind phân giải `@import` theo đường dẫn file.
+ */
+@import "../../../packages/config/theme.css";
+
+/**
  * Tailwind v4 chỉ tự dò source trong cây thư mục chứa file CSS này, và bỏ qua
  * `node_modules` — mà `@noalhub/ui` nằm ngoài app, chỉ được symlink vào
  * node_modules. Không khai `@source` thì mọi class dùng riêng trong package ui
@@ -9,27 +16,28 @@
  */
 @source "../../../packages/ui/src";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/**
+ * `--font-open-sans` do `next/font` sinh ra ở `layout.tsx`; nối nó vào
+ * namespace `--font-*` của Tailwind để có `font-sans`. Tên hai biến phải KHÁC
+ * nhau — đặt cả hai là `--font-sans` thì `var()` tự trỏ vào chính nó.
+ */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-open-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/**
+ * Đổi màu mượt khi bấm toggle. Cố ý KHÔNG dùng `transition: all` trên `*`:
+ * nó kéo theo cả layout và làm giật mọi animation khác.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  body {
+    transition: background-color 150ms ease, color 150ms ease;
+  }
 }

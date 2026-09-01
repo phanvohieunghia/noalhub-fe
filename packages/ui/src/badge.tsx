@@ -18,17 +18,16 @@ export function Badge({
   children: React.ReactNode;
 }) {
   const tones: Record<BadgeTone, string> = {
-    neutral: "bg-black/8 text-foreground/70 dark:bg-white/12",
-    success:
-      "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300",
-    warning: "bg-amber-500/15 text-amber-700 dark:text-amber-300",
-    danger: "bg-red-500/12 text-red-700 dark:text-red-300",
-    info: "bg-blue-500/12 text-blue-700 dark:text-blue-300",
+    neutral: "bg-muted text-muted-foreground",
+    success: "bg-success/12 text-success",
+    warning: "bg-warning/15 text-warning",
+    danger: "bg-danger/12 text-danger",
+    info: "bg-highlight text-highlight-foreground",
   };
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${tones[tone]} ${className}`}
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-body-4 font-medium ${tones[tone]} ${className}`}
     >
       {children}
     </span>

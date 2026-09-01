@@ -9,6 +9,7 @@ import { PresenceDot, PresenceLabel } from "./presence-dot";
 import { useAuthStore } from "@noalhub/api/auth";
 import { conversationDisplayName, otherMember } from "@noalhub/core/chat/format";
 import type { Conversation } from "@noalhub/api/chat";
+import { Typography } from "@noalhub/ui/typography";
 
 export function ChatHeader({ conversation }: { conversation: Conversation }) {
   const currentUserId = useAuthStore((state) => state.user?.id ?? null);
@@ -23,7 +24,7 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
       <Link
         href="/chat"
         aria-label="Về danh sách hội thoại"
-        className="-ml-1 rounded-md px-1 py-0.5 text-lg leading-none opacity-70 hover:opacity-100 md:hidden"
+        className="-ml-1 rounded-md px-1 py-0.5 text-title-2 leading-none opacity-70 hover:opacity-100 md:hidden"
       >
         ◀
       </Link>
@@ -38,10 +39,7 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
         >
           <Avatar name={name} src={peer.avatarUrl} size="sm" />
           {isDirect ? (
-            <PresenceDot
-              userId={peer.userId}
-              className="absolute -right-0.5 -bottom-0.5"
-            />
+            <PresenceDot userId={peer.userId} className="absolute -right-0.5 -bottom-0.5" />
           ) : null}
         </button>
       ) : (
@@ -51,11 +49,15 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
       )}
 
       <div className="flex min-w-0 flex-col">
-        <span className="truncate text-sm font-semibold">{name}</span>
-        {isDirect ? <PresenceLabel userId={peer?.userId} /> : (
-          <span className="text-xs opacity-60">
+        <Typography variant="title-4" weight={600} as="span" className="truncate">
+          {name}
+        </Typography>
+        {isDirect ? (
+          <PresenceLabel userId={peer?.userId} />
+        ) : (
+          <Typography variant="body-4" as="span" className="opacity-60">
             {conversation.members.length} thành viên
-          </span>
+          </Typography>
         )}
       </div>
 

@@ -5,6 +5,7 @@ import type { BlogPostListItem } from "@noalhub/api/blog";
 import { formatReadingTime } from "@noalhub/core/blog/reading-time";
 import { listItemDescription } from "@noalhub/core/blog/seo";
 import { formatDate } from "@noalhub/core/format-date";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * Thẻ bài trong danh sách.
@@ -33,29 +34,32 @@ export function PostCard({ post }: { post: BlogPostListItem }) {
       <div className="flex flex-col gap-2">
         <Link
           href={`/blogs/category/${post.category.slug}`}
-          className="w-fit text-xs font-medium uppercase tracking-wide opacity-60 hover:underline hover:opacity-100"
+          className="w-fit text-body-4 font-medium uppercase tracking-wide opacity-60 hover:underline hover:opacity-100"
         >
           {post.category.name}
         </Link>
 
         {/* h2: trang danh sách chỉ có MỘT h1 là tiêu đề trang (§6.2). */}
-        <h2 className="text-lg font-semibold leading-snug">
+        <Typography variant="h5" as="h2" className="leading-snug">
           <Link href={`/blogs/${post.slug}`} className="hover:underline">
             {post.title}
           </Link>
-        </h2>
+        </Typography>
 
-        <p className="text-sm leading-relaxed opacity-75">
+        <Typography variant="body-3" className="leading-relaxed opacity-75">
           {listItemDescription(post)}
-        </p>
+        </Typography>
 
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs opacity-60">
+        <Typography
+          variant="body-4"
+          className="flex flex-wrap items-center gap-x-2 gap-y-1 opacity-60"
+        >
           <span>{post.author.displayName}</span>
           <span aria-hidden>·</span>
           <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
           <span aria-hidden>·</span>
           <span>{formatReadingTime(post.readingMinutes)}</span>
-        </p>
+        </Typography>
       </div>
     </article>
   );

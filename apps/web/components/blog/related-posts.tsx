@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import type { BlogPostListItem } from "@noalhub/api/blog";
 import { formatDate } from "@noalhub/core/format-date";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * Khối "Bài liên quan" cuối mỗi bài — 3 bài **cùng chuyên mục**.
@@ -16,17 +17,25 @@ export function RelatedPosts({ posts }: { posts: BlogPostListItem[] }) {
   if (posts.length === 0) return null;
 
   return (
-    <section aria-labelledby="related-heading" className="border-t border-black/10 pt-8 dark:border-white/15">
-      <h2 id="related-heading" className="text-sm font-medium uppercase tracking-wide opacity-60">
+    <section
+      aria-labelledby="related-heading"
+      className="border-t border-black/10 pt-8 dark:border-white/15"
+    >
+      <Typography
+        variant="title-4"
+        as="h2"
+        id="related-heading"
+        className="uppercase tracking-wide opacity-60"
+      >
         Bài liên quan
-      </h2>
+      </Typography>
       <ul className="mt-4 grid gap-4 sm:grid-cols-3">
         {posts.map((post) => (
           <li key={post.id} className="flex flex-col gap-1">
             <Link href={`/blogs/${post.slug}`} className="font-medium leading-snug hover:underline">
               {post.title}
             </Link>
-            <time dateTime={post.publishedAt} className="text-xs opacity-60">
+            <time dateTime={post.publishedAt} className="text-body-4 opacity-60">
               {formatDate(post.publishedAt)}
             </time>
           </li>

@@ -8,6 +8,7 @@ import { PaginationLinks } from "@noalhub/ui/pagination-links";
 import { Breadcrumb } from "@/components/blog/breadcrumb";
 import { isPageOutOfRange, readPageParam } from "@/components/blog/page-param";
 import { PostList } from "@/components/blog/post-list";
+import { Typography } from "@noalhub/ui/typography";
 
 type Props = {
   params: Promise<{ tag: string }>;
@@ -64,7 +65,9 @@ export default async function TagPage({ params, searchParams }: Props) {
       />
 
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">#{tag.name}</h1>
+        <Typography variant="h3" as="h1">
+          #{tag.name}
+        </Typography>
       </header>
 
       <PostList posts={list.items} emptyMessage="Chưa có bài viết nào gắn thẻ này." />

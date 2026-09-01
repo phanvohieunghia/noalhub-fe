@@ -3,11 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 
-import {
-  getBlogSitemapEntries,
-  getPublishedPost,
-  getRelatedPosts,
-} from "@noalhub/api/blog/server";
+import { getBlogSitemapEntries, getPublishedPost, getRelatedPosts } from "@noalhub/api/blog/server";
 import { formatReadingTime, readingMinutes } from "@noalhub/core/blog/reading-time";
 import {
   absoluteUrl,
@@ -22,6 +18,7 @@ import { TableOfContents } from "@noalhub/ui/blog/table-of-contents";
 import { Breadcrumb } from "@/components/blog/breadcrumb";
 import { JsonLd } from "@/components/blog/json-ld";
 import { RelatedPosts } from "@/components/blog/related-posts";
+import { Typography } from "@noalhub/ui/typography";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -131,9 +128,14 @@ export default async function BlogPostPage({ params }: Props) {
 
       <header className="flex flex-col gap-4">
         {/* Đúng MỘT <h1> mỗi trang; heading trong nội dung là h2/h3 (§6.2). */}
-        <h1 className="text-3xl font-semibold leading-tight">{post.title}</h1>
+        <Typography variant="h2" as="h1" className="leading-tight">
+          {post.title}
+        </Typography>
 
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm opacity-60">
+        <Typography
+          variant="body-3"
+          className="flex flex-wrap items-center gap-x-2 gap-y-1 opacity-60"
+        >
           <span>{post.author.displayName}</span>
           <span aria-hidden>·</span>
           {post.publishedAt ? (
@@ -141,7 +143,7 @@ export default async function BlogPostPage({ params }: Props) {
           ) : null}
           <span aria-hidden>·</span>
           <span>{formatReadingTime(minutes)}</span>
-        </p>
+        </Typography>
 
         {post.coverImageUrl ? (
           <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-black/5 dark:bg-white/5">
@@ -164,14 +166,14 @@ export default async function BlogPostPage({ params }: Props) {
 
       {post.tags.length > 0 ? (
         <section aria-labelledby="tags-heading" className="flex flex-wrap items-center gap-2">
-          <h2 id="tags-heading" className="sr-only">
+          <Typography variant="h2" id="tags-heading" className="sr-only">
             Thẻ
-          </h2>
+          </Typography>
           {post.tags.map((tag) => (
             <Link
               key={tag.slug}
               href={`/blogs/tag/${tag.slug}`}
-              className="rounded-full bg-black/8 px-3 py-1 text-xs opacity-80 transition-opacity hover:opacity-100 dark:bg-white/12"
+              className="rounded-full bg-black/8 px-3 py-1 text-body-4 opacity-80 transition-opacity hover:opacity-100 dark:bg-white/12"
             >
               #{tag.name}
             </Link>
@@ -196,9 +198,7 @@ export default async function BlogPostPage({ params }: Props) {
           },
           ...(postOgImage(post) ? { image: [postOgImage(post)] } : {}),
           ...(post.category ? { articleSection: post.category.name } : {}),
-          ...(post.tags.length
-            ? { keywords: post.tags.map((tag) => tag.name).join(", ") }
-            : {}),
+          ...(post.tags.length ? { keywords: post.tags.map((tag) => tag.name).join(", ") } : {}),
           wordCount: post.contentText.trim().split(/\s+/).filter(Boolean).length,
         }}
       />

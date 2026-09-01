@@ -1,13 +1,45 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Open_Sans } from "next/font/google";
 import "./globals.css";
 import { appUrl } from "@noalhub/core/blog/seo";
+import { THEME_INIT_SCRIPT } from "@noalhub/core/theme/script";
 import { AuthProvider } from "@noalhub/ui/auth/auth-provider";
 import { QueryProvider } from "@noalhub/ui/query-provider";
+import { ThemeProvider } from "@noalhub/ui/theme/theme-provider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+/**
+ * `next/font/google` tải file font **lúc build** rồi tự host cùng static
+ * assets — trình duyệt của người dùng không gọi sang Google, và không có FOUT
+ * vì Next chèn sẵn `@font-face` + preload.
+ *
+ * `subsets` BẮT BUỘC có `vietnamese`: thiếu nó thì chữ có dấu rơi sang font
+ * fallback của hệ điều hành, cùng một dòng có hai kiểu chữ khác nhau.
+ *
+ * Open Sans là font biến thiên (300–800) nên không khai `weight` — mọi độ đậm
+ * đều nằm trong một file, và `typography.tsx` chỉ dùng 400/500/600.
+ */
+const openSans = Open_Sans({
+  variable: "--font-open-sans",
+  subsets: ["latin", "vietnamese"],
+  display: "swap",
+});
+
+/**
+ * Bản NGHIÊNG phải nạp riêng. `next/font/google` không nhận mảng `style` cho
+ * font biến thiên, và không có nó thì trình duyệt **tự bóp nghiêng** chữ đứng
+ * (synthetic oblique) — nét dày mỏng sai hẳn so với bản italic thật của Open
+ * Sans, thấy rõ nhất ở `a`, `e`, `g`.
+ *
+ * Hai lần gọi cùng sinh ra `font-family: "Open Sans"`, chỉ khác `font-style`,
+ * nên utility `italic` tự chọn đúng bản — không cần khai gì thêm ở chỗ dùng.
+ * Biến `--font-open-sans-italic` không ai đọc, nhưng phải gắn `.variable` lên
+ * `<html>` thì Next mới giữ lại `@font-face` này.
+ */
+const openSansItalic = Open_Sans({
+  variable: "--font-open-sans-italic",
+  subsets: ["latin", "vietnamese"],
+  style: "italic",
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -44,14 +76,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    // `suppressHydrationWarning` là BẮT BUỘC ở đây: script dưới đây thêm class
+    // `dark` vào chính thẻ này trước khi React hydrate, nên HTML của server và
+    // của client lệch nhau một cách có chủ đích.
     <html
       lang="vi"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`${openSans.variable} ${openSansItalic.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* Đồng bộ, không `defer`/`async`, và phải nằm trước mọi thứ khác —
+            nó chạy trước lần paint đầu để trang không nháy trắng rồi mới tối.
+            Nội dung là hằng số của repo, không có dữ liệu người dùng. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col">
-        <QueryProvider>
-          <AuthProvider>{children}</AuthProvider>
-        </QueryProvider>
+        <ThemeProvider>
+          <QueryProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

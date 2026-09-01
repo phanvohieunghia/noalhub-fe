@@ -1,4 +1,5 @@
 import { Skeleton } from "./skeleton";
+import { Typography } from "./typography";
 
 /**
  * Ô số liệu cho trang tổng quan.
@@ -19,18 +20,22 @@ export function StatCard({
   isLoading?: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-black/10 p-4 dark:border-white/15">
-      <p className="text-xs font-medium uppercase tracking-wide opacity-60">
+    <div className="rounded-xl border border-black/10 p-6 dark:border-white/15">
+      <Typography variant="title-4" weight={500} className="uppercase tracking-wide opacity-60">
         {label}
-      </p>
+      </Typography>
       {isLoading ? (
-        <Skeleton className="mt-2 h-8 w-20" />
+        <Skeleton className="mt-2 h-10 w-24" />
       ) : (
-        <p className="mt-1 text-3xl font-semibold tabular-nums">
+        <Typography variant="h1" as="p" className="mt-2 tabular-nums">
           {typeof value === "number" ? value.toLocaleString("vi-VN") : value}
-        </p>
+        </Typography>
       )}
-      {hint ? <p className="mt-1 text-xs opacity-60">{hint}</p> : null}
+      {hint ? (
+        <Typography variant="body-3" className="mt-2 opacity-60">
+          {hint}
+        </Typography>
+      ) : null}
     </div>
   );
 }

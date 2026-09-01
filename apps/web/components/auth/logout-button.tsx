@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Button } from "@noalhub/ui/button";
 import { useAuthStore } from "@noalhub/api/auth";
 
-export function LogoutButton() {
+export function LogoutButton({ className }: { className?: string } = {}) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const logout = useAuthStore((s) => s.logout);
@@ -23,7 +23,7 @@ export function LogoutButton() {
   };
 
   return (
-    <Button variant="outline" onClick={onClick} disabled={pending}>
+    <Button variant="outline" onClick={onClick} disabled={pending} className={className}>
       {pending ? "Đang đăng xuất…" : "Đăng xuất"}
     </Button>
   );

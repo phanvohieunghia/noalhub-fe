@@ -8,6 +8,7 @@ import { SendButton } from "./send-button";
 import { useChatRealtime } from "./chat-realtime-provider";
 import { MESSAGE_BODY_MAX } from "@noalhub/api/chat";
 import { useSendMessage, useTyping } from "@noalhub/api/chat";
+import { Typography } from "@noalhub/ui/typography";
 
 export function MessageComposer({ conversationId }: { conversationId: string }) {
   const [body, setBody] = useState("");
@@ -70,9 +71,13 @@ export function MessageComposer({ conversationId }: { conversationId: string }) 
       </div>
 
       {tooLong ? (
-        <p role="alert" className="px-1 pt-1 text-xs text-red-600 dark:text-red-400">
+        <Typography
+          variant="body-4"
+          role="alert"
+          className="px-1 pt-1 text-red-600 dark:text-red-400"
+        >
           Tin nhắn tối đa {MESSAGE_BODY_MAX} ký tự (đang {trimmed.length}).
-        </p>
+        </Typography>
       ) : null}
     </form>
   );

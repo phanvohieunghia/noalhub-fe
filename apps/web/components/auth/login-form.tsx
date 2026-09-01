@@ -14,6 +14,7 @@ import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { safeRedirect } from "@noalhub/core/auth/redirect";
 import { loginSchema, type LoginInput } from "@noalhub/api/auth";
 import { useLogin } from "@noalhub/api/auth";
+import { Typography } from "@noalhub/ui/typography";
 
 export function LoginForm() {
   const router = useRouter();
@@ -42,8 +43,12 @@ export function LoginForm() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Đăng nhập</h1>
-        <p className="text-sm opacity-70">Chào mừng quay lại.</p>
+        <Typography variant="h3" as="h1">
+          Đăng nhập
+        </Typography>
+        <Typography variant="body-3" className="opacity-70">
+          Chào mừng quay lại.
+        </Typography>
       </header>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
@@ -65,7 +70,7 @@ export function LoginForm() {
         />
 
         <div className="flex justify-end">
-          <Link href="/forgot-password" className="text-sm underline underline-offset-4">
+          <Link href="/forgot-password" className="text-body-3 underline underline-offset-4">
             Quên mật khẩu?
           </Link>
         </div>
@@ -77,12 +82,12 @@ export function LoginForm() {
 
       <OAuthButtons next={next} />
 
-      <p className="text-center text-sm opacity-70">
+      <Typography variant="body-3" className="text-center opacity-70">
         Chưa có tài khoản?{" "}
         <Link href="/register" className="underline underline-offset-4">
           Đăng ký
         </Link>
-      </p>
+      </Typography>
     </div>
   );
 }

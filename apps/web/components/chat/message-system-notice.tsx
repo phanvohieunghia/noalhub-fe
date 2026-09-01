@@ -1,4 +1,4 @@
-/**
+import { Typography } from "@noalhub/ui/typography"; /**
  * Tin `type: "system"` — biến động thành viên, đổi tên nhóm…
  *
  * Render khác hẳn bubble thường: một dòng nhỏ căn giữa, không avatar, không
@@ -7,6 +7,8 @@
  */
 export function MessageSystemNotice({ body }: { body: string }) {
   return (
-    <p className="py-1 text-center text-xs opacity-60">{body}</p>
+    <Typography variant="body-4" className="py-1 text-center opacity-60">
+      {body}
+    </Typography>
   );
 }

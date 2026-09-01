@@ -21,6 +21,7 @@ import {
 import { AdminErrorState } from "../admin-error-state";
 import { PostStatusBadge } from "./post-status-badge";
 import { usePostFilters } from "./use-post-filters";
+import { Typography } from "@noalhub/ui/typography";
 
 const COLUMN_COUNT = 5;
 
@@ -36,19 +37,21 @@ export function PostTable() {
   const posts = useAdminBlogPosts(query);
 
   return (
-    <main className="w-full max-w-6xl p-6">
+    <main className="w-full p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">Bài viết</h1>
+        <Typography variant="h4" as="h1">
+          Bài viết
+        </Typography>
         <div className="flex items-center gap-2">
           <Link
             href="/posts/categories"
-            className="inline-flex h-10 items-center rounded-md border border-black/15 px-4 text-sm font-medium transition-colors hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+            className="inline-flex h-10 items-center rounded-md border border-black/15 px-4 text-body-3 font-medium transition-colors hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
           >
             Chuyên mục
           </Link>
           <Link
             href="/posts/new"
-            className="inline-flex h-10 items-center rounded-md bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90"
+            className="inline-flex h-10 items-center rounded-md bg-foreground px-4 text-body-3 font-medium text-background transition-opacity hover:opacity-90"
           >
             Viết bài mới
           </Link>
@@ -130,7 +133,9 @@ function PostRow({ post }: { post: BlogPost }) {
         <Link href={`/posts/${post.id}`} className="font-medium hover:underline">
           {post.title}
         </Link>
-        <span className="block text-xs opacity-60">/{post.slug}</span>
+        <Typography variant="body-4" as="span" className="block opacity-60">
+          /{post.slug}
+        </Typography>
       </TableCell>
       <TableCell>
         <PostStatusBadge status={post.status} />

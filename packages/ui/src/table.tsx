@@ -17,7 +17,7 @@ export function TableRoot({
 }) {
   return (
     <div className={`w-full overflow-x-auto ${className}`}>
-      <table className="w-full border-collapse text-left text-sm">
+      <table className="w-full border-collapse text-left text-body-3">
         <caption className="sr-only">{caption}</caption>
         {children}
       </table>
@@ -26,19 +26,11 @@ export function TableRoot({
 }
 
 export function TableHead({ children }: { children: React.ReactNode }) {
-  return (
-    <thead className="border-b border-black/10 dark:border-white/15">
-      {children}
-    </thead>
-  );
+  return <thead className="border-b border-black/10 dark:border-white/15">{children}</thead>;
 }
 
 export function TableBody({ children }: { children: React.ReactNode }) {
-  return (
-    <tbody className="divide-y divide-black/6 dark:divide-white/10">
-      {children}
-    </tbody>
-  );
+  return <tbody className="divide-y divide-black/6 dark:divide-white/10">{children}</tbody>;
 }
 
 export function TableRow({
@@ -64,7 +56,7 @@ export function TableHeaderCell({
   return (
     <th
       scope="col"
-      className={`px-3 py-2 text-xs font-medium uppercase tracking-wide opacity-60 ${className}`}
+      className={`px-3 py-2 text-body-4 font-medium uppercase tracking-wide opacity-60 ${className}`}
       {...props}
     >
       {children}
@@ -97,7 +89,7 @@ export function TableEmptyRow({
 }) {
   return (
     <tr>
-      <td colSpan={colSpan} className="px-3 py-10 text-center text-sm opacity-60">
+      <td colSpan={colSpan} className="px-3 py-10 text-center text-body-3 opacity-60">
         {children}
       </td>
     </tr>

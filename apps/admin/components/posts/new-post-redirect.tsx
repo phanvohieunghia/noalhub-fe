@@ -7,6 +7,7 @@ import { useCreateBlogPost } from "@noalhub/api/blog";
 import { Button } from "@noalhub/ui/button";
 
 import { AdminErrorState } from "../admin-error-state";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * `/posts/new` **tạo bản nháp rồi `replace` sang `/posts/[id]` ngay**
@@ -51,7 +52,7 @@ export function NewPostRedirect() {
 
   if (create.isError) {
     return (
-      <main className="w-full max-w-3xl p-6">
+      <main className="w-full p-6">
         <AdminErrorState error={create.error} />
         <div className="mt-3 flex gap-2">
           <Button
@@ -68,8 +69,10 @@ export function NewPostRedirect() {
   }
 
   return (
-    <main className="w-full max-w-3xl p-6">
-      <p className="text-sm opacity-70">Đang tạo bản nháp…</p>
+    <main className="w-full p-6">
+      <Typography variant="body-3" className="opacity-70">
+        Đang tạo bản nháp…
+      </Typography>
     </main>
   );
 }

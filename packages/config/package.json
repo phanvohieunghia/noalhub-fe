@@ -6,6 +6,7 @@
     "tsconfig.base.json",
     "eslint.boundaries.mjs",
     "blog-image-hosts.mjs",
-    "blog-image-hosts.d.mts"
+    "blog-image-hosts.d.mts",
+    "theme.css"
   ]
 }

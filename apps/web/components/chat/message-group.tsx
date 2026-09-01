@@ -28,9 +28,7 @@ export function MessageGroup({
   const sender = senderId ? members.get(senderId) : undefined;
 
   // senderId null = người gửi đã bị xoá khỏi hệ thống (ON DELETE SET NULL).
-  const name = senderId === null
-    ? "Người dùng đã xoá"
-    : (sender?.displayName ?? "Người dùng");
+  const name = senderId === null ? "Người dùng đã xoá" : (sender?.displayName ?? "Người dùng");
 
   const memberList = [...members.values()];
 
@@ -40,11 +38,7 @@ export function MessageGroup({
 
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         {mine ? null : (
-          <span
-            className={`px-1 text-xs opacity-60 ${
-              senderId === null ? "italic" : ""
-            }`}
-          >
+          <span className={`px-1 text-body-4 opacity-60 ${senderId === null ? "italic" : ""}`}>
             {name}
           </span>
         )}

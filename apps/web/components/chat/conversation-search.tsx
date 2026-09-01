@@ -20,7 +20,7 @@ export function ConversationSearch({
         onChange={(event) => onChange(event.target.value)}
         placeholder="Tìm hội thoại đã tải…"
         aria-label="Tìm hội thoại"
-        className="w-full rounded-md border border-black/15 bg-transparent px-3 py-1.5 text-sm outline-none focus:border-foreground/60 dark:border-white/20"
+        className="w-full rounded-md border border-black/15 bg-transparent px-3 py-1.5 text-body-3 outline-none focus:border-foreground/60 dark:border-white/20"
       />
     </div>
   );

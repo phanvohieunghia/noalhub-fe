@@ -10,10 +10,8 @@ import { FormError, FormSuccess } from "@noalhub/ui/form-error";
 import { Input } from "@noalhub/ui/input";
 import { useForgotPassword } from "@noalhub/api/auth";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
-import {
-  forgotPasswordSchema,
-  type ForgotPasswordInput,
-} from "@noalhub/api/auth";
+import { Typography } from "@noalhub/ui/typography";
+import { forgotPasswordSchema, type ForgotPasswordInput } from "@noalhub/api/auth";
 
 export function ForgotPasswordForm() {
   const [formError, setFormError] = useState<string | null>(null);
@@ -40,10 +38,12 @@ export function ForgotPasswordForm() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Quên mật khẩu</h1>
-        <p className="text-sm opacity-70">
+        <Typography variant="h3" as="h1">
+          Quên mật khẩu
+        </Typography>
+        <Typography variant="body-3" className="opacity-70">
           Nhập email, chúng tôi sẽ gửi liên kết đặt lại mật khẩu.
-        </p>
+        </Typography>
       </header>
 
       {sent ? (
@@ -67,11 +67,11 @@ export function ForgotPasswordForm() {
         </form>
       )}
 
-      <p className="text-center text-sm opacity-70">
+      <Typography variant="body-3" className="text-center opacity-70">
         <Link href="/login" className="underline underline-offset-4">
           Quay lại đăng nhập
         </Link>
-      </p>
+      </Typography>
     </div>
   );
 }

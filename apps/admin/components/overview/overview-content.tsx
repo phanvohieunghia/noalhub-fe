@@ -6,6 +6,7 @@ import { Button } from "@noalhub/ui/button";
 import { StatCard } from "@noalhub/ui/stat-card";
 
 import { AdminErrorState } from "../admin-error-state";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * Tổng quan — 4 số từ `GET /admin/stats`.
@@ -18,34 +19,34 @@ export function OverviewContent() {
 
   if (stats.isError) {
     return (
-      <main className="w-full max-w-4xl p-6">
-        <h1 className="mb-4 text-xl font-semibold">Tổng quan</h1>
+      <main className="w-full p-6">
+        <Typography variant="h4" as="h1" className="mb-4">
+          Tổng quan
+        </Typography>
         <AdminErrorState error={stats.error} onRetry={() => stats.refetch()} />
       </main>
     );
   }
 
   return (
-    <main className="w-full max-w-4xl p-6">
+    <main className="w-full p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">Tổng quan</h1>
-        <div className="flex items-center gap-3 text-xs opacity-60">
+        <Typography variant="h4" as="h1">
+          Tổng quan
+        </Typography>
+        <div className="text-body-4 flex items-center gap-3 opacity-60">
           {/* dataUpdatedAt = lúc response về, không phải lúc backend tính. Đủ
               chính xác cho mục đích "số này cũ chưa". */}
           {stats.dataUpdatedAt ? (
             <span>Cập nhật {formatDateTime(new Date(stats.dataUpdatedAt).toISOString())}</span>
           ) : null}
-          <Button
-            variant="outline"
-            onClick={() => stats.refetch()}
-            disabled={stats.isFetching}
-          >
+          <Button variant="outline" onClick={() => stats.refetch()} disabled={stats.isFetching}>
             {stats.isFetching ? "Đang tải…" : "Làm mới"}
           </Button>
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Tổng người dùng"
           value={stats.data?.totalUsers ?? 0}

@@ -11,11 +11,9 @@ import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { formatDateTime } from "@noalhub/core/format-date";
 import { ApiError, ERROR_CODES } from "@noalhub/api/errors";
 import { useChangeUsername } from "@noalhub/api/users";
-import {
-  changeUsernameSchema,
-  type ChangeUsernameInput,
-} from "@noalhub/api/users";
+import { changeUsernameSchema, type ChangeUsernameInput } from "@noalhub/api/users";
 import type { User } from "@noalhub/api/users";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * Đổi username — mỗi 6 tháng một lần.
@@ -53,10 +51,7 @@ export function ChangeUsernameForm({ user }: { user: User }) {
         setError("username", { message: "Username này đã có người dùng" });
         return;
       }
-      if (
-        error instanceof ApiError &&
-        error.code === ERROR_CODES.usernameChangeTooSoon
-      ) {
+      if (error instanceof ApiError && error.code === ERROR_CODES.usernameChangeTooSoon) {
         setFormError("Bạn vừa đổi username gần đây, chưa tới hạn đổi tiếp.");
         return;
       }
@@ -78,11 +73,11 @@ export function ChangeUsernameForm({ user }: { user: User }) {
         {...register("username")}
       />
 
-      <p className="text-sm opacity-70">
+      <Typography variant="body-3" className="opacity-70">
         {locked
           ? `Chỉ đổi được mỗi 6 tháng một lần. Lần đổi tiếp theo: ${formatDateTime(lockedUntil)}.`
           : "Chỉ đổi được mỗi 6 tháng một lần — cân nhắc trước khi lưu."}
-      </p>
+      </Typography>
 
       <div>
         <Button type="submit" disabled={locked || isSubmitting}>

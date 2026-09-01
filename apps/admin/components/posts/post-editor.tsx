@@ -39,6 +39,7 @@ import { SeoPanel } from "./seo-panel";
 import { TagMultiselect } from "./tag-multiselect";
 import { TiptapEditor } from "./tiptap-editor";
 import { useUnsavedChanges } from "./use-unsaved-changes";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * Tên field mà token đầu câu trong `ErrorResponseDto.details` có thể khớp.
@@ -82,7 +83,7 @@ export function PostEditor({ postId }: { postId: string }) {
   const failed = [post, categories, tags].find((query) => query.isError);
   if (failed) {
     return (
-      <main className="w-full max-w-6xl p-6">
+      <main className="w-full p-6">
         <AdminErrorState
           error={failed.error}
           onRetry={() => {
@@ -100,7 +101,7 @@ export function PostEditor({ postId }: { postId: string }) {
   // thầm gỡ hết thẻ và chuyên mục của bài ngay lần Lưu đầu tiên.
   if (!post.data || !categories.data || !tags.data) {
     return (
-      <main className="flex w-full max-w-6xl flex-col gap-4 p-6">
+      <main className="flex w-full flex-col gap-4 p-6">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-96 w-full" />
       </main>
@@ -195,13 +196,13 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
   const busy = update.isPending || publish.isPending || unpublish.isPending;
 
   return (
-    <main className="w-full max-w-6xl p-6">
+    <main className="w-full p-6">
       <form onSubmit={onSubmit} className="flex flex-col gap-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold">
+            <Typography variant="h4" as="h1">
               {values.title.trim() || "Bài viết không tên"}
-            </h1>
+            </Typography>
             <PostStatusBadge status={post.status} />
           </div>
 
@@ -241,16 +242,13 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
         {conflict ? (
           <div
             role="alert"
-            className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300"
+            className="text-body-3 flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300"
           >
             <span>
-              Bản trên máy chủ đã thay đổi (có thể bạn đang mở bài này ở tab
-              khác). Tải lại để lấy bản mới — thay đổi chưa lưu ở đây sẽ mất.
+              Bản trên máy chủ đã thay đổi (có thể bạn đang mở bài này ở tab khác). Tải lại để lấy
+              bản mới — thay đổi chưa lưu ở đây sẽ mất.
             </span>
-            <Button
-              variant="outline"
-              onClick={async () => applyFresh(await onReloadPost())}
-            >
+            <Button variant="outline" onClick={async () => applyFresh(await onReloadPost())}>
               Tải lại bản trên máy chủ
             </Button>
           </div>
@@ -260,11 +258,7 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="flex flex-col gap-4">
-            <Input
-              label="Tiêu đề"
-              {...register("title")}
-              error={formState.errors.title?.message}
-            />
+            <Input label="Tiêu đề" {...register("title")} error={formState.errors.title?.message} />
 
             <Textarea
               label="Tóm tắt"
@@ -330,9 +324,7 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
               categories={categories}
               required={post.status === "published"}
               value={values.categorySlug}
-              onChange={(slug) =>
-                setValue("categorySlug", slug, { shouldDirty: true })
-              }
+              onChange={(slug) => setValue("categorySlug", slug, { shouldDirty: true })}
               error={formState.errors.categorySlug?.message}
             />
 
@@ -342,10 +334,7 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
               onChange={(slugs) => setValue("tagSlugs", slugs, { shouldDirty: true })}
             />
 
-            <SeoPanel
-              form={form}
-              publishedSlug={post.status === "published" ? post.slug : null}
-            />
+            <SeoPanel form={form} publishedSlug={post.status === "published" ? post.slug : null} />
 
             {post.status === "archived" ? null : (
               <ArchiveButton
@@ -395,7 +384,9 @@ function CoverImageField({
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm font-medium">Ảnh bìa</span>
+      <Typography variant="title-4" as="span">
+        Ảnh bìa
+      </Typography>
 
       {url ? (
         <div className="flex flex-col gap-2">
@@ -443,19 +434,23 @@ function CoverImageField({
 function SaveState({ isDirty, savedAt }: { isDirty: boolean; savedAt: Date | null }) {
   if (isDirty) {
     return (
-      <span className="text-sm text-amber-700 dark:text-amber-300">
+      <Typography variant="body-3" as="span" className="text-amber-700 dark:text-amber-300">
         Có thay đổi chưa lưu
-      </span>
+      </Typography>
     );
   }
   if (savedAt) {
     return (
-      <span className="text-sm opacity-60">
+      <Typography variant="body-3" as="span" className="opacity-60">
         Đã lưu {savedAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
-      </span>
+      </Typography>
     );
   }
-  return <span className="text-sm opacity-60">Chưa có thay đổi</span>;
+  return (
+    <Typography variant="body-3" as="span" className="opacity-60">
+      Chưa có thay đổi
+    </Typography>
+  );
 }
 
 function TabButton({
@@ -472,7 +467,7 @@ function TabButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`-mb-px border-b-2 px-3 py-2 text-sm transition-colors ${
+      className={`-mb-px border-b-2 px-3 py-2 text-body-3 transition-colors ${
         active ? "border-foreground font-medium" : "border-transparent opacity-60"
       }`}
     >
@@ -508,12 +503,12 @@ function ArchiveButton({
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-black/15 p-3 text-sm dark:border-white/20">
-      <p className="opacity-80">
+    <div className="text-body-3 flex flex-col gap-2 rounded-md border border-black/15 p-3 dark:border-white/20">
+      <Typography variant="body-3" className="opacity-80">
         {isDraft
           ? "Bài nháp chuyển sang trạng thái “Đã gỡ” và không còn trong danh sách đang soạn. Nội dung vẫn còn và slug vẫn bị giữ — không có xoá vĩnh viễn."
           : "Bài sẽ chuyển sang trạng thái “Đã gỡ” và biến mất khỏi trang công khai. Nội dung vẫn còn và slug vẫn bị giữ — không có xoá vĩnh viễn."}
-      </p>
+      </Typography>
       <div className="flex gap-2">
         <Button variant="outline" onClick={() => setConfirming(false)}>
           Huỷ

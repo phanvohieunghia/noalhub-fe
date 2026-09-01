@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 
 import { Button } from "@noalhub/ui/button";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * 500 của riêng vùng blog: backend chết, timeout, `schema.parse` fail
@@ -33,14 +34,16 @@ export default function BlogError({
 
   return (
     <div className="flex flex-col items-start gap-4">
-      <h1 className="text-2xl font-semibold">Không tải được bài viết</h1>
-      <p className="text-sm opacity-70">
-        Máy chủ đang gặp sự cố nên phần nội dung chưa lấy về được. Thử lại sau ít
-        phút giúp chúng tôi nhé.
-      </p>
+      <Typography variant="h3" as="h1">
+        Không tải được bài viết
+      </Typography>
+      <Typography variant="body-3" className="opacity-70">
+        Máy chủ đang gặp sự cố nên phần nội dung chưa lấy về được. Thử lại sau ít phút giúp chúng
+        tôi nhé.
+      </Typography>
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={() => unstable_retry()}>Thử lại</Button>
-        <Link href="/blogs" className="text-sm underline underline-offset-4">
+        <Link href="/blogs" className="text-body-3 underline underline-offset-4">
           Về danh sách bài viết
         </Link>
       </div>

@@ -13,6 +13,7 @@ import { useAuthStore } from "@noalhub/api/auth";
 import { useCreateDirectConversation } from "@noalhub/api/chat";
 import { usePublicProfile } from "@noalhub/api/users";
 import type { PublicProfile } from "@noalhub/api/users";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * Hồ sơ công khai của người khác (`GET /users/{username}`).
@@ -27,7 +28,7 @@ export function PublicProfileContent({ username }: { username: string }) {
     return (
       <main
         role="status"
-        className="flex flex-1 items-center justify-center gap-2 p-8 text-sm opacity-70"
+        className="flex flex-1 items-center justify-center gap-2 p-8 text-body-3 opacity-70"
       >
         <Spinner />
         Đang tải hồ sơ…
@@ -36,16 +37,11 @@ export function PublicProfileContent({ username }: { username: string }) {
   }
 
   if (error) {
-    const notFound =
-      error instanceof ApiError && error.code === ERROR_CODES.userNotFound;
+    const notFound = error instanceof ApiError && error.code === ERROR_CODES.userNotFound;
     return (
       <main className="mx-auto w-full max-w-3xl p-8">
         <FormError
-          message={
-            notFound
-              ? `Không tìm thấy người dùng @${username}.`
-              : "Không tải được hồ sơ."
-          }
+          message={notFound ? `Không tìm thấy người dùng @${username}.` : "Không tải được hồ sơ."}
         />
       </main>
     );
@@ -54,21 +50,19 @@ export function PublicProfileContent({ username }: { username: string }) {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 p-8">
       <header className="flex items-center gap-4">
-        <Avatar
-          name={data.displayName ?? data.username}
-          src={data.avatarUrl}
-          size="lg"
-        />
+        <Avatar name={data.displayName ?? data.username} src={data.avatarUrl} size="lg" />
         <div className="min-w-0">
-          <h1 className="truncate text-2xl font-semibold">
+          <Typography variant="h3" as="h1" className="truncate">
             {data.displayName ?? data.username}
-          </h1>
-          <p className="truncate font-mono text-sm opacity-70">@{data.username}</p>
+          </Typography>
+          <Typography variant="body-3" className="truncate font-mono opacity-70">
+            @{data.username}
+          </Typography>
         </div>
         <MessageButton user={data} />
       </header>
 
-      <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-sm dark:border-white/15">
+      <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-body-3 dark:border-white/15">
         <div className="flex justify-between gap-4">
           <dt className="opacity-70">Tham gia</dt>
           <dd>{formatDate(data.createdAt)}</dd>
@@ -112,9 +106,14 @@ function MessageButton({ user }: { user: PublicProfile }) {
         {createDirect.isPending ? "Đang mở…" : "Nhắn tin"}
       </Button>
       {createDirect.isError ? (
-        <span role="alert" className="text-xs text-red-600 dark:text-red-400">
+        <Typography
+          variant="body-4"
+          as="span"
+          role="alert"
+          className="text-red-600 dark:text-red-400"
+        >
           {dmErrorMessage(createDirect.error)}
-        </span>
+        </Typography>
       ) : null}
     </div>
   );

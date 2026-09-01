@@ -1,0 +1,217 @@
+/**
+ * Bảng màu dùng chung cho `apps/web` và `apps/admin`.
+ *
+ * Ba tầng, đọc từ dưới lên:
+ *   1. `@theme` — hai THANG màu (`brand`, `neutral`), hằng số, không đổi theo
+ *      chế độ sáng/tối. Đây là bảng nguyên liệu.
+ *   2. `:root` / `.dark` — TOKEN NGỮ NGHĨA trỏ vào một bậc của thang. Đây là
+ *      chỗ duy nhất biết light khác dark ở đâu.
+ *   3. `@theme inline` — nối token ngữ nghĩa vào utility của Tailwind.
+ *
+ * ⚠️ Tầng 3 BẮT BUỘC có `inline`. Không có nó, Tailwind copy giá trị lúc build
+ * (tức là giá trị của `:root`) vào từng utility, và `.dark` đổi biến cũng
+ * không đổi được màu — dark mode câm lặng không hoạt động.
+ *
+ * Component **chỉ dùng token ngữ nghĩa** (`bg-surface`, `text-muted-foreground`).
+ * Gọi thẳng bậc thang (`bg-brand-700`) là mời lại đúng con bug này: `brand-700`
+ * là nút ở light nhưng là đường viền ở dark. Ngoại lệ: biểu đồ, avatar sinh màu
+ * theo tên — chỗ cần một dải màu chứ không phải một vai trò.
+ *
+ * Chi tiết cách dựng thang (nội suy OKLCH từ 4 màu gốc) ở `docs/theme-plan.md` §5.
+ */
+
+@theme {
+  /* Ba bậc 200/300/400 là màu gốc của thương hiệu, giữ nguyên tuyệt đối.
+     ⚠️ Cả BỐN màu được đưa đều nằm ở nửa SÁNG (màu tối nhất, `#0ABAB5`, chỉ
+     đạt 2.4:1 trên nền trắng) — không màu nào làm chữ hay nút được ở light.
+     Nên nửa dưới thang (500→950) là do mình kéo dài ra: giữ hue teal, hạ dần
+     độ sáng và chroma. Đó mới là chỗ lấy màu chữ và màu nút.
+     Hue trôi 173° (mint) → 212° (teal thẫm); chroma phải hạ ở nửa dưới mới nằm
+     trong gamut sRGB. */
+  --color-brand-50: #e9fcf4;
+  --color-brand-100: #d0f7e8;
+  --color-brand-200: #adeed9;
+  --color-brand-300: #56dfcf;
+  --color-brand-400: #0abab5;
+  --color-brand-500: #009a9a;
+  --color-brand-600: #067b7f;
+  --color-brand-700: #006066;
+  --color-brand-800: #02464d;
+  --color-brand-900: #002e35;
+  --color-brand-950: #001a1f;
+
+  /* Xám cùng hue 200° với `brand-900`, chroma 0.006–0.016: đọc ra là "xám"
+     nhưng đứng cạnh brand thì không lệch tông.
+     ⚠️ Đây là GHI ĐÈ palette `neutral` mặc định của Tailwind — chủ ý, để
+     `text-neutral-500` cũ tự ám xanh theo thương hiệu. */
+  --color-neutral-50: #f6fbfc;
+  --color-neutral-100: #eaf2f2;
+  --color-neutral-200: #d8e2e2;
+  --color-neutral-300: #bfcaca;
+  --color-neutral-400: #95a1a2;
+  --color-neutral-500: #768384;
+  --color-neutral-600: #5a6868;
+  --color-neutral-700: #435050;
+  --color-neutral-800: #2c3839;
+  --color-neutral-900: #172323;
+  --color-neutral-950: #0a1414;
+
+  /* Hồng phấn `#FFEDF3` không nằm trên trục teal (hue 355° so với 173–212°),
+     nên nó KHÔNG phải một bậc của thang brand — nó là màu nhấn thứ hai, dùng
+     cho nền vùng highlight/callout. Hai bậc kia là do mình dựng để nó còn dùng
+     được ở dark. */
+  --color-blush-100: #ffedf3;
+  --color-blush-600: #7f3b58;
+  --color-blush-900: #562f3f;
+}
+
+/**
+ * `dark:` của Tailwind v4 mặc định bám `prefers-color-scheme`. Khai lại để nó
+ * bám class trên `<html>` — nếu không, lựa chọn tường minh của user (`light`
+ * trên máy đang dark) sẽ bị hệ điều hành ghi đè.
+ */
+/**
+ * Thang chữ. Mỗi bậc khai kèm `--line-height` và `--letter-spacing` để một
+ * utility `text-h1` mang đủ ba thứ — chia lẻ thành `text-4xl leading-tight
+ * tracking-tight` ở từng chỗ gọi là cách để chúng lệch nhau sau ba tháng.
+ *
+ * Tiêu đề càng lớn thì line-height càng CHẶT và letter-spacing càng ÂM: ở cỡ
+ * lớn, khoảng cách mặc định trông rời rạc; ở cỡ nhỏ thì ngược lại, cần thoáng
+ * để đọc đoạn dài.
+ *
+ * Bậc `--text-*` là namespace của Tailwind → tự có `text-h1`, `text-body`…
+ */
+@theme {
+  --text-h1: 2.25rem;
+  --text-h1--line-height: 1.15;
+  --text-h1--letter-spacing: -0.02em;
+
+  --text-h2: 1.875rem;
+  --text-h2--line-height: 1.2;
+  --text-h2--letter-spacing: -0.015em;
+
+  --text-h3: 1.5rem;
+  --text-h3--line-height: 1.3;
+  --text-h3--letter-spacing: -0.01em;
+
+  --text-h4: 1.25rem;
+  --text-h4--line-height: 1.4;
+  --text-h4--letter-spacing: -0.005em;
+
+  --text-h5: 1.125rem;
+  --text-h5--line-height: 1.45;
+
+  --text-h6: 1rem;
+  --text-h6--line-height: 1.5;
+
+  /* `title` KHÔNG phải bậc heading: nó là nhãn của một khối (card, hàng bảng,
+     ô thống kê). Cùng dải cỡ với h4–h6 nhưng line-height CHẶT hơn (nhãn thường
+     một dòng) và letter-spacing DƯƠNG — chữ đặc mà giãn nhẹ thì dễ quét mắt. */
+  --text-title-1: 1.25rem;
+  --text-title-1--line-height: 1.4;
+  --text-title-1--letter-spacing: 0.005em;
+
+  --text-title-2: 1.125rem;
+  --text-title-2--line-height: 1.4;
+  --text-title-2--letter-spacing: 0.005em;
+
+  --text-title-3: 1rem;
+  --text-title-3--line-height: 1.4;
+  --text-title-3--letter-spacing: 0.005em;
+
+  --text-title-4: 0.875rem;
+  --text-title-4--line-height: 1.45;
+  --text-title-4--letter-spacing: 0.01em;
+
+  /* Bốn bậc thân chữ. `body-2` là mặc định của cả hệ; `body-1` chỉ dùng cho
+     đoạn mở đầu (lead). Cỡ càng nhỏ thì line-height càng CHẶT lại — chữ nhỏ
+     dòng thưa quá thì mắt lạc dòng. */
+  --text-body-1: 1.125rem;
+  --text-body-1--line-height: 1.7;
+
+  --text-body-2: 1rem;
+  --text-body-2--line-height: 1.65;
+
+  --text-body-3: 0.875rem;
+  --text-body-3--line-height: 1.6;
+
+  --text-body-4: 0.75rem;
+  --text-body-4--line-height: 1.55;
+
+  /* `caption` cùng cỡ `body-4` nhưng LUÔN in nghiêng — phân biệt bằng dáng chữ
+     chứ không bằng cỡ, để chú thích ảnh nằm cạnh thân bài vẫn tách bạch. */
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.5;
+  --text-caption--letter-spacing: 0.01em;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: var(--color-neutral-50);
+  --foreground: var(--color-brand-900);
+  --surface: #ffffff;
+  --surface-foreground: var(--color-brand-900);
+  --muted: var(--color-neutral-100);
+  --highlight: var(--color-blush-100);
+  --highlight-foreground: var(--color-blush-600); /* 7.0:1 trên nền hồng */
+  --muted-foreground: var(--color-neutral-600); /* 5.6:1 trên --background */
+  --border: var(--color-neutral-200);
+  --primary: var(--color-brand-600); /* chữ trắng trên nút: 5.1:1 */
+  --primary-hover: var(--color-brand-700); /* 7.3:1 */
+  --primary-foreground: #ffffff;
+  --accent: var(--color-brand-700); /* link & chữ nhấn, 7.3:1 */
+  --ring: var(--color-brand-400); /* Tiffany gốc — chỉ làm viền focus, không làm chữ */
+
+  /* Trạng thái KHÔNG lấy từ thang brand. `success` phải là xanh LÁ rõ rệt, đừng
+     ngả teal: thang brand giờ là teal, một `success` teal nữa thì "thành công"
+     và "màu thương hiệu" nhìn như nhau. */
+  --danger: #b42318;
+  --success: #16803c;
+  --warning: #b54708;
+}
+
+.dark {
+  --background: var(--color-brand-900);
+  --foreground: var(--color-neutral-50); /* 14.0:1 */
+  /* Ở dark, surface SÁNG hơn background — không phải trắng. */
+  --surface: var(--color-brand-800);
+  --surface-foreground: var(--color-neutral-50);
+  --muted: var(--color-brand-800);
+  --highlight: var(--color-blush-900);
+  --highlight-foreground: var(--color-blush-100); /* 10.0:1 */
+  --muted-foreground: var(--color-neutral-400); /* 5.5:1 trên --background */
+  --border: var(--color-brand-700);
+  --primary: var(--color-brand-400); /* Tiffany gốc, cuối cùng cũng có đất diễn */
+  /* Và hover cũng SÁNG lên, không tối đi. */
+  --primary-hover: var(--color-brand-300);
+  /* Chữ TỐI trên nút, không phải trắng: `#0ABAB5` quá sáng để mang chữ trắng
+     (2.4:1); chữ gần-đen cho 7.5:1. */
+  --primary-foreground: var(--color-brand-950);
+  --accent: var(--color-brand-300); /* 8.9:1 — link & chữ nhấn */
+  --ring: var(--color-brand-400);
+
+  --danger: #f97066;
+  --success: #4ade80;
+  --warning: #f79009;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-ring: var(--ring);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+}

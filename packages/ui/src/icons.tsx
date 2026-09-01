@@ -1,0 +1,96 @@
+"use client";
+
+import { Icon as IconifyIcon, addIcon, type IconProps } from "@iconify/react";
+
+// Icon set mặc định của project: lucide (stroke-based, hợp với Tailwind).
+// Cú pháp tên: "lucide:trash-2". Iconify tải icon data từ api.iconify.design
+// rồi cache vào localStorage — lần render đầu tiên có thể trống 1 nhịp.
+//
+// Icon nào cần hiển thị ngay (above-the-fold, logo brand) thì đăng ký offline
+// bằng addIcon() ở dưới, sẽ render đồng bộ không cần network.
+
+export type { IconProps };
+
+/**
+ * Wrapper quanh Iconify. Mặc định 1em → co theo font-size của parent;
+ * truyền className="size-4" để ép kích thước cụ thể.
+ */
+export function Icon({ className = "size-4", ...props }: IconProps) {
+  return <IconifyIcon aria-hidden className={className} {...props} />;
+}
+
+/* ---------------------------------------------------------------------------
+ * Brand icons đăng ký offline (lucide không có logo thương hiệu)
+ * ------------------------------------------------------------------------- */
+
+addIcon("brand:google", {
+  width: 24,
+  height: 24,
+  body: `<path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.4 5.4 0 0 1-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09A11.99 11.99 0 0 0 12 24"/><path fill="#FBBC05" d="M5.27 14.29a7.2 7.2 0 0 1-.38-2.29c0-.8.14-1.57.38-2.29V6.62H1.29A11.99 11.99 0 0 0 0 12c0 1.94.47 3.77 1.29 5.38z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.7 0 3.99 2.47 1.29 6.62l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75"/>`,
+});
+
+addIcon("brand:github", {
+  width: 24,
+  height: 24,
+  body: `<path fill="currentColor" d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.9 1.2 1.9 1.2 1.1 1.9 2.8 1.3 3.5 1c.1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/>`,
+});
+
+/* ---------------------------------------------------------------------------
+ * Alias cho các icon dùng nhiều — đổi icon set sau này chỉ sửa ở đây.
+ * ------------------------------------------------------------------------- */
+
+export const ICONS = {
+  // actions
+  add: "lucide:plus",
+  edit: "lucide:pencil",
+  delete: "lucide:trash-2",
+  save: "lucide:check",
+  close: "lucide:x",
+  search: "lucide:search",
+  filter: "lucide:list-filter",
+  more: "lucide:ellipsis",
+  menu: "lucide:menu",
+  copy: "lucide:copy",
+  drag: "lucide:grip-vertical",
+
+  // navigation
+  chevronDown: "lucide:chevron-down",
+  chevronRight: "lucide:chevron-right",
+  chevronLeft: "lucide:chevron-left",
+  arrowLeft: "lucide:arrow-left",
+  externalLink: "lucide:external-link",
+
+  // status
+  loading: "lucide:loader-circle",
+  success: "lucide:circle-check",
+  error: "lucide:circle-alert",
+  info: "lucide:info",
+  warning: "lucide:triangle-alert",
+
+  // domain
+  user: "lucide:user",
+  users: "lucide:users",
+  post: "lucide:file-text",
+  category: "lucide:folder",
+  tag: "lucide:tag",
+  rss: "lucide:rss",
+  map: "lucide:map",
+  image: "lucide:image",
+  eye: "lucide:eye",
+  eyeOff: "lucide:eye-off",
+  calendar: "lucide:calendar",
+  chat: "lucide:message-circle",
+  logout: "lucide:log-out",
+  settings: "lucide:settings",
+  sun: "lucide:sun",
+  moon: "lucide:moon",
+  monitor: "lucide:monitor",
+  palette: "lucide:palette",
+  check: "lucide:check",
+
+  // brands (offline)
+  google: "brand:google",
+  github: "brand:github",
+} as const;
+
+export type IconName = (typeof ICONS)[keyof typeof ICONS];

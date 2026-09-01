@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "./button";
+import { Typography } from "./typography";
 
 /**
  * Phân trang **offset** — hợp với `GET /admin/users` (`page`/`limit`), KHÔNG
@@ -30,13 +31,13 @@ export function Pagination({
   return (
     <nav
       aria-label="Phân trang"
-      className="flex flex-wrap items-center justify-between gap-3 pt-3 text-sm"
+      className="flex flex-wrap items-center justify-between gap-3 pt-3 text-body-3"
     >
       {/* aria-live: đổi trang bằng nút không làm focus nhảy, screen reader cần
           được báo phạm vi mới. */}
-      <p aria-live="polite" className="opacity-70">
+      <Typography variant="body-2" aria-live="polite" className="opacity-70">
         {total === 0 ? "Không có kết quả" : `${from}–${to} trên ${total}`}
-      </p>
+      </Typography>
 
       <div className="flex items-center gap-2">
         <Button

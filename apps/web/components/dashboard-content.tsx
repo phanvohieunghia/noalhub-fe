@@ -4,6 +4,8 @@ import Link from "next/link";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { useAuthStore } from "@noalhub/api/auth";
+import { ThemeToggle } from "@noalhub/ui/theme/theme-toggle";
+import { Typography } from "@noalhub/ui/typography";
 
 /** Trang mẫu để verify luồng auth end-to-end. */
 export function DashboardContent() {
@@ -13,19 +15,24 @@ export function DashboardContent() {
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-8">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Dashboard</h1>
-          <p className="text-sm opacity-70">Xin chào, {user?.displayName ?? user?.email ?? "bạn"}.</p>
+          <Typography variant="h3" as="h1">
+            Dashboard
+          </Typography>
+          <Typography variant="body-3" className="opacity-70">
+            Xin chào, {user?.displayName ?? user?.email ?? "bạn"}.
+          </Typography>
         </div>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <Link
             href="/profile"
-            className="inline-flex h-10 items-center rounded-md border border-black/15 px-4 text-sm font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+            className="inline-flex h-10 items-center rounded-md border border-border px-4 text-body-3 font-medium hover:bg-muted"
           >
             Hồ sơ
           </Link>
           <Link
             href="/chat"
-            className="inline-flex h-10 items-center rounded-md border border-black/15 px-4 text-sm font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+            className="inline-flex h-10 items-center rounded-md border border-border px-4 text-body-3 font-medium hover:bg-muted"
           >
             Tin nhắn
           </Link>
@@ -33,7 +40,7 @@ export function DashboardContent() {
         </div>
       </div>
 
-      <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-sm dark:border-white/15">
+      <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-body-3 dark:border-white/15">
         <div className="flex justify-between gap-4">
           <dt className="opacity-70">Email</dt>
           <dd className="font-mono">{user?.email ?? "—"}</dd>

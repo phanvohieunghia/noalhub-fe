@@ -12,17 +12,14 @@ import {
   sanitizeBlogDoc,
   type BlogDoc,
 } from "@noalhub/api/blog";
-import {
-  MEDIA_IMAGE_MIMES,
-  useUploadMedia,
-  type MediaAsset,
-} from "@noalhub/api/media";
+import { MEDIA_IMAGE_MIMES, useUploadMedia, type MediaAsset } from "@noalhub/api/media";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
 import { FormError } from "@noalhub/ui/form-error";
 import { Input } from "@noalhub/ui/input";
 
 import { ImageUploadButton } from "../media/image-upload-button";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * Node `image` mang thêm `width`/`height` **ngay từ đợt 1**.
@@ -91,9 +88,7 @@ export function TiptapEditor({
           void insertImageAsset(editorInstance, asset, file.name);
         },
         onError: (error) =>
-          setDropError(
-            error instanceof Error ? error.message : "Không tải được ảnh lên.",
-          ),
+          setDropError(error instanceof Error ? error.message : "Không tải được ảnh lên."),
       });
     },
     [dropUpload],
@@ -178,21 +173,15 @@ export function TiptapEditor({
       <EditorContent editor={editor} />
 
       {dropUpload.isPending ? (
-        <p role="status" className="text-xs opacity-70">
+        <Typography variant="body-4" role="status" className="opacity-70">
           Đang tải ảnh lên…{" "}
-          {dropUpload.progress
-            ? `${Math.round(dropUpload.progress.ratio * 100)}%`
-            : ""}
-        </p>
+          {dropUpload.progress ? `${Math.round(dropUpload.progress.ratio * 100)}%` : ""}
+        </Typography>
       ) : null}
       <FormError message={dropError} />
 
-      {linkOpen ? (
-        <LinkDialog editor={editor} onClose={() => setLinkOpen(false)} />
-      ) : null}
-      {imageOpen ? (
-        <ImageDialog editor={editor} onClose={() => setImageOpen(false)} />
-      ) : null}
+      {linkOpen ? <LinkDialog editor={editor} onClose={() => setLinkOpen(false)} /> : null}
+      {imageOpen ? <ImageDialog editor={editor} onClose={() => setImageOpen(false)} /> : null}
     </div>
   );
 }
@@ -308,7 +297,7 @@ function Toolbar({
       {inCodeBlock ? (
         <select
           aria-label="Ngôn ngữ của khối mã"
-          className="ml-auto h-8 rounded-md border border-black/15 bg-transparent px-2 text-xs dark:border-white/20"
+          className="ml-auto h-8 rounded-md border border-black/15 bg-transparent px-2 text-body-4 dark:border-white/20"
           value={(editor.getAttributes("codeBlock").language as string) ?? ""}
           onChange={(event) =>
             editor
@@ -350,10 +339,8 @@ function ToolbarButton({
       aria-label={label}
       aria-pressed={active}
       onClick={onClick}
-      className={`h-8 min-w-8 rounded px-2 text-sm transition-colors ${
-        active
-          ? "bg-foreground text-background"
-          : "hover:bg-black/8 dark:hover:bg-white/12"
+      className={`h-8 min-w-8 rounded px-2 text-body-3 transition-colors ${
+        active ? "bg-foreground text-background" : "hover:bg-black/8 dark:hover:bg-white/12"
       }`}
     >
       {children}
@@ -399,10 +386,10 @@ function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }
           onChange={(event) => setHref(event.target.value)}
           placeholder="https://…"
         />
-        <p className="-mt-2 text-xs opacity-60">
+        <Typography variant="body-4" className="-mt-2 opacity-60">
           Để trống rồi bấm Áp dụng để gỡ liên kết. Link ra ngoài tự động mang
           <code className="mx-1">rel=&quot;nofollow noopener&quot;</code> khi hiển thị.
-        </p>
+        </Typography>
         <FormError message={error} />
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
@@ -503,12 +490,13 @@ function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void 
         />
         <FormError message={error} />
         {notice ? (
-          <p
+          <Typography
+            variant="body-3"
             role="status"
-            className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300"
+            className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300"
           >
             {notice}
-          </p>
+          </Typography>
         ) : null}
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
@@ -527,8 +515,7 @@ function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void 
 function measureImage(src: string): Promise<{ width: number; height: number } | null> {
   return new Promise((resolve) => {
     const image = new window.Image();
-    image.onload = () =>
-      resolve({ width: image.naturalWidth, height: image.naturalHeight });
+    image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
     image.onerror = () => resolve(null);
     image.src = src;
   });
@@ -581,5 +568,8 @@ async function insertImageAsset(
  */
 function suggestAltFrom(fileName: string | null): string {
   if (!fileName) return "";
-  return fileName.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim();
+  return fileName
+    .replace(/\.[^.]+$/, "")
+    .replace(/[-_]+/g, " ")
+    .trim();
 }

@@ -34,10 +34,7 @@ export function TagMultiselect({
   const [error, setError] = useState<string | null>(null);
   const createTag = useCreateBlogTag();
 
-  const bySlug = useMemo(
-    () => new Map(tags.map((tag) => [tag.slug, tag])),
-    [tags],
-  );
+  const bySlug = useMemo(() => new Map(tags.map((tag) => [tag.slug, tag])), [tags]);
 
   const query = search.trim().toLowerCase();
   const suggestions = tags
@@ -89,7 +86,7 @@ export function TagMultiselect({
               <button
                 type="button"
                 onClick={() => onChange(value.filter((item) => item !== slug))}
-                className="flex items-center gap-1.5 rounded-full bg-black/8 px-2.5 py-1 text-xs transition-opacity hover:opacity-70 dark:bg-white/12"
+                className="flex items-center gap-1.5 rounded-full bg-black/8 px-2.5 py-1 text-body-4 transition-opacity hover:opacity-70 dark:bg-white/12"
               >
                 <span>#{bySlug.get(slug)?.name ?? slug}</span>
                 <span aria-hidden>×</span>
@@ -107,7 +104,7 @@ export function TagMultiselect({
               key={tag.slug}
               type="button"
               onClick={() => add(tag.slug)}
-              className="rounded-full border border-black/15 px-2.5 py-1 text-xs transition-colors hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+              className="rounded-full border border-black/15 px-2.5 py-1 text-body-4 transition-colors hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
             >
               #{tag.name}
             </button>
@@ -117,7 +114,7 @@ export function TagMultiselect({
               type="button"
               onClick={() => void create()}
               disabled={createTag.isPending}
-              className="rounded-full border border-dashed border-black/25 px-2.5 py-1 text-xs disabled:opacity-50 dark:border-white/30"
+              className="rounded-full border border-dashed border-black/25 px-2.5 py-1 text-body-4 disabled:opacity-50 dark:border-white/30"
             >
               {createTag.isPending
                 ? "Đang tạo…"

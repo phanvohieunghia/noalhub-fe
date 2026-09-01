@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getLatestPosts } from "@noalhub/api/blog/server";
 
 import { PostList } from "@/components/blog/post-list";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * 404 của riêng vùng blog: bài không tồn tại, chưa publish, đã `archived`, hoặc
@@ -29,20 +30,27 @@ export default async function BlogNotFound() {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-3">
-        <h1 className="text-2xl font-semibold">Không tìm thấy bài viết</h1>
-        <p className="text-sm opacity-70">
+        <Typography variant="h3" as="h1">
+          Không tìm thấy bài viết
+        </Typography>
+        <Typography variant="body-3" className="opacity-70">
           Bài viết này không tồn tại, đã được gỡ, hoặc đường dẫn bị gõ sai.
-        </p>
-        <Link href="/blogs" className="w-fit text-sm underline underline-offset-4">
+        </Typography>
+        <Link href="/blogs" className="w-fit text-body-3 underline underline-offset-4">
           ← Về danh sách bài viết
         </Link>
       </header>
 
       {latest.length > 0 ? (
         <section aria-labelledby="latest-heading" className="flex flex-col gap-4">
-          <h2 id="latest-heading" className="text-sm font-medium uppercase tracking-wide opacity-60">
+          <Typography
+            variant="title-4"
+            as="h2"
+            id="latest-heading"
+            className="uppercase tracking-wide opacity-60"
+          >
             Bài mới nhất
-          </h2>
+          </Typography>
           <PostList posts={latest} emptyMessage="" />
         </section>
       ) : null}

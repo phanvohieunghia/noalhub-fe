@@ -12,6 +12,7 @@ import {
   otherMember,
 } from "@noalhub/core/chat/format";
 import type { Conversation } from "@noalhub/api/chat";
+import { Typography } from "@noalhub/ui/typography";
 
 export function ConversationListItem({
   conversation,
@@ -46,23 +47,22 @@ export function ConversationListItem({
         <span className="relative shrink-0">
           <Avatar name={name} src={peer?.avatarUrl} />
           {conversation.type === "direct" ? (
-            <PresenceDot
-              userId={peer?.userId}
-              className="absolute -right-0.5 -bottom-0.5"
-            />
+            <PresenceDot userId={peer?.userId} className="absolute -right-0.5 -bottom-0.5" />
           ) : null}
         </span>
 
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="flex items-baseline justify-between gap-2">
-            <span className="truncate text-sm font-medium">{name}</span>
+            <Typography variant="title-4" as="span" className="truncate">
+              {name}
+            </Typography>
             <span className="shrink-0 text-[11px] opacity-50">
               {conversationTimestamp(last?.createdAt ?? null)}
             </span>
           </span>
           <span className="flex items-center justify-between gap-2">
             <span
-              className={`truncate text-xs ${
+              className={`truncate text-body-4 ${
                 conversation.unreadCount > 0 ? "font-medium" : "opacity-60"
               }`}
             >

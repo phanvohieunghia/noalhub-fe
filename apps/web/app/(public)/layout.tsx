@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { SiteFooter } from "@/components/layout/site-footer";
 import { getBlogCategories } from "@noalhub/api/blog/server";
 
 /**
@@ -12,11 +13,7 @@ import { getBlogCategories } from "@noalhub/api/blog/server";
  * (§2.6). Thẻ thì KHÔNG lên nav, chỉ xuất hiện dưới mỗi bài: cho cả hai trục lên
  * nav là tự tạo ra hàng chục URL gần trùng nhau.
  */
-export default async function PublicLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   // Nav hỏng không được làm chết trang bài viết: backend sập thì bài vẫn phải
   // đọc được (nó có cache riêng). `error.tsx` của `/blogs` lo lỗi của NỘI DUNG,
   // còn đây chỉ là điều hướng.
@@ -24,13 +21,13 @@ export default async function PublicLayout({
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="border-b border-black/10 dark:border-white/15">
+      <header className="border-b border-border">
         <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-6 gap-y-3 px-6 py-4">
-          <Link href="/blogs" className="text-base font-semibold">
+          <Link href="/blogs" className="text-body-2 font-semibold">
             Noalhub Blog
           </Link>
 
-          <nav aria-label="Chuyên mục" className="flex flex-wrap items-center gap-4 text-sm">
+          <nav aria-label="Chuyên mục" className="flex flex-wrap items-center gap-4 text-body-3">
             {categories.map((category) => (
               <Link
                 key={category.slug}
@@ -42,30 +39,17 @@ export default async function PublicLayout({
             ))}
           </nav>
 
-          <Link href="/login" className="ml-auto text-sm opacity-70 hover:opacity-100">
-            Đăng nhập
-          </Link>
+          <div className="ml-auto flex items-center gap-4">
+            <Link href="/login" className="text-body-3 opacity-70 hover:opacity-100">
+              Đăng nhập
+            </Link>
+          </div>
         </div>
       </header>
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">{children}</main>
 
-      <footer className="border-t border-black/10 dark:border-white/15">
-        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 px-6 py-6 text-sm opacity-60">
-          <p>© {new Date().getFullYear()} Noalhub</p>
-          <nav aria-label="Liên kết chân trang" className="flex items-center gap-4">
-            <Link href="/blogs" className="hover:underline">
-              Bài viết
-            </Link>
-            <Link href="/blogs/tag" className="hover:underline">
-              Thẻ
-            </Link>
-            <a href="/blogs/rss.xml" className="hover:underline">
-              RSS
-            </a>
-          </nav>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

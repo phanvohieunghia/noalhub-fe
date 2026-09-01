@@ -12,6 +12,7 @@ import { ApiError, ERROR_CODES } from "@noalhub/api/errors";
 import { usePresence } from "@noalhub/api/chat";
 import { usePublicProfile } from "@noalhub/api/users";
 import type { ConversationMember } from "@noalhub/api/chat";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * Hồ sơ công khai của một thành viên hội thoại.
@@ -35,9 +36,7 @@ export function MemberProfileDrawer({
   onClose: () => void;
 }) {
   const presence = usePresence(member?.userId);
-  const { data, isPending, error } = usePublicProfile(
-    open ? member?.username : undefined,
-  );
+  const { data, isPending, error } = usePublicProfile(open ? member?.username : undefined);
 
   const statusLabel = !presence
     ? "Không rõ trạng thái"
@@ -55,31 +54,29 @@ export function MemberProfileDrawer({
       {member ? (
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-center gap-3 text-center">
-            <Avatar
-              name={displayName}
-              src={avatarUrl}
-              size="lg"
-              className="size-20 text-2xl"
-            />
+            <Avatar name={displayName} src={avatarUrl} size="lg" className="size-20 text-h3" />
             <div>
-              <p className="text-lg font-semibold">{displayName}</p>
-              <p className="font-mono text-sm opacity-70">@{member.username}</p>
-              <p className="text-sm opacity-60">{statusLabel}</p>
+              <Typography variant="title-2">{displayName}</Typography>
+              <Typography variant="body-3" className="font-mono opacity-70">
+                @{member.username}
+              </Typography>
+              <Typography variant="body-3" className="opacity-60">
+                {statusLabel}
+              </Typography>
             </div>
           </div>
 
           {error ? (
             <FormError
               message={
-                error instanceof ApiError &&
-                error.code === ERROR_CODES.userNotFound
+                error instanceof ApiError && error.code === ERROR_CODES.userNotFound
                   ? "Người dùng này không còn tồn tại."
                   : "Không tải được hồ sơ."
               }
             />
           ) : null}
 
-          <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-sm dark:border-white/15">
+          <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-body-3 dark:border-white/15">
             <div className="flex justify-between gap-4">
               <dt className="opacity-70">Vai trò</dt>
               <dd>{member.role === "owner" ? "Chủ hội thoại" : "Thành viên"}</dd>
@@ -101,7 +98,7 @@ export function MemberProfileDrawer({
 
           <Link
             href={`/profile/${member.username}`}
-            className="inline-flex h-10 items-center justify-center rounded-md border border-black/15 px-4 text-sm font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+            className="inline-flex h-10 items-center justify-center rounded-md border border-black/15 px-4 text-body-3 font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
           >
             Xem hồ sơ đầy đủ
           </Link>

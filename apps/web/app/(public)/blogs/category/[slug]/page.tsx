@@ -1,17 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import {
-  BLOG_PAGE_SIZE,
-  getBlogCategory,
-  getPublishedPosts,
-} from "@noalhub/api/blog/server";
+import { BLOG_PAGE_SIZE, getBlogCategory, getPublishedPosts } from "@noalhub/api/blog/server";
 import { listCanonical } from "@noalhub/core/blog/seo";
 import { PaginationLinks } from "@noalhub/ui/pagination-links";
 
 import { Breadcrumb } from "@/components/blog/breadcrumb";
 import { isPageOutOfRange, readPageParam } from "@/components/blog/page-param";
 import { PostList } from "@/components/blog/post-list";
+import { Typography } from "@noalhub/ui/typography";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -38,10 +35,7 @@ type Props = {
  * (`server.ts` gắn `revalidate: 60` + tag `blog-category:<slug>`), nên không đấm
  * vào backend mỗi request và webhook §5.2 vẫn xoá được cache.
  */
-export async function generateMetadata({
-  params,
-  searchParams,
-}: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug } = await params;
   const page = readPageParam((await searchParams).page) ?? 1;
 
@@ -51,8 +45,7 @@ export async function generateMetadata({
   return {
     title: page > 1 ? `${category.name} — Trang ${page}` : category.name,
     // `description` của chuyên mục chính là thứ làm nó KHÔNG phải trang mỏng (§6.5).
-    description:
-      category.description ?? `Các bài viết trong chuyên mục ${category.name}.`,
+    description: category.description ?? `Các bài viết trong chuyên mục ${category.name}.`,
     alternates: { canonical: listCanonical(`/blogs/category/${slug}`, page) },
     robots: { index: true, follow: true },
   };
@@ -77,21 +70,20 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <Breadcrumb
-        items={[{ label: "Blog", href: "/blogs" }, { label: category.name }]}
-      />
+      <Breadcrumb items={[{ label: "Blog", href: "/blogs" }, { label: category.name }]} />
 
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">{category.name}</h1>
+        <Typography variant="h3" as="h1">
+          {category.name}
+        </Typography>
         {category.description ? (
-          <p className="text-sm opacity-70">{category.description}</p>
+          <Typography variant="body-3" className="opacity-70">
+            {category.description}
+          </Typography>
         ) : null}
       </header>
 
-      <PostList
-        posts={list.items}
-        emptyMessage="Chuyên mục này chưa có bài viết nào."
-      />
+      <PostList posts={list.items} emptyMessage="Chuyên mục này chưa có bài viết nào." />
 
       <PaginationLinks
         basePath={`/blogs/category/${slug}`}

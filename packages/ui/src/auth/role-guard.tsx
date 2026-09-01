@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { useMe, type UserRole } from "@noalhub/api/auth";
 
 import { Button } from "../button";
+import { Typography } from "../typography";
 
 /**
  * Lớp thứ hai sau `AuthGuard`: đã đăng nhập **và** đúng role.
@@ -20,13 +21,7 @@ import { Button } from "../button";
  * Guard này là **UX, không phải bảo mật**: role đọc từ `/auth/me` ở client, ai
  * cũng sửa được trong devtools. Ranh giới thật vẫn là 403 của backend.
  */
-export function RoleGuard({
-  role,
-  children,
-}: {
-  role: UserRole;
-  children: React.ReactNode;
-}) {
+export function RoleGuard({ role, children }: { role: UserRole; children: React.ReactNode }) {
   const me = useMe();
   const router = useRouter();
 
@@ -60,9 +55,7 @@ export function RoleGuard({
         title="Bạn không có quyền truy cập"
         message={`Khu vực này chỉ dành cho tài khoản ${role}. Tài khoản đang đăng nhập là ${me.data.email}.`}
         action={
-          <Button onClick={() => router.replace("/login")}>
-            Đăng nhập bằng tài khoản khác
-          </Button>
+          <Button onClick={() => router.replace("/login")}>Đăng nhập bằng tài khoản khác</Button>
         }
       />
     );
@@ -85,8 +78,12 @@ function GuardScreen({
       role="alert"
       className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-3 p-8 text-center"
     >
-      <h1 className="text-lg font-semibold">{title}</h1>
-      <p className="text-sm opacity-70">{message}</p>
+      <Typography variant="h5" as="h1">
+        {title}
+      </Typography>
+      <Typography variant="body-3" className="opacity-70">
+        {message}
+      </Typography>
       {action}
     </main>
   );
@@ -94,10 +91,7 @@ function GuardScreen({
 
 function RoleSkeleton() {
   return (
-    <div
-      className="mx-auto w-full max-w-3xl animate-pulse space-y-4 p-8"
-      aria-busy="true"
-    >
+    <div className="mx-auto w-full max-w-3xl animate-pulse space-y-4 p-8" aria-busy="true">
       <div className="h-8 w-48 rounded bg-black/10 dark:bg-white/10" />
       <div className="h-4 w-full rounded bg-black/10 dark:bg-white/10" />
     </div>

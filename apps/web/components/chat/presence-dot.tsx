@@ -2,6 +2,7 @@
 
 import { usePresence } from "@noalhub/api/chat";
 import { lastSeenLabel } from "@noalhub/core/chat/format";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * Đốm trạng thái. Ba trạng thái, không phải hai: presence chỉ được backend phát
@@ -34,10 +35,7 @@ export function PresenceDot({
 
   return (
     <span className={`inline-flex items-center ${className}`}>
-      <span
-        title={label}
-        className={`size-2.5 rounded-full ring-2 ring-background ${color}`}
-      />
+      <span title={label} className={`size-2.5 rounded-full ring-2 ring-background ${color}`} />
       <span className="sr-only">{label}</span>
     </span>
   );
@@ -49,10 +47,12 @@ export function PresenceLabel({ userId }: { userId: string | null | undefined })
   if (!presence) return null;
 
   const label =
-    presence.status === "online"
-      ? "Đang hoạt động"
-      : lastSeenLabel(presence.lastSeenAt);
+    presence.status === "online" ? "Đang hoạt động" : lastSeenLabel(presence.lastSeenAt);
 
   if (!label) return null;
-  return <span className="text-xs opacity-60">{label}</span>;
+  return (
+    <Typography variant="body-4" as="span" className="opacity-60">
+      {label}
+    </Typography>
+  );
 }

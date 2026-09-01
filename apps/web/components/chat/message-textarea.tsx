@@ -24,7 +24,7 @@ export const MessageTextarea = forwardRef<
         node.style.height = `${node.scrollHeight}px`;
         onInput?.(event);
       }}
-      className={`max-h-40 flex-1 resize-none rounded-md border border-black/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-foreground/60 disabled:opacity-50 dark:border-white/20 ${className}`}
+      className={`max-h-40 flex-1 resize-none rounded-md border border-black/15 bg-transparent px-3 py-2 text-body-3 outline-none focus:border-foreground/60 disabled:opacity-50 dark:border-white/20 ${className}`}
     />
   );
 });

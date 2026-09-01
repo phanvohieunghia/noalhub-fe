@@ -2,11 +2,14 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import { useAuthStore, useMe } from "@noalhub/api/auth";
 import { Avatar } from "@noalhub/ui/avatar";
 import { Button } from "@noalhub/ui/button";
+import { DropdownMenu } from "@noalhub/ui/dropdown-menu";
+import { ThemeToggle } from "@noalhub/ui/theme/theme-toggle";
+import { Typography } from "@noalhub/ui/typography";
 
 import { AdminBreadcrumb } from "./admin-breadcrumb";
 
@@ -16,28 +19,6 @@ export function AdminHeader() {
   const queryClient = useQueryClient();
   const logout = useAuthStore((s) => s.logout);
   const [pending, setPending] = useState(false);
-  const [open, setOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  // Click ra ngoài / Esc đóng popover. Dùng "mousedown" thay vì "click" để
-  // popover đóng trước khi phần tử bên dưới nhận sự kiện.
-  useEffect(() => {
-    if (!open) return;
-
-    const onPointerDown = (e: MouseEvent) => {
-      if (!menuRef.current?.contains(e.target as Node)) setOpen(false);
-    };
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-
-    document.addEventListener("mousedown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open]);
 
   const onLogout = async () => {
     setPending(true);
@@ -52,44 +33,49 @@ export function AdminHeader() {
   const name = user?.displayName || user?.username || "";
 
   return (
-    <header className="flex items-center justify-between gap-4 border-b border-black/10 px-6 py-3 dark:border-white/15">
+    <header className="flex items-center justify-between gap-4 border-b border-border px-6 py-3">
       <AdminBreadcrumb />
-      <div ref={menuRef} className="relative">
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          aria-label="Tài khoản"
-          className="flex items-center rounded-full ring-offset-2 transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:outline-none dark:focus-visible:ring-white/40"
-        >
-          <Avatar name={name} src={user?.avatarUrl} size="sm" />
-        </button>
-
-        {open ? (
-          <div
-            role="dialog"
-            aria-label="Thông tin tài khoản"
-            className="absolute right-0 z-50 mt-2 w-64 rounded-lg border border-black/10 bg-white p-3 shadow-lg dark:border-white/15 dark:bg-neutral-900"
-          >
-            <div className="flex items-center gap-3">
-              <Avatar name={name} src={user?.avatarUrl} size="md" />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{name || "—"}</p>
-                <p className="truncate text-xs opacity-70">{user?.email}</p>
-              </div>
-            </div>
-            <p className="mt-2 text-xs opacity-70">Vai trò: {user?.role}</p>
+      <div className="flex items-center gap-3">
+        <DropdownMenu
+          className="w-64"
+          trigger={
             <Button
-              variant="outline"
-              onClick={onLogout}
-              disabled={pending}
-              className="mt-3 w-full"
+              variant="ghost"
+              size="icon-sm"
+              shape="circle"
+              aria-label="Tài khoản"
+              className="size-8 hover:bg-transparent hover:opacity-80"
             >
-              {pending ? "Đang đăng xuất…" : "Đăng xuất"}
+              <Avatar name={name} src={user?.avatarUrl} size="sm" />
             </Button>
+          }
+        >
+          <div className="flex items-center gap-3">
+            <Avatar name={name} src={user?.avatarUrl} size="md" />
+            <div className="min-w-0">
+              <Typography variant="title-4" className="truncate">
+                {name || "—"}
+              </Typography>
+              <Typography variant="body-4" className="truncate opacity-70">
+                {user?.email}
+              </Typography>
+            </div>
           </div>
-        ) : null}
+          <Typography variant="body-4" className="mt-2 opacity-70">
+            Vai trò: {user?.role}
+          </Typography>
+
+          <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3">
+            <Typography variant="body-4" className="opacity-70">
+              Giao diện
+            </Typography>
+            <ThemeToggle />
+          </div>
+
+          <Button variant="outline" onClick={onLogout} disabled={pending} className="mt-3 w-full">
+            {pending ? "Đang đăng xuất…" : "Đăng xuất"}
+          </Button>
+        </DropdownMenu>
       </div>
     </header>
   );

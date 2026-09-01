@@ -8,6 +8,7 @@ import { PaginationLinks } from "@noalhub/ui/pagination-links";
 import { Breadcrumb } from "@/components/blog/breadcrumb";
 import { isPageOutOfRange, readPageParam } from "@/components/blog/page-param";
 import { PostList } from "@/components/blog/post-list";
+import { Typography } from "@noalhub/ui/typography";
 
 type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -33,8 +34,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
   return {
     title: page > 1 ? `Bài viết — Trang ${page}` : "Bài viết",
-    description:
-      "Bài viết về sản phẩm, kỹ thuật và những thứ chúng tôi học được khi xây Noalhub.",
+    description: "Bài viết về sản phẩm, kỹ thuật và những thứ chúng tôi học được khi xây Noalhub.",
     alternates: {
       canonical: listCanonical("/blogs", page),
       types: { "application/rss+xml": "/blogs/rss.xml" },
@@ -57,11 +57,12 @@ export default async function BlogListPage({ searchParams }: Props) {
       <Breadcrumb items={[{ label: "Blog" }]} />
 
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">Bài viết</h1>
-        <p className="text-sm opacity-70">
-          Ghi chép về sản phẩm, kỹ thuật và những thứ chúng tôi học được khi xây
-          Noalhub.
-        </p>
+        <Typography variant="h3" as="h1">
+          Bài viết
+        </Typography>
+        <Typography variant="body-3" className="opacity-70">
+          Ghi chép về sản phẩm, kỹ thuật và những thứ chúng tôi học được khi xây Noalhub.
+        </Typography>
       </header>
 
       <PostList

@@ -21,17 +21,19 @@ import {
 
 import { AdminErrorState } from "../admin-error-state";
 import { useUserFilters } from "./use-user-filters";
+import { Typography } from "@noalhub/ui/typography";
 
 const COLUMN_COUNT = 5;
 
 export function UsersContent() {
-  const { query, searchInput, setSearchInput, setRole, setPage } =
-    useUserFilters();
+  const { query, searchInput, setSearchInput, setRole, setPage } = useUserFilters();
   const users = useAdminUsers(query);
 
   return (
-    <main className="w-full max-w-5xl p-6">
-      <h1 className="text-xl font-semibold">Người dùng</h1>
+    <main className="w-full p-6">
+      <Typography variant="h4" as="h1">
+        Người dùng
+      </Typography>
 
       <div className="mt-4 flex flex-wrap items-end gap-3">
         <div className="min-w-56 flex-1">
@@ -80,9 +82,7 @@ export function UsersContent() {
                     : "Chưa có người dùng nào."}
                 </TableEmptyRow>
               ) : (
-                users.data.items.map((user) => (
-                  <UserRow key={user.id} user={user} />
-                ))
+                users.data.items.map((user) => <UserRow key={user.id} user={user} />)
               )}
             </TableBody>
           </TableRoot>
@@ -106,30 +106,23 @@ function UserRow({ user }: { user: AdminUser }) {
   return (
     <TableRow>
       <TableCell>
-        <Link
-          href={`/users/${user.id}`}
-          className="font-medium hover:underline"
-        >
+        <Link href={`/users/${user.id}`} className="font-medium hover:underline">
           {user.displayName ?? user.username}
         </Link>
-        <span className="block text-xs opacity-60">@{user.username}</span>
+        <Typography variant="body-4" as="span" className="block opacity-60">
+          @{user.username}
+        </Typography>
       </TableCell>
       <TableCell>
         <span className="flex items-center gap-2">
           {user.email}
-          {user.emailVerifiedAt ? null : (
-            <Badge tone="warning">Chưa verify</Badge>
-          )}
+          {user.emailVerifiedAt ? null : <Badge tone="warning">Chưa verify</Badge>}
         </span>
       </TableCell>
       <TableCell>
-        <Badge tone={user.role === "admin" ? "info" : "neutral"}>
-          {user.role}
-        </Badge>
+        <Badge tone={user.role === "admin" ? "info" : "neutral"}>{user.role}</Badge>
       </TableCell>
-      <TableCell className="whitespace-nowrap">
-        {formatDate(user.createdAt)}
-      </TableCell>
+      <TableCell className="whitespace-nowrap">{formatDate(user.createdAt)}</TableCell>
       {/* KHÔNG phải trạng thái online — endpoint admin không đọc presence, nên
           ở đây là mốc thời gian, không phải dot xanh/xám. */}
       <TableCell className="whitespace-nowrap opacity-70">

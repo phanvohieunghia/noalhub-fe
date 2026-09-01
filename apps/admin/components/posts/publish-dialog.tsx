@@ -9,6 +9,7 @@ import { Dialog } from "@noalhub/ui/dialog";
 import { FormError } from "@noalhub/ui/form-error";
 
 import { publishChecklist } from "./publish-checklist";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * Dialog xác nhận trước khi đăng (`docs/blog-plan.md` §7.4).
@@ -36,13 +37,12 @@ export function PublishDialog({
   return (
     <Dialog open onClose={onClose} title="Đăng bài này?">
       <div className="flex flex-col gap-4">
-        <p className="text-sm opacity-80">
-          Đăng xong bài sẽ xuất hiện ngay ở <strong>/blogs/{values.slug}</strong>{" "}
-          và trong sitemap.
-        </p>
+        <Typography variant="body-3" className="opacity-80">
+          Đăng xong bài sẽ xuất hiện ngay ở <strong>/blogs/{values.slug}</strong> và trong sitemap.
+        </Typography>
 
         {issues.length > 0 ? (
-          <ul className="flex flex-col gap-2 text-sm">
+          <ul className="flex flex-col gap-2 text-body-3">
             {issues.map((issue) => (
               <li
                 key={issue.id}
@@ -57,9 +57,12 @@ export function PublishDialog({
             ))}
           </ul>
         ) : (
-          <p className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
+          <Typography
+            variant="body-3"
+            className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-emerald-700 dark:text-emerald-300"
+          >
             Mọi thứ đã sẵn sàng.
-          </p>
+          </Typography>
         )}
 
         <FormError message={error} />

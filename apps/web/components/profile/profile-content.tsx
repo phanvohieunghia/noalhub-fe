@@ -10,6 +10,7 @@ import { useAuthStore } from "@noalhub/api/auth";
 import { formatDate } from "@noalhub/core/format-date";
 import { useMe } from "@noalhub/api/auth";
 import type { User } from "@noalhub/api/users";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * Hồ sơ của chính mình.
@@ -29,7 +30,7 @@ export function ProfileContent() {
       return (
         <main
           role="status"
-          className="flex flex-1 items-center justify-center gap-2 p-8 text-sm opacity-70"
+          className="flex flex-1 items-center justify-center gap-2 p-8 text-body-3 opacity-70"
         >
           <Spinner />
           Đang tải hồ sơ…
@@ -48,14 +49,16 @@ export function ProfileContent() {
       <header className="flex items-center gap-4">
         <Avatar name={user.displayName ?? user.username} src={user.avatarUrl} size="lg" />
         <div className="min-w-0">
-          <h1 className="truncate text-2xl font-semibold">
+          <Typography variant="h3" as="h1" className="truncate">
             {user.displayName ?? user.username}
-          </h1>
-          <p className="truncate font-mono text-sm opacity-70">@{user.username}</p>
+          </Typography>
+          <Typography variant="body-3" className="truncate font-mono opacity-70">
+            @{user.username}
+          </Typography>
         </div>
         <Link
           href="/dashboard"
-          className="ml-auto inline-flex h-10 items-center rounded-md border border-black/15 px-4 text-sm font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
+          className="ml-auto inline-flex h-10 items-center rounded-md border border-black/15 px-4 text-body-3 font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
         >
           Dashboard
         </Link>
@@ -64,7 +67,9 @@ export function ProfileContent() {
       <ProfileFacts user={user} />
 
       <section className="flex flex-col gap-4 rounded-lg border border-black/10 p-4 dark:border-white/15">
-        <h2 className="text-lg font-semibold">Đổi username</h2>
+        <Typography variant="h5" as="h2">
+          Đổi username
+        </Typography>
         <ChangeUsernameForm user={user} />
       </section>
     </main>
@@ -73,7 +78,7 @@ export function ProfileContent() {
 
 function ProfileFacts({ user }: { user: User }) {
   return (
-    <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-sm dark:border-white/15">
+    <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-body-3 dark:border-white/15">
       <Fact label="Email">
         <span className="font-mono">{user.email}</span>{" "}
         {user.emailVerified ? (

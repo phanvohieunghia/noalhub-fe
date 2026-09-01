@@ -11,10 +11,8 @@ import { FormError, FormSuccess } from "@noalhub/ui/form-error";
 import { Input } from "@noalhub/ui/input";
 import { useResetPassword } from "@noalhub/api/auth";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
-import {
-  resetPasswordSchema,
-  type ResetPasswordInput,
-} from "@noalhub/api/auth";
+import { Typography } from "@noalhub/ui/typography";
+import { resetPasswordSchema, type ResetPasswordInput } from "@noalhub/api/auth";
 
 export function ResetPasswordForm({ token }: { token: string }) {
   const router = useRouter();
@@ -43,9 +41,11 @@ export function ResetPasswordForm({ token }: { token: string }) {
   if (!token) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold">Liên kết không hợp lệ</h1>
+        <Typography variant="h3" as="h1">
+          Liên kết không hợp lệ
+        </Typography>
         <FormError message="Liên kết đặt lại mật khẩu thiếu mã xác thực hoặc đã hỏng." />
-        <Link href="/forgot-password" className="text-sm underline underline-offset-4">
+        <Link href="/forgot-password" className="text-body-3 underline underline-offset-4">
           Gửi lại liên kết
         </Link>
       </div>
@@ -55,8 +55,12 @@ export function ResetPasswordForm({ token }: { token: string }) {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Đặt lại mật khẩu</h1>
-        <p className="text-sm opacity-70">Chọn mật khẩu mới cho tài khoản.</p>
+        <Typography variant="h3" as="h1">
+          Đặt lại mật khẩu
+        </Typography>
+        <Typography variant="body-3" className="opacity-70">
+          Chọn mật khẩu mới cho tài khoản.
+        </Typography>
       </header>
 
       {done ? (
