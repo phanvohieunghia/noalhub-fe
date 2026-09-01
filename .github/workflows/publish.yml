@@ -185,10 +185,19 @@ jobs:
         # bắt được cả lỗi cert lẫn lỗi app, thứ mà healthcheck nội bộ không thấy.
         run: |
           # Chờ tới khi URL trả về đúng mã mong đợi.
+          #
+          # `-L` là BẮT BUỘC từ khi có i18n: mọi route của web redirect một nhịp
+          # để gắn tiền tố locale (`/` → `/vi`, `/dashboard` → `/vi/dashboard`) —
+          # `apps/web/proxy.ts` làm việc đó. Client thật đi theo redirect, nên
+          # check phải đi theo; đo mã của chính cú redirect là đo sai thứ, và đó
+          # đúng là cách bước này từng đỏ với `307 (mong đợi 200)`.
+          #
+          # `--max-redirs 3`: đủ cho một nhịp gắn locale, mà vòng lặp redirect
+          # thì vẫn hỏng (curl trả 000) thay vì treo tới hết 60s.
           expect() {
             url="$1"; want="$2"
             for i in $(seq 1 10); do
-              code=$(curl -sS -o /dev/null -w '%{http_code}' "$url" || true)
+              code=$(curl -sSL --max-redirs 3 -o /dev/null -w '%{http_code}' "$url" || true)
               [ "$code" = "$want" ] && echo "$url → $code OK" && return 0
               echo "lần $i: $url → $code (mong đợi $want), thử lại sau 6s"
               sleep 6
@@ -206,7 +215,22 @@ jobs:
           # deploy xanh trong khi khách vào trang chủ thì thấy trang quản trị. Hai
           # route dưới đây chỉ tồn tại ở đúng một app, nên cặp 200/404 khoá chặt danh
           # tính. Sửa cấu trúc route thì phải sửa cả bốn dòng này.
+          #
+          # Đường dẫn giữ nguyên KHÔNG tiền tố locale: `-L` lo phần đó, và viết
+          # `/vi/dashboard` ở đây thì lần đổi `localePrefix` nào cũng phải sửa lại.
           expect https://noalhub.duckdns.org/dashboard 200        # chỉ có ở apps/web
           expect https://noalhub.duckdns.org/overview 404         # chỉ có ở apps/admin
           expect https://admin-noalhub.duckdns.org/overview 200
           expect https://admin-noalhub.duckdns.org/dashboard 404
+
+          # Cuối cùng: redirect locale phải hạ cánh ĐÚNG CHỖ, không chỉ "kết thúc
+          # bằng 200". `proxy.ts` không được bundle vào image là một hỏng hóc có
+          # thật, và khi đó `/` trả thẳng 200 của một trang không có locale —
+          # `-L` ở trên sẽ nuốt gọn. Dòng này là chốt chặn cho đúng ca đó
+          # (`docs/i18n-plan.md` §3.1: `localePrefix: "always"`).
+          landed=$(curl -sSL --max-redirs 3 -o /dev/null -w '%{url_effective}' https://noalhub.duckdns.org/)
+          if [ "$landed" != "https://noalhub.duckdns.org/vi" ]; then
+            echo "/ hạ cánh ở $landed, mong đợi https://noalhub.duckdns.org/vi — proxy locale không chạy?"
+            exit 1
+          fi
+          echo "/ → $landed OK"
