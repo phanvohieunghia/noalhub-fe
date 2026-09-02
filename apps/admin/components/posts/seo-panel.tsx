@@ -4,6 +4,9 @@ import type { UseFormReturn } from "react-hook-form";
 
 import type { BlogPostFormValues } from "@noalhub/api/blog";
 import { slugify } from "@noalhub/core/blog/slugify";
+import { useAdminBlogSlugs } from "@noalhub/api/blog";
+import { useDateFormat } from "@noalhub/i18n/use-date-format";
+import Link from "next/link";
 import { useMessage } from "@noalhub/i18n/use-message";
 import { useTranslations } from "next-intl";
 import { appUrl, SEO_LIMITS, truncateForSeo } from "@noalhub/core/blog/seo";
@@ -28,10 +31,12 @@ import { Typography } from "@noalhub/ui/typography";
 export function SeoPanel({
   form,
   publishedSlug,
+  postId,
 }: {
   form: UseFormReturn<BlogPostFormValues>;
   /** The slug currently live in public; `null` if the post has never been published. */
   publishedSlug: string | null;
+  postId: string;
 }) {
   const t = useTranslations("admin.posts.seo");
   const m = useMessage();
@@ -97,6 +102,8 @@ export function SeoPanel({
             })}
           </Typography>
         ) : null}
+        
+        {publishedSlug ? <SlugHistory postId={postId} /> : null}
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -219,6 +226,61 @@ function OgPreview({
           {description}
         </Typography>
       </div>
+    </div>
+  );
+}
+
+/**
+ * The post's old URLs, **read only** (`docs/slug-management.md` §5.3).
+ *
+ * Editing or deleting one breaks a URL that is live in Google's index, and it
+ * has no undo — a different kind of act from writing a post. Mixing it into the
+ * editor means it gets clicked with the editor's mindset, so the actions live
+ * one screen away, behind the link below.
+ */
+function SlugHistory({ postId }: { postId: string }) {
+  const t = useTranslations("admin.posts.slugs");
+  const df = useDateFormat();
+  const { data, isPending, isError } = useAdminBlogSlugs({ postId, limit: 50 });
+
+  if (isPending) {
+    return (
+      <div className="text-body-4 animate-pulse opacity-60">{t("loading")}</div>
+    );
+  }
+
+  // A post with no old URLs is the normal case — every post that never had its
+  // slug changed. Nothing to show, and an empty box would only raise questions.
+  if (isError || data.items.length === 0) return null;
+
+  return (
+    <div className="mt-2 flex flex-col gap-2 rounded-md border border-border p-3">
+      <Typography variant="title-4" className="opacity-80">
+        {t("panelTitle")}
+      </Typography>
+      <Typography variant="body-4" className="opacity-60">
+        {t("panelHint")}
+      </Typography>
+
+      <ul className="flex flex-col gap-1.5">
+        {data.items.map((row) => (
+          <li key={row.id} className="flex flex-wrap items-baseline gap-x-2">
+            <Typography variant="body-4" as="span" className="font-medium">
+              /blogs/{row.slug}
+            </Typography>
+            <Typography variant="body-4" as="span" className="opacity-60">
+              {df.date(row.createdAt)}
+            </Typography>
+          </li>
+        ))}
+      </ul>
+
+      <Link
+        href={`/posts/slugs?postId=${encodeURIComponent(postId)}`}
+        className="text-body-4 font-medium underline underline-offset-2"
+      >
+        {t("manageLink")}
+      </Link>
     </div>
   );
 }

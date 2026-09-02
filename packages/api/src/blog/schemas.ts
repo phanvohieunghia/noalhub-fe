@@ -400,6 +400,25 @@ export const blogTagSchema = z.object({
 
 export const blogTagListSchema = z.array(blogTagSchema);
 
+export const blogPostSlugSchema = z.object({
+  id: z.string(),
+  slug: z.string(),
+  createdAt: z.string(),
+  post: z.object({
+    id: z.string(),
+    title: z.string(),
+    slug: z.string(),
+    status: blogPostStatusSchema,
+  }),
+});
+
+export const adminBlogSlugListSchema = z.object({
+  items: z.array(blogPostSlugSchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+});
+
 export const blogSitemapEntrySchema = z.object({
   slug: z.string(),
   updatedAt: z.string(),
@@ -596,6 +615,20 @@ export const adminBlogPostQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).catch(20),
   q: z.string().trim().min(1).optional().catch(undefined),
   status: blogPostStatusSchema.optional().catch(undefined),
+});
+
+/**
+ * `/posts/slugs` reads its filters from the URL, so every field `.catch()`es back
+ * to a default: people edit the address bar, and `?page=abc` must not blank the
+ * screen. `docs/slug-management.md` §3.
+ */
+export const adminBlogSlugQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).catch(1),
+  limit: z.coerce.number().int().min(1).max(50).catch(10),
+  q: z.string().trim().min(1).optional().catch(undefined),
+  postId: z.string().trim().min(1).optional().catch(undefined),
+  sort: z.enum(["created", "slug"]).catch("created"),
+  order: z.enum(["asc", "desc"]).catch("desc"),
 });
 
 /** The public pages' `?page=`. `limit` is NOT taken from the URL — see §4.5. */

@@ -39,12 +39,15 @@
       "conversations": "Hội thoại",
       "reports": "Báo cáo",
       "categories": "Chuyên mục",
-      "new": "Bài mới"
+      "new": "Bài mới",
+      "slugs": "Slugs"
     },
     "disabled": {
       "conversations": "Chờ backend: chưa có endpoint /admin/conversations (admin-plan §3)",
       "reports": "Chờ backend: chưa có luồng report (admin-plan §3.1)"
-    }
+    },
+    "expandGroup": "Mở mục {section}",
+    "collapseGroup": "Thu gọn mục {section}"
   },
   "languageSwitcher": {
     "label": "Đổi ngôn ngữ",

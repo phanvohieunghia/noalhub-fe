@@ -178,5 +178,46 @@
     "contentMismatch": "Nội dung file không khớp với định dạng của nó. File có thể đã hỏng, hoặc chỉ được đổi đuôi.",
     "notUploaded": "Máy chủ không tìm thấy file vừa tải lên. Thử lại từ đầu.",
     "failed": "Không tải được ảnh lên."
+  },
+  "slugs": {
+    "title": "Slugs",
+    "description": "Mỗi lần đổi slug của một bài đã đăng, slug cũ được giữ lại ở đây để URL cũ vẫn chuyển hướng về bài. Không thêm mới được — chúng chỉ sinh ra tự động.",
+    "caption": "Danh sách slug của các bài viết",
+    "search": "Tìm slug",
+    "searchPlaceholder": "Dán một phần URL, ví dụ nau-pho",
+    "sortHint": "Sắp xếp theo {column}",
+    "filteredByPost": "Đang lọc theo bài: {title}",
+    "clearPostFilter": "Bỏ lọc",
+    "columns": {
+      "oldUrl": "URL cũ",
+      "post": "Thuộc bài",
+      "createdAt": "Ngày tạo",
+      "actions": "Thao tác"
+    },
+    "empty": "Chưa có URL cũ nào. Chúng chỉ xuất hiện khi bạn đổi slug của một bài đã đăng.",
+    "emptyFiltered": "Không có URL cũ nào khớp bộ lọc.",
+    "actions": {
+      "edit": "Sửa",
+      "delete": "Xoá"
+    },
+    "loading": "Đang tải URL cũ…",
+    "panelTitle": "URL cũ của bài này",
+    "panelHint": "Các URL này vẫn chuyển hướng về bài. Chỉ xem ở đây.",
+    "manageLink": "Quản lý URL cũ →",
+    "edit": {
+      "title": "Sửa URL cũ",
+      "slugLabel": "Slug mới",
+      "preview": "Sẽ lưu thành: {url}",
+      "consequence": "<strong>{old}</strong> sẽ ngừng hoạt động và trả về lỗi 404. Thay vào đó, <strong>{next}</strong> sẽ chuyển hướng về bài <strong>{title}</strong>.",
+      "unknownTraffic": "Nếu URL cũ còn nằm trong kết quả tìm kiếm hoặc còn trang khác dẫn link về, lượng truy cập đó sẽ mất. Hệ thống không theo dõi được điều này — hãy tự kiểm tra trước khi tiếp tục. Thao tác này không hoàn tác được.",
+      "confirmLabel": "Gõ lại {slug} để xác nhận",
+      "submit": "Ngừng URL cũ"
+    },
+    "delete": {
+      "title": "Xoá URL cũ",
+      "body": "{url} sẽ ngừng chuyển hướng và trả về lỗi 404 vĩnh viễn. Thao tác này không hoàn tác được.",
+      "postStaysReachable": "Bài viết vẫn truy cập bình thường tại {url}.",
+      "submit": "Xoá vĩnh viễn"
+    }
   }
 }

@@ -18,6 +18,8 @@ export function blogErrorText(error: unknown): Message | string {
         return { key: "common.errors.postConflict" };
       case ERROR_CODES.slugTaken:
         return { key: "common.errors.slugTaken" };
+      case ERROR_CODES.slugAliasNotFound:
+        return { key: "common.errors.slugAliasNotFound" };
       case ERROR_CODES.postNotPublishable:
         // The backend lists the missing fields in `message`; keep that sentence.
         return {

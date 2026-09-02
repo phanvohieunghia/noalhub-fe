@@ -354,7 +354,11 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
               onChange={(slugs) => setValue("tagSlugs", slugs, { shouldDirty: true })}
             />
 
-            <SeoPanel form={form} publishedSlug={post.status === "published" ? post.slug : null} />
+            <SeoPanel
+              form={form}
+              publishedSlug={post.status === "published" ? post.slug : null}
+              postId={post.id}
+            />
 
             {post.status === "archived" ? null : (
               <ArchiveButton

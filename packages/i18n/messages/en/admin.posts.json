@@ -178,5 +178,46 @@
     "contentMismatch": "The file's content does not match its format. It may be corrupt, or just renamed.",
     "notUploaded": "The server could not find the file you just uploaded. Start over.",
     "failed": "Could not upload the image."
+  },
+  "slugs": {
+    "title": "Slugs",
+    "description": "Whenever a published post's slug changes, the old slug is kept here so the old URL still redirects to the post. They cannot be added by hand — they only ever appear automatically.",
+    "caption": "Slugs of blog posts",
+    "search": "Search slugs",
+    "searchPlaceholder": "Paste part of a URL, e.g. nau-pho",
+    "sortHint": "Sort by {column}",
+    "filteredByPost": "Filtered by post: {title}",
+    "clearPostFilter": "Clear filter",
+    "columns": {
+      "oldUrl": "Old URL",
+      "post": "Post",
+      "createdAt": "Created",
+      "actions": "Actions"
+    },
+    "empty": "No old URLs yet. They appear when you change the slug of a published post.",
+    "emptyFiltered": "No old URL matches these filters.",
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "loading": "Loading old URLs…",
+    "panelTitle": "This post's old URLs",
+    "panelHint": "These URLs still redirect to the post. Read only here.",
+    "manageLink": "Manage old URLs →",
+    "edit": {
+      "title": "Edit old URL",
+      "slugLabel": "New slug",
+      "preview": "Will be saved as: {url}",
+      "consequence": "<strong>{old}</strong> will stop working and return a 404. In its place, <strong>{next}</strong> will redirect to <strong>{title}</strong>.",
+      "unknownTraffic": "If this URL is still in search results or still linked to from other sites, that traffic is lost. The system does not track this — check for yourself before continuing. There is no undo.",
+      "confirmLabel": "Type {slug} to confirm",
+      "submit": "Retire old URL"
+    },
+    "delete": {
+      "title": "Delete old URL",
+      "body": "{url} will stop redirecting and return a 404 permanently. There is no undo.",
+      "postStaysReachable": "The post itself stays reachable at {url}.",
+      "submit": "Delete permanently"
+    }
   }
 }

@@ -73,11 +73,12 @@ export const ERROR_CODES = {
   /**
    * The `blog` feature's codes (`docs/blog.md` §2.3).
    *
-   * The seven below match `src/common/errors/error-codes.ts` in the
-   * `noalhub-be` repo and each one is actually produced by an e2e test.
+   * These match `src/common/errors/error-codes.ts` in the `noalhub-be` repo.
    */
   postNotFound: "POST_NOT_FOUND",
   slugTaken: "SLUG_TAKEN",
+  /** No row in `blog_post_slugs` with that id — slug management (§3). */
+  slugAliasNotFound: "SLUG_ALIAS_NOT_FOUND",
   /** The submitted `version` is stale — two tabs overwriting each other (§7.3). */
   postConflict: "POST_CONFLICT",
   /** A required field is missing at publish time, including a **missing category** (§2.6). */

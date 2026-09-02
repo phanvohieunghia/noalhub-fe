@@ -5,7 +5,12 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import * as blogApi from "./api";
 import type { UpdateBlogPostInput } from "./api";
 import type { BlogCategoryFormValues } from "./schemas";
-import type { AdminBlogPostQuery, BlogCategory, BlogPost } from "./types";
+import type {
+  AdminBlogPostQuery,
+  AdminBlogSlugQuery,
+  BlogCategory,
+  BlogPost,
+} from "./types";
 
 /**
  * The **client** path — used only by `apps/admin`. The public pages of
@@ -23,6 +28,9 @@ export const blogKeys = {
   postDetail: (id: string) => [...blogKeys.posts(), "detail", id] as const,
   categories: () => [...blogKeys.all, "categories"] as const,
   tags: () => [...blogKeys.all, "tags"] as const,
+  slugs: () => [...blogKeys.all, "slugs"] as const,
+  slugList: (query: AdminBlogSlugQuery) =>
+    [...blogKeys.slugs(), "list", query] as const,
 };
 
 /**
@@ -224,4 +232,42 @@ function writePostToCache(
 ) {
   queryClient.setQueryData(blogKeys.postDetail(post.id), post);
   queryClient.invalidateQueries({ queryKey: blogKeys.posts() });
+}
+
+/**
+ * The old-URL table. `keepPreviousData` for the same reason as the post list:
+ * typing in the search box must not flash the table back to a skeleton.
+ */
+export function useAdminBlogSlugs(query: AdminBlogSlugQuery = {}) {
+  return useQuery({
+    queryKey: blogKeys.slugList(query),
+    queryFn: ({ signal }) => blogApi.listAdminBlogSlugs(query, signal),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * Both mutations invalidate the whole `slugs` subtree rather than one page: a
+ * rename can move the row to a different page under `sort=slug`, so patching a
+ * single cached page would leave the table showing a row that is no longer there.
+ */
+export function useUpdateAdminBlogSlug() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, slug }: { id: string; slug: string }) =>
+      blogApi.updateAdminBlogSlug(id, slug),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: blogKeys.slugs() }),
+  });
+}
+
+export function useDeleteAdminBlogSlug() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => blogApi.deleteAdminBlogSlug(id),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: blogKeys.slugs() }),
+  });
 }

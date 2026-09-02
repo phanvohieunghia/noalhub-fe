@@ -142,6 +142,48 @@ export type BlogTag = {
   postCount: number;
 };
 
+/**
+ * One row of `blog_post_slugs`: an **old** slug still 301-ing to the post.
+ *
+ * `post` comes expanded because the screen exists to answer "which post does this
+ * old URL belong to" — see `docs/slug-management.md`.
+ */
+export type BlogPostSlug = {
+  id: string;
+  slug: string;
+  createdAt: string;
+  post: {
+    id: string;
+    title: string;
+    /** The post's **live** slug, from `blog_posts` — not an old one. */
+    slug: string;
+    status: BlogPostStatus;
+  };
+};
+
+export type BlogSlugSort = "created" | "slug";
+
+/**
+ * `GET /admin/blog/slugs`. Flat, not nested under a post: the main use is the
+ * reverse lookup — you hold an old URL and do not yet know the post.
+ */
+export type AdminBlogSlugQuery = {
+  page?: number;
+  limit?: number;
+  /** Substring match on the old slug. */
+  q?: string;
+  postId?: string;
+  sort?: BlogSlugSort;
+  order?: "asc" | "desc";
+};
+
+export type AdminBlogSlugList = {
+  items: BlogPostSlug[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
 export type BlogPostStatus = "draft" | "published" | "archived";
 
 export type BlogAuthor = {

@@ -23,6 +23,7 @@ export type NavLabelKey =
   | "items.conversations"
   | "items.reports"
   | "items.categories"
+  | "items.slugs"
   | "items.new";
 
 export type NavReasonKey = "disabled.conversations" | "disabled.reports";
@@ -33,12 +34,33 @@ export type NavItem = {
   disabled?: boolean;
   /** Why it is locked, shown as a tooltip. */
   reasonKey?: NavReasonKey;
+  /**
+   * Sub-screens of this section, rendered indented under it. One level only —
+   * a second would be a menu, and this sidebar has five sections.
+   */
+  children?: NavItem[];
 };
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/overview", labelKey: "items.overview" },
   { href: "/users", labelKey: "items.users" },
-  { href: "/posts", labelKey: "items.posts" },
+  /*
+   * Blog's two configuration screens sit UNDER "Posts" rather than beside it:
+   * both are settings for the same section, used a few times a year. Buried
+   * behind a link inside `/posts` they were effectively unfindable — you had to
+   * already know they existed.
+   *
+   * Nesting is why `admin-sidebar` matches on the LONGEST href instead of the
+   * first prefix hit: a plain `startsWith` lights up "Posts" on these too.
+   */
+  {
+    href: "/posts",
+    labelKey: "items.posts",
+    children: [
+      { href: "/posts/categories", labelKey: "items.categories" },
+      { href: "/posts/slugs", labelKey: "items.slugs" },
+    ],
+  },
   {
     href: "/conversations",
     labelKey: "items.conversations",
@@ -53,16 +75,20 @@ export const NAV_ITEMS: NavItem[] = [
   },
 ];
 
+/** Every item, parents and children alike — for lookups by href. */
+export const FLAT_NAV_ITEMS: NavItem[] = NAV_ITEMS.flatMap((item) => [
+  item,
+  ...(item.children ?? []),
+]);
+
 /**
  * Labels for segments that are NOT nav items — the breadcrumb's second lookup
  * layer, before falling back to "Detail".
  *
- * `/posts/categories` is the archetype: it deliberately stays out of the
- * sidebar (a screen used a few times a year, entered from inside `/posts` —
- * `docs/blog.md` §7.1), but letting the breadcrumb say "Detail" would read as
- * some individual post, which is plainly wrong.
+ * `/posts/new` is the archetype: a route with a real name that no sidebar entry
+ * points at, where letting the breadcrumb say "Detail" would read as some
+ * individual post — plainly wrong.
  */
 export const SEGMENT_LABEL_KEYS: Record<string, NavLabelKey> = {
-  categories: "items.categories",
   new: "items.new",
 };

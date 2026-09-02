@@ -6,6 +6,8 @@ import {
   blogPostSchema,
   blogTagListSchema,
   blogTagSchema,
+  adminBlogSlugListSchema,
+  blogPostSlugSchema,
 } from "./schemas";
 import { toBlogPostPayload } from "./schemas";
 import type { BlogCategoryFormValues } from "./schemas";
@@ -15,6 +17,9 @@ import type {
   BlogCategory,
   BlogPost,
   BlogTag,
+  AdminBlogSlugList,
+  AdminBlogSlugQuery,
+  BlogPostSlug,
 } from "./types";
 
 /**
@@ -159,6 +164,68 @@ export async function unpublishBlogPost(id: string): Promise<BlogPost> {
  */
 export async function archiveBlogPost(id: string): Promise<void> {
   await http.delete(`/admin/blog/posts/${encodeURIComponent(id)}`, {
+    authRequired: true,
+  });
+}
+
+/**
+ * GET /admin/blog/slugs → 200 `AdminBlogSlugListDto`.
+ *
+ * Flat, NOT nested under `posts/{id}`: the screen's main job is the reverse
+ * lookup — an old URL in hand, the post unknown. A nested route would demand the
+ * answer before the question. `postId` narrows it to one post for the editor.
+ */
+export async function listAdminBlogSlugs(
+  query: AdminBlogSlugQuery = {},
+  signal?: AbortSignal,
+): Promise<AdminBlogSlugList> {
+  const params: Record<string, string | number> = {};
+  if (query.page !== undefined) params.page = query.page;
+  if (query.limit !== undefined) params.limit = query.limit;
+  if (query.q) params.q = query.q;
+  if (query.postId) params.postId = query.postId;
+  if (query.sort) params.sort = query.sort;
+  if (query.order) params.order = query.order;
+
+  const { data } = await http.get<AdminBlogSlugList>("/admin/blog/slugs", {
+    params,
+    authRequired: true,
+    schema: adminBlogSlugListSchema,
+    signal,
+  });
+  return data;
+}
+
+/**
+ * PATCH /admin/blog/slugs/{id} → 200. 404 `SLUG_ALIAS_NOT_FOUND`,
+ * 409 `SLUG_TAKEN`, 422 `POST_NOT_PUBLISHABLE`.
+ *
+ * ⚠️ This BREAKS a live URL: `/blogs/<old>` stops redirecting and starts 404-ing.
+ * The confirm step is not optional — `docs/slug-management.md` §4.2.
+ *
+ * There is no create counterpart on purpose: aliases only ever appear one way,
+ * automatically, when a published post's slug changes.
+ */
+export async function updateAdminBlogSlug(
+  id: string,
+  slug: string,
+): Promise<BlogPostSlug> {
+  const { data } = await http.patch<BlogPostSlug>(
+    `/admin/blog/slugs/${encodeURIComponent(id)}`,
+    { slug },
+    { authRequired: true, schema: blogPostSlugSchema },
+  );
+  return data;
+}
+
+/**
+ * DELETE /admin/blog/slugs/{id} → 204. Hard delete, no undo.
+ *
+ * Safe to run on the last remaining alias: the post's live slug lives in
+ * `blog_posts`, so an empty alias table never strands a post.
+ */
+export async function deleteAdminBlogSlug(id: string): Promise<void> {
+  await http.delete(`/admin/blog/slugs/${encodeURIComponent(id)}`, {
     authRequired: true,
   });
 }

@@ -59,6 +59,9 @@ export const ICONS = {
   chevronRight: "lucide:chevron-right",
   chevronLeft: "lucide:chevron-left",
   arrowLeft: "lucide:arrow-left",
+  sortNone: "lucide:chevrons-up-down",
+  sortAsc: "lucide:arrow-up-narrow-wide",
+  sortDesc: "lucide:arrow-down-wide-narrow",
   externalLink: "lucide:external-link",
 
   // status

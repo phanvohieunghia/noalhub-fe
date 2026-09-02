@@ -12,7 +12,8 @@
     "add": "Add",
     "viewAll": "View all",
     "copy": "Copy",
-    "copied": "Copied"
+    "copied": "Copied",
+    "continue": "Continue"
   },
   "states": {
     "loading": "Loading…",
@@ -59,7 +60,8 @@
     "serverError": "The server is having trouble, please try again",
     "storageForbidden": "Storage refused the upload (403). Usually the upload link expired — start over; if it keeps happening it is the server's host or clock configuration.",
     "uploadDisconnected": "The connection dropped while uploading.",
-    "uploadAborted": "Upload cancelled."
+    "uploadAborted": "Upload cancelled.",
+    "slugAliasNotFound": "This old URL no longer exists — someone may have just deleted it."
   },
   "theme": {
     "label": "Appearance",

@@ -12,7 +12,8 @@
     "add": "Thêm",
     "viewAll": "Xem tất cả",
     "copy": "Sao chép",
-    "copied": "Đã sao chép"
+    "copied": "Đã sao chép",
+    "continue": "Tiếp tục"
   },
   "states": {
     "loading": "Đang tải…",
@@ -59,7 +60,8 @@
     "serverError": "Máy chủ đang gặp sự cố, vui lòng thử lại",
     "storageForbidden": "Storage từ chối (403). Thường là link upload đã hết hạn — thử lại từ đầu; nếu lặp lại thì là cấu hình host/đồng hồ của server.",
     "uploadDisconnected": "Mất kết nối khi đang tải file lên.",
-    "uploadAborted": "Đã huỷ tải lên."
+    "uploadAborted": "Đã huỷ tải lên.",
+    "slugAliasNotFound": "Không tìm thấy URL cũ này. Có thể ai đó vừa xoá nó."
   },
   "theme": {
     "label": "Giao diện",
