@@ -3,6 +3,7 @@ import { DEFAULT_LOCALE } from "@noalhub/i18n/config";
 import { Link } from "@noalhub/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { Icon, ICONS } from "@noalhub/ui/icons";
+import { Logo } from "@noalhub/ui/logo";
 import { ThemeToggle } from "@noalhub/ui/theme/theme-toggle";
 import { Typography } from "@noalhub/ui/typography";
 
@@ -87,9 +88,12 @@ export async function SiteFooter() {
       <div className="mx-auto w-full max-w-5xl px-6 py-12">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col gap-3 lg:col-span-1">
-            <Typography variant="title-3" as="p">
-              Noalhub
-            </Typography>
+            <div className="flex items-center gap-2">
+              <Logo className="size-8" />
+              <Typography variant="title-3" as="p">
+                Noalhub
+              </Typography>
+            </div>
             <Typography variant="body-3" className="max-w-xs opacity-70">
               {t("footer.tagline")}
             </Typography>

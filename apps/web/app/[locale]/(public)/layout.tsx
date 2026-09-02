@@ -1,6 +1,7 @@
 import { getBlogCategories } from "@noalhub/api/blog/server";
 import { Link } from "@noalhub/i18n/navigation";
 import { IntlProvider } from "@noalhub/i18n/provider";
+import { Logo } from "@noalhub/ui/logo";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -33,7 +34,8 @@ export default async function PublicLayout({ children, params }: LayoutProps<"/[
       <div className="flex min-h-full flex-1 flex-col">
         <header className="border-b border-border">
           <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-6 gap-y-3 px-6 py-4">
-            <Link href="/blogs" className="text-body-2 font-semibold">
+            <Link href="/blogs" className="text-body-2 flex items-center gap-2 font-semibold">
+              <Logo className="size-7" />
               {t("blogBrand")}
             </Link>
 

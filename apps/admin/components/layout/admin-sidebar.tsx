@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { NAV_ITEMS } from "./nav-items";
+import { Logo } from "@noalhub/ui/logo";
 import { Typography } from "@noalhub/ui/typography";
 
 export function AdminSidebar() {
@@ -14,9 +15,12 @@ export function AdminSidebar() {
 
   return (
     <aside className="w-56 shrink-0 border-r border-black/10 p-3 dark:border-white/15">
-      <Typography variant="title-4" weight={600} className="px-2 py-3">
-        {t("adminTitle")}
-      </Typography>
+      <div className="flex items-center gap-2 px-2 py-3">
+        <Logo className="size-7" />
+        <Typography variant="title-4" weight={600}>
+          {t("adminTitle")}
+        </Typography>
+      </div>
       <nav aria-label={ta("mainNav")} className="flex flex-col gap-0.5">
         {NAV_ITEMS.map((item) => {
           // startsWith so `/users/[id]` still highlights the "Users" item;

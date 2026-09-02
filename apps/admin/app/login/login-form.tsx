@@ -14,6 +14,7 @@ import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { Button } from "@noalhub/ui/button";
 import { FormError } from "@noalhub/ui/form-error";
 import { Input } from "@noalhub/ui/input";
+import { Logo } from "@noalhub/ui/logo";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
@@ -61,6 +62,7 @@ export function AdminLoginForm() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
+        <Logo className="mb-2 size-10" />
         <Typography variant="h3" as="h1">
           {t("title")}
         </Typography>
