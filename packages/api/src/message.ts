@@ -1,13 +1,13 @@
 /**
- * Một thông điệp **chưa dịch**: khoá i18n cộng tham số của nó.
+ * An **untranslated** message: an i18n key plus its parameters.
  *
- * Tầng dữ liệu (schema zod, hàm map lỗi) chạy ở module scope, nạp một lần lúc
- * import — nó không biết và không thể biết locale của request nào. Nên nó trả
- * về khoá, còn component dịch lúc render bằng `useMessage()` của
- * `@noalhub/i18n` (`docs/i18n-plan.md` §7.3).
+ * The data layer (zod schemas, error mappers) runs at module scope, loaded once
+ * at import — it does not and cannot know any request's locale. So it returns a
+ * key, and components translate it at render time with `useMessage()` from
+ * `@noalhub/i18n` (`docs/i18n.md` §7.3).
  *
- * Chuỗi trần vẫn hợp lệ ở những chỗ nhận `Message`: đó là câu do **backend**
- * soạn, không có khoá tương ứng, hiện nguyên văn.
+ * A bare string is still valid wherever a `Message` is accepted: that is a
+ * sentence written by the **backend**, with no matching key, shown verbatim.
  */
 export type Message = { key: string; values?: Record<string, string | number> };
 
@@ -16,11 +16,12 @@ export function isMessage(value: unknown): value is Message {
 }
 
 /**
- * `Error` mang theo một `Message` chưa dịch.
+ * An `Error` carrying an untranslated `Message`.
  *
- * Cần một lớp riêng vì `Error.message` là `string`: nhét khoá vào đó thì chỗ
- * bắt lỗi không phân biệt được "khoá cần dịch" với "câu backend gửi về". Ở đây
- * `message` giữ khoá cho log/stack, còn `text` mới là thứ đem đi dịch.
+ * A separate class is needed because `Error.message` is a `string`: stuffing a
+ * key in there leaves the catch site unable to tell "a key to translate" from
+ * "a sentence the backend sent". Here `message` keeps the key for logs and
+ * stack traces, while `text` is what actually gets translated.
  */
 export class MessageError extends Error {
   readonly text: Message;
@@ -32,7 +33,7 @@ export class MessageError extends Error {
   }
 }
 
-/** Lấy phần hiển thị được của một lỗi bất kỳ. */
+/** Extract the displayable part of an arbitrary error. */
 export function messageOf(error: unknown): Message | string {
   if (error instanceof MessageError) return error.text;
   if (error instanceof Error) return error.message;

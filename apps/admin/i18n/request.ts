@@ -2,7 +2,7 @@ import { adminRequestConfig } from "@noalhub/i18n/request";
 import { getRequestConfig } from "next-intl/server";
 
 /**
- * Admin không có segment `[locale]` (`docs/i18n-plan.md` §3.2) nên bỏ qua
- * `requestLocale` — locale lấy từ cookie `NOALHUB_LOCALE`.
+ * Admin has no `[locale]` segment (`docs/i18n.md` §3.2), so `requestLocale` is
+ * ignored — the locale comes from the `NOALHUB_LOCALE` cookie.
  */
 export default getRequestConfig(() => adminRequestConfig());

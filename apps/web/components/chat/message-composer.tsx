@@ -27,8 +27,9 @@ export function MessageComposer({ conversationId }: { conversationId: string }) 
   function submit() {
     if (!canSend) return;
 
-    // Clear composer NGAY, không chờ ack — tin đã vào cache dưới dạng optimistic
-    // và có nút gửi lại nếu thất bại, nên không có gì để mất.
+    // Clear the composer IMMEDIATELY, without waiting for the ack — the message
+    // is already in the cache optimistically and has a retry button on failure,
+    // so nothing can be lost.
     setBody("");
     stopTyping();
     const node = textareaRef.current;
@@ -53,16 +54,16 @@ export function MessageComposer({ conversationId }: { conversationId: string }) 
           value={body}
           aria-label={t("label")}
           placeholder={offline ? t("placeholderOffline") : t("placeholder")}
-          // KHÔNG disable textarea khi offline: đang gõ mà bị khoá là tệ. Chỉ
-          // chặn ở nút gửi, và nội dung vẫn được giữ nguyên.
+          // Do NOT disable the textarea while offline: being locked out mid-typing
+          // is awful. Only the send button is blocked, and the text is kept.
           onChange={(event) => {
             setBody(event.target.value);
             if (event.target.value.trim()) startTyping();
           }}
           onBlur={stopTyping}
           onKeyDown={(event) => {
-            // Enter gửi, Shift+Enter xuống dòng. Bỏ qua lúc IME đang ghép chữ,
-            // nếu không tiếng Việt sẽ bị gửi giữa lúc gõ dấu.
+            // Enter sends, Shift+Enter adds a line. Skipped while an IME is
+            // composing, or Vietnamese gets sent mid-diacritic.
             if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
               event.preventDefault();
               submit();

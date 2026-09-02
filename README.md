@@ -7,7 +7,7 @@ Backend là một service REST + Socket.IO riêng (`noalhub-be`); browser gọi 
 
 Repo là **monorepo** (pnpm workspace + Turborepo): hai Next app độc lập — `apps/web` (customer)
 và `apps/admin` — dùng chung tầng dữ liệu, helper và UI trong `packages/`. Xem
-[`docs/monorepo-plan.md`](docs/monorepo-plan.md) cho cơ chế build, tên miền và đường tách repo.
+[`docs/monorepo.md`](docs/monorepo.md) cho cơ chế build, tên miền và đường tách repo.
 
 ## Chạy dự án
 

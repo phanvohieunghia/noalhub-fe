@@ -5,42 +5,43 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 /**
- * Thanh tiến trình mỏng cho chuyển trang.
+ * A thin progress bar for page transitions.
  *
- * **Vì sao cần:** phần lớn route của repo này render theo yêu cầu (`ƒ` trong
- * output `next build`) — admin thì toàn bộ, web thì mọi trang danh sách có
- * `searchParams`. App Router giữ nguyên trang cũ trên màn hình cho tới khi RSC
- * payload mới về, nên với người dùng một cú bấm chậm trông y hệt một cú bấm
- * hỏng. Thanh này là phản hồi cho khoảng đó.
+ * **Why it exists:** most routes in this repo render on demand (`ƒ` in
+ * `next build` output) — all of admin, and every listing page in web that takes
+ * `searchParams`. App Router keeps the old page on screen until the new RSC
+ * payload arrives, so to the user a slow click looks exactly like a broken one.
+ * This bar is the feedback for that gap.
  *
- * **Vì sao không dùng `useLinkStatus`:** hook đó chỉ chạy bên trong đúng một
- * `<Link>` (nó đọc context của link cha), nên nó hợp với hiệu ứng tại chỗ trên
- * chính cái link vừa bấm, không dựng được một thanh dùng chung cho cả app.
+ * **Why not `useLinkStatus`:** that hook only works inside a single `<Link>`
+ * (it reads the parent link's context), so it suits an in-place effect on the
+ * link just clicked and cannot build one shared bar for the whole app.
  *
- * **Cách phát hiện:**
- * - *Bắt đầu*: bắt `click` ở capture phase trên `document` — phải là capture để
- *   chạy trước handler của `<Link>`. Lọc ra đúng những cú bấm thật sự rời khỏi
- *   URL hiện tại.
- * - *Kết thúc*: `usePathname` hoặc `useSearchParams` đổi giá trị. Đó là tín
- *   hiệu duy nhất mà App Router phát ra khi điều hướng đã xong — không có
- *   `router.events` như Pages Router.
+ * **How it detects:**
+ * - *Start*: a `click` listener on `document` in the capture phase — capture is
+ *   required so it runs before `<Link>`'s own handler. It then filters down to
+ *   clicks that really leave the current URL.
+ * - *End*: `usePathname` or `useSearchParams` changes value. That is the only
+ *   signal App Router emits when a navigation completes — there is no
+ *   `router.events` like in the Pages Router.
  *
- * Điều hướng bằng code (`router.push` trong một handler) KHÔNG được bắt: chỗ
- * đó đã có trạng thái riêng (nút "Đang lưu…", "Đang đăng nhập…") và nếu bắt cả
- * bằng cách vá `history.pushState` thì phải gánh mọi hệ quả của việc vá API
- * trình duyệt, đổi lấy rất ít.
+ * Programmatic navigation (`router.push` inside a handler) is deliberately NOT
+ * caught: those places already have their own state ("Saving…", "Signing in…"),
+ * and catching them by patching `history.pushState` means owning every
+ * consequence of patching a browser API for very little in return.
  *
- * **Đặt ở root layout, một lần cho cả app.** Bản đầu tôi gắn nó vào từng header
- * (blog, admin, chat) cho đúng chữ "dưới header" — sai: `/dashboard`,
- * `/profile`, `/friends` và mọi trang auth **không có header nào**, nên đúng
- * những trang đó lại không có phản hồi gì. Thanh `fixed` ở mép trên viewport
- * phủ được tất cả, và trên trang có header nó nằm ngay trên viền header.
+ * **Mounted in the root layout, once for the whole app.** The first version
+ * attached it to each header (blog, admin, chat) to sit literally "under the
+ * header" — wrong: `/dashboard`, `/profile`, `/friends` and every auth page
+ * have **no header at all**, so exactly those pages got no feedback. A `fixed`
+ * bar at the top of the viewport covers everything, and on pages with a header
+ * it sits right on the header's edge.
  */
 export function NavigationProgress({ className }: { className?: string }) {
   /*
-   * `useSearchParams` bắt buộc nằm dưới một Suspense boundary, nếu không mọi
-   * trang tĩnh chứa component này sẽ hỏng lúc prerender. Bọc ngay tại đây để
-   * chỗ dùng không phải nhớ.
+   * `useSearchParams` must sit under a Suspense boundary, or every static page
+   * containing this component breaks at prerender. Wrapped here so call sites
+   * do not have to remember.
    */
   return (
     <Suspense fallback={null}>
@@ -49,16 +50,16 @@ export function NavigationProgress({ className }: { className?: string }) {
   );
 }
 
-/** Trần: không bao giờ chạm 100% khi chưa xong — 100% nghĩa là đã tới nơi. */
+/** The ceiling: never reach 100% before completion — 100% means "arrived". */
 const CEILING = 90;
 
 /**
- * Chờ trước khi hiện. Route đã prefetch chuyển gần như tức thì; hiện thanh cho
- * những cú đó chỉ tạo ra một vệt nhấp nháy, khó chịu hơn là không có gì.
+ * The delay before showing. A prefetched route transitions almost instantly;
+ * showing the bar for those produces a flicker that is worse than nothing.
  */
 const SHOW_DELAY_MS = 120;
 
-/** Lưới an toàn: điều hướng bị huỷ (404 tải file, tab ẩn…) thì thanh vẫn tắt. */
+/** Safety net: if a navigation is cancelled (a 404 download, a hidden tab…) the bar still goes away. */
 const MAX_DURATION_MS = 15_000;
 
 function ProgressBar({ className = "fixed inset-x-0 top-0 z-60" }: { className?: string }) {
@@ -82,22 +83,22 @@ function ProgressBar({ className = "fixed inset-x-0 top-0 z-60" }: { className?:
   const finish = useCallback(() => {
     clearTimers();
     setValue((current) => (current === null ? null : 100));
-    // Đợi transition width chạy hết rồi mới gỡ, nếu không thanh biến mất giữa chừng.
+    // Let the width transition finish before removing it, or the bar vanishes mid-way.
     timers.current.push(window.setTimeout(() => setValue(null), 220));
   }, [clearTimers]);
 
   const start = useCallback(() => {
-    if (tickRef.current !== null) return; // đang chạy rồi
+    if (tickRef.current !== null) return; // already running
     clearTimers();
 
     timers.current.push(
       window.setTimeout(() => {
         setValue(12);
         /*
-         * Tăng chậm dần: còn cách trần bao nhiêu thì mỗi nhịp đi được một phần
-         * nhỏ của khoảng đó. Nhờ vậy thanh luôn nhúc nhích (người dùng thấy
-         * "đang chạy") nhưng không bao giờ về đích trước dữ liệu — đó là kiểu
-         * nói dối mà người ta nhận ra ngay.
+         * Decelerating growth: each tick covers a small fraction of whatever
+         * distance is left to the ceiling. The bar therefore always moves (the
+         * user sees "it is working") but never arrives before the data — that
+         * is the kind of lie people notice instantly.
          */
         tickRef.current = window.setInterval(() => {
           setValue((current) => {
@@ -110,7 +111,7 @@ function ProgressBar({ className = "fixed inset-x-0 top-0 z-60" }: { className?:
     );
   }, [clearTimers, finish]);
 
-  // URL đã đổi = điều hướng xong. Bỏ qua lần chạy đầu lúc mount.
+  // A changed URL means the navigation finished. Skip the first run on mount.
   const mounted = useRef(false);
   useEffect(() => {
     if (!mounted.current) {
@@ -126,7 +127,7 @@ function ProgressBar({ className = "fixed inset-x-0 top-0 z-60" }: { className?:
       start();
     };
 
-    // Back/forward cũng là một lần điều hướng, và cũng có thể chậm.
+    // Back/forward is a navigation too, and can be just as slow.
     const onPopState = () => start();
 
     document.addEventListener("click", onClick, true);
@@ -144,9 +145,9 @@ function ProgressBar({ className = "fixed inset-x-0 top-0 z-60" }: { className?:
       <span
         aria-hidden
         /*
-         * `shadow`: một cú chuyển trang nhanh chỉ cho thanh quét qua trong vài
-         * trăm mili giây. Ở 3px thì vệt sáng là thứ khiến mắt kịp bắt được nó —
-         * không có nó, người dùng bảo "chẳng thấy thanh nào cả".
+         * `shadow`: a fast transition only lets the bar sweep past for a few
+         * hundred milliseconds. At 3px the glow is what makes the eye catch it
+         * at all — without it, users report "I never saw any bar".
          */
         className="block h-full rounded-r-full bg-primary shadow-[0_0_10px_2px_var(--primary)] transition-[width,opacity] duration-200 ease-out"
         style={{
@@ -154,8 +155,9 @@ function ProgressBar({ className = "fixed inset-x-0 top-0 z-60" }: { className?:
           opacity: value === null ? 0 : 1,
         }}
       />
-      {/* Thanh màu không nói gì với trình đọc màn hình; câu này mới là phần
-          truyền đạt. `role="status"` để nó được đọc mà không cướp focus. */}
+      {/* A colored bar says nothing to a screen reader; this sentence is what
+          actually communicates. `role="status"` so it is announced without
+          stealing focus. */}
       {value !== null ? (
         <span role="status" className="sr-only">
           {t("loading")}
@@ -166,14 +168,14 @@ function ProgressBar({ className = "fixed inset-x-0 top-0 z-60" }: { className?:
 }
 
 /**
- * Cú bấm này có thật sự dẫn tới một trang khác **trong app** không?
+ * Does this click really lead to another page **inside the app**?
  *
- * Mọi nhánh `false` dưới đây đều là một kiểu thanh-chạy-mãi-không-dừng nếu bỏ
- * sót: URL không đổi thì `usePathname` không bao giờ báo xong, còn link tải file
- * hay ra ngoài origin thì trang này không điều hướng đi đâu cả.
+ * Every `false` branch below is a bar-that-never-stops if missed: an unchanged
+ * URL means `usePathname` never reports completion, and a download or
+ * cross-origin link means this page never navigates anywhere at all.
  */
 function isInAppNavigation(event: MouseEvent): boolean {
-  // Chuột giữa/phải, hoặc giữ phím để mở tab mới → tab hiện tại đứng yên.
+  // Middle/right click, or a modifier to open a new tab → this tab stays put.
   if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
     return false;
   }
@@ -187,14 +189,15 @@ function isInAppNavigation(event: MouseEvent): boolean {
 
   const url = new URL(anchor.href, window.location.href);
   if (url.origin !== window.location.origin) return false;
-  // Neo trong trang: không điều hướng.
+  // An in-page anchor: no navigation.
   if (url.pathname === window.location.pathname && url.search === window.location.search) {
     return false;
   }
   /*
-   * Đường dẫn có dấu chấm = route handler trả file (`/vi/blogs/rss.xml`,
-   * `/sitemap.xml`). Trình duyệt tự tải, React không render lại gì, nên không
-   * có tín hiệu kết thúc nào để chờ. Cùng luật với matcher của `proxy.ts`.
+   * A path with a dot means a route handler serving a file
+   * (`/vi/blogs/rss.xml`, `/sitemap.xml`). The browser downloads it, React
+   * re-renders nothing, so there is no completion signal to wait for. Same rule
+   * as `proxy.ts`'s matcher.
    */
   if (url.pathname.split("/").pop()?.includes(".")) return false;
 

@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
-/** Bảng màu + biến thể `dark` bám class — xem chú thích ở `apps/web/app/globals.css`. */
+/** The palette plus the class-based `dark` variant — see the note in `apps/web/app/globals.css`. */
 @import "../../../packages/config/theme.css";
 
 /**
- * Giống bên web: Tailwind không tự dò `packages/ui` vì nó nằm ngoài cây thư
- * mục của app và chỉ được symlink qua node_modules. Xem chú thích dài hơn ở
- * `apps/web/app/globals.css`.
+ * Same as web: Tailwind does not scan `packages/ui` on its own, because it lies
+ * outside the app's directory tree and is only symlinked through node_modules.
+ * The longer note is in `apps/web/app/globals.css`.
  */
 @source "../../../packages/ui/src";
 
-/** Xem chú thích ở `apps/web/app/globals.css`. */
+/** See the note in `apps/web/app/globals.css`. */
 @theme inline {
   --font-sans: var(--font-open-sans);
 }

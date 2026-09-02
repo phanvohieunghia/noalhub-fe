@@ -7,15 +7,16 @@ import { usePathname } from "next/navigation";
 import { NAV_ITEMS, SEGMENT_LABEL_KEYS } from "./nav-items";
 
 /**
- * Breadcrumb suy từ pathname, không phải từ state riêng — không có chỗ nào để
- * lệch với URL.
+ * The breadcrumb is derived from the pathname, not from separate state — so
+ * there is nowhere for it to drift from the URL.
  *
- * Segment cuối của `/users/[id]` là một UUID: hiện nguyên thì vô nghĩa với người
- * đọc, nên rút gọn thành "Chi tiết". Tên user thật do chính trang đó hiện ở
- * `<h1>` (nó mới là chỗ có dữ liệu), breadcrumb không đi fetch thêm.
+ * The last segment of `/users/[id]` is a UUID: showing it raw means nothing to
+ * a reader, so it collapses to "Detail". The real user name is rendered by that
+ * page's own `<h1>` (which is where the data is); the breadcrumb fetches
+ * nothing.
  *
- * Thứ tự tra: mục nav → `SEGMENT_LABEL_KEYS` (segment có tên thật nhưng không
- * lên sidebar, vd `/posts/categories`) → "Chi tiết".
+ * Lookup order: nav items → `SEGMENT_LABEL_KEYS` (segments with a real name that
+ * are not in the sidebar, e.g. `/posts/categories`) → "Detail".
  */
 export function AdminBreadcrumb() {
   const t = useTranslations("nav.admin");
@@ -27,8 +28,8 @@ export function AdminBreadcrumb() {
     const key = NAV_ITEMS.find((item) => item.href === href)?.labelKey ?? SEGMENT_LABEL_KEYS[segment];
     return {
       href,
-      // Segment đầu không khớp khoá nào thì hiện nguyên văn: đó là một đoạn
-      // đường dẫn có nghĩa, dịch nó thành "Chi tiết" là mất thông tin.
+      // A first segment matching no key is shown verbatim: it is a meaningful
+      // path segment, and turning it into "Detail" loses information.
       label: key ? t(key) : index === 0 ? segment : t("detail"),
       isLast: index === segments.length - 1,
     };

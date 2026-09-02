@@ -1,9 +1,9 @@
 import { ChatPane } from "@/components/chat/chat-pane";
 
 /**
- * `params` là async ở Next 16 (bản đồng bộ đã bị xoá hẳn). Await ở server rồi
- * truyền prop xuống client component — rõ ràng hơn `useParams()` về biên
- * server/client.
+ * `params` is async in Next 16 (the synchronous form is gone entirely). Await it
+ * on the server and pass it as a prop to the client component — clearer about
+ * the server/client boundary than `useParams()`.
  */
 export default async function ConversationPage(
   props: PageProps<"/[locale]/chat/[conversationId]">,

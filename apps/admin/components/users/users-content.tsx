@@ -126,8 +126,8 @@ function UserRow({ user }: { user: AdminUser }) {
         <Badge tone={user.role === "admin" ? "info" : "neutral"}>{user.role}</Badge>
       </TableCell>
       <TableCell className="whitespace-nowrap">{df.date(user.createdAt)}</TableCell>
-      {/* KHÔNG phải trạng thái online — endpoint admin không đọc presence, nên
-          ở đây là mốc thời gian, không phải dot xanh/xám. */}
+      {/* NOT an online state — the admin endpoints do not read presence, so this
+          is a timestamp, never a green/gray dot. */}
       <TableCell className="whitespace-nowrap opacity-70">
         {user.lastSeenAt ? df.dateTime(user.lastSeenAt) : t("neverOnline")}
       </TableCell>

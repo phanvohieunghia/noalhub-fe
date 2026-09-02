@@ -1,16 +1,17 @@
 import { z } from "zod";
 
 /**
- * Hai nhóm schema:
- * - Form schema: validate input phía client (UX). Ràng buộc phải KHỚP với DTO
- *   trong OpenAPI spec, nếu không backend sẽ trả VALIDATION_FAILED sau khi
- *   form đã báo hợp lệ.
- * - Response schema: parse body backend, bắt lỗi đổi shape ngay tại chỗ.
+ * Two groups of schemas:
+ * - Form schemas: client-side input validation (UX). The constraints must MATCH
+ *   the DTOs in the OpenAPI spec, or the backend answers VALIDATION_FAILED
+ *   after the form already called the input valid.
+ * - Response schemas: parse the backend's body, catching shape changes on the
+ *   spot.
  */
 
 const email = z.email("validation.email.invalid").max(320, "validation.email.tooLong");
 
-/** Backend: minLength 12, maxLength 128, không ép ký tự đặc biệt. */
+/** Backend: minLength 12, maxLength 128, no special-character requirement. */
 const password = z
   .string()
   .min(12, "validation.password.tooShort")
@@ -66,7 +67,7 @@ export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 
 /* ---- Response schemas (mirror DTO) ---- */
 
-/** `UserDto` — displayName/avatarUrl nullable, backend có thể bỏ hẳn field. */
+/** `UserDto` — displayName/avatarUrl are nullable, and the backend may omit the field entirely. */
 export const userSchema = z.object({
   id: z.string(),
   email: z.string(),
@@ -82,9 +83,10 @@ export const userSchema = z.object({
   emailVerified: z.boolean(),
   role: z.enum(["user", "admin"]),
   /*
-   * `catch` chứ không phải `default`: backend luôn trả trường này (cột NOT NULL
-   * có DEFAULT), nhưng token phát trước migration vẫn còn hiệu lực và
-   * `/auth/me` cũ có thể thiếu nó — parse hỏng ở đây là đăng xuất cả phiên.
+   * `catch` rather than `default`: the backend always returns this field (a NOT
+   * NULL column with a DEFAULT), but tokens issued before the migration are
+   * still valid and an older `/auth/me` may lack it — a parse failure here logs
+   * the whole session out.
    */
   language: z.enum(["vi", "en"]).catch("vi"),
   displayName: z

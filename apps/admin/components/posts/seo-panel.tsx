@@ -14,21 +14,23 @@ import { ImageUploadButton } from "../media/image-upload-button";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Panel SEO — **hiện preview, đừng chỉ hiện input** (`docs/blog-plan.md` §7.2).
+ * The SEO panel — **show a preview, not just inputs** (`docs/blog.md` §7.2).
  *
- * Ô nhập trơn thì không ai đoán được kết quả: người viết gõ 90 ký tự tiêu đề mà
- * không biết Google chỉ hiện ~60. Preview dùng chung `truncateForSeo` +
- * `SEO_LIMITS` với chỗ dựng metadata thật, nên nó không nói dối.
+ * Bare fields let nobody predict the outcome: an author types a 90-character
+ * title without knowing Google shows about 60. The preview shares
+ * `truncateForSeo` and `SEO_LIMITS` with the code that builds the real
+ * metadata, so it cannot lie.
  *
- * Đếm ký tự là **cảnh báo mềm**: không chặn lưu. Google cắt theo pixel chứ không
- * theo ký tự nên con số chỉ là ước lượng — chặn cứng theo nó là sai.
+ * The character count is a **soft warning**: it never blocks saving. Google
+ * truncates by pixels rather than characters, so the number is an estimate —
+ * hard-blocking on it would be wrong.
  */
 export function SeoPanel({
   form,
   publishedSlug,
 }: {
   form: UseFormReturn<BlogPostFormValues>;
-  /** Slug đang chạy công khai; `null` nếu bài chưa từng publish. */
+  /** The slug currently live in public; `null` if the post has never been published. */
   publishedSlug: string | null;
 }) {
   const t = useTranslations("admin.posts.seo");
@@ -48,7 +50,7 @@ export function SeoPanel({
         {t("heading")}
       </Typography>
 
-      {/* Preview kết quả Google */}
+      {/* The Google result preview */}
       <div className="rounded-lg border border-black/10 p-3 dark:border-white/15">
         <Typography variant="body-4" className="truncate opacity-60">
           {appUrl()}/blogs/{values.slug || "…"}
@@ -77,10 +79,11 @@ export function SeoPanel({
         </button>
 
         {/*
-          Bài ĐÃ publish mà đổi slug: phải cảnh báo ngay tại chỗ, đừng để nó lặng
-          lẽ như một field bình thường. Ở đây được nói "301" vì bài có bảng
-          `blog_post_slugs` đỡ đòn (§2.4) — khác hẳn slug CHUYÊN MỤC, nơi URL cũ
-          chết hẳn (§2.6, §7.1a). Đừng chép câu này sang đó.
+          Changing the slug of an ALREADY published post: warn right here, do not
+          let it pass quietly like an ordinary field. Saying "301" is fair here
+          because posts have the `blog_post_slugs` table to absorb it (§2.4) —
+          quite unlike CATEGORY slugs, where the old URL dies outright (§2.6,
+          §7.1a). Do not copy this wording over there.
         */}
         {slugChangedAfterPublish ? (
           <Typography
@@ -198,9 +201,9 @@ function OgPreview({
   return (
     <div className="overflow-hidden rounded-lg border border-black/10 dark:border-white/15">
       {image ? (
-        // `<img>` thuần chứ không `next/image`: đây là preview của một URL người
-        // dùng vừa gõ, có thể chưa nằm trong `remotePatterns` — cho nó đi qua
-        // optimizer là nhận 400 ngay trong lúc soạn.
+        // A plain `<img>` rather than `next/image`: this previews a URL the user
+        // just typed, which may not be in `remotePatterns` yet — sending it
+        // through the optimizer means a 400 in the middle of editing.
         // eslint-disable-next-line @next/next/no-img-element
         <img src={image} alt="" className="aspect-[1200/630] w-full object-cover" />
       ) : (

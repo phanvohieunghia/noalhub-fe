@@ -16,19 +16,20 @@ type Variant =
   | "caption";
 
 /**
- * Chỉ ba mức. Open Sans là font biến thiên nên về kỹ thuật có cả 300–800,
- * nhưng mở hết ra thì mỗi người chọn một số và giao diện hết nhất quán.
+ * Three weights only. Open Sans is a variable font so 300–800 technically
+ * exist, but exposing all of them means everyone picks a different number and
+ * the interface stops being consistent.
  */
 type Weight = 400 | 500 | 600;
 
 /**
- * ⚠️ Phải là object tra cứu với class viết NGUYÊN chuỗi. Tailwind quét mã
- * nguồn bằng regex chứ không chạy nó, nên `text-${variant}` sẽ không sinh ra
- * class nào và mọi thứ mất style ở production (đúng cái bẫy đã ghi trong
- * `globals.css`).
+ * ⚠️ This must be a lookup object with class names written out IN FULL.
+ * Tailwind scans source with a regex rather than executing it, so
+ * `text-${variant}` generates no class at all and everything loses its styling
+ * in production (exactly the trap noted in `globals.css`).
  *
- * `caption` gánh thêm `italic` ngay trong bảng: nghiêng là một phần ĐỊNH NGHĨA
- * của nó, không phải trang trí ở chỗ gọi.
+ * `caption` carries `italic` right here in the table: the slant is part of its
+ * DEFINITION, not decoration applied at the call site.
  */
 const VARIANTS: Record<Variant, string> = {
   h1: "text-h1",
@@ -55,10 +56,11 @@ const WEIGHTS: Record<Weight, string> = {
 };
 
 /**
- * Cỡ chữ mặc định đi với độ đậm nào.
+ * Which weight each size defaults to.
  *
- * Heading đặc (600); title 1–2 còn là tiêu đề khối nên vẫn 600, title 3–4 đã
- * xuống cỡ chữ thường nên hạ về 500 — 600 ở cỡ 14px trông như đang hét.
+ * Headings are heavy (600); title 1–2 are still block headings so they stay at
+ * 600, while title 3–4 have dropped to body size and come down to 500 — 600 at
+ * 14px reads like shouting.
  */
 const DEFAULT_WEIGHT: Record<Variant, Weight> = {
   h1: 600,
@@ -78,7 +80,7 @@ const DEFAULT_WEIGHT: Record<Variant, Weight> = {
   caption: 400,
 };
 
-/** Thẻ HTML mặc định. `title-*`/`caption` là `<p>` vì chúng KHÔNG phải heading. */
+/** The default HTML tag. `title-*`/`caption` are `<p>` because they are NOT headings. */
 const DEFAULT_TAG: Record<Variant, React.ElementType> = {
   h1: "h1",
   h2: "h2",
@@ -101,19 +103,19 @@ type TypographyProps = {
   variant?: Variant;
   weight?: Weight;
   /**
-   * Thẻ HTML, tách rời khỏi `variant`.
+   * The HTML tag, decoupled from `variant`.
    *
-   * Cấp heading là **cấu trúc tài liệu**, cỡ chữ là **thị giác** — trộn hai
-   * thứ là cách nhanh nhất để có trang nhảy từ `h1` xuống `h4`, hoặc có ba
-   * `h1`. Cần một tiêu đề cấp 2 nhưng nhỏ như h4 thì viết
-   * `<Typography variant="h4" as="h2">`, đừng đổi variant.
+   * Heading level is **document structure**, type size is **visual** — mixing
+   * the two is the fastest route to a page that jumps from `h1` to `h4`, or has
+   * three `h1`s. For a level-2 heading that looks as small as an h4, write
+   * `<Typography variant="h4" as="h2">` rather than changing the variant.
    *
-   * Chú thích ảnh thì `<Typography variant="caption" as="figcaption">`.
+   * For an image caption: `<Typography variant="caption" as="figcaption">`.
    */
   as?: React.ElementType;
   className?: string;
   children: React.ReactNode;
-  /** Cho `as="label"` — `htmlFor` không nằm trong `HTMLAttributes` chung. */
+  /** For `as="label"` — `htmlFor` is not part of the generic `HTMLAttributes`. */
   htmlFor?: string;
 } & Omit<React.HTMLAttributes<HTMLElement>, "className" | "children">;
 

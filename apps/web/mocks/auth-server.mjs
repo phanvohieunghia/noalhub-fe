@@ -1,4 +1,4 @@
-// Mock backend cho docs/auth.md §3. Chạy: node mock-api.mjs
+// Mock backend for docs/auth.md §3. Run: node mock-api.mjs
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
 
@@ -10,11 +10,11 @@ const refreshTokens = new Map(); // token -> userId
 const accessTokens = new Map(); // token -> userId
 const resetTokens = new Map(); // token -> userId
 
-// tài khoản sẵn có
+// a pre-existing account
 const seed = { id: "u_1", email: "a@b.com", name: "Noah", password: "password123" };
 users.set(seed.email, seed);
 
-// Cờ điều khiển để test: POST /__control { forceMeUnauthorized, expireRefresh }
+// Control flags for testing: POST /__control { forceMeUnauthorized, expireRefresh }
 const control = { forceMeUnauthorized: false };
 
 const log = (...a) => console.log("[mock]", ...a);
@@ -92,7 +92,7 @@ const server = createServer(async (req, res) => {
     const userId = refreshTokens.get(body.refreshToken);
     if (!userId) return send(401, { message: "Refresh token không hợp lệ" });
     refreshTokens.delete(body.refreshToken); // rotate
-    control.forceMeUnauthorized = false; // sau khi refresh thì /me hoạt động lại
+    control.forceMeUnauthorized = false; // after a refresh, /me works again
     return send(200, issue(userId));
   }
 

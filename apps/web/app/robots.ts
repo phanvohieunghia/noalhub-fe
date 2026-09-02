@@ -4,17 +4,17 @@ import { absoluteUrl } from "@noalhub/core/blog/seo";
 import { LOCALES } from "@noalhub/i18n/config";
 
 /**
- * Chỉ vùng blog được crawl.
+ * Only the blog area is crawlable.
  *
- * ⚠️ `/` nằm trong `disallow` là **có chủ ý**, không phải sót: trang chủ hiện
- * vẫn ở trong route group `(protected)`, tức là đứng sau `AuthGuard` — crawler
- * vào đó chỉ thấy màn hình chờ rồi bị đá sang `/login`. Cho phép index một URL
- * như vậy là tự nộp một trang rỗng cho Google. Làm landing công khai cho `/` là
- * một đợt riêng; ngày đó thì sửa cả dòng này lẫn `sitemap.ts`
- * (`docs/blog-plan.md` §6.1).
+ * ⚠️ `/` sitting in `disallow` is **deliberate**, not an oversight: the home
+ * page is still inside the `(protected)` route group, i.e. behind `AuthGuard` —
+ * a crawler there sees a loading screen and is then pushed to `/login`.
+ * Allowing such a URL to be indexed hands Google a blank page. Building a public
+ * landing page for `/` is its own piece of work; on that day, change this line
+ * and `sitemap.ts` together (`docs/blog.md` §6.1).
  */
 
-/** Mọi route (trừ `/auth/callback`) giờ nằm sau tiền tố locale. */
+/** Every route (except `/auth/callback`) now sits behind a locale prefix. */
 const PRIVATE_PATHS = [
   "/chat",
   "/friends",
@@ -30,17 +30,17 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      // Nhánh công khai duy nhất, một mục cho mỗi ngôn ngữ.
+      // The only public branch, one entry per language.
       allow: LOCALES.map((locale) => `/${locale}/blogs`),
       disallow: [
         "/",
-        // Đường dẫn riêng tư phải liệt kê **theo từng locale**: `/chat` trần
-        // không còn tồn tại, và một dòng `/chat` không chặn được `/vi/chat`.
+        // Private paths must be listed **per locale**: a bare `/chat` no longer
+        // exists, and one `/chat` line does not block `/vi/chat`.
         ...LOCALES.flatMap((locale) => PRIVATE_PATHS.map((path) => `/${locale}${path}`)),
-        // `/auth/callback` cố ý nằm ngoài `[locale]` (OAuth redirect_uri).
+        // `/auth/callback` deliberately sits outside `[locale]` (the OAuth redirect_uri).
         "/auth",
-        // Webhook nội bộ (§5.2). nginx đã `deny all` đường công khai; dòng này
-        // chỉ để crawler tử tế khỏi thử.
+        // The internal webhook (§5.2). nginx already `deny all`s the public
+        // path; this line only keeps well-behaved crawlers from trying.
         "/api",
       ],
     },

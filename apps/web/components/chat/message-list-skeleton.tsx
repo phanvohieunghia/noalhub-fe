@@ -2,7 +2,7 @@ import { useTranslations } from "next-intl";
 
 import { Skeleton } from "@noalhub/ui/skeleton";
 
-/** Bubble giả, xen trái/phải để khung giống nội dung thật. */
+/** Placeholder bubbles alternating left/right so the shell resembles real content. */
 export function MessageListSkeleton() {
   const t = useTranslations("web.chat.messages");
   const widths = ["w-40", "w-56", "w-32", "w-48", "w-24"];

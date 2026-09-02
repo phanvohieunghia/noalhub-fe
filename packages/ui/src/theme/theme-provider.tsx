@@ -13,10 +13,10 @@ import type { ResolvedTheme, ThemeMode } from "@noalhub/core/theme/types";
 
 type ThemeContextValue = {
   mode: ThemeMode;
-  /** `system` đã được quy về màu thật. Dùng để vẽ icon, không để quyết định class. */
+  /** `system` already resolved to a real theme. For drawing icons, not for deciding the class. */
   resolved: ResolvedTheme;
   setMode: (mode: ThemeMode) => void;
-  /** false cho tới khi hiệu ứng đầu tiên chạy — xem `theme-toggle.tsx`. */
+  /** false until the first effect runs — see `theme-toggle.tsx`. */
   mounted: boolean;
 };
 
@@ -26,21 +26,23 @@ const DARK_QUERY = "(prefers-color-scheme: dark)";
 
 function applyClass(dark: boolean) {
   document.documentElement.classList.toggle("dark", dark);
-  // Cho form control gốc của trình duyệt (scrollbar, date picker, autofill)
-  // biết nền đang tối. Thiếu dòng này thì scrollbar vẫn sáng trắng.
+  // Tells the browser's native controls (scrollbar, date picker, autofill) that
+  // the background is dark. Without this line the scrollbar stays white.
   document.documentElement.style.colorScheme = dark ? "dark" : "light";
 }
 
 /**
- * Nguồn sự thật là `localStorage`; class trên `<html>` chỉ là hệ quả.
+ * The source of truth is `localStorage`; the class on `<html>` is only a
+ * consequence.
  *
- * Lần vẽ đầu **không** do provider quyết định — `THEME_INIT_SCRIPT` trong
- * `<head>` đã set class trước khi React chạy. Provider chỉ tiếp quản từ lần
- * user bấm đổi trở đi, và đồng bộ lại state cho khớp với thứ script đã làm.
+ * The first paint is **not** the provider's decision — `THEME_INIT_SCRIPT` in
+ * the `<head>` sets the class before React runs. The provider takes over from
+ * the user's first click onwards, and syncs its state to match what the script
+ * already did.
  */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // Server không đọc được localStorage nên phải khởi tạo bằng một giá trị
-  // tĩnh, rồi sửa lại ở effect. Đây chính là lý do cần `mounted`.
+  // The server cannot read localStorage, so this starts from a static value and
+  // is corrected in an effect. That is precisely why `mounted` exists.
   const [mode, setModeState] = useState<ThemeMode>("system");
   const [systemDark, setSystemDark] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -51,8 +53,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setSystemDark(media.matches);
     setMounted(true);
 
-    // Ở chế độ `system`, user đổi theme máy lúc tab đang mở thì trang phải đổi
-    // theo ngay — đọc một lần lúc mount là không đủ.
+    // In `system` mode, changing the OS theme with the tab open must change the
+    // page immediately — reading once on mount is not enough.
     const onChange = (e: MediaQueryListEvent) => setSystemDark(e.matches);
     media.addEventListener("change", onChange);
     return () => media.removeEventListener("change", onChange);
@@ -79,6 +81,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 export function useTheme(): ThemeContextValue {
   const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error("useTheme phải nằm trong <ThemeProvider>");
+  if (!ctx) throw new Error("useTheme must be used inside <ThemeProvider>");
   return ctx;
 }

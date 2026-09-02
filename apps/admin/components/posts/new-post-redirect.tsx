@@ -11,38 +11,40 @@ import { AdminErrorState } from "../admin-error-state";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * `/posts/new` **tạo bản nháp rồi `replace` sang `/posts/[id]` ngay**
- * (`docs/blog-plan.md` §7.1).
+ * `/posts/new` **creates a draft and immediately `replace`s to `/posts/[id]`**
+ * (`docs/blog.md` §7.1).
  *
- * Vì sao không dựng một form "tạo mới" riêng: như vậy mọi thao tác sau đó chỉ có
- * MỘT đường lưu (`PATCH`), không phải hai nhánh create/update phải giữ đồng bộ
- * mãi mãi — kể cả `version`, `slug`, và checklist publish.
+ * Why not build a separate "create" form: this way every later action has
+ * exactly ONE save path (`PATCH`), instead of create/update branches that must
+ * be kept in sync forever — including `version`, `slug` and the publish
+ * checklist.
  *
- * `replace` chứ không `push`: bấm Back từ editor phải về `/posts`, không phải
- * quay lại đây rồi tạo thêm một bản nháp rỗng nữa.
+ * `replace` rather than `push`: pressing Back from the editor must land on
+ * `/posts`, not return here and create yet another empty draft.
  */
 export function NewPostRedirect() {
   const t = useTranslations("admin.posts");
   const tc = useTranslations("common");
   const router = useRouter();
   const create = useCreateBlogPost();
-  // StrictMode ở dev chạy effect hai lần — không có chốt này là mỗi lần mở
-  // `/posts/new` đẻ ra hai bản nháp.
+  // StrictMode runs effects twice in dev — without this latch, every visit to
+  // `/posts/new` produces two drafts.
   const started = useRef(false);
 
-  // ⚠️ `mutateAsync` chứ KHÔNG phải `mutate(_, { onSuccess })`.
+  // ⚠️ `mutateAsync`, NOT `mutate(_, { onSuccess })`.
   //
-  // Callback truyền vào `mutate` thuộc về observer của lần mount đó; StrictMode
-  // unmount rồi mount lại ngay, observer đầu tiên bị huỷ nên callback không bao
-  // giờ chạy — mà chốt `started` lại chặn lần mount thứ hai gọi lại. Kết quả:
-  // bản nháp được tạo thật (POST 201) nhưng trang treo mãi ở "Đang tạo bản
-  // nháp…". Promise của `mutateAsync` thì sống độc lập với observer.
+  // A callback passed to `mutate` belongs to that mount's observer; StrictMode
+  // unmounts and remounts immediately, the first observer is discarded and the
+  // callback never runs — while the `started` latch stops the second mount from
+  // calling again. The result: the draft really is created (POST 201) but the
+  // page hangs forever on "Creating draft…". `mutateAsync`'s promise lives
+  // independently of the observer.
   const start = () => {
     create
       .mutateAsync(undefined)
       .then((post) => router.replace(`/posts/${post.id}`))
-      // Lỗi đã nằm trong `create.isError` và được render bên dưới; `catch` này
-      // chỉ để promise không rơi ra ngoài thành unhandled rejection.
+      // The error already lives in `create.isError` and is rendered below; this
+      // `catch` only keeps the promise from becoming an unhandled rejection.
       .catch(() => {});
   };
 

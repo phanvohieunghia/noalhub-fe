@@ -1,14 +1,14 @@
 /**
- * Outbox — tin đã soạn nhưng chưa có ack.
+ * The outbox — messages composed but not yet acknowledged.
  *
- * Vì `id` là UUID v7 do client sinh và backend idempotent (trình lại cùng `id`
- * đâm vào PK conflict và nhận lại bản ghi cũ), gửi lại tự động là **an toàn
- * tuyệt đối**. Không dựng outbox nghĩa là bỏ mất lợi ích lớn nhất của thiết kế
- * backend.
+ * Because `id` is a client-generated UUID v7 and the backend is idempotent
+ * (resubmitting the same `id` hits a PK conflict and returns the existing row),
+ * automatic resending is **entirely safe**. Not building an outbox would waste
+ * the single biggest benefit of the backend's design.
  *
- * Giai đoạn 1 giữ trong MEMORY: F5 là mất. Bền qua reload cần localStorage +
- * giới hạn số tin + TTL, nếu không một outbox hỏng sẽ đập backend mãi mãi
- * (`docs/chat.md` §5.6, §12).
+ * Phase 1 keeps it in MEMORY: F5 loses it. Surviving a reload needs
+ * localStorage plus a message cap plus a TTL, or one broken outbox hammers the
+ * backend forever (`docs/chat.md` §5.6, §12).
  */
 
 export type OutboxEntry = {
@@ -33,8 +33,8 @@ export const outbox = {
   },
 
   /**
-   * Tin chờ gửi, sắp theo `id`. UUID v7 sắp theo thời gian nên đây đúng là thứ
-   * tự người dùng đã gõ — gửi lại đúng thứ tự đó.
+   * Pending messages, ordered by `id`. UUID v7 sorts chronologically, so this is
+   * exactly the order the user typed them — and the order they are resent in.
    */
   drain(): OutboxEntry[] {
     return [...entries.values()].sort((a, b) => a.id.localeCompare(b.id));

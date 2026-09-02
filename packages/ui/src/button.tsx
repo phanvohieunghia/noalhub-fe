@@ -17,7 +17,7 @@ const SHAPES = {
 const SIZES = {
   md: "h-10 px-4",
   sm: "h-8 px-3",
-  /** Vuông, chỉ chứa icon — dùng kèm `aria-label`. */
+  /** Square, icon only — always pair it with an `aria-label`. */
   icon: "size-10",
   "icon-sm": "size-7",
 } as const;
@@ -26,15 +26,16 @@ type ButtonProps = React.ComponentPropsWithoutRef<"button"> & {
   variant?: keyof typeof VARIANTS;
   size?: keyof typeof SIZES;
   /**
-   * Bo góc. Là prop chứ không phải class truyền vào `className`: `rounded-md`
-   * của base và `rounded-full` ghi đè có cùng specificity, nên thứ tự trong
-   * chuỗi class không quyết định được cái nào thắng — góc sẽ vuông ngẫu nhiên.
+   * Corner rounding. A prop rather than a class passed through `className`: the
+   * base's `rounded-md` and an overriding `rounded-full` have the same
+   * specificity, so the order in the class string does not decide the winner —
+   * the corners come out square at random.
    */
   shape?: keyof typeof SHAPES;
   /**
-   * Render prop lên phần tử con thay vì tự dựng `<button>`. Cần khi Button
-   * đứng làm `Trigger` / `Close` của Radix — hai bên đều muốn là cái nút đó,
-   * lồng button trong button thì HTML sai.
+   * Render onto the child element instead of emitting a `<button>`. Needed when
+   * Button acts as a Radix `Trigger` / `Close` — both sides want to be that
+   * button, and nesting a button inside a button is invalid HTML.
    */
   asChild?: boolean;
 };
@@ -56,8 +57,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
 
   const classes = `${base} ${VARIANTS[variant]} ${SIZES[size]} ${SHAPES[shape]} ${className}`;
 
-  // Slot chuyển class/handler xuống con — nhưng `type` là thuộc tính của
-  // <button>, không áp cho <a>/<span>, nên chỉ đặt khi tự render button.
+  // Slot forwards classes/handlers to the child — but `type` is a <button>
+  // attribute that means nothing on <a>/<span>, so it is only set when we
+  // render the button ourselves.
   if (asChild) return <Slot.Root ref={ref} className={classes} {...props} />;
 
   return <button ref={ref} type={type} className={classes} {...props} />;

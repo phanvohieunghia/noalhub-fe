@@ -4,12 +4,12 @@ import { PostCard } from "./post-card";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Lưới bài + **trạng thái rỗng có chữ**.
+ * The post grid plus **an empty state with words in it**.
  *
- * Danh sách rỗng vẫn là **200**, không phải 404: chưa có bài nào (hoặc chuyên
- * mục vừa tạo chưa có bài) là trạng thái hợp lệ tạm thời của site, không phải
- * URL sai. Chỉ chuyên mục/thẻ **không tồn tại** mới `notFound()`
- * (`docs/blog-plan.md` §6.5).
+ * An empty list is still a **200**, not a 404: having no posts yet (or a
+ * freshly created category with none) is a valid temporary state of the site,
+ * not a bad URL. Only a category or tag that **does not exist** calls
+ * `notFound()` (`docs/blog.md` §6.5).
  */
 export function PostList({
   posts,

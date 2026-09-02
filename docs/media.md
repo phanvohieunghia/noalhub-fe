@@ -5,7 +5,7 @@
 | **Status**     | ĐÃ LÀM. Editor blog upload được ảnh; chưa có màn hình nào cho video/file       |
 | **Contract**   | tag `admin-media` trong `/docs-json`                                          |
 | **Thiết kế**   | `docs/media.md` bên repo `noalhub-be` — **nguồn sự thật** cho mọi giới hạn    |
-| **Liên quan**  | [`data-layer.md`](./data-layer.md) · [`blog-plan.md`](./blog-plan.md) §9      |
+| **Liên quan**  | [`data-layer.md`](./data-layer.md) · [`blog.md`](./blog.md) §9      |
 
 Tài liệu này chỉ nói phần **FE làm gì và vì sao**; giới hạn mime/size, luồng ba nhịp
 và lý do chọn MinIO nằm ở tài liệu bên backend.

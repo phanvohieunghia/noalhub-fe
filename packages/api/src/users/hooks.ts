@@ -7,29 +7,30 @@ import { authKeys } from "../auth/hooks";
 import { useAuthStore } from "../auth/store";
 import type { ChangeLanguageInput, ChangeUsernameInput } from "./schemas";
 
-/** Query key factory — nguồn sự thật DUY NHẤT cho key của feature users. */
+/** Query key factory — the ONLY source of truth for the users feature's keys. */
 export const userKeys = {
   all: ["users"] as const,
   details: () => [...userKeys.all, "detail"] as const,
   detail: (username: string) => [...userKeys.details(), username] as const,
 };
 
-/** Hồ sơ công khai của một người, tra theo username. */
+/** Someone's public profile, looked up by username. */
 export function usePublicProfile(username: string | null | undefined) {
   return useQuery({
     queryKey: userKeys.detail(username ?? ""),
     queryFn: ({ signal }) => usersApi.getPublicProfile(username!, signal),
     enabled: Boolean(username),
-    // Hồ sơ đổi rất thưa; presence realtime đi đường socket riêng.
+    // Profiles change rarely; realtime presence has its own socket channel.
     staleTime: 5 * 60_000,
   });
 }
 
 /**
- * Đổi username của chính mình.
+ * Change your own username.
  *
- * Response cùng shape `/auth/me` nên ghi thẳng vào cache `authKeys.me()` và
- * auth store — không cần refetch, và mọi chỗ đọc `user` cập nhật cùng nhịp.
+ * The response has the same shape as `/auth/me`, so it is written straight into
+ * the `authKeys.me()` cache and the auth store — no refetch needed, and every
+ * reader of `user` updates in the same beat.
  */
 export function useChangeUsername() {
   const queryClient = useQueryClient();
@@ -40,23 +41,25 @@ export function useChangeUsername() {
     onSuccess: (user) => {
       queryClient.setQueryData(authKeys.me(), user);
       setUser(user);
-      // Hồ sơ công khai nằm dưới key username CŨ → bỏ hết cho fetch lại.
+      // Public profiles are cached under the OLD username key → drop them to refetch.
       queryClient.removeQueries({ queryKey: userKeys.details() });
     },
   });
 }
 
 /**
- * Đổi ngôn ngữ giao diện của chính mình.
+ * Change your own interface language.
  *
- * Chỉ ghi phía server — cookie và điều hướng do `LanguageSwitcher` lo TRƯỚC khi
- * gọi hook này (§4.2): giao diện phải đổi ngay khi bấm, không đợi mạng. Vì vậy
- * mutation này hỏng cũng không rollback gì: người dùng vẫn đang đọc đúng ngôn
- * ngữ họ chọn, chỉ là lần đăng nhập ở máy khác chưa nhớ được.
+ * This writes the server side only — the cookie and the navigation are
+ * `LanguageSwitcher`'s job, done BEFORE this hook is called (§4.2): the UI has
+ * to change the instant the button is pressed, not when the network answers.
+ * That is why a failed mutation rolls nothing back: the user is still reading
+ * in the language they chose, it simply will not be remembered on another
+ * machine.
  *
- * `onSuccess` ghi lại user vào cache + auth store, giống `useChangeUsername` —
- * nếu không, `user.language` trong bộ nhớ vẫn là giá trị cũ và lần
- * `bootstrap()` kế tiếp sẽ kéo giao diện về ngôn ngữ trước đó.
+ * `onSuccess` writes the user back into the cache and the auth store, like
+ * `useChangeUsername` — without it, the in-memory `user.language` stays stale
+ * and the next `bootstrap()` drags the UI back to the previous language.
  */
 export function useChangeLanguage() {
   const queryClient = useQueryClient();

@@ -16,8 +16,8 @@ import { Typography } from "@noalhub/ui/typography";
 type CallbackParams = { ok: true; code: string } | { ok: false; error: Message };
 
 /**
- * Backend redirect về đây kèm `?code=` — handoff code dùng MỘT lần, hết hạn
- * sau 60 giây. Token không bao giờ đi qua URL.
+ * The backend redirects here with `?code=` — a SINGLE-use handoff code that
+ * expires after 60 seconds. Tokens never travel through the URL.
  */
 function parseCallback(params: URLSearchParams): CallbackParams {
   const oauthError = params.get("error");
@@ -43,19 +43,20 @@ export function OAuthCallback() {
   const searchParams = useSearchParams();
   const exchange = useOAuthExchange();
 
-  // Lỗi từ URL là giá trị dẫn xuất — tính khi render, không setState trong effect.
+  // The URL's error is derived state — compute it during render, never setState in an effect.
   const parsed = useMemo(() => parseCallback(searchParams), [searchParams]);
   const handled = useRef(false);
   const { mutate } = exchange;
 
   useEffect(() => {
     if (!parsed.ok || handled.current) return;
-    // Code chỉ đổi được một lần: để effect chạy lại (StrictMode) là lần thứ
-    // hai nhận INVALID_TOKEN và ghi đè kết quả thành công.
+    // The code can only be exchanged once: letting the effect run twice
+    // (StrictMode) makes the second attempt take INVALID_TOKEN and overwrite the
+    // successful result.
     handled.current = true;
 
     mutate(parsed.code, {
-      // replace (không phải push) để code biến khỏi lịch sử trình duyệt ngay.
+      // replace (not push) so the code leaves the browser history immediately.
       onSuccess: () => router.replace(takeOAuthNext()),
     });
   }, [parsed, mutate, router]);
@@ -82,7 +83,7 @@ export function OAuthCallback() {
 
 function exchangeErrorText(error: unknown): Message | string | null {
   if (!error) return null;
-  // Câu của backend, không có bản dịch — hiện nguyên văn (§7.3).
+  // A backend sentence with no translation — shown verbatim (§7.3).
   if (error instanceof ApiError) return error.message;
   return { key: "web.auth.oauth.exchangeFailed" };
 }

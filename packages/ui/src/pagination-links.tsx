@@ -2,21 +2,23 @@ import { Link } from "@noalhub/i18n/navigation";
 import { useTranslations } from "next-intl";
 
 /**
- * Phân trang bằng **`<a href>` thật**, cho trang công khai.
+ * Pagination made of **real `<a href>`s**, for public pages.
  *
- * Vì sao không dùng lại `pagination.tsx`: bản đó là `"use client"` + nút bấm
- * `onPageChange`. Googlebot có chạy JS nhưng **không bấm nút**, nên từ trang 2
- * trở đi không có đường crawl nào từ trong site. Bài vẫn vào index qua sitemap
- * nên không mất bài; cái mất là **toàn bộ internal linking**, và URL
- * chỉ-có-trong-sitemap bị xếp ưu tiên thấp hơn (`docs/blog-plan.md` §4.5).
+ * Why not reuse `pagination.tsx`: that one is `"use client"` with an
+ * `onPageChange` button. Googlebot runs JS but **does not click buttons**, so
+ * from page 2 onwards there is no crawl path from inside the site. Posts still
+ * reach the index through the sitemap, so nothing is lost outright; what is
+ * lost is **all internal linking**, and sitemap-only URLs are ranked lower
+ * (`docs/blog.md` §4.5).
  *
- * Hai component chứ không sửa cái cũ: bảng admin phải giữ state ở client, hai
- * nhu cầu khác nhau.
+ * Two components rather than a rewrite of the old one: the admin table has to
+ * keep state on the client — two different needs.
  *
- * `Link` lấy từ `@noalhub/i18n/navigation` (bản của next-intl) chứ không phải
- * `next/link`: component này chỉ dùng ở phần công khai của `apps/web`, nơi URL
- * có tiền tố locale. Dùng `next/link` thì trang 2 mất tiền tố và người đọc
- * tiếng Anh bị đá về bản tiếng Việt ngay khi lật trang.
+ * `Link` comes from `@noalhub/i18n/navigation` (next-intl's version), not
+ * `next/link`: this component is used only in `apps/web`'s public section,
+ * where URLs carry a locale prefix. With `next/link`, page 2 loses the prefix
+ * and an English reader is thrown back to the Vietnamese version on the first
+ * page turn.
  */
 export function PaginationLinks({
   basePath,
@@ -25,20 +27,20 @@ export function PaginationLinks({
   total,
   label,
 }: {
-  /** Đường dẫn không kèm query, ví dụ `/blogs` hoặc `/blogs/category/huong-dan`. */
+  /** The path without a query, e.g. `/blogs` or `/blogs/category/huong-dan`. */
   basePath: string;
   page: number;
   limit: number;
   total: number;
-  /** Bỏ trống thì dùng nhãn chung "Phân trang". */
+  /** Left out, the generic "Pagination" label is used. */
   label?: string;
 }) {
   const t = useTranslations("common.pagination");
   const pageCount = Math.max(1, Math.ceil(total / Math.max(1, limit)));
   if (pageCount <= 1) return null;
 
-  // Trang 1 KHÔNG kèm `?page=1` — phải khớp canonical, nếu không `/blogs` và
-  // `/blogs?page=1` là hai URL cùng nội dung (§4.5).
+  // Page 1 carries NO `?page=1` — it has to match the canonical, or `/blogs`
+  // and `/blogs?page=1` are two URLs with one content (§4.5).
   const hrefFor = (target: number) => (target <= 1 ? basePath : `${basePath}?page=${target}`);
 
   return (
@@ -48,8 +50,8 @@ export function PaginationLinks({
     >
       <PageLink
         href={hrefFor(page - 1)}
-        // `rel="prev"/"next"`: Google đã bỏ dùng từ 2019, nhưng Bing và RSS
-        // reader vẫn đọc. Đặt thì có, đừng trông cậy vào nó thay cho <a> thật.
+        // `rel="prev"/"next"`: Google dropped it in 2019, but Bing and RSS
+        // readers still read it. Worth setting, never a substitute for a real <a>.
         rel="prev"
         disabled={page <= 1}
       >
@@ -66,9 +68,9 @@ export function PaginationLinks({
 }
 
 /**
- * Ở hai đầu danh sách thì render `<span>` chứ không phải link bị `aria-disabled`:
- * một thẻ `<a>` không có `href` vẫn được crawler thử, và một link trỏ tới trang
- * 0 là URL rác trong log.
+ * At either end of the list this renders a `<span>` rather than an
+ * `aria-disabled` link: crawlers still follow an `<a>` without an `href`, and a
+ * link to page 0 is junk in the logs.
  */
 function PageLink({
   href,

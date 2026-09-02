@@ -5,23 +5,24 @@ import { ensureAccessToken } from "../client";
 import { tokenStore } from "../auth/token-store";
 
 /**
- * BIÊN CÔ LẬP của realtime — file DUY NHẤT trong codebase biết về Socket.IO.
- * Vai của nó giống `lib/auth/token-store.ts` với localStorage.
+ * Realtime's ISOLATION BOUNDARY — the ONLY file in the codebase that knows about
+ * Socket.IO. It plays the same role `lib/auth/token-store.ts` plays for
+ * localStorage.
  *
- * Không import React, không biết React Query. Cầu nối sang cache nằm ở
- * `services/chat/hooks.ts` (`useChatSocket`).
+ * It imports no React and knows nothing of React Query. The bridge to the cache
+ * lives in `services/chat/hooks.ts` (`useChatSocket`).
  */
 
-/** Ack không tự timeout — thiếu mốc này thì bubble kẹt "sending" vĩnh viễn. */
+/** Acks do not time out on their own — without this, a bubble is stuck "sending" forever. */
 const ACK_TIMEOUT_MS = 10_000;
 
-/** Gia hạn token trước khi hết hạn 60s, đừng chờ backend ngắt. */
+/** Renew the token 60s before it expires; do not wait for the backend to disconnect. */
 const REFRESH_MARGIN_MS = 60_000;
 
 let socket: Socket | null = null;
 let refreshTimer: ReturnType<typeof setTimeout> | null = null;
 let unsubscribeToken: (() => void) | null = null;
-/** Chặn nhiều lời gọi `connect()` chồng nhau cùng dựng hai socket. */
+/** Stops overlapping `connect()` calls from building two sockets. */
 let connecting: Promise<Socket | null> | null = null;
 
 export function getSocket(): Socket | null {
@@ -29,10 +30,11 @@ export function getSocket(): Socket | null {
 }
 
 /**
- * Mở kết nối. Idempotent: gọi nhiều lần chỉ có một socket.
+ * Opens the connection. Idempotent: any number of calls yield one socket.
  *
- * Phải chờ có access token trước khi handshake — access token chỉ nằm trong
- * memory nên sau F5 nó rỗng, handshake với `token: null` là bị ngắt ngay.
+ * It has to wait for an access token before the handshake — the access token
+ * lives in memory only, so after F5 it is empty, and a handshake with
+ * `token: null` is disconnected immediately.
  */
 export function connectChatSocket(): Promise<Socket | null> {
   if (socket?.connected) return Promise.resolve(socket);
@@ -42,18 +44,19 @@ export function connectChatSocket(): Promise<Socket | null> {
     const token = await ensureAccessToken();
     if (!token) return null;
 
-    // Một lời gọi khác đã dựng xong socket trong lúc ta await.
+    // Another call finished building the socket while we awaited.
     if (socket) return socket;
 
     socket = io(`${WS_URL}${CHAT_NAMESPACE}`, {
-      // Token đi trong payload handshake, KHÔNG qua query string (query string
-      // rơi vào access log của server).
+      // The token rides in the handshake payload, NOT in the query string
+      // (query strings end up in the server's access log).
       auth: { token },
-      // Ép websocket: tránh yêu cầu sticky session ở load balancer khi backend
-      // chạy nhiều instance. Đổi lại mất fallback long-polling ở vài môi
-      // trường mạng chặn WebSocket — xem `docs/chat.md` §5.4.
+      // Force websocket: avoids needing sticky sessions at the load balancer
+      // when the backend runs several instances. The trade is losing the
+      // long-polling fallback on networks that block WebSocket — see
+      // `docs/chat.md` §5.4.
       transports: ["websocket"],
-      // Socket.IO đã có backoff + jitter sẵn. Không tự viết reconnect.
+      // Socket.IO already has backoff plus jitter. Do not hand-write reconnect.
       reconnection: true,
       reconnectionDelayMax: 30_000,
     });
@@ -81,8 +84,9 @@ export function disconnectChatSocket() {
 }
 
 /**
- * `TOKEN_EXPIRED` phải phân biệt với lỗi mạng: gặp nó thì xin token MỚI rồi
- * mới nối lại. Nối lại bằng token cũ là vòng lặp vô hạn có mã lỗi.
+ * `TOKEN_EXPIRED` has to be told apart from a network failure: on that, get a
+ * FRESH token before reconnecting. Reconnecting with the old token is an
+ * infinite loop with an error code attached.
  */
 function registerLifecycle(instance: Socket) {
   instance.on("connect", scheduleTokenRefresh);
@@ -90,8 +94,9 @@ function registerLifecycle(instance: Socket) {
   instance.on("disconnect", (reason) => {
     clearRefreshTimer();
     if (reason === "io server disconnect") {
-      // Server chủ động ngắt → Socket.IO KHÔNG tự reconnect. Thường là token
-      // hết hạn, nên lấy token mới rồi nối tay.
+      // The server disconnected us → Socket.IO does NOT reconnect on its own.
+      // It is usually an expired token, so fetch a fresh one and reconnect by
+      // hand.
       void reconnectWithFreshToken();
     }
   });
@@ -111,7 +116,7 @@ async function reconnectWithFreshToken() {
   socket.connect();
 }
 
-/** Cập nhật token cho lần handshake kế tiếp, và gia hạn phiên đang mở. */
+/** Updates the token for the next handshake and renews the open session. */
 function applyToken(token: string) {
   if (!socket) return;
   socket.auth = { token };
@@ -121,12 +126,12 @@ function applyToken(token: string) {
 }
 
 /**
- * Chủ động gia hạn: access token TTL 900s, kết nối sống lâu hơn thế. Chờ tới
- * lúc backend ngắt vì TOKEN_EXPIRED nghĩa là cứ 15 phút người dùng thấy một
- * nhịp "Mất kết nối".
+ * Proactive renewal: the access token's TTL is 900s and the connection outlives
+ * that. Waiting for the backend to disconnect on TOKEN_EXPIRED means the user
+ * sees a "Disconnected" blip every 15 minutes.
  *
- * Mốc hết hạn đọc từ `exp` trong JWT — không phải từ `expiresIn` lúc login,
- * vì token có thể đã được refresh nhiều lần từ đó.
+ * The expiry is read from the JWT's `exp` — not from login's `expiresIn`, since
+ * the token may have been refreshed several times since.
  */
 function scheduleTokenRefresh() {
   clearRefreshTimer();
@@ -141,8 +146,9 @@ function scheduleTokenRefresh() {
   refreshTimer = setTimeout(
     () => {
       void (async () => {
-        // Xoá access token khỏi memory để `ensureAccessToken` buộc phải refresh
-        // — nó dùng single-flight của tầng HTTP, nên không đua với REST.
+        // Clear the access token from memory so `ensureAccessToken` is forced to
+        // refresh — it uses the HTTP layer's single-flight, so it never races
+        // with REST.
         const fresh = await ensureAccessToken();
         if (fresh) applyToken(fresh);
         scheduleTokenRefresh();
@@ -152,7 +158,7 @@ function scheduleTokenRefresh() {
   );
 }
 
-/** Token đổi do REST tự refresh → gia hạn phiên socket ngay, đừng chờ hẹn giờ. */
+/** REST refreshed the token → renew the socket session at once, do not wait for the timer. */
 function watchTokenChanges() {
   unsubscribeToken?.();
   unsubscribeToken = tokenStore.subscribe((token) => {
@@ -168,8 +174,8 @@ function clearRefreshTimer() {
 }
 
 /**
- * Đọc `exp` (giây) từ payload JWT. Chỉ để hẹn giờ gia hạn — KHÔNG dùng cho
- * quyết định bảo mật nào; chữ ký không được verify ở client.
+ * Reads `exp` (in seconds) from the JWT payload. For scheduling renewal ONLY —
+ * never for a security decision; the signature is not verified on the client.
  */
 function readJwtExpiry(token: string): number | null {
   try {
@@ -185,12 +191,12 @@ function readJwtExpiry(token: string): number | null {
 }
 
 /**
- * Cầu debug cho DevTools console: `__chatSocket.disconnect()`.
+ * A debug bridge for the DevTools console: `__chatSocket.disconnect()`.
  *
- * Chỉ gắn ngoài production — đây là lối tắt để thử tay các nhánh mất kết nối,
- * KHÔNG phải API cho component. Component vẫn đi qua `useChatSocket`; gọi
- * `disconnect()` từ console sẽ không dọn ephemeral store, đúng như một cú rớt
- * mạng thật.
+ * Attached outside production only — a shortcut for exercising the
+ * disconnection branches by hand, NOT an API for components. Components still
+ * go through `useChatSocket`; calling `disconnect()` from the console does not
+ * clear the ephemeral store, exactly like a real network drop.
  */
 if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
   (window as Window & { __chatSocket?: unknown }).__chatSocket = {
@@ -201,8 +207,8 @@ if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
 }
 
 /**
- * Emit có ack + timeout. Trả về payload ack thô — người gọi tự validate bằng
- * zod (`sendMessageAckSchema`).
+ * An emit with an ack and a timeout. Returns the raw ack payload — the caller
+ * validates it with zod (`sendMessageAckSchema`).
  */
 export async function emitWithAck<T>(
   event: string,
@@ -215,7 +221,7 @@ export async function emitWithAck<T>(
   return instance.timeout(ACK_TIMEOUT_MS).emitWithAck(event, payload) as Promise<T>;
 }
 
-/** Emit "bắn và quên" — dùng cho typing, thứ được phép rơi. */
+/** A fire-and-forget emit — for typing, which is allowed to be dropped. */
 export function emitFireAndForget(event: string, payload: unknown) {
   if (!socket?.connected) return;
   socket.emit(event, payload);

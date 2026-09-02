@@ -3,9 +3,9 @@
 |                |                                                                                                                                               |
 | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Status**     | Đã chốt phạm vi (2026-08-17) — chờ backend chốt contract §3                                                                                          |
-| **Hiện trạng** | `apps/admin` chỉ có `/login` + `/dashboard` (dashboard mới in `useMe()` làm bằng chứng chuỗi liên kết — xem `docs/monorepo-plan.md` §5)       |
+| **Hiện trạng** | `apps/admin` chỉ có `/login` + `/dashboard` (dashboard mới in `useMe()` làm bằng chứng chuỗi liên kết — xem `docs/monorepo.md` §5)       |
 | **Contract**   | `http://localhost:3101/docs-json`. Backend hiện có **đúng 3** endpoint admin: `GET /admin/stats`, `GET /admin/users`, `GET /admin/users/{id}` |
-| **Liên quan**  | `docs/data-layer.md` (bắt buộc), `docs/chat.md`, `docs/monorepo-plan.md`, `docs/account-deletion.md` (user tự xoá tài khoản)                  |
+| **Liên quan**  | `docs/data-layer.md` (bắt buộc), `docs/chat.md`, `docs/monorepo.md`, `docs/account-deletion.md` (user tự xoá tài khoản)                  |
 
 ---
 
@@ -313,7 +313,7 @@ thấy app hỏng, không hiểu vì sao):
 ## 4. Phase 3 — Vận hành
 
 - [ ] CI 2 job, nginx server block cho `admin-noalhub.duckdns.org`, origin admin vào
-      CORS allowlist backend. **Nguồn sự thật là `monorepo-plan.md` §5 bước 7** — đừng
+      CORS allowlist backend. **Nguồn sự thật là `monorepo.md` §5 bước 7** — đừng
       chép trạng thái sang đây, chỉ trỏ.
 - [ ] Bảo vệ tầng hạ tầng cho `admin-*`: IP allowlist / basic auth / VPN ở nginx.
 

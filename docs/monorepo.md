@@ -1,4 +1,4 @@
-# Kế hoạch tách monorepo: `apps/web` + `apps/admin`
+# Monorepo: `apps/web` + `apps/admin`
 
 | | |
 |---|---|

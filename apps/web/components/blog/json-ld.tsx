@@ -1,12 +1,13 @@
 /**
- * Structured data cho Google. Render ở **server component**, nằm trong HTML đầu
- * tiên — `<meta>` không thay được nó, và đây mới là thứ Google dùng để hiện rich
- * result (`docs/blog-plan.md` §6.2).
+ * Structured data for Google. Rendered in a **server component** so it is in the
+ * first HTML — `<meta>` cannot replace it, and this is what Google actually uses
+ * for rich results (`docs/blog.md` §6.2).
  *
- * ⚠️ `JSON.stringify` KHÔNG khử được chuỗi tấn công XSS: một tiêu đề bài chứa
- * `</script>` sẽ đóng thẻ sớm và mọi thứ sau đó thành HTML thật. Thay `<` bằng
- * `<` — trong JSON thì hai dạng tương đương, còn trình phân tích HTML thì
- * không còn thấy thẻ nào. Đây là khuyến nghị của chính docs Next.
+ * ⚠️ `JSON.stringify` does NOT neutralize an XSS payload: a post title
+ * containing `</script>` closes the tag early and everything after it becomes
+ * real HTML. Replacing `<` with its escape makes no difference inside JSON while
+ * leaving the HTML parser with no tag to see. This is Next's own documented
+ * recommendation.
  */
 export function JsonLd({ data }: { data: Record<string, unknown> }) {
   return (

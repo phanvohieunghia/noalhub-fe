@@ -3,20 +3,20 @@
 import { DropdownMenu as RadixDropdownMenu } from "radix-ui";
 
 type DropdownMenuProps = {
-  /** Phần tử mở menu — nhận `asChild`, nên truyền đúng một element. */
+  /** The element that opens the menu — passed through `asChild`, so give exactly one element. */
   trigger: React.ReactNode;
   children: React.ReactNode;
-  /** Canh mép nào của trigger. Mặc định canh phải: menu tài khoản nằm góc phải. */
+  /** Which edge of the trigger to align to. Defaults to the right: the account menu sits in the right corner. */
   align?: "start" | "center" | "end";
   className?: string;
 };
 
 /**
- * Menu thả xuống dựng trên Radix DropdownMenu: click ra ngoài, `Esc`, điều
- * hướng bàn phím, `aria-expanded` và định vị tránh tràn viewport đều có sẵn.
+ * A dropdown built on Radix DropdownMenu: outside clicks, `Esc`, keyboard
+ * navigation, `aria-expanded` and viewport-aware positioning all come for free.
  *
- * `modal={false}` để nền vẫn cuộn được khi menu mở — menu này là phụ trợ trong
- * header, không phải modal.
+ * `modal={false}` keeps the page scrollable while the menu is open — this menu
+ * is a header affordance, not a modal.
  */
 export function DropdownMenu({
   trigger,
@@ -41,8 +41,8 @@ export function DropdownMenu({
 }
 
 /**
- * Một dòng bấm được trong menu. Radix tự lo highlight bằng bàn phím/chuột qua
- * `data-highlighted`, và tự đóng menu sau khi chọn.
+ * One clickable row in the menu. Radix handles keyboard/mouse highlighting via
+ * `data-highlighted` and closes the menu after a selection.
  */
 export function DropdownMenuItem({
   children,

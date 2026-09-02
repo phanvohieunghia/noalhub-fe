@@ -1,9 +1,10 @@
 import { isThemeMode, THEME_STORAGE_KEY, type ThemeMode } from "./types";
 
 /**
- * Mọi lần chạm `localStorage` đều phải bọc `try/catch`: Safari ở cửa sổ riêng
- * tư và trình duyệt chặn cookie **ném lỗi ngay lúc truy cập thuộc tính**, chứ
- * không phải trả về `null`. Không bắt thì cả cây React chết theo.
+ * Every touch of `localStorage` must be wrapped in `try/catch`: Safari in a
+ * private window, and browsers with cookies blocked, **throw on property
+ * access** rather than returning `null`. Uncaught, that takes the whole React
+ * tree down with it.
  */
 export function readThemeMode(): ThemeMode {
   try {
@@ -18,7 +19,7 @@ export function writeThemeMode(mode: ThemeMode): void {
   try {
     localStorage.setItem(THEME_STORAGE_KEY, mode);
   } catch {
-    // Không lưu được thì theme chỉ sống trong phiên này — vẫn dùng được, chỉ
-    // là mất sau khi reload. Không có gì để báo cho user.
+    // If it cannot be stored, the theme lives for this session only — still
+    // usable, just lost on reload. Nothing worth telling the user about.
   }
 }

@@ -16,7 +16,7 @@ type AvatarProps = {
   className?: string;
 };
 
-/** Chữ cái đầu của tối đa hai từ đầu tiên: "Nguyễn An" → "NA". */
+/** The initials of at most the first two words: "Nguyễn An" → "NA". */
 function initials(name: string): string {
   return name
     .trim()
@@ -27,12 +27,12 @@ function initials(name: string): string {
 }
 
 /**
- * Ảnh + fallback chữ cái đầu, dựng trên Radix Avatar: Radix theo dõi trạng
- * thái tải của ảnh nên ảnh hỏng / chậm sẽ rơi về chữ cái đầu thay vì để lại ô
- * vỡ — thứ mà `<img>` trần không tự làm được.
+ * An image with an initials fallback, built on Radix Avatar: Radix tracks the
+ * image's load state, so a broken or slow image falls back to the initials
+ * instead of leaving a broken box — something a bare `<img>` cannot do.
  *
- * `aria-hidden` vì avatar luôn đi kèm tên ở dạng text ngay cạnh — đọc lại tên
- * hai lần là nhiễu cho screen reader.
+ * `aria-hidden` because an avatar always sits next to the name as text —
+ * reading the name twice is noise for a screen reader.
  */
 export function Avatar({ name, src, size = "md", className = "" }: AvatarProps) {
   const t = useTranslations("common.avatar");
@@ -44,11 +44,12 @@ export function Avatar({ name, src, size = "md", className = "" }: AvatarProps) 
       className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-black/10 font-medium select-none dark:bg-white/15 ${SIZES[size]} ${className}`}
     >
       {src ? (
-        // Avatar đến từ host bất kỳ (OAuth provider) → Radix render <img> thường
-        // thay vì next/image, khỏi phải khai remotePatterns cho từng provider.
+        // Avatars come from arbitrary hosts (OAuth providers) → Radix renders a
+        // plain <img> instead of next/image, so no remotePatterns entry is
+        // needed per provider.
         <RadixAvatar.Image src={src} alt="" className="size-full object-cover" />
       ) : null}
-      {/* delayMs=0: fallback hiện ngay, không nháy ô trống chờ ảnh. */}
+      {/* delayMs=0: the fallback shows at once, no empty box flashing while the image loads. */}
       <RadixAvatar.Fallback delayMs={0}>{initials(label) || "?"}</RadixAvatar.Fallback>
     </RadixAvatar.Root>
   );

@@ -5,17 +5,18 @@ import { type MessageTree, pickMessages } from "./messages";
 import { SHARED_NAMESPACES, type Namespace } from "./namespaces";
 
 /**
- * Đưa message xuống Client Component — nhưng chỉ **đúng namespace của route
- * này**, không phải cả kho chuỗi (`docs/i18n-plan.md` §5).
+ * Hands messages down to Client Components — but only **this route's
+ * namespace**, not the whole store (`docs/i18n.md` §5).
  *
- * Server Component không cần provider: `getTranslations` đọc thẳng từ
- * `getRequestConfig`. Provider chỉ tồn tại vì client không có đường nào khác để
- * lấy message ngoài việc chúng được serialize vào payload — nên mỗi chuỗi thừa
- * ở đây là byte thừa trên đường truyền của **mọi** người vào trang.
+ * Server Components need no provider: `getTranslations` reads straight from
+ * `getRequestConfig`. The provider exists only because the client has no other
+ * way to get messages than having them serialized into the payload — so every
+ * extra string here is extra bytes over the wire for **everyone** who opens the
+ * page.
  *
- * Đặt ở layout gần route nhất. Provider lồng nhau thì cái trong cùng thắng, nên
- * `namespace` phải là namespace của chính route đó; `common`/`nav`/`validation`
- * luôn được kèm sẵn.
+ * Place it in the layout closest to the route. With nested providers the
+ * innermost wins, so `namespace` must be that route's own namespace;
+ * `common`/`nav`/`validation` are always included.
  */
 export async function IntlProvider({
   namespace,

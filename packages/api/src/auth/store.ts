@@ -26,10 +26,11 @@ type AuthState = {
 };
 
 /**
- * Tăng mỗi khi có phiên mới (login / register / OAuth / logout). bootstrap()
- * là async nên có thể resolve SAU một phiên mới hơn — ví dụ ở /auth/callback,
- * bootstrap khôi phục phiên cũ trong khi setSession đã ghi phiên OAuth. So
- * epoch trước khi ghi kết quả để phiên cũ không đè phiên mới.
+ * Incremented on every new session (login / register / OAuth / logout).
+ * bootstrap() is async and can therefore resolve AFTER a newer session — at
+ * /auth/callback, for instance, bootstrap restores the old session while
+ * setSession has already written the OAuth one. The epoch is compared before
+ * writing the result so an old session cannot overwrite a newer one.
  */
 let sessionEpoch = 0;
 
@@ -38,9 +39,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   status: "idle",
 
   /**
-   * Chạy một lần lúc app mount. Access token chỉ nằm trong memory nên sau
-   * mỗi lần reload nó rỗng — gọi /auth/me sẽ nhận 401, apiFetch tự refresh
-   * rồi retry. Thiếu bước này, F5 là văng ra /login.
+   * Runs once when the app mounts. The access token lives in memory only, so
+   * after every reload it is empty — /auth/me answers 401, apiFetch refreshes
+   * and retries. Without this step, F5 throws the user out to /login.
    */
   async bootstrap() {
     if (get().status !== "idle") return;
@@ -53,7 +54,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ status: "loading" });
     try {
       const user = await authApi.me();
-      if (epoch !== sessionEpoch) return; // đã có phiên mới hơn
+      if (epoch !== sessionEpoch) return; // a newer session already exists
       set({ user, status: "authenticated" });
     } catch {
       if (epoch !== sessionEpoch) return;
@@ -76,7 +77,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user, status: "authenticated" });
   },
 
-  /** Dùng cho OAuth callback: đã có token, cần lấy user nếu chưa có. */
+  /** For the OAuth callback: tokens are in hand, fetch the user if we lack one. */
   async setSession(tokens, user) {
     sessionEpoch += 1;
     const epoch = sessionEpoch;
@@ -87,8 +88,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   /**
-   * Thay bản user trong store sau khi cập nhật hồ sơ. Chỉ ghi khi đang
-   * authenticated — tránh hồi sinh phiên vừa bị reset.
+   * Replace the stored user after a profile update. Only writes while
+   * authenticated — so it cannot resurrect a session that was just reset.
    */
   setUser(user) {
     if (get().status !== "authenticated") return;
@@ -100,8 +101,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       if (refreshToken) await authApi.logout(refreshToken);
     } catch {
-      // Mạng hỏng không được phép giữ người dùng ở trạng thái đăng nhập —
-      // vẫn clear ở dưới.
+      // A network failure must not leave the user stuck signed in — the clear
+      // below runs regardless.
     }
     get().reset();
   },
@@ -113,8 +114,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 }));
 
-// Refresh thất bại ở tầng HTTP → hạ trạng thái xuống unauthenticated.
-// AuthGuard sẽ lo phần điều hướng.
+// A refresh failure at the HTTP layer → drop the status to unauthenticated.
+// AuthGuard takes care of the navigation.
 setSessionExpiredHandler(() => {
   useAuthStore.getState().reset();
 });

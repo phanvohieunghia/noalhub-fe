@@ -1,10 +1,10 @@
-# Kế hoạch theme sáng/tối — `apps/web` + `apps/admin`
+# Theme sáng/tối — `apps/web` + `apps/admin`
 
 |                |                                                                                                          |
 | -------------- | -------------------------------------------------------------------------------------------------------- |
 | **Status**     | ✅ **Đã implement** (2026-09-01) — sai lệch so với plan ghi ở **§10** · Draft ban đầu (2026-09-01) — chưa implement · bảng màu `#0ABAB5 / #56DFCF / #ADEED9 / #FFEDF3` ở **§5**, thang 50→950 ở **§5.1** |
 | **Mục tiêu**   | Người dùng chọn được **3 chế độ**: `light`, `dark`, `system`. Lựa chọn lưu ở **localStorage** (không server, không cookie), áp cho cả web lẫn admin |
-| **Liên quan**  | `docs/monorepo-plan.md` (chia sẻ code qua `packages/*`), `apps/{web,admin}/app/globals.css`, `packages/ui/src/*` |
+| **Liên quan**  | `docs/monorepo.md` (chia sẻ code qua `packages/*`), `apps/{web,admin}/app/globals.css`, `packages/ui/src/*` |
 
 ---
 
@@ -325,7 +325,7 @@ mới, không phải sửa. Chỉ ba nhóm thật sự phải đổi:
 user phải chọn theme riêng ở mỗi app. Chấp nhận đợt này; muốn chung thì phải lưu server-side
 (ngoài phạm vi). Vẫn dùng chung một key để lúc dev cùng `localhost` thì trùng nhau.
 
-**7.2 SSR luôn render ở "light".** Blog là route render ở server (`docs/blog-plan.md` §4); HTML
+**7.2 SSR luôn render ở "light".** Blog là route render ở server (`docs/blog.md` §4); HTML
 gửi về không có class `dark`, script §3 mới thêm vào ở client. Hệ quả: một khung hình rất ngắn
 theo màu mặc định. Đã giảm thiểu bằng script chạy trước paint. **Không** dùng
 `prefers-color-scheme` ở CSS để bù, vì sẽ mâu thuẫn với lựa chọn tường minh của user.

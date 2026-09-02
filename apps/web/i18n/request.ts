@@ -2,11 +2,11 @@ import { webRequestConfig } from "@noalhub/i18n/request";
 import { getRequestConfig } from "next-intl/server";
 
 /**
- * Đường vào của next-intl cho mỗi request. Vị trí file là quy ước của
- * `createNextIntlPlugin` trong `next.config.ts` — đổi chỗ thì phải khai đường
- * dẫn mới ở đó.
+ * next-intl's entry point for each request. The file location is
+ * `createNextIntlPlugin`'s convention in `next.config.ts` — move it and the new
+ * path must be declared there.
  *
- * Phần thân nằm ở `@noalhub/i18n` vì admin cũng cần đúng logic nạp message,
- * chỉ khác cách tìm ra locale.
+ * The body lives in `@noalhub/i18n` because admin needs the same
+ * message-loading logic, differing only in how the locale is found.
  */
 export default getRequestConfig(({ requestLocale }) => webRequestConfig(requestLocale));

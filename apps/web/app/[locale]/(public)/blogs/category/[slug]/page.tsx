@@ -15,24 +15,28 @@ import { Typography } from "@noalhub/ui/typography";
 type Props = PageProps<"/[locale]/blogs/category/[slug]">;
 
 /**
- * Trang chuyên mục — **trục DUY NHẤT được index** (`docs/blog-plan.md` §2.6).
+ * The category page — **the ONLY axis that gets indexed** (`docs/blog.md`
+ * §2.6).
  *
- * Chuyên mục và thẻ đều là lát cắt của cùng một tập bài, tức là gần trùng nội
- * dung với nhau và với `/blogs`. Cho index cả hai là tự tạo ra hàng chục URL nội
- * dung mỏng — đúng bệnh kinh điển của WordPress. Chuyên mục thắng vì nó là tập
- * **cố định, có mô tả, đủ bài**; số lượng thẻ thì không kiểm soát được.
+ * Categories and tags are both slices of the same set of posts, i.e. near
+ * duplicates of each other and of `/blogs`. Indexing both manufactures dozens of
+ * thin-content URLs — the classic WordPress disease. Categories win because they
+ * are a **fixed set, with descriptions and enough posts**; the number of tags is
+ * uncontrolled.
  *
- * ⚠️ **Không có `generateStaticParams` và không có `export const revalidate`**,
- * dù §4.4 xếp route này vào nhóm "ISR, revalidate = 300". Lý do là ràng buộc của
- * Next chứ không phải lựa chọn: trang có phân trang nên nó đọc `searchParams`,
- * mà `searchParams` là request-time API — khai `generateStaticParams` cùng lúc
- * làm Next cố tĩnh hoá route rồi chết với `DYNAMIC_SERVER_USAGE` **lúc chạy**,
- * không phải lúc build (đã vỡ thật khi smoke test).
+ * ⚠️ **No `generateStaticParams` and no `export const revalidate`**, even though
+ * §4.4 files this route under "ISR, revalidate = 300". The reason is a Next
+ * constraint rather than a choice: the page is paginated and therefore reads
+ * `searchParams`, a request-time API — declaring `generateStaticParams` alongside
+ * it makes Next try to statically generate the route and then die with
+ * `DYNAMIC_SERVER_USAGE` **at runtime**, not at build time (it really broke
+ * during a smoke test).
  *
- * Đây đúng là đánh đổi mà §4.5 đã chấp nhận cho `/blogs`, chỉ là nó áp cho cả
- * trang chuyên mục: route render mỗi request, nhưng **cache nằm ở tầng `fetch`**
- * (`server.ts` gắn `revalidate: 60` + tag `blog-category:<slug>`), nên không đấm
- * vào backend mỗi request và webhook §5.2 vẫn xoá được cache.
+ * This is exactly the trade §4.5 accepted for `/blogs`, extended to the category
+ * page: the route renders per request, but the **cache lives at the `fetch`
+ * layer** (`server.ts` sets `revalidate: 60` plus the `blog-category:<slug>`
+ * tag), so it does not hit the backend per request and the §5.2 webhook can
+ * still clear it.
  */
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
@@ -51,7 +55,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
   return {
     title: page > 1 ? t("titleWithPage", { name: category.name, page }) : category.name,
-    // `description` của chuyên mục chính là thứ làm nó KHÔNG phải trang mỏng (§6.5).
+    // A category's `description` is exactly what keeps it from being a thin page (§6.5).
     description: category.description ?? t("metaDescription", { name: category.name }),
     alternates: {
       ...alternates,
@@ -69,8 +73,9 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const page = readPageParam((await searchParams).page);
   if (page === null) notFound();
 
-  // Chuyên mục KHÔNG tồn tại → 404. Khác hẳn "chuyên mục tồn tại nhưng chưa có
-  // bài" ở dưới: cái đó vẫn 200 vì rỗng là trạng thái hợp lệ tạm thời (§6.5).
+  // A category that does NOT exist → 404. Quite different from "the category
+  // exists but has no posts yet" below: that stays 200, because empty is a valid
+  // temporary state (§6.5).
   const category = await getBlogCategory(slug);
   if (!category) notFound();
 

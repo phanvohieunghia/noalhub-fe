@@ -5,13 +5,14 @@ import type { ChangeLanguageInput, ChangeUsernameInput } from "./schemas";
 import type { PublicProfile, User } from "./types";
 
 /**
- * Bề mặt tiếp xúc với backend users, map 1-1 với OpenAPI spec (tag `users`).
+ * The contact surface with the users backend, mapping 1-to-1 to the OpenAPI
+ * spec (tag `users`).
  */
 
 /**
  * GET /users/{username} → 200 PublicProfileDto. 404 USER_NOT_FOUND.
  *
- * Tra theo **username**, không phải id — id chỉ là khoá nội bộ.
+ * Looked up by **username**, not id — the id is an internal key only.
  */
 export async function getPublicProfile(
   username: string,
@@ -28,7 +29,7 @@ export async function getPublicProfile(
  * PATCH /users/me/username → 200 UserDto.
  *
  * 403 USERNAME_CHANGE_TOO_SOON, 409 USERNAME_TAKEN, 429 RATE_LIMITED.
- * Trả về user sau khi đổi, cùng shape `/auth/me` → thay thẳng bản cache.
+ * Returns the updated user in the same shape as `/auth/me` → replace the cached copy directly.
  */
 export async function changeUsername(
   input: ChangeUsernameInput,
@@ -43,8 +44,9 @@ export async function changeUsername(
 /**
  * PATCH /users/me/language → 200 UserDto.
  *
- * Không có mã lỗi riêng: enum sai thì 400 VALIDATION_FAILED, chưa đăng nhập thì
- * 401. Trả về user sau khi đổi, cùng shape `/auth/me` → thay thẳng bản cache.
+ * No dedicated error code: a bad enum is a 400 VALIDATION_FAILED and being
+ * signed out is a 401. Returns the updated user in the same shape as
+ * `/auth/me` → replace the cached copy directly.
  */
 export async function changeLanguage(input: ChangeLanguageInput): Promise<User> {
   const { data } = await http.patch<User>("/users/me/language", input, {

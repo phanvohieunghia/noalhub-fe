@@ -6,16 +6,17 @@ import { useCallback, useEffect, useState } from "react";
 import { adminUserListQuerySchema, type AdminUserListQuery } from "@noalhub/api/admin";
 
 /**
- * Filter của bảng user sống trong **URL searchParams**, không trong state của
- * component — nhờ vậy link share được và nút back của trình duyệt đi đúng
- * đường. State cục bộ duy nhất là ô tìm kiếm, vì nó cần debounce.
+ * The user table's filters live in the **URL searchParams**, not in component
+ * state — so links stay shareable and the browser's back button behaves. The
+ * only local state is the search box, because it needs debouncing.
  */
 export function useUserFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // `.catch()` trong schema nuốt mọi giá trị rác trên URL (`?page=abc`) về mặc
-  // định — người ta sửa tay thanh địa chỉ suốt, đừng để nó làm vỡ trang.
+  // The schema's `.catch()` folds any junk in the URL (`?page=abc`) back to the
+  // default — people edit the address bar all the time; that must not break the
+  // page.
   const query: AdminUserListQuery = adminUserListQuerySchema.parse({
     page: searchParams.get("page") ?? undefined,
     limit: searchParams.get("limit") ?? undefined,
@@ -37,8 +38,8 @@ export function useUserFilters() {
         }
       }
 
-      // Đổi filter thì phải về trang 1: giữ nguyên `page=5` với bộ lọc mới là
-      // cách chắc chắn nhất để nhận một bảng rỗng khó hiểu.
+      // A filter change resets to page 1: keeping `page=5` under a new filter is
+      // the surest way to get a baffling empty table.
       if (!("page" in next)) params.delete("page");
 
       router.replace(params.size ? `/users?${params}` : "/users", {
@@ -48,8 +49,8 @@ export function useUserFilters() {
     [router, searchParams],
   );
 
-  // Debounce ô tìm kiếm: mỗi phím là một request + một entry lịch sử nếu ghi
-  // thẳng vào URL.
+  // Debounce the search box: written straight to the URL, every keystroke is a
+  // request plus a history entry.
   useEffect(() => {
     const current = query.q ?? "";
     const next = searchInput.trim();

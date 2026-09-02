@@ -5,10 +5,12 @@ import { ChatLayoutShell } from "@/components/chat/chat-layout-shell";
 import { ChatRealtimeProvider } from "@/components/chat/chat-realtime-provider";
 
 /**
- * Layout của route group: sidebar và socket sống ở đây nên đổi hội thoại KHÔNG
- * unmount chúng — không dựng lại kết nối mỗi lần điều hướng.
+ * The route group's layout: the sidebar and the socket live here, so switching
+ * conversations does NOT unmount them — the connection is not rebuilt on every
+ * navigation.
  *
- * `AuthGuard` đã bọc ở `app/[locale]/(protected)/layout.tsx`, không cần thêm.
+ * `AuthGuard` already wraps at `app/[locale]/(protected)/layout.tsx`; no second
+ * one is needed.
  */
 export default async function ChatLayout({ children, params }: LayoutProps<"/[locale]/chat">) {
   const { locale } = await params;

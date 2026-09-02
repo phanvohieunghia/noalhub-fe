@@ -39,7 +39,7 @@ import { useEphemeralStore } from "./ephemeral-store";
 import { outbox } from "./outbox";
 import { useAuthStore } from "../auth/store";
 
-/** Nguồn sự thật DUY NHẤT cho query key của feature. */
+/** The ONLY source of truth for this feature's query keys. */
 export const chatKeys = {
   all: ["chat"] as const,
   conversations: () => [...chatKeys.all, "conversations"] as const,
@@ -51,12 +51,13 @@ export const chatKeys = {
 /* ------------------------------------------------------------------ queries */
 
 /**
- * Mồi `presenceByUser` từ snapshot REST.
+ * Seeds `presenceByUser` from the REST snapshot.
  *
- * Không có bước này thì store rỗng cho tới lúc ai đó ĐỔI trạng thái — mở hội
- * thoại với người đang online vẫn hiện "không rõ", vì `presence:changed` chỉ
- * bắn khi có thay đổi. `status: null` nghĩa là endpoint không tính presence
- * (spec: danh sách hội thoại chỉ tính cho DM) → bỏ qua, đừng ghi "offline" đè.
+ * Without this the store stays empty until someone CHANGES state — opening a
+ * conversation with someone who is online still shows "unknown", because
+ * `presence:changed` only fires on a change. `status: null` means the endpoint
+ * did not compute presence (per spec, the conversation list only does so for
+ * DMs) → skip it, do not overwrite with "offline".
  */
 function useSeedPresence(members: ConversationMember[] | undefined) {
   const setPresence = useEphemeralStore((state) => state.setPresence);
@@ -80,8 +81,8 @@ export function useConversations() {
         signal,
       ),
     initialPageParam: null as string | null,
-    // Cursor của endpoint này là DATE-TIME (khác endpoint messages, chỗ đó là
-    // uuid). Luôn đọc từ `nextCursor`, đừng tự suy từ `items`.
+    // This endpoint's cursor is a DATE-TIME (unlike the messages endpoint, where
+    // it is a uuid). Always read `nextCursor`; never derive it from `items`.
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
 
@@ -116,7 +117,7 @@ export function useMessages(conversationId: string | undefined) {
         signal,
       ),
     initialPageParam: null as string | null,
-    // Cursor là UUID. `null` = đã hết lịch sử — điều kiện dừng, không phải lỗi.
+    // The cursor is a UUID. `null` means history is exhausted — a stop condition, not an error.
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: Boolean(conversationId),
   });
@@ -140,23 +141,24 @@ export function useCreateDirectConversation() {
 }
 
 export type SendMessageVariables = {
-  /** Truyền lại `id` cũ khi gửi lại — ĐỪNG sinh id mới, sẽ phá idempotency. */
+  /** Pass the old `id` back when resending — do NOT mint a new one, it breaks idempotency. */
   id?: string;
   body: string;
 };
 
-/** Variables sau khi chuẩn hoá: `id` LUÔN có. */
+/** Normalized variables: `id` is ALWAYS present. */
 type ResolvedSendMessageVariables = {
   id: string;
   body: string;
 };
 
 /**
- * Gửi tin: optimistic + ack qua socket.
+ * Sending a message: optimistic, acknowledged over the socket.
  *
- * Backend chỉ có MỘT đường ghi là socket event, nên hook này không gọi REST.
- * Lỗi thì KHÔNG rollback — giữ bubble với `status: "failed"` kèm nút gửi lại,
- * vì xoá thứ người dùng vừa gõ là làm mất công của họ (`docs/chat.md` §5.5).
+ * The backend's only write path is the socket event, so this hook makes no REST
+ * call. On failure it does NOT roll back — the bubble stays with
+ * `status: "failed"` and a retry button, because deleting what someone just
+ * typed throws away their work (`docs/chat.md` §5.5).
  */
 export function useSendMessage(conversationId: string) {
   const queryClient = useQueryClient();
@@ -215,12 +217,13 @@ export function useSendMessage(conversationId: string) {
     },
   });
 
-  // Sinh `id` ĐÚNG MỘT LẦN, ngay tại biên gọi. Sinh ở cả `onMutate` lẫn
-  // `mutationFn` là hai id khác nhau cho cùng một tin: bubble optimistic
-  // ("sending") không bao giờ được ack thay thế, và tin server trả về đứng
-  // thành bubble thứ hai ("sent").
-  // `id` v7 sinh bây giờ luôn lớn hơn mọi id đã có, nên chèn vào đầu là đúng
-  // vị trí ngay và không nhảy chỗ khi ack về.
+  // Mint the `id` EXACTLY ONCE, right at the call boundary. Minting in both
+  // `onMutate` and `mutationFn` produces two ids for one message: the optimistic
+  // bubble ("sending") is never replaced by the ack, and the server's message
+  // becomes a second bubble ("sent").
+  // A v7 `id` minted now is always greater than every existing id, so
+  // prepending puts it in the right place immediately and it does not jump when
+  // the ack lands.
   const { mutate, mutateAsync } = mutation;
 
   const send = useCallback(
@@ -248,8 +251,9 @@ class SendMessageError extends Error {
 }
 
 /**
- * Đánh dấu đã đọc. Ưu tiên socket (có ack), fallback REST khi socket offline —
- * để unread không kẹt chỉ vì mất kết nối.
+ * Marking as read. Prefers the socket (it has an ack) and falls back to REST
+ * while the socket is offline — so the unread badge does not get stuck merely
+ * because the connection dropped.
  */
 export function useMarkRead(conversationId: string) {
   const queryClient = useQueryClient();
@@ -263,7 +267,7 @@ export function useMarkRead(conversationId: string) {
       await chatApi.markRead(conversationId, messageId);
     },
     onSuccess: () => {
-      // Con trỏ đã đọc chỉ TIẾN, nên về 0 là an toàn.
+      // The read cursor only moves FORWARD, so zeroing this is safe.
       patchConversationInList(queryClient, conversationId, { unreadCount: 0 });
     },
   });
@@ -271,7 +275,7 @@ export function useMarkRead(conversationId: string) {
 
 /* ------------------------------------------------------- typing & presence */
 
-/** TTL 5s và throttle nằm ở đây; store chỉ giữ state. */
+/** The 5s TTL and the throttle live here; the store only holds state. */
 const TYPING_THROTTLE_MS = 2_000;
 
 export function useTyping(conversationId: string) {
@@ -298,8 +302,8 @@ export function useTyping(conversationId: string) {
 const EMPTY_IDS: string[] = [];
 
 /**
- * Presence chỉ có cho người chung hội thoại. Vắng mặt = KHÔNG RÕ, không phải
- * offline — `PresenceDot` phải chịu được điều đó.
+ * Presence exists only for people you share a conversation with. Absent means
+ * UNKNOWN, not offline — `PresenceDot` has to cope with that.
  */
 export function usePresence(userId: string | null | undefined) {
   return useEphemeralStore((state) =>
@@ -310,8 +314,9 @@ export function usePresence(userId: string | null | undefined) {
 /* ----------------------------------------------------- socket ↔ cache bridge */
 
 /**
- * Cầu nối DUY NHẤT giữa socket và React Query cache. Gọi ở đúng MỘT chỗ
- * (`ChatRealtimeProvider`) — gọi hai lần là mỗi tin append hai lần.
+ * The ONLY bridge between the socket and the React Query cache. Called in
+ * exactly ONE place (`ChatRealtimeProvider`) — call it twice and every message
+ * is appended twice.
  */
 export function useChatSocket(activeConversationId?: string) {
   const queryClient = useQueryClient();
@@ -319,9 +324,9 @@ export function useChatSocket(activeConversationId?: string) {
   const [status, setStatus] = useState<ChatConnectionStatus>("connecting");
   const cleanupRef = useRef<(() => void) | null>(null);
 
-  // Handler dưới đây đọc conversation đang mở qua ref: đổi conversation không
-  // được phép tháo và gắn lại toàn bộ listener. Ghi ref trong effect, không
-  // trong lúc render.
+  // The handlers below read the open conversation through a ref: switching
+  // conversations must not tear down and re-attach every listener. The ref is
+  // written in an effect, never during render.
   const activeIdRef = useRef(activeConversationId);
   useEffect(() => {
     activeIdRef.current = activeConversationId;
@@ -332,8 +337,8 @@ export function useChatSocket(activeConversationId?: string) {
   const clearEphemeral = useEphemeralStore((state) => state.clear);
 
   useEffect(() => {
-    // Chờ auth xong: access token chỉ nằm trong memory, connect sớm là
-    // handshake với token rỗng.
+    // Wait for auth: the access token lives in memory only, so connecting early
+    // means a handshake with an empty token.
     if (authStatus !== "authenticated") return;
 
     let cancelled = false;
@@ -344,9 +349,10 @@ export function useChatSocket(activeConversationId?: string) {
       const onConnect = () => {
         setStatus("online");
 
-        // BẮT BUỘC: socket chỉ chở sự kiện từ lúc connect trở đi. Tin rơi
-        // trong lúc mất mạng KHÔNG được bơm lại — thiếu hai dòng này thì mất
-        // mạng 30 giây = mất tin, và UI không báo gì.
+        // REQUIRED: the socket only carries events from the moment it connects.
+        // Messages missed while offline are NOT replayed — without these two
+        // lines, 30 seconds offline means lost messages and a UI that says
+        // nothing.
         queryClient.invalidateQueries({ queryKey: chatKeys.conversations() });
         const activeId = activeIdRef.current;
         if (activeId) {
@@ -360,14 +366,15 @@ export function useChatSocket(activeConversationId?: string) {
 
       const onDisconnect = () => {
         setStatus("offline");
-        // Presence/typing cũ là thông tin sai ngay khi mất kết nối.
+        // Stale presence/typing becomes wrong the instant the connection drops.
         clearEphemeral();
       };
 
       const onMessageNew = guard((raw) => {
         const { message } = messageNewEventSchema.parse(raw);
-        // Dedupe theo `id`: tin của chính mình cũng về qua room này, và có thể
-        // về TRƯỚC ack. Cả hai đường đều upsert nên thứ tự nào cũng ra một tin.
+        // Deduped by `id`: your own messages also come back through this room,
+        // and can arrive BEFORE the ack. Both paths upsert, so either order ends
+        // with one message.
         upsertMessage(queryClient, message.conversationId, {
           ...message,
           status: "sent",
@@ -394,9 +401,9 @@ export function useChatSocket(activeConversationId?: string) {
 
       const onConversationUpdated = guard((raw) => {
         const event = conversationUpdatedEventSchema.parse(raw);
-        // Event mang sẵn lastMessage + unreadCount → setQueryData, KHÔNG
-        // invalidate. Invalidate ở mỗi tin đến biến chat sôi nổi thành một
-        // tràng request danh sách hội thoại.
+        // The event already carries lastMessage + unreadCount → setQueryData,
+        // never invalidate. Invalidating on every incoming message turns a
+        // lively chat into a burst of conversation-list requests.
         patchConversationInList(queryClient, event.conversationId, {
           lastMessage: event.lastMessage ?? undefined,
           unreadCount: event.unreadCount ?? undefined,
@@ -441,7 +448,7 @@ export function useChatSocket(activeConversationId?: string) {
       disconnectChatSocket();
       clearEphemeral();
     };
-    // `activeConversationId` cố tình KHÔNG nằm trong deps — nó đi qua ref.
+    // `activeConversationId` is deliberately NOT in the deps — it goes through the ref.
   }, [authStatus, queryClient, clearEphemeral, setPresence, setTyping]);
 
   const reconnect = useCallback(() => {
@@ -453,33 +460,33 @@ export function useChatSocket(activeConversationId?: string) {
 }
 
 /**
- * Payload lạ hoặc sai shape thì BỎ QUA event đó — không được để một event
- * hỏng làm sập cả kết nối.
+ * An unknown or malformed payload means that event is SKIPPED — one bad event
+ * must never bring down the whole connection.
  */
 function guard(handler: (raw: unknown) => void) {
   return (raw: unknown) => {
     try {
       handler(raw);
     } catch (error) {
-      // Không log nội dung tin nhắn — chỉ log lý do.
-      console.warn("[chat] bỏ qua event sai shape:", error);
+      // Never log message content — only the reason.
+      console.warn("[chat] skipping malformed event:", error);
     }
   };
 }
 
-/** Gửi lại tin trong outbox. An toàn vì backend idempotent theo `id`. */
+/** Resends the outbox. Safe because the backend is idempotent on `id`. */
 function flushOutbox() {
   for (const entry of outbox.drain()) {
     void emitWithAck("message:send", entry).catch(() => {
-      // Thất bại thì để nguyên trong outbox, lần connect sau thử lại. KHÔNG
-      // vòng lặp retry ở đây — rate limit sẽ biến nó thành đập backend.
+      // On failure leave it in the outbox and retry on the next connect. No
+      // retry loop here — the rate limiter would turn it into a hammering.
     });
   }
 }
 
 /* -------------------------------------------------------- cache helpers */
 
-/** Chèn hoặc thay tin theo `id`, luôn ở trang đầu (trang mới nhất). */
+/** Inserts or replaces a message by `id`, always on the first (newest) page. */
 function upsertMessage(
   queryClient: QueryClient,
   conversationId: string,
@@ -538,12 +545,12 @@ function patchMessage(
 }
 
 /**
- * Patch một hội thoại trong danh sách rồi đưa nó lên đầu.
+ * Patches one conversation in the list and moves it to the top.
  *
- * `ConversationDto` KHÔNG có `lastMessageAt` (backend sort theo cột đó nhưng
- * không lộ ra), nên không sort lại được bằng khoá thật. Thay vào đó: hội thoại
- * vừa có tin mới được đẩy lên đầu — đúng kết quả mà sort theo `last_message_at`
- * sẽ cho, mà không cần khoá.
+ * `ConversationDto` has NO `lastMessageAt` (the backend sorts by that column but
+ * does not expose it), so there is no real key to re-sort by. Instead: the
+ * conversation that just received a message is pushed to the front — the same
+ * result sorting by `last_message_at` would give, without the key.
  */
 function patchConversationInList(
   queryClient: QueryClient,
@@ -573,8 +580,8 @@ function patchConversationInList(
         }),
       }));
 
-      // Không có trong cache (nằm ở trang chưa tải) → để invalidate lo, đừng
-      // dựng một Conversation nửa vời từ payload event.
+      // Not in the cache (it is on a page not yet loaded) → leave it to
+      // invalidation; do not build a half-formed Conversation from the event.
       if (!found) return old;
 
       const [first, ...rest] = pages;

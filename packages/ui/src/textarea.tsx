@@ -2,7 +2,7 @@ import { forwardRef, useId } from "react";
 import { Typography } from "./typography";
 
 type TextareaProps = React.ComponentPropsWithoutRef<"textarea"> & {
-  /** Bỏ trống thì phải tự truyền `aria-label` — không có nhãn là lỗi a11y. */
+  /** If omitted, pass an `aria-label` yourself — an unlabelled field is an a11y bug. */
   label?: string;
   error?: string;
 };

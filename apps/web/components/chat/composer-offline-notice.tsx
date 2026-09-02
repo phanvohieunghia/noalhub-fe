@@ -3,8 +3,9 @@ import { useTranslations } from "next-intl";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Gửi tin đi qua socket, nên mất kết nối là KHÔNG gửi được. Phải nói rõ lý do
- * và nói rõ tin không bị mất — nút disable im lặng là thứ tệ nhất ở đây.
+ * Messages are sent over the socket, so a lost connection means nothing can be
+ * sent. The reason has to be stated, and so does the fact that nothing is lost —
+ * a silently disabled button is the worst option here.
  */
 export function ComposerOfflineNotice() {
   return (

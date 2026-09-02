@@ -1,49 +1,52 @@
 /**
- * Feature `media` — upload asset (ảnh trước mắt, video/file về sau).
+ * The `media` feature — asset uploads (images for now, video/files later).
  *
- * Contract: tag `admin-media` trong `/docs-json`; thiết kế đầy đủ ở
- * `docs/media.md` bên repo `noalhub-be`. Mọi endpoint cần token + role `admin`.
+ * Contract: tag `admin-media` in `/docs-json`; the full design lives in
+ * `docs/media.md` in the `noalhub-be` repo. Every endpoint needs a token plus
+ * the `admin` role.
  */
 
 /**
- * Backend **suy `kind` từ mime đã duyệt**, client không gửi nó lên: cho gửi
- * nghĩa là backend phải kiểm nó khớp mime, và quên câu kiểm đó là lỗ hổng lách
- * giới hạn size (khai `video` để lấy hạn mức 200MB rồi upload một zip vốn chỉ
- * được 25MB). Ở đây kiểu này chỉ dùng để **đọc** phản hồi.
+ * The backend **derives `kind` from the approved mime**; the client never sends
+ * it. Allowing it to be sent would mean the backend has to verify it matches
+ * the mime, and forgetting that check is a hole for bypassing the size limit
+ * (declare `video` to claim the 200MB budget, then upload a zip that is capped
+ * at 25MB). Here the type is used only to **read** responses.
  */
 export type MediaKind = "image" | "video" | "file";
 
 export type MediaStatus = "pending" | "ready";
 
-/** Phản hồi nhịp 1 — tấm vé để browser tự `PUT` lên storage. */
+/** The step 1 response — the ticket letting the browser `PUT` to storage itself. */
 export type PresignedUpload = {
   id: string;
   kind: MediaKind;
   /**
-   * Browser `PUT` **thẳng** lên đây, không qua backend. Phải gửi đúng
-   * `Content-Type` và `Content-Length` đã khai: cả hai nằm trong phần được ký,
-   * sai một cái là 403 từ storage chứ không phải lỗi của API.
+   * The browser `PUT`s **straight** here, never through the backend. It must
+   * send exactly the declared `Content-Type` and `Content-Length`: both are part
+   * of what was signed, and getting either wrong is a 403 from storage, not an
+   * API error.
    */
   uploadUrl: string;
   /**
-   * ⚠️ Không phải hạn để *bắt đầu* upload — là hạn cho **toàn bộ** request PUT,
-   * mà một PUT lớn kéo dài suốt thời gian truyền.
+   * ⚠️ Not a deadline for *starting* the upload — it covers the **entire** PUT
+   * request, and a large PUT lasts for the whole transfer.
    */
   expiresIn: number;
 };
 
-/** Phản hồi nhịp 3. `url` chính là chuỗi nhét vào bài viết. */
+/** The step 3 response. `url` is the string dropped into the post. */
 export type MediaAsset = {
   id: string;
   kind: MediaKind;
   status: MediaStatus;
-  /** Hàm thuần của `MEDIA_PUBLIC_URL` + `storageKey` bên backend. */
+  /** A pure function of the backend's `MEDIA_PUBLIC_URL` + `storageKey`. */
   url: string;
   mime: string;
-  /** Số thật từ `HeadObject`, không phải số client khai ở nhịp 1. */
+  /** The real number from `HeadObject`, not what the client declared in step 1. */
   sizeBytes: number;
   originalName: string | null;
-  /** Luôn `null` ở vòng này — backend chưa giải mã ảnh/video để đọc kích thước. */
+  /** Always `null` in this round — the backend does not decode media to read dimensions yet. */
   width: number | null;
   height: number | null;
   durationMs: number | null;
@@ -51,20 +54,21 @@ export type MediaAsset = {
   createdAt: string;
 };
 
-/** Tiến độ của nhịp 2. `total` là 0 khi trình duyệt không báo được độ dài. */
+/** Step 2's progress. `total` is 0 when the browser cannot report a length. */
 export type UploadProgress = {
   loaded: number;
   total: number;
-  /** 0–1. Bằng 0 khi `total` không xác định. */
+  /** 0–1. Zero when `total` is unknown. */
   ratio: number;
 };
 
 /**
- * Lỗi của **nhịp 2**, tức của storage — không phải của API.
+ * A **step 2** failure — that is, storage's, not the API's.
  *
- * Không tái dùng `ApiError`: nó mô tả `ErrorResponseDto` của backend (`code`
- * ổn định, `details`), còn MinIO trả XML và không có mã nào trong contract đó.
- * Trộn hai thứ vào một lớp là mời người ta `switch` trên một `code` không tồn tại.
+ * `ApiError` is not reused: it describes the backend's `ErrorResponseDto`
+ * (stable `code`, `details`), while MinIO answers with XML and has no code in
+ * that contract. Merging the two into one class invites someone to `switch` on
+ * a `code` that does not exist.
  */
 export class StorageUploadError extends Error {
   readonly status: number;
@@ -76,7 +80,7 @@ export class StorageUploadError extends Error {
   }
 }
 
-/** Lỗi đến từ nhịp 2 (storage) chứ không phải từ API — xem `StorageUploadError`. */
+/** An error from step 2 (storage) rather than from the API — see `StorageUploadError`. */
 export function isStorageUploadError(
   error: unknown,
 ): error is StorageUploadError {

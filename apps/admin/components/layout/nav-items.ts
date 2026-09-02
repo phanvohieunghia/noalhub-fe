@@ -1,19 +1,20 @@
 /**
- * Nguồn sự thật duy nhất của điều hướng admin — sidebar và breadcrumb đọc chung
- * mảng này, nếu không hai chỗ sẽ lệch tên ngay lần đổi đầu tiên.
+ * The single source of truth for admin navigation — the sidebar and the
+ * breadcrumb read this same array, or the two drift apart on the first rename.
  *
- * `disabled` = màn hình cần contract chưa có ở backend (`docs/admin-plan.md`
- * §3). Hiện mục ra nhưng khoá lại là cố ý: giấu đi thì mỗi lần review lại có
- * người hỏi "sao không có phần hội thoại", còn cho bấm vào thì ra trang 404.
+ * `disabled` marks a screen whose contract the backend does not have yet
+ * (`docs/admin-plan.md` §3). Showing the item but locking it is deliberate:
+ * hiding it means someone asks "where is the conversations section?" at every
+ * review, while making it clickable leads to a 404.
  */
 /**
- * `labelKey`/`reasonKey` là **khoá** trong `nav.admin.*`, không phải chữ: file
- * này là module cấp app, nạp một lần lúc import, không biết locale nào
- * (`docs/i18n-plan.md` §7.3). Sidebar và breadcrumb dịch lúc render.
+ * `labelKey`/`reasonKey` are **keys** under `nav.admin.*`, not words: this is an
+ * app-level module loaded once at import time and it knows no locale
+ * (`docs/i18n.md` §7.3). The sidebar and breadcrumb translate at render time.
  */
 /**
- * Union chứ không phải `string`: nhờ vậy `t(labelKey)` được kiểm kiểu, và một
- * khoá gõ sai là lỗi biên dịch chứ không phải chữ lạ trên sidebar (§9).
+ * A union rather than `string`: that way `t(labelKey)` is type-checked and a
+ * mistyped key is a compile error instead of odd text in the sidebar (§9).
  */
 export type NavLabelKey =
   | "items.overview"
@@ -30,7 +31,7 @@ export type NavItem = {
   href: string;
   labelKey: NavLabelKey;
   disabled?: boolean;
-  /** Lý do khoá, hiện dưới dạng tooltip. */
+  /** Why it is locked, shown as a tooltip. */
   reasonKey?: NavReasonKey;
 };
 
@@ -53,13 +54,13 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 /**
- * Nhãn cho segment KHÔNG phải mục nav — breadcrumb dùng làm lớp tra thứ hai,
- * trước khi rơi về "Chi tiết".
+ * Labels for segments that are NOT nav items — the breadcrumb's second lookup
+ * layer, before falling back to "Detail".
  *
- * `/posts/categories` là ví dụ đúng của loại này: nó cố tình không lên sidebar
- * (màn hình dùng vài lần một năm, vào từ trong `/posts` — `docs/blog-plan.md`
- * §7.1), nhưng để breadcrumb hiện "Chi tiết" thì đọc như một trang bài viết nào
- * đó, sai hẳn nghĩa.
+ * `/posts/categories` is the archetype: it deliberately stays out of the
+ * sidebar (a screen used a few times a year, entered from inside `/posts` —
+ * `docs/blog.md` §7.1), but letting the breadcrumb say "Detail" would read as
+ * some individual post, which is plainly wrong.
  */
 export const SEGMENT_LABEL_KEYS: Record<string, NavLabelKey> = {
   categories: "items.categories",

@@ -27,11 +27,11 @@ import { Typography } from "@noalhub/ui/typography";
 const COLUMN_COUNT = 5;
 
 /**
- * Bảng quản trị bài viết (`docs/blog-plan.md` §7.1).
+ * The post administration table (`docs/blog.md` §7.1).
  *
- * Dùng `Pagination` (nút bấm, giữ state client) chứ KHÔNG phải
- * `PaginationLinks`: đây là màn hình sau đăng nhập, `robots` chặn hết, không có
- * crawler nào cần đi qua. Bản `<a href>` là cho trang công khai (§4.5).
+ * It uses `Pagination` (buttons, client state), NOT `PaginationLinks`: this
+ * screen is behind login, `robots` blocks everything, and no crawler needs a
+ * path through. The `<a href>` version is for the public pages (§4.5).
  */
 export function PostTable() {
   const t = useTranslations("admin.posts");
@@ -146,12 +146,13 @@ function PostRow({ post }: { post: BlogPost }) {
         <PostStatusBadge status={post.status} />
       </TableCell>
       <TableCell className="whitespace-nowrap">
-        {/* `null` chỉ hợp lệ với bài nháp — publish bắt buộc có chuyên mục (§2.6). */}
+        {/* `null` is only valid for drafts — publishing requires a category (§2.6). */}
         {post.category?.name ?? <span className="opacity-40">{t("table.noCategory")}</span>}
       </TableCell>
       <TableCell className="whitespace-nowrap">{post.author.displayName}</TableCell>
-      {/* Sort của bảng này là `updatedAt DESC`, khác public (`publishedAt DESC`) —
-          nên cột hiện đúng thứ đang được sort (§2.1a). */}
+      {/* This table sorts by `updatedAt DESC`, unlike the public list
+          (`publishedAt DESC`) — so the column shows what is actually sorted on
+          (§2.1a). */}
       <TableCell className="whitespace-nowrap opacity-70">
         {df.dateTime(post.updatedAt)}
       </TableCell>

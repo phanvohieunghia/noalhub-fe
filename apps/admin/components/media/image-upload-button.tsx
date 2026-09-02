@@ -16,15 +16,17 @@ import { Button } from "@noalhub/ui/button";
 import { FormError } from "@noalhub/ui/form-error";
 
 /**
- * Nút "Tải ảnh lên" — bọc trọn luồng ba nhịp của `useUploadMedia` vào một chỗ.
+ * The "Upload image" button — wrapping `useUploadMedia`'s whole three-step flow
+ * in one place.
  *
- * Dùng ở cả hai nơi cần ảnh (ô ảnh bìa và dialog chèn ảnh trong bài) thay vì
- * viết lại: chúng khác nhau đúng ở việc làm gì với `url` trả về, mà phần khó —
- * tiến độ, huỷ, và ba họ lỗi khác nhau — thì giống hệt.
+ * Used by both places that need images (the cover field and the in-post image
+ * dialog) rather than reimplemented: they differ only in what they do with the
+ * returned `url`, while the hard parts — progress, cancellation and three
+ * distinct error families — are identical.
  *
- * `<input type="file">` bị ẩn và bấm bằng ref: input file mặc định không style
- * được, còn `<label>` bọc `<Button>` thì lồng một `<button>` vào label, thứ
- * screen reader đọc thành hai control.
+ * The `<input type="file">` is hidden and clicked through a ref: a file input
+ * cannot be styled, and wrapping `<Button>` in a `<label>` nests a `<button>`
+ * inside a label, which a screen reader announces as two controls.
  */
 export function ImageUploadButton({
   onUploaded,
@@ -32,7 +34,7 @@ export function ImageUploadButton({
   disabled = false,
 }: {
   onUploaded: (asset: MediaAsset) => void;
-  /** Bỏ trống thì dùng nhãn chung "Tải ảnh lên". */
+  /** Left out, the generic "Upload image" label is used. */
   label?: string;
   disabled?: boolean;
 }) {
@@ -65,8 +67,8 @@ export function ImageUploadButton({
         className="hidden"
         onChange={(event) => {
           pick(event.target.files?.[0]);
-          // Reset để chọn LẠI đúng file vừa rồi vẫn bắn `change` (sau một lần
-          // upload hỏng, đây là thao tác tự nhiên nhất của người dùng).
+          // Reset so re-picking the SAME file still fires `change` (after a
+          // failed upload, that is the most natural next action).
           event.target.value = "";
         }}
       />
@@ -107,13 +109,15 @@ export function ImageUploadButton({
 }
 
 /**
- * Ba họ lỗi, ba cách nói — trộn chúng thành "Tải lên thất bại" là lấy mất đúng
- * phần thông tin giúp người dùng biết phải làm gì tiếp.
+ * Three error families, three things to say — collapsing them into "Upload
+ * failed" removes precisely the information that tells the user what to do next.
  *
- * 1. `MessageError`: file bị chính FE từ chối trước khi gọi API (sai định dạng,
- *    quá nặng) — nó mang sẵn khoá i18n, `messageOf` lấy ra.
- * 2. `StorageUploadError`: nhịp 2, tức MinIO. Không có mã lỗi nào trong contract.
- * 3. `ApiError`: nhịp 1 hoặc 3.
+ * 1. `MessageError`: the frontend rejected the file before calling the API
+ *    (wrong format, too large) — it carries an i18n key, which `messageOf`
+ *    extracts.
+ * 2. `StorageUploadError`: step 2, i.e. MinIO. No error code exists in the
+ *    contract.
+ * 3. `ApiError`: step 1 or step 3.
  */
 function uploadErrorText(error: unknown): Message | string {
   if (isStorageUploadError(error)) return error.message;
@@ -126,7 +130,7 @@ function uploadErrorText(error: unknown): Message | string {
         return { key: "admin.posts.upload.notUploaded" };
       case ERROR_CODES.mediaTooLarge:
       case ERROR_CODES.mediaMimeNotAllowed:
-        // Backend trả kèm allowlist và con số thật trong `message`.
+        // The backend returns the allowlist and the real numbers in `message`.
         return error.message;
       default:
         return error.message || { key: "admin.posts.upload.failed" };

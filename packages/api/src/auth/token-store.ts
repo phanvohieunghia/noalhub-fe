@@ -1,14 +1,15 @@
 import type { AuthTokens } from "./types";
 
 /**
- * BIÊN CÔ LẬP — file duy nhất trong codebase được phép chạm localStorage.
+ * AN ISOLATION BOUNDARY — the only file in the codebase allowed to touch
+ * localStorage.
  *
- * Access token nằm trong biến module (memory): mất khi reload, nhưng XSS kiểu
- * "đọc storage" không lấy được nó. Refresh token buộc phải sống qua reload nên
- * nằm ở localStorage.
+ * The access token lives in a module variable (memory): lost on reload, but out
+ * of reach of "read the storage" XSS. The refresh token has to survive a reload
+ * and therefore lives in localStorage.
  *
- * Muốn chuyển sang httpOnly cookie + BFF sau này: viết lại đúng file này,
- * không component nào phải sửa.
+ * To move to httpOnly cookies plus a BFF later: rewrite this one file, and no
+ * component has to change.
  */
 
 const REFRESH_KEY = "nh.refresh";
@@ -16,19 +17,19 @@ const REFRESH_KEY = "nh.refresh";
 let accessToken: string | null = null;
 
 /**
- * Người nghe access token đổi. Tầng socket cần biết để emit `auth:refresh` —
- * kết nối socket sống lâu hơn access token (TTL 15 phút), nếu không gia hạn
- * thì backend ngắt kèm mã TOKEN_EXPIRED.
+ * Listeners for access-token changes. The socket layer needs them so it can
+ * emit `auth:refresh` — a socket connection outlives the access token (15 min
+ * TTL), and without a renewal the backend disconnects it with TOKEN_EXPIRED.
  */
 const accessListeners = new Set<(token: string | null) => void>();
 
 function notify() {
   for (const listener of accessListeners) {
-    // Một listener ném lỗi không được phép chặn các listener còn lại.
+    // One listener throwing must not block the remaining listeners.
     try {
       listener(accessToken);
     } catch {
-      /* bỏ qua */
+      /* ignored */
     }
   }
 }
@@ -63,10 +64,10 @@ export const tokenStore = {
   },
 
   /**
-   * Đăng ký nghe access token đổi. Trả về hàm huỷ đăng ký.
+   * Subscribe to access-token changes. Returns an unsubscribe function.
    *
-   * Callback nhận token MỚI, kể cả `null` (lúc clear) — bên nghe tự quyết định
-   * làm gì với null, đừng lọc sẵn ở đây.
+   * The callback receives the NEW token, including `null` (on clear) — what to
+   * do with null is the listener's call, do not filter it out here.
    */
   subscribe(callback: (token: string | null) => void): () => void {
     accessListeners.add(callback);
@@ -74,14 +75,14 @@ export const tokenStore = {
   },
 
   /**
-   * Đồng bộ đa tab: tab khác xoá refresh token (logout) → tab này cũng phải
-   * thoát. Trả về hàm huỷ đăng ký.
+   * Cross-tab sync: another tab cleared the refresh token (logout) → this tab
+   * must sign out too. Returns an unsubscribe function.
    */
   onExternalClear(callback: () => void): () => void {
     if (typeof window === "undefined") return () => {};
 
     const handler = (event: StorageEvent) => {
-      // event.key === null nghĩa là localStorage.clear()
+      // event.key === null means localStorage.clear()
       if (event.key !== null && event.key !== REFRESH_KEY) return;
       if (event.newValue === null) {
         accessToken = null;

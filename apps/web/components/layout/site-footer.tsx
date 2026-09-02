@@ -9,17 +9,18 @@ import { Typography } from "@noalhub/ui/typography";
 import { WebLanguageSwitcher } from "./language-switcher";
 
 /**
- * Chân trang dùng chung cho vùng công khai (blog) và trang chủ.
+ * The footer shared by the public area (the blog) and the home page.
  *
- * Chọn giao diện nằm ở đây chứ không phải header: nó là thiết lập, dùng một
- * lần rồi thôi — để trên header thì chiếm chỗ ngang hàng với điều hướng, thứ
- * user thực sự cần mỗi lần vào trang.
+ * The appearance controls live here rather than in the header: they are
+ * settings, used once and then forgotten — in the header they would sit at the
+ * same level as navigation, which users actually need on every visit.
  *
- * Chat KHÔNG dùng footer này: layout chat là khung cao đúng viewport (sidebar +
- * khung tin nhắn tự cuộn), chèn footer vào sẽ đẩy ô nhập tin ra ngoài màn hình.
+ * Chat does NOT use this footer: the chat layout is exactly viewport-height (a
+ * sidebar plus a self-scrolling message pane), and inserting a footer pushes the
+ * composer off screen.
  */
 
-/** Cột link: tiêu đề + danh sách, dùng lại cho cả 4 cột. */
+/** A link column: a heading plus a list, reused for all 4 columns. */
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-3">
@@ -54,9 +55,9 @@ function FooterLink({
 
   return (
     <li>
-      {/* RSS và sitemap là route handler trả file, không phải trang React —
-          <Link> prefetch chúng là tải rác. Dùng <a> thường; đường dẫn cũng đã
-          gồm sẵn locale nên không cần <Link> gắn tiền tố hộ. */}
+      {/* RSS and the sitemap are route handlers serving files, not React pages —
+          <Link> would prefetch junk. A plain <a> instead; the paths already
+          include the locale, so there is nothing for <Link> to prefix. */}
       {external ? (
         <a href={href} className={className}>
           {content}
@@ -73,8 +74,9 @@ function FooterLink({
 export async function SiteFooter() {
   const t = await getTranslations("nav");
 
-  // Footer không được làm chết trang: backend sập thì vẫn phải render đủ khung
-  // với các link tĩnh — cùng lý do với nav ở `(public)/layout.tsx`.
+  // The footer must not kill the page: with the backend down it still has to
+  // render the full shell with its static links — same reason as the nav in
+  // `(public)/layout.tsx`.
   const [categories, latestPosts] = await Promise.all([
     getBlogCategories().catch(() => []),
     getLatestPosts(3).catch(() => []),
@@ -110,8 +112,8 @@ export async function SiteFooter() {
           <FooterColumn title={t("footer.categories")}>
             {categories.length > 0 ? (
               <>
-                {/* Cắt 4 mục: footer là lối tắt, không phải bản sao của trang
-                    danh sách — link "Tất cả" ở dưới lo phần còn lại. */}
+                {/* Capped at 4: the footer is a shortcut, not a copy of the
+                    listing page — the "All" link below covers the rest. */}
                 {categories.slice(0, 4).map((category) => (
                   <FooterLink key={category.slug} href={`/blogs/category/${category.slug}`}>
                     {category.name}
@@ -149,8 +151,8 @@ export async function SiteFooter() {
             © {new Date().getFullYear()} Noalhub
           </Typography>
 
-          {/* Các trang này nằm sau `AuthGuard`; khách chưa đăng nhập bấm vào sẽ
-              được đưa về /login rồi quay lại — chủ ý, không phải link hỏng. */}
+          {/* These pages sit behind `AuthGuard`; a signed-out visitor clicking one
+              is sent to /login and then back — deliberate, not a broken link. */}
           <nav aria-label={t("footer.nav")} className="flex flex-wrap items-center gap-4">
             <Link href="/login" className="text-body-4 opacity-60 hover:opacity-100">
               {t("login")}
@@ -166,8 +168,8 @@ export async function SiteFooter() {
             </Link>
           </nav>
 
-          {/* `ml-auto` đẩy sang mép phải; khi xuống dòng trên màn hẹp thì nó tự
-              thành dòng riêng, không cần breakpoint. */}
+          {/* `ml-auto` pushes it to the right edge; when it wraps on a narrow
+              screen it becomes its own line, with no breakpoint needed. */}
           <div className="ml-auto flex items-center gap-3">
             <WebLanguageSwitcher />
             <ThemeToggle />

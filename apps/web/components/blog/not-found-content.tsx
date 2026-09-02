@@ -8,16 +8,18 @@ import { PostList } from "./post-list";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Phần chữ của trang 404 blog — **là Client Component, và đó là điều bắt buộc**.
+ * The text of the blog 404 page — **a Client Component, and that is mandatory**.
  *
- * `not-found.tsx` không nhận `params`, nên mọi API i18n phía server ở đó
- * (`useTranslations` lẫn `getTranslations`) phải đọc request mới biết ngôn ngữ.
- * Chỉ cần một lời gọi như vậy là **cả segment `blogs/` rơi khỏi static
- * rendering**, kể cả `[slug]` — đo được bằng `next build`: `●` biến thành `ƒ`,
- * và nginx mất sạch cache bài viết (`docs/i18n-plan.md` §10).
+ * `not-found.tsx` receives no `params`, so every server-side i18n API there
+ * (`useTranslations` as well as `getTranslations`) has to read the request to
+ * learn the language. One such call is enough to drop **the entire `blogs/`
+ * segment out of static rendering**, `[slug]` included — measurable with
+ * `next build`: `●` turns into `ƒ`, and nginx loses every cached post
+ * (`docs/i18n.md` §10).
  *
- * Client Component thì không có vấn đề đó: message đến từ `NextIntlClientProvider`
- * mà `(public)/layout.tsx` đã đặt sẵn, không ai phải hỏi request cả.
+ * A Client Component has no such problem: the messages come from the
+ * `NextIntlClientProvider` that `(public)/layout.tsx` already mounted, and
+ * nobody has to ask the request.
  */
 export function BlogNotFoundContent({ posts }: { posts: BlogPostListItem[] }) {
   const t = useTranslations("web.blog.notFound");

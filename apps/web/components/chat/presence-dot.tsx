@@ -8,11 +8,11 @@ import { Typography } from "@noalhub/ui/typography";
 import { useChatFormat } from "./use-chat-format";
 
 /**
- * Đốm trạng thái. Ba trạng thái, không phải hai: presence chỉ được backend phát
- * cho người có chung hội thoại, nên "chưa có dữ liệu" là KHÔNG RÕ — không được
- * hiển thị thành offline chắc chắn.
+ * The status dot. Three states, not two: the backend only broadcasts presence to
+ * people who share a conversation, so "no data yet" means UNKNOWN — it must not
+ * be rendered as a confident offline.
  *
- * Màu một mình không truyền đạt thông tin → luôn kèm `title` + `sr-only`.
+ * Color alone communicates nothing → always paired with `title` + `sr-only`.
  */
 export function PresenceDot({
   userId,
@@ -46,7 +46,7 @@ export function PresenceDot({
   );
 }
 
-/** Text trạng thái cho `ChatHeader` — cùng nguồn dữ liệu với đốm màu. */
+/** The status text for `ChatHeader` — the same data source as the dot. */
 export function PresenceLabel({ userId }: { userId: string | null | undefined }) {
   const t = useTranslations("web.chat.presence");
   const cf = useChatFormat();

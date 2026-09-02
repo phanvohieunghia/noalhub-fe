@@ -19,10 +19,10 @@ import type { User } from "@noalhub/api/users";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Đổi username — mỗi 6 tháng một lần.
+ * Changing the username — once every 6 months.
  *
- * Nút bị khoá theo `nextUsernameChangeAt` của backend; không tự cộng ngày ở
- * frontend vì hai nguồn sự thật sẽ lệch.
+ * The button is disabled from the backend's `nextUsernameChangeAt`; the date is
+ * never computed on the frontend, because two sources of truth drift apart.
  */
 export function ChangeUsernameForm({ user }: { user: User }) {
   const t = useTranslations("web.profile.username");
@@ -52,7 +52,7 @@ export function ChangeUsernameForm({ user }: { user: User }) {
       await changeUsername.mutateAsync(values);
       setSaved(true);
     } catch (error) {
-      // Hai lỗi nghiệp vụ này gắn đúng vào ô username, không đẩy lên banner.
+      // These two business errors attach to the username field, not the banner.
       if (error instanceof ApiError && error.code === ERROR_CODES.usernameTaken) {
         setError("username", { message: "web.profile.username.taken" });
         return;

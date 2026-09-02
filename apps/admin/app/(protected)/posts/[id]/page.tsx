@@ -9,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("editTitle") };
 }
 
-/** `params` là async ở Next 16 — await ở server rồi truyền xuống client. */
+/** `params` is async in Next 16 — await it on the server, then pass it down to the client. */
 export default async function EditPostPage(props: PageProps<"/posts/[id]">) {
   const { id } = await props.params;
 

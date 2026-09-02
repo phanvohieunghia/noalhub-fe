@@ -9,21 +9,21 @@ import { tokenPairSchema } from "./auth/schemas";
 import type { AuthTokens } from "./auth/types";
 
 /**
- * Thêm option riêng của app vào config của axios, để tầng service dùng thẳng
- * `http.get/post` mà vẫn khai báo được "cần token" và "validate bằng schema
- * này" — không phải bọc thêm hàm nào.
+ * Adds app-specific options to axios' config, so the service layer can call
+ * `http.get/post` directly while still declaring "this needs a token" and
+ * "validate with this schema" — with no extra wrapper functions.
  *
- * `authRequired` KHÔNG được đặt tên `auth`: axios đã lấy key đó cho HTTP Basic
- * (`{ username, password }`).
+ * `authRequired` must NOT be named `auth`: axios already uses that key for HTTP
+ * Basic (`{ username, password }`).
  */
 declare module "axios" {
   export interface AxiosRequestConfig {
-    /** Gắn `Authorization: Bearer <access>` và bật refresh-on-401. */
+    /** Attaches `Authorization: Bearer <access>` and enables refresh-on-401. */
     authRequired?: boolean;
-    /** Validate response bằng zod — bắt lỗi backend đổi shape ngay tại chỗ. */
+    /** Validates the response with zod — catching a backend shape change on the spot. */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     schema?: ZodType<any>;
-    /** Nội bộ: đánh dấu request đã retry sau refresh. */
+    /** Internal: marks a request as already retried after a refresh. */
     isRetry?: boolean;
   }
 }
@@ -34,8 +34,8 @@ export const http = axios.create({
 });
 
 /**
- * Instance riêng cho `/auth/refresh`: không có interceptor 401 nên không thể
- * đệ quy vào chính nó.
+ * A separate instance for `/auth/refresh`: it has no 401 interceptor, so it
+ * cannot recurse into itself.
  */
 const refreshHttp = axios.create({
   baseURL: API_BASE_URL,
@@ -43,8 +43,8 @@ const refreshHttp = axios.create({
 });
 
 /**
- * Được `lib/auth/store.ts` đăng ký. Tách qua callback để client không phải
- * import store (tránh phụ thuộc vòng).
+ * Registered by `lib/auth/store.ts`. Routed through a callback so the client
+ * never imports the store (avoiding a circular dependency).
  */
 let onSessionExpired: (() => void) | null = null;
 
@@ -58,9 +58,10 @@ function expireSession() {
 }
 
 /**
- * Single-flight: nếu N request cùng nhận 401, chỉ MỘT lần gọi /auth/refresh.
- * Backend XOAY VÒNG refresh token và trình lại token cũ sẽ thu hồi TOÀN BỘ
- * phiên — nên gọi song song là mất phiên thật, không chỉ là lãng phí.
+ * Single-flight: when N requests hit a 401 together, /auth/refresh is called
+ * exactly ONCE. The backend ROTATES refresh tokens and presenting an old one
+ * revokes the ENTIRE session — so parallel calls actually lose the session,
+ * they are not merely wasteful.
  */
 let refreshPromise: Promise<AuthTokens> | null = null;
 
@@ -68,9 +69,9 @@ function refreshTokens(): Promise<AuthTokens> {
   if (refreshPromise) return refreshPromise;
 
   refreshPromise = withRefreshLock(async () => {
-    // ĐỌC LẠI storage SAU khi đã giành được khoá. Nếu một tab khác vừa xoay vòng
-    // trong lúc ta xếp hàng, token trong biến đọc trước khi khoá đã chết rồi —
-    // trình nó ra là tự tố cáo mình replay.
+    // RE-READ storage AFTER winning the lock. If another tab rotated while we
+    // queued, the token read before locking is already dead — presenting it
+    // reports us as a replay.
     const refreshToken = tokenStore.getRefresh();
     if (!refreshToken) {
       throw new ApiError(401, {
@@ -96,36 +97,38 @@ function refreshTokens(): Promise<AuthTokens> {
 }
 
 /**
- * Khoá liên tab quanh một lượt xoay vòng.
+ * A cross-tab lock around one rotation.
  *
- * `refreshPromise` ở trên chỉ chống được nhiều request TRONG CÙNG một tab. Nhưng
- * access token chỉ nằm trong memory, nên **mỗi tab reload đều bắt buộc xoay vòng
- * một lần** — hai tab cùng origin cùng F5 là hai lần xoay vòng song song trên cùng
- * một refresh token. Backend khoá dòng DB nên chúng bị xếp hàng chứ không đua:
- * tab thứ nhất xoay vòng thành công, tab thứ hai trình đúng token vừa bị thu hồi.
- * Đó không phải race hiếm gặp mà là kết cục CHẮC CHẮN, và trước khi có cửa sổ ân
- * hạn ở backend thì nó thu hồi cả family — đăng xuất vĩnh viễn.
+ * `refreshPromise` above only guards multiple requests WITHIN one tab. But the
+ * access token lives in memory only, so **every tab reload forces exactly one
+ * rotation** — two tabs on the same origin hitting F5 means two parallel
+ * rotations on one refresh token. The backend locks the DB row, so they queue
+ * rather than race: the first tab rotates successfully, the second presents the
+ * token that was just revoked. That is not a rare race but a CERTAIN outcome,
+ * and before the backend had a grace window it revoked the whole family —
+ * a permanent logout.
  *
- * Web Locks API giữ khoá theo origin và tự nhả khi tab chết, kể cả khi tab bị đóng
- * giữa chừng — thứ mà một cờ trong localStorage không làm được (tab chết là cờ kẹt
- * lại mãi). Trình duyệt nào không có nó thì chạy thẳng: mất phần chống đa tab,
- * nhưng vẫn còn cửa sổ ân hạn của backend đỡ.
+ * The Web Locks API holds the lock per origin and releases it when the tab
+ * dies, even one closed mid-flight — something a localStorage flag cannot do (a
+ * dead tab leaves the flag stuck forever). Browsers without it run straight
+ * through: the cross-tab guard is lost, but the backend's grace window still
+ * covers it.
  */
 function withRefreshLock<T>(run: () => Promise<T>): Promise<T> {
   const locks = globalThis.navigator?.locks;
   if (!locks) return run();
-  // Cast: kiểu của `request` suy ra T = Promise<AuthTokens> nên lồng thêm một lớp.
+  // Cast: `request`'s typing infers T = Promise<AuthTokens>, adding a layer of nesting.
   return locks.request("noalhub.auth.refresh", run) as Promise<T>;
 }
 
 /**
- * Trả về một access token còn dùng được, refresh nếu trong memory đang rỗng
- * (vừa reload — access token chỉ nằm trong memory).
+ * Returns a usable access token, refreshing when memory is empty (just after a
+ * reload — the access token lives in memory only).
  *
- * Đây là cửa DUY NHẤT cho tầng socket lấy token. Socket KHÔNG được tự gọi
- * `/auth/refresh`: backend xoay vòng refresh token và trình lại token cũ sẽ
- * thu hồi TOÀN BỘ phiên — chạy song song với single-flight ở đây là mất phiên
- * thật, không chỉ là lãng phí một request.
+ * This is the ONLY door through which the socket layer gets a token. The socket
+ * must NOT call `/auth/refresh` itself: the backend rotates refresh tokens and
+ * presenting an old one revokes the ENTIRE session — running alongside the
+ * single-flight here really loses the session, it is not just a wasted request.
  */
 export async function ensureAccessToken(): Promise<string | null> {
   const current = tokenStore.getAccess();
@@ -141,7 +144,7 @@ export async function ensureAccessToken(): Promise<string | null> {
   }
 }
 
-/** Gắn `Authorization: Bearer <access>` cho request có `authRequired`. */
+/** Attaches `Authorization: Bearer <access>` to requests marked `authRequired`. */
 http.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (config.authRequired) {
     const accessToken = tokenStore.getAccess();
@@ -151,12 +154,12 @@ http.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 });
 
 /**
- * Nhánh thành công: validate bằng `config.schema` nếu có, và quy 204 về
- * `undefined` (axios trả chuỗi rỗng cho body rỗng).
+ * Success branch: validate with `config.schema` when present, and map 204 to
+ * `undefined` (axios returns an empty string for an empty body).
  *
- * Nhánh lỗi: chuẩn hoá + refresh-on-401. Mọi lỗi rời khỏi interceptor này đều
- * là `ApiError` (trừ huỷ request — giữ nguyên `CanceledError` để React Query
- * nhận đúng là abort chứ không phải lỗi thật).
+ * Error branch: normalization plus refresh-on-401. Every error leaving this
+ * interceptor is an `ApiError` (except cancellation — `CanceledError` is passed
+ * through so React Query reads it as an abort rather than a real failure).
  */
 http.interceptors.response.use(
   (response) => {
@@ -173,7 +176,7 @@ http.interceptors.response.use(
 
     const config = error.config;
 
-    // Không có response = không kết nối được (DNS, CORS, mạng chết).
+    // No response means the connection never happened (DNS, CORS, dead network).
     if (!error.response) {
       throw new ApiError(0, {
         code: "NETWORK_ERROR",
@@ -195,7 +198,7 @@ http.interceptors.response.use(
           statusCode: 401,
         });
       }
-      // Retry ĐÚNG một lần — isRetry chặn vòng lặp vô hạn.
+      // Retry EXACTLY once — isRetry stops an infinite loop.
       config.isRetry = true;
       return http.request(config);
     }
@@ -231,11 +234,12 @@ function fallbackCodeFor(status: number): string {
 }
 
 /**
- * Câu dự phòng khi backend không gửi `message` nào.
+ * The fallback text when the backend sends no `message`.
  *
- * Trả về **khoá i18n**, không phải câu: `client.ts` là module cấp app, không
- * biết locale. `useMessage()` ở component dịch nó; câu do backend gửi thì không
- * khớp khoá nào nên đi thẳng qua (`docs/i18n-plan.md` §7.3).
+ * Returns an **i18n key**, not a sentence: `client.ts` is an app-level module
+ * with no locale. `useMessage()` in the component translates it; a sentence sent
+ * by the backend matches no key and passes straight through (`docs/i18n.md`
+ * §7.3).
  */
 function defaultMessageFor(status: number): string {
   if (status === 401) return "common.errors.sessionExpired";

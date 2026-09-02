@@ -1,13 +1,13 @@
 import type { Locale } from "./config";
 
 /**
- * Danh sách namespace. Một namespace = **một nhóm route**, không phải một
- * component (`docs/i18n-plan.md` §5). Chat có hơn hai chục component nhưng là
- * một trang, nên chỉ có một namespace.
+ * The namespace list. One namespace = **one route group**, not one component
+ * (`docs/i18n.md` §5). Chat has two dozen components but is a single page, so
+ * it gets a single namespace.
  *
- * Tên file trên đĩa là `web.auth.json`, nhưng trong cây message nó nằm ở
- * `web.auth` — dấu chấm là **đường dẫn**, không phải một phần của khoá. Nhờ vậy
- * `useTranslations("web.auth")` hoạt động như mọi namespace lồng nhau khác.
+ * The file on disk is `web.auth.json`, but in the message tree it lives at
+ * `web.auth` — the dot is a **path**, not part of the key. That is what makes
+ * `useTranslations("web.auth")` behave like any other nested namespace.
  */
 export const NAMESPACES = [
   "common",
@@ -28,8 +28,8 @@ export const NAMESPACES = [
 export type Namespace = (typeof NAMESPACES)[number];
 
 /**
- * Namespace mà **mọi** route đều nạp. Giữ danh sách này ngắn: nó nằm trong
- * payload của từng trang, kể cả trang blog tĩnh.
+ * The namespaces **every** route loads. Keep this list short: it ships in every
+ * page's payload, including the static blog pages.
  */
 export const SHARED_NAMESPACES = [
   "common",
@@ -38,8 +38,8 @@ export const SHARED_NAMESPACES = [
 ] as const satisfies readonly Namespace[];
 
 /**
- * Tiền tố đường dẫn → namespace riêng của nhóm route đó. So khớp theo tiền tố
- * **dài nhất trước**, nên thứ tự trong mảng là có ý nghĩa.
+ * Path prefix → the namespace owned by that route group. Matched **longest
+ * prefix first**, so the order of this array is meaningful.
  */
 const WEB_ROUTES: ReadonlyArray<readonly [string, Namespace]> = [
   ["/blogs", "web.blog"],
@@ -73,26 +73,26 @@ function matchPrefix(
 }
 
 /**
- * Namespace cần nạp cho một request của `apps/web`.
+ * The namespaces to load for an `apps/web` request.
  *
- * `pathname` đã **bỏ** tiền tố locale — gọi `stripLocale` trước nếu đang cầm
- * đường dẫn thô từ request.
+ * `pathname` must already have the locale prefix **stripped** — call
+ * `stripLocale` first if you are holding the raw request path.
  *
- * Đây là lý do tồn tại của việc chia namespace: chia mà vẫn nạp hết thì trang
- * blog vẫn phải tải toàn bộ chuỗi của chat (§5).
+ * This is the whole reason namespaces exist: splitting them but still loading
+ * everything would leave the blog page downloading all of chat's strings (§5).
  */
 export function webNamespaces(pathname: string): readonly Namespace[] {
   const route = matchPrefix(WEB_ROUTES, pathname);
   return route ? [...SHARED_NAMESPACES, route] : [...SHARED_NAMESPACES];
 }
 
-/** Như trên, cho `apps/admin`. Trang gốc `/` là overview. */
+/** Same as above, for `apps/admin`. The root `/` is the overview. */
 export function adminNamespaces(pathname: string): readonly Namespace[] {
   const route = matchPrefix(ADMIN_ROUTES, pathname) ?? "admin.overview";
   return [...SHARED_NAMESPACES, route];
 }
 
-/** `/en/blogs/x` → `/blogs/x`. Đường dẫn không có tiền tố thì giữ nguyên. */
+/** `/en/blogs/x` → `/blogs/x`. A path without a prefix is returned unchanged. */
 export function stripLocale(pathname: string, locales: readonly Locale[]): string {
   for (const locale of locales) {
     if (pathname === `/${locale}`) return "/";

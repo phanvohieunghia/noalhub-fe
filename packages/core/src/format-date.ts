@@ -1,13 +1,15 @@
 /**
- * Định dạng ngày/giờ theo locale.
+ * Locale-aware date/time formatting.
  *
- * Trước i18n, hai formatter được tạo một lần ở module scope với `vi-VN` cứng.
- * Giờ locale chỉ biết được lúc chạy nên phải tạo theo yêu cầu — nhưng vẫn
- * **cache**: `new Intl.DateTimeFormat` là một trong những hàm đắt nhất của
- * `Intl`, và danh sách chat gọi nó cho từng dòng ở mỗi lần render.
+ * Before i18n, both formatters were created once at module scope with a
+ * hardcoded `vi-VN`. The locale is only known at runtime now, so they are built
+ * on demand — but still **cached**: `new Intl.DateTimeFormat` is one of the
+ * most expensive things in `Intl`, and the chat list calls it per row on every
+ * render.
  *
- * Component không gọi thẳng hai hàm này mà dùng `useDateFormat()` của
- * `@noalhub/i18n` — nó gắn sẵn locale hiện tại, không chỗ nào phải tự truyền.
+ * Components do not call these two directly; they use `useDateFormat()` from
+ * `@noalhub/i18n`, which binds the current locale so no call site has to pass
+ * it.
  */
 
 type Style = "date" | "dateTime";
@@ -29,7 +31,7 @@ function formatter(locale: string, style: Style): Intl.DateTimeFormat {
   return found;
 }
 
-/** Backend trả ISO string; giá trị null/không parse được thì hiện "—". */
+/** The backend returns ISO strings; null or unparsable values render as "—". */
 export function formatDate(locale: string, value?: string | null): string {
   return format(formatter(locale, "date"), value);
 }

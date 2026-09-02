@@ -14,16 +14,17 @@ import type { User } from "@noalhub/api/users";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Hồ sơ của chính mình.
+ * Your own profile.
  *
- * Backend chưa có endpoint đọc hồ sơ người khác (spec chỉ có `/auth/me` và
- * `PATCH /users/me/username`), nên trang này mới chỉ phục vụ user hiện tại.
+ * The backend has no endpoint for reading someone else's profile yet (the spec
+ * only has `/auth/me` and `PATCH /users/me/username`), so this page serves the
+ * current user only.
  */
 export function ProfileContent() {
   const t = useTranslations("web.profile");
   const { data, isPending, error } = useMe();
-  // Store đã có bản user từ lúc bootstrap/login — dùng làm nền để trang không
-  // nháy skeleton khi query đang revalidate.
+  // The store already holds a user from bootstrap/login — used as the base so the
+  // page does not flash a skeleton while the query revalidates.
   const cached = useAuthStore((s) => s.user);
   const user = data ?? cached;
 

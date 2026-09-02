@@ -11,7 +11,7 @@ export async function generateMetadata({
   return { title: t("title") };
 }
 
-// Next 16: searchParams là Promise, phải await.
+// Next 16: searchParams is a Promise and must be awaited.
 export default async function ResetPasswordPage(props: PageProps<"/[locale]/reset-password">) {
   const { locale } = await props.params;
   setRequestLocale(locale);

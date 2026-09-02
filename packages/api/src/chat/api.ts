@@ -7,16 +7,18 @@ import {
 import type { Conversation, ConversationPage, MessagePage } from "./types";
 
 /**
- * Tầng transport của chat — CHỈ ĐỌC.
+ * Chat's transport layer — READ ONLY.
  *
- * Không có `sendMessage` ở đây: backend cố tình chỉ có MỘT đường ghi, là socket
- * event `message:send` có ack (`services/chat/socket.ts`). Đây là chỗ duy nhất
- * feature chat lệch khỏi template `docs/data-layer.md` §3 — cố ý.
+ * There is no `sendMessage` here: the backend deliberately offers exactly ONE
+ * write path, the acknowledged socket event `message:send`
+ * (`services/chat/socket.ts`). This is the only place the chat feature departs
+ * from the `docs/data-layer.md` §3 template — deliberately.
  *
- * Path không mang tiền tố `/api`: `services/config.ts` đã gộp vào baseURL.
+ * Paths carry no `/api` prefix: `services/config.ts` folded it into the
+ * baseURL.
  */
 
-/** GET /chat/conversations — cursor `before` là **date-time**. */
+/** GET /chat/conversations — the `before` cursor is a **date-time**. */
 export async function listConversations(
   params: { before?: string; limit?: number } = {},
   signal?: AbortSignal,
@@ -31,9 +33,9 @@ export async function listConversations(
 }
 
 /**
- * POST /chat/conversations/direct — **idempotent**: gọi mười lần trả về đúng
- * một hội thoại (backend chặn trùng bằng unique index trên `direct_key`).
- * 404 = không có user đó.
+ * POST /chat/conversations/direct — **idempotent**: calling it ten times returns
+ * the same one conversation (the backend prevents duplicates with a unique
+ * index on `direct_key`). A 404 means no such user.
  */
 export async function createDirectConversation(
   userId: string,
@@ -47,10 +49,10 @@ export async function createDirectConversation(
 }
 
 /**
- * GET /chat/conversations/{id} — kèm `members`.
+ * GET /chat/conversations/{id} — includes `members`.
  *
- * 404 nghĩa là "không tồn tại HOẶC bạn không phải thành viên" — backend cố ý
- * không tiết lộ, và không endpoint nào trả 403.
+ * A 404 means "it does not exist OR you are not a member" — the backend
+ * deliberately does not disclose which, and no endpoint here answers 403.
  */
 export async function getConversation(
   id: string,
@@ -65,10 +67,11 @@ export async function getConversation(
 }
 
 /**
- * GET /chat/conversations/{id}/messages — cursor `before` là **uuid** (khác
- * endpoint danh sách hội thoại, chỗ đó là date-time).
+ * GET /chat/conversations/{id}/messages — the `before` cursor is a **uuid**
+ * (unlike the conversation list endpoint, where it is a date-time).
  *
- * `items` là MỚI NHẤT TRƯỚC; `nextCursor === null` là đã hết lịch sử.
+ * `items` is NEWEST FIRST; `nextCursor === null` means the history is
+ * exhausted.
  */
 export async function listMessages(
   conversationId: string,
@@ -90,8 +93,8 @@ export async function listMessages(
 /**
  * POST /chat/conversations/{id}/read → 204.
  *
- * Bản HTTP của socket event `message:mark-read`. Tồn tại để đánh dấu đã đọc
- * vẫn chạy khi socket offline.
+ * The HTTP counterpart of the `message:mark-read` socket event. It exists so
+ * marking as read still works while the socket is offline.
  */
 export async function markRead(
   conversationId: string,

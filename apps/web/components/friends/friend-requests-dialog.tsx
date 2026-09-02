@@ -16,10 +16,10 @@ import type { Friend } from "@noalhub/api/friends";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Lời mời kết bạn đang chờ.
+ * Pending friend requests.
  *
- * Hai chiều là hai endpoint riêng (`?direction=`) nên gọi hai query — chiều đến
- * là thứ cần hành động, để lên trên.
+ * The two directions are separate endpoints (`?direction=`), hence two queries —
+ * incoming requests are what need action, so they go on top.
  */
 export function FriendRequestsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useTranslations("web.friends.requests");
@@ -94,8 +94,8 @@ function IncomingRow({ friend }: { friend: Friend }) {
   const t = useTranslations("web.friends.requests");
   const accept = useAcceptFriendRequest();
   const remove = useRemoveFriendRequest();
-  // Khoá cả hai nút khi một trong hai đang chạy: bấm chồng lên nhau là gửi hai
-  // quyết định trái ngược cho cùng một lời mời.
+  // Disable both buttons while either is running: overlapping clicks send two
+  // contradictory decisions about one request.
   const busy = accept.isPending || remove.isPending;
 
   return (

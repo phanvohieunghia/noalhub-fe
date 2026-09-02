@@ -6,9 +6,9 @@ import type { Conversation } from "@noalhub/api/chat";
 import { useChatFormat } from "./use-chat-format";
 
 /**
- * Tên hội thoại. DM không có `title` nên tên phải lấy từ thành viên còn lại —
- * việc đó cần biết "mình là ai", nên component tự đọc auth store thay vì bắt
- * mọi chỗ gọi truyền `currentUserId` xuống.
+ * The conversation's name. A DM has no `title`, so the name comes from the other
+ * member — which requires knowing who "I" am, so the component reads the auth
+ * store itself instead of making every call site thread `currentUserId` down.
  */
 export function ConversationTitle({
   conversation,

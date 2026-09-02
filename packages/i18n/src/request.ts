@@ -5,14 +5,15 @@ import { formats } from "./formats";
 import { loadAllMessages } from "./messages";
 
 /**
- * Cấu hình cho `apps/web`. `requestLocale` là giá trị của segment `[locale]`.
+ * Config for `apps/web`. `requestLocale` is the value of the `[locale]` segment.
  *
- * Segment này bắt cả những đường dẫn rác (`/unknown.txt`) nên **phải** kiểm tra
- * lại thay vì tin — next-intl ghi rõ điều đó ở `GetRequestConfigParams`.
+ * That segment also catches junk paths (`/unknown.txt`), so it **must** be
+ * validated rather than trusted — next-intl says as much in
+ * `GetRequestConfigParams`.
  *
- * (`requestLocale` đã bị next-intl đánh dấu deprecated để chuyển sang
- * `next/root-params`. Chưa chuyển được: Next 16 đã gỡ `unstable_rootParams` và
- * bản thay thế chưa ra — xem `docs/01-app/02-guides/upgrading/version-16.md`.)
+ * (next-intl has deprecated `requestLocale` in favour of `next/root-params`.
+ * We cannot move yet: Next 16 removed `unstable_rootParams` and the
+ * replacement is not out — see `docs/01-app/02-guides/upgrading/version-16.md`.)
  */
 export async function webRequestConfig(requestLocale: Promise<string | undefined>) {
   const requested = await requestLocale;
@@ -22,9 +23,9 @@ export async function webRequestConfig(requestLocale: Promise<string | undefined
 }
 
 /**
- * Cấu hình cho `apps/admin`: không có segment `[locale]`, nên locale lấy từ
- * cookie. Admin nằm sau đăng nhập và không được index, nên URL không cần phân
- * biệt ngôn ngữ (`docs/i18n-plan.md` §3.2).
+ * Config for `apps/admin`: there is no `[locale]` segment, so the locale comes
+ * from the cookie. Admin sits behind login and is never indexed, so its URLs do
+ * not need to distinguish languages (`docs/i18n.md` §3.2).
  */
 export async function adminRequestConfig() {
   const cookie = (await cookies()).get(LOCALE_COOKIE)?.value;

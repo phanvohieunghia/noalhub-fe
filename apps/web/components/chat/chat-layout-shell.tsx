@@ -6,24 +6,24 @@ import { ChatSidebar } from "./chat-sidebar";
 import { ConnectionBanner } from "./connection-banner";
 
 /**
- * Khung 2 cột.
+ * The two-column shell.
  *
- * Mobile là HAI MÀN HÌNH riêng, không phải hai cột co lại: `/chat` chỉ có
- * sidebar, `/chat/[id]` chỉ có pane. Chọn cột nào hiển thị bằng CSS
- * (`hidden md:flex`) chứ không bằng `useMediaQuery` — JS đo màn hình sẽ làm
- * layout nhảy một nhịp ở render đầu.
+ * On mobile these are TWO SEPARATE SCREENS, not two shrunken columns: `/chat`
+ * shows only the sidebar, `/chat/[id]` only the pane. Which column shows is
+ * decided in CSS (`hidden md:flex`) rather than with `useMediaQuery` — measuring
+ * the screen in JS makes the layout jump for one beat on the first render.
  *
- * `pathname` chỉ dùng để biết mobile đang ở màn hình nào; desktop luôn hiện cả
- * hai bất kể giá trị này.
+ * `pathname` only tells mobile which screen it is on; desktop always shows both
+ * regardless of its value.
  */
 export function ChatLayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const hasSelection = pathname !== "/chat";
 
   return (
-    /* Chat CHIẾM ĐÚNG một màn hình và không bao giờ để trang cuộn: chỉ khi
-       chiều cao bị chặn thì `flex-1 + overflow-y-auto` bên trong mới cuộn
-       riêng được. `dvh` chứ không `vh` — thanh địa chỉ trên mobile. */
+    /* Chat occupies EXACTLY one screen and never lets the page scroll: only with
+       a bounded height can the inner `flex-1 + overflow-y-auto` scroll on its
+       own. `dvh` rather than `vh` — the mobile address bar. */
     <div className="flex h-dvh flex-col overflow-hidden">
       <ConnectionBanner />
       <div className="flex min-h-0 flex-1">

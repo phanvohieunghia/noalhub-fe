@@ -4,16 +4,18 @@ import { ApiError, ERROR_CODES } from "@noalhub/api/errors";
 import type { Message } from "@noalhub/api/message";
 
 /**
- * Map lỗi backend vào form.
+ * Maps a backend error onto a form.
  *
- * `ErrorResponseDto.details` là **danh sách câu**, không phải map field →
- * message (ví dụ `["email must be an email"]`). Ta lấy token đầu câu làm tên
- * field: đó là quy ước của class-validator ở backend. Token nào không khớp
- * field nào trong form thì dồn lên banner — không nuốt mất.
+ * `ErrorResponseDto.details` is a **list of sentences**, not a field → message
+ * map (e.g. `["email must be an email"]`). We take the first token of each
+ * sentence as the field name: that is the backend's class-validator
+ * convention. A token matching no field in the form is pushed to the banner —
+ * never swallowed.
  *
- * Trả về nội dung cho banner cấp form, hoặc `null` nếu mọi lỗi đã gắn vào
- * input. Câu do backend soạn đi qua nguyên văn; trường hợp không nhận dạng
- * được trả về khoá i18n để component dịch (`docs/i18n-plan.md` §7.3).
+ * Returns the content for the form-level banner, or `null` when every error was
+ * attached to an input. Backend-authored sentences pass through verbatim;
+ * unrecognized cases return an i18n key for the component to translate
+ * (`docs/i18n.md` §7.3).
  */
 export function applyApiError<T extends FieldValues>(
   error: unknown,
@@ -27,8 +29,9 @@ export function applyApiError<T extends FieldValues>(
 
       for (const detail of error.details) {
         const field = detail.split(" ")[0];
-        // Chỉ gắn khi field thực sự có trong form; nếu không react-hook-form
-        // giữ một lỗi mà không ô input nào hiển thị → form kẹt im lặng.
+        // Only attach when the field really exists in the form; otherwise
+        // react-hook-form holds an error no input renders → the form is stuck
+        // with nothing on screen.
         if (knownFields.includes(field) && !seen.has(field)) {
           seen.add(field);
           setError(field as Path<T>, { type: "server", message: detail });

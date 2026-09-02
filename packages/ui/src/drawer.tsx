@@ -16,11 +16,13 @@ type DrawerProps = {
 };
 
 /**
- * Panel trượt từ mép phải. Dùng chung Radix Dialog với `Dialog` vì lý do giống
- * hệt: focus trap, `Esc`, khoá scroll nền và portal đã có sẵn.
+ * A panel sliding in from the right edge. It shares Radix Dialog with `Dialog`
+ * for exactly the same reasons: focus trap, `Esc`, background scroll lock and
+ * portal come for free.
  *
- * Khác `Dialog` ở chỗ dán vào mép phải và cao hết màn hình — nội dung dài
- * (hồ sơ, chi tiết) đọc dễ hơn trong cột hẹp so với hộp giữa màn hình.
+ * It differs from `Dialog` by pinning to the right edge at full height — long
+ * content (a profile, a detail view) reads better in a narrow column than in a
+ * box centered on screen.
  */
 export function Drawer({ open, onClose, title, children }: DrawerProps) {
   const t = useTranslations("common");

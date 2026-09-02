@@ -6,8 +6,8 @@ import { useEffect } from "react";
 import { useAuthStore } from "@noalhub/api/auth";
 
 /**
- * Bảo vệ route ở phía client. Token nằm trong localStorage/memory nên
- * proxy.ts (server) không thấy được — xem docs/auth.md §1.2.
+ * Client-side route protection. The token lives in localStorage/memory, so
+ * proxy.ts (server) cannot see it — see docs/auth.md §1.2.
  */
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const status = useAuthStore((s) => s.status);

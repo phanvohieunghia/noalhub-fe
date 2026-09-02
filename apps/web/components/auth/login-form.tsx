@@ -21,7 +21,7 @@ import { Typography } from "@noalhub/ui/typography";
 
 export function LoginForm() {
   const t = useTranslations("web.auth.login");
-  // Message của zod và của backend là KHOÁ, dịch ở đây (`docs/i18n-plan.md` §7.3).
+  // zod's and the backend's messages are KEYS, translated here (`docs/i18n.md` §7.3).
   const m = useMessage();
   const router = useRouter();
   const searchParams = useSearchParams();

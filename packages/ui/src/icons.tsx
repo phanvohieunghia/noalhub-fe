@@ -2,25 +2,26 @@
 
 import { Icon as IconifyIcon, addIcon, type IconProps } from "@iconify/react";
 
-// Icon set mặc định của project: lucide (stroke-based, hợp với Tailwind).
-// Cú pháp tên: "lucide:trash-2". Iconify tải icon data từ api.iconify.design
-// rồi cache vào localStorage — lần render đầu tiên có thể trống 1 nhịp.
+// The project's default icon set: lucide (stroke-based, a good fit for
+// Tailwind). Name syntax: "lucide:trash-2". Iconify fetches icon data from
+// api.iconify.design and caches it in localStorage — the first render can be
+// blank for a beat.
 //
-// Icon nào cần hiển thị ngay (above-the-fold, logo brand) thì đăng ký offline
-// bằng addIcon() ở dưới, sẽ render đồng bộ không cần network.
+// Icons that must appear immediately (above the fold, brand logos) are
+// registered offline with addIcon() below and render synchronously, no network.
 
 export type { IconProps };
 
 /**
- * Wrapper quanh Iconify. Mặc định 1em → co theo font-size của parent;
- * truyền className="size-4" để ép kích thước cụ thể.
+ * A wrapper around Iconify. Defaults to 1em → scales with the parent's
+ * font-size; pass className="size-4" to pin a specific size.
  */
 export function Icon({ className = "size-4", ...props }: IconProps) {
   return <IconifyIcon aria-hidden className={className} {...props} />;
 }
 
 /* ---------------------------------------------------------------------------
- * Brand icons đăng ký offline (lucide không có logo thương hiệu)
+ * Brand icons registered offline (lucide carries no brand logos)
  * ------------------------------------------------------------------------- */
 
 addIcon("brand:google", {
@@ -36,7 +37,7 @@ addIcon("brand:github", {
 });
 
 /* ---------------------------------------------------------------------------
- * Alias cho các icon dùng nhiều — đổi icon set sau này chỉ sửa ở đây.
+ * Aliases for frequently used icons — switching icon sets later is one edit here.
  * ------------------------------------------------------------------------- */
 
 export const ICONS = {

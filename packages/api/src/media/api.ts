@@ -4,20 +4,22 @@ import { StorageUploadError } from "./types";
 import type { MediaAsset, PresignedUpload, UploadProgress } from "./types";
 
 /**
- * Đường **client** của feature media — chỉ `apps/admin` dùng. Contract:
- * tag `admin-media` trong `/docs-json`, thiết kế ở `docs/media.md` bên
+ * The media feature's **client** path — used only by `apps/admin`. Contract:
+ * tag `admin-media` in `/docs-json`, designed in `docs/media.md` over in
  * `noalhub-be`.
  *
- * ### Vì sao không có `POST /media/upload` nhận file
+ * ### Why there is no `POST /media/upload` that takes a file
  *
- * Vì backend cố ý không có endpoint đó: file sẽ đi qua RAM của Nest, đúng thứ
- * kiến trúc storage chọn MinIO để tránh. Đổi lại là luồng **ba nhịp** dưới đây,
- * mà nhịp 2 không nói chuyện với backend chút nào.
+ * Because the backend deliberately has no such endpoint: the file would pass
+ * through Nest's RAM, precisely what choosing MinIO for storage was meant to
+ * avoid. The trade is the **three-step** flow below, whose second step never
+ * talks to the backend at all.
  */
 
 /**
- * Nhịp 1 — POST /admin/media/presign → 201.
- * 400 `MEDIA_MIME_NOT_ALLOWED` (body kèm allowlist), 400 `MEDIA_TOO_LARGE`.
+ * Step 1 — POST /admin/media/presign → 201.
+ * 400 `MEDIA_MIME_NOT_ALLOWED` (the body carries the allowlist),
+ * 400 `MEDIA_TOO_LARGE`.
  */
 export async function presignMedia(
   input: { mime: string; sizeBytes: number; originalName?: string | null },
@@ -32,12 +34,13 @@ export async function presignMedia(
 }
 
 /**
- * Nhịp 3 — POST /admin/media/{id}/complete → 200.
+ * Step 3 — POST /admin/media/{id}/complete → 200.
  * 400 `MEDIA_NOT_UPLOADED` | `MEDIA_CONTENT_MISMATCH` | `MEDIA_TOO_LARGE`,
  * 404 `MEDIA_ASSET_NOT_FOUND`.
  *
- * **Idempotent** ở backend: gọi lại trên asset đã `ready` trả về nguyên trạng.
- * Nhờ vậy FE cứ retry sau khi mất mạng giữa chừng mà không sợ hỏng dữ liệu.
+ * **Idempotent** on the backend: calling it again on an already-`ready` asset
+ * returns it unchanged. So the frontend can retry after a mid-flight network
+ * drop without risking the data.
  */
 export async function completeMedia(
   id: string,
@@ -52,20 +55,22 @@ export async function completeMedia(
 }
 
 /**
- * Nhịp 2 — browser `PUT` thẳng lên storage.
+ * Step 2 — the browser `PUT`s straight to storage.
  *
- * ⚠️ **Không dùng `http` (axios instance) ở đây.** Ba lý do, mỗi lý do đủ để
- * hỏng: `baseURL` sẽ nối `uploadUrl` vào sau origin của API; interceptor gắn
- * `Authorization` — một header **không nằm trong chữ ký** presigned, và gửi
- * kèm token của mình sang một origin khác là chuyện không nên làm dù storage có
- * bỏ qua nó; và interceptor 401 sẽ đi refresh token vì một mã 403 của storage.
+ * ⚠️ **Do not use `http` (the axios instance) here.** Three reasons, any one of
+ * them fatal: `baseURL` would append `uploadUrl` to the API's origin; the
+ * interceptor attaches `Authorization` — a header **outside the presigned
+ * signature**, and sending your own token to a different origin is a bad idea
+ * even if storage ignores it; and the 401 interceptor would go refresh the
+ * token over a 403 that came from storage.
  *
- * Dùng `XMLHttpRequest` chứ không phải `fetch`: `fetch` **không** báo tiến độ
- * upload (`ReadableStream` request body chưa dùng được rộng rãi), mà một video
- * 200MB không có thanh tiến độ thì người dùng chỉ thấy app treo.
+ * `XMLHttpRequest` rather than `fetch`: `fetch` reports **no** upload progress
+ * (a `ReadableStream` request body is not broadly usable yet), and a 200MB
+ * video with no progress bar just looks like a frozen app.
  *
- * `Content-Type` phải khớp **đúng** thứ đã khai ở nhịp 1: nó nằm trong phần
- * được ký. `Content-Length` trình duyệt tự đặt từ body, không set tay được.
+ * `Content-Type` must match **exactly** what was declared in step 1: it is part
+ * of what was signed. `Content-Length` is set by the browser from the body and
+ * cannot be set by hand.
  */
 export function putToStorage(params: {
   uploadUrl: string;
@@ -96,22 +101,23 @@ export function putToStorage(params: {
         return;
       }
       /*
-       * 403 ở đây gần như luôn là một trong ba thứ, và cả ba đều KHÔNG phải lỗi
-       * người dùng: URL đã hết hạn (`expiresIn` là hạn cho toàn bộ PUT), chữ ký
-       * sai vì `Host` khác lúc ký, hoặc đồng hồ máy lệch. Nói thẳng ra để người
-       * gặp không đi tìm bug ở chỗ khác.
+       * A 403 here is almost always one of three things, none of them the
+       * user's fault: the URL expired (`expiresIn` covers the entire PUT), the
+       * signature is wrong because `Host` differs from signing time, or the
+       * machine's clock is off. Say so plainly, so whoever hits it does not go
+       * hunting for a bug elsewhere.
        */
       reject(
         new StorageUploadError(
           xhr.status,
           xhr.status === 403
             ? "common.errors.storageForbidden"
-            : `Storage trả ${xhr.status} khi tải file lên.`,
+            : `Storage answered ${xhr.status} while uploading the file.`,
         ),
       );
     };
 
-    // Lỗi mạng: `status` là 0 và không có body nào để đọc.
+    // A network failure: `status` is 0 and there is no body to read.
     xhr.onerror = () =>
       reject(new StorageUploadError(0, "common.errors.uploadDisconnected"));
     xhr.onabort = () => reject(new StorageUploadError(0, "common.errors.uploadAborted"));
@@ -129,14 +135,14 @@ export function putToStorage(params: {
 }
 
 /**
- * Cả ba nhịp trong một lời gọi — đơn vị mà UI thực sự cần.
+ * All three steps in one call — the unit the UI actually needs.
  *
- * Gói ở tầng api chứ không ở hook: nó là **trình tự của contract**, không phải
- * logic React. Nhờ vậy một script hay server action cũng gọi được.
+ * Packaged in the api layer rather than a hook: it is **the contract's
+ * sequence**, not React logic. So a script or a server action can call it too.
  *
- * Thất bại ở nhịp 2 hoặc 3 để lại một row `pending` bên backend; **không** cố
- * dọn từ FE (không có endpoint xoá, và cũng không nên có): job dọn của backend
- * xoá nó sau 24h.
+ * A failure at step 2 or 3 leaves a `pending` row on the backend; do **not**
+ * try to clean it from the frontend (there is no delete endpoint, and there
+ * should not be): the backend's cleanup job removes it after 24h.
  */
 export async function uploadMedia(params: {
   file: File;
@@ -149,7 +155,7 @@ export async function uploadMedia(params: {
     {
       mime: file.type,
       sizeBytes: file.size,
-      // Chỉ để hiển thị ở phía backend; nó KHÔNG tham gia vào storage key.
+      // For display on the backend only; it takes NO part in the storage key.
       originalName: file.name || null,
     },
     signal,

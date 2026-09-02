@@ -1,19 +1,19 @@
-/** Bắt URL http/https đơn giản — đủ cho nội dung chat, không phải parser markdown. */
+/** Matches simple http/https URLs — enough for chat content, not a markdown parser. */
 const URL_SPLIT = /(https?:\/\/[^\s<]+)/g;
 
 /**
- * Bản KHÔNG có cờ `g` để kiểm từng mảnh. Dùng lại regex có `g` cho `.test()` là
- * bug ngầm: `lastIndex` được giữ giữa các lần gọi nên kết quả nhảy đúng/sai
- * xen kẽ.
+ * A version WITHOUT the `g` flag, for testing individual fragments. Reusing the
+ * `g` regex for `.test()` is a latent bug: `lastIndex` persists between calls,
+ * so the result alternates true/false.
  */
 const IS_URL = /^https?:\/\//;
 
 /**
- * Nội dung tin nhắn.
+ * A message's content.
  *
- * KHÔNG render HTML thô (`dangerouslySetInnerHTML`) — `body` là dữ liệu người
- * dùng. Linkify bằng cách chẻ chuỗi rồi render `<a>` như React element, nên
- * không có đường nào để chèn thẻ.
+ * It NEVER renders raw HTML (`dangerouslySetInnerHTML`) — `body` is user data.
+ * Linkifying works by splitting the string and rendering `<a>` as a React
+ * element, so there is no path for injecting a tag.
  */
 export function MessageBody({ body }: { body: string }) {
   const parts = body.split(URL_SPLIT);
@@ -26,8 +26,9 @@ export function MessageBody({ body }: { body: string }) {
             key={index}
             href={part}
             target="_blank"
-            // `noreferrer` cùng với `noopener`: link do người khác gửi, không
-            // để trang đích biết nguồn và không cho nó chạm `window.opener`.
+            // `noreferrer` alongside `noopener`: the link was sent by someone
+            // else, so the destination learns neither the referrer nor gets to
+            // touch `window.opener`.
             rel="noopener noreferrer"
             className="underline underline-offset-2"
           >

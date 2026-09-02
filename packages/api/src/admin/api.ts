@@ -7,17 +7,18 @@ import {
 import type { AdminStats, AdminUser, AdminUserList, AdminUserListQuery } from "./types";
 
 /**
- * Bề mặt tiếp xúc với backend admin, map 1-1 với OpenAPI spec (tag `admin`).
+ * The contact surface with the admin backend, mapping 1-to-1 to the OpenAPI
+ * spec (tag `admin`).
  *
- * Cả ba endpoint đều yêu cầu `role === "admin"` và đều khai **403** (không đủ
- * quyền) lẫn **429** `RATE_LIMITED`. Tầng này không xử lý chúng — component
- * đọc `ApiError.code` và quyết định hiển thị.
+ * All three endpoints require `role === "admin"` and all declare both **403**
+ * (insufficient permission) and **429** `RATE_LIMITED`. This layer does not
+ * handle them — components read `ApiError.code` and decide what to show.
  */
 
 /**
  * GET /admin/stats → 200 AdminStatsDto. 403, 429.
  *
- * Backend **không cache**; tần suất gọi do tầng hooks quyết định.
+ * The backend does **not** cache; call frequency is the hooks layer's decision.
  */
 export async function getAdminStats(signal?: AbortSignal): Promise<AdminStats> {
   const { data } = await http.get<AdminStats>("/admin/stats", {
@@ -31,8 +32,9 @@ export async function getAdminStats(signal?: AbortSignal): Promise<AdminStats> {
 /**
  * GET /admin/users → 200 AdminUserListDto. 403, 429.
  *
- * Phân trang offset. Trường rỗng bị loại khỏi query thay vì gửi `q=`: gửi chuỗi
- * rỗng là một filter khác với "không lọc", và nó cũng làm bẩn query key.
+ * Offset pagination. Empty fields are dropped from the query rather than sent
+ * as `q=`: an empty string is a different filter from "no filter", and it also
+ * pollutes the query key.
  */
 export async function listAdminUsers(
   query: AdminUserListQuery = {},
@@ -56,8 +58,9 @@ export async function listAdminUsers(
 /**
  * GET /admin/users/{id} → 200 AdminUserDto. 403, 404 USER_NOT_FOUND, 429.
  *
- * Tra theo **id**, không phải username — ngược với `GET /users/{username}` của
- * feature users. Bảng admin có sẵn id nên đó là khoá đúng ở đây.
+ * Looked up by **id**, not username — the opposite of the users feature's
+ * `GET /users/{username}`. The admin table already holds ids, so that is the
+ * right key here.
  */
 export async function getAdminUser(
   id: string,

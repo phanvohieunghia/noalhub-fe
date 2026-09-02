@@ -9,26 +9,27 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
   /**
-   * Docker: `standalone` cho ra `.next/standalone` — bản sao đã trace sẵn của
-   * server + đúng những file `node_modules` thực sự cần, nên image runtime
-   * không phải chạy `pnpm install` lần nữa.
+   * Docker: `standalone` emits `.next/standalone` — a pre-traced copy of the
+   * server plus exactly the `node_modules` files actually needed, so the runtime
+   * image never runs `pnpm install` again.
    *
-   * `outputFileTracingRoot` là BẮT BUỘC trong monorepo: mặc định Next trace từ
-   * thư mục app, mà `packages/*` nằm ngoài đó và pnpm còn symlink chúng vào
-   * `node_modules` — không ghim root lên gốc repo thì standalone thiếu file và
-   * container chết lúc khởi động chứ không phải lúc build.
+   * `outputFileTracingRoot` is REQUIRED in a monorepo: by default Next traces
+   * from the app directory, while `packages/*` lives outside it and pnpm
+   * symlinks them into `node_modules` — without pinning the root to the repo
+   * root, standalone is missing files and the container dies at startup rather
+   * than at build time.
    */
   output: "standalone",
   outputFileTracingRoot: path.join(process.cwd(), "..", ".."),
 
   /**
-   * Package nội bộ được export dưới dạng TS THÔ (`./src/*.ts`), không build ra
-   * `dist/`. Next phải tự compile chúng bằng SWC của app — đó là việc mà
-   * `transpilePackages` bật lên. Đổi lại: sửa file trong `packages/` là HMR ăn
-   * ngay, không cần chạy watch build song song.
+   * Internal packages are exported as RAW TS (`./src/*.ts`) with no `dist/`
+   * build. Next has to compile them with the app's SWC — which is what
+   * `transpilePackages` turns on. In exchange: editing a file in `packages/`
+   * hot-reloads immediately, with no parallel watch build.
    *
-   * Thêm package mới vào `packages/` thì PHẢI khai ở đây, nếu không build sẽ
-   * chết với lỗi cú pháp ngay ở dòng `import type` đầu tiên.
+   * A new package under `packages/` MUST be declared here, or the build dies
+   * with a syntax error on the very first `import type` line.
    */
   transpilePackages: [
     "@noalhub/api",
@@ -38,53 +39,58 @@ const nextConfig: NextConfig = {
   ],
 
   /**
-   * Host được phép cho ảnh trong bài viết và ảnh bìa (`docs/blog-plan.md` §6.2).
-   * Host không khai ở đây làm `next/image` trả **400 ở production** trong khi
-   * dev vẫn chạy — nên nó phải được chốt cùng lúc với allowlist ghi dữ liệu.
+   * The allowed hosts for in-post and cover images (`docs/blog.md` §6.2). A host
+   * missing here makes `next/image` answer **400 in production** while dev keeps
+   * working — so it has to be settled at the same time as the write allowlist.
    *
-   * Danh sách nằm ở `@noalhub/config/blog-image-hosts.mjs` — JS thuần, vì file
-   * config này được nạp TRƯỚC khi `transpilePackages` có hiệu lực nên không
-   * import được package nội bộ (chúng export TS thô). `isSafeImageSrc` trong
-   * `packages/api/src/blog/schemas.ts` đọc đúng file đó, nên hai đầu không còn
-   * lệch được nữa.
+   * The list lives in `@noalhub/config/blog-image-hosts.mjs` — plain JS, because
+   * this config file is loaded BEFORE `transpilePackages` applies and therefore
+   * cannot import an internal package (they export raw TS). `isSafeImageSrc` in
+   * `packages/api/src/blog/schemas.ts` reads that same file, so the two ends can
+   * no longer drift.
    */
   images: {
     remotePatterns: [...blogImageRemotePatterns],
 
     /**
-     * Chỉ bật ngoài production — xem `BLOG_IMAGE_ALLOW_LOCAL_IP`. Không có nó
-     * thì ảnh từ MinIO local (`http://localhost:9000`) bị chặn ở lớp chống SSRF
-     * chứ không phải ở allowlist, và lỗi trả về trông y hệt lỗi allowlist.
+     * Enabled outside production only — see `BLOG_IMAGE_ALLOW_LOCAL_IP`. Without
+     * it, images from a local MinIO (`http://localhost:9000`) are blocked by the
+     * SSRF guard rather than the allowlist, and the returned error looks exactly
+     * like an allowlist failure.
      */
     dangerouslyAllowLocalIP: BLOG_IMAGE_ALLOW_LOCAL_IP,
 
     /**
-     * `next/image` TỪ CHỐI mọi SVG khi cờ này tắt — mà media của backend cho
-     * phép `image/svg+xml`, nên không bật là ảnh SVG upload lên hỏng ở đúng
-     * production (dev vẫn chạy vì `next dev` không tối ưu ảnh).
+     * With this flag off, `next/image` REJECTS every SVG — and the backend's
+     * media allows `image/svg+xml`, so leaving it off breaks uploaded SVGs in
+     * production only (dev keeps working because `next dev` does not optimize
+     * images).
      *
-     * "dangerously" là thật, và nó được bù bằng ba lớp KHÁC, không phải bằng cờ
-     * này (`docs/media.md` §7a bên `noalhub-be`): backend sanitize file bằng
-     * DOMPurify rồi ghi đè object, nginx trả `Content-Security-Policy: sandbox`
-     * cho mọi `.svg`, và host phục vụ ảnh tách hẳn khỏi origin của app.
+     * The "dangerously" is real, and it is offset by three OTHER layers rather
+     * than by this flag (`docs/media.md` §7a in `noalhub-be`): the backend
+     * sanitizes the file with DOMPurify and overwrites the object, nginx serves
+     * every `.svg` with `Content-Security-Policy: sandbox`, and the image host
+     * is a separate origin from the app.
      *
-     * Lớp thứ ba là RÀNG BUỘC CỦA REPO NÀY: SVG chỉ được nhúng qua `next/image`
-     * / `<img src>`. Inline nó vào DOM (`dangerouslySetInnerHTML`, import as
-     * component) là cho nó chạy trên origin của app — không lớp nào ở trên cứu
-     * được, vì cả ba đều dựa vào việc file được tải như một tấm ảnh.
+     * The third layer is A CONSTRAINT OF THIS REPO: an SVG may only be embedded
+     * through `next/image` / `<img src>`. Inlining it into the DOM
+     * (`dangerouslySetInnerHTML`, importing it as a component) runs it on the
+     * app's origin — none of the layers above can help there, since all three
+     * depend on the file being loaded as an image.
      */
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",
   },
 
   /**
-   * `/blogs/rss.xml` là đường **cũ**, có người đã đăng ký trong reader từ trước
-   * khi có tiền tố locale. Feed thật giờ ở `/vi/blogs/rss.xml` (một bản duy
-   * nhất — `docs/i18n-plan.md` §8), nên đường cũ phải chuyển hướng vĩnh viễn
-   * chứ không được 404: reader thấy 404 vài lần là tự huỷ đăng ký.
+   * `/blogs/rss.xml` is the **old** path, subscribed to in readers before the
+   * locale prefix existed. The real feed now lives at `/vi/blogs/rss.xml` (a
+   * single one — `docs/i18n.md` §8), so the old path has to redirect
+   * permanently rather than 404: a reader that sees a few 404s unsubscribes
+   * itself.
    *
-   * Không làm được ở `proxy.ts`: matcher ở đó loại mọi đường dẫn có dấu chấm để
-   * file tĩnh không bị đụng tới.
+   * It cannot be done in `proxy.ts`: that matcher excludes every path with a dot
+   * so static files are left alone.
    */
   async redirects() {
     return [
@@ -94,21 +100,22 @@ const nextConfig: NextConfig = {
 
   turbopack: {
     /**
-     * Turbopack KHÔNG resolve file nằm ngoài root, mà root nó tự dò bằng cách
-     * đi ngược lên tìm lockfile — trên máy này nó vớ phải `~/yarn.lock` và
-     * chọn cả `$HOME` làm root. Ghim thẳng vào gốc repo: đủ rộng để thấy
-     * `packages/*`, đủ hẹp để không watch cả home directory.
+     * Turbopack does NOT resolve files outside its root, and it detects that
+     * root by walking up looking for a lockfile — on this machine it found
+     * `~/yarn.lock` and picked all of `$HOME`. Pin it to the repo root instead:
+     * wide enough to see `packages/*`, narrow enough not to watch the entire
+     * home directory.
      *
-     * `process.cwd()` là thư mục app vì `next build` luôn chạy từ đó (turbo
-     * cũng chạy script trong đúng package).
+     * `process.cwd()` is the app directory because `next build` always runs from
+     * there (turbo runs the script inside the package too).
      */
     root: path.join(process.cwd(), "..", ".."),
   },
 };
 
 /**
- * Plugin của next-intl trỏ `next-intl/config` về `./i18n/request.ts`. Không có
- * nó thì mọi `getTranslations`/`useTranslations` chạy với cấu hình rỗng và ném
- * lỗi "no messages" ngay ở trang đầu tiên.
+ * next-intl's plugin points `next-intl/config` at `./i18n/request.ts`. Without
+ * it, every `getTranslations`/`useTranslations` runs with an empty config and
+ * throws "no messages" on the very first page.
  */
 export default createNextIntlPlugin()(nextConfig);

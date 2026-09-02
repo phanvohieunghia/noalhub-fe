@@ -8,19 +8,21 @@ import { Button } from "@noalhub/ui/button";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * 500 của riêng vùng blog: backend chết, timeout, `schema.parse` fail
- * (`docs/blog-plan.md` §6.4).
+ * The blog area's own 500: a dead backend, a timeout, a failed `schema.parse`
+ * (`docs/blog.md` §6.4).
  *
- * **Bắt buộc `"use client"`** — Next chỉ nhận error boundary ở client.
+ * **`"use client"` is required** — Next only accepts error boundaries on the
+ * client.
  *
- * ⚠️ Nó **không** bắt được lỗi trong `generateMetadata`: lỗi ở đó làm hỏng cả
- * route trước khi boundary này tồn tại. Vì vậy mọi `generateMetadata` có fetch
- * phải tự `try/catch` và trả metadata tối thiểu thay vì ném — xem
- * `[slug]/page.tsx`.
+ * ⚠️ It does **not** catch errors in `generateMetadata`: a failure there breaks
+ * the whole route before this boundary exists. So every `generateMetadata` that
+ * fetches must `try/catch` itself and return minimal metadata rather than throw
+ * — see `[slug]/page.tsx`.
  *
- * `unstable_retry` (Next 16.2) render lại segment kèm **fetch lại dữ liệu**;
- * `reset` cũ chỉ xoá trạng thái lỗi rồi render lại bằng đúng dữ liệu đã hỏng,
- * nên nút "Thử lại" dùng nó là bấm bao nhiêu lần cũng ra cùng một lỗi.
+ * `unstable_retry` (Next 16.2) re-renders the segment and **refetches the
+ * data**; the older `reset` only clears the error state and re-renders with the
+ * very data that failed, so a "Retry" button built on it produces the same error
+ * however many times it is pressed.
  */
 export default function BlogError({
   error,

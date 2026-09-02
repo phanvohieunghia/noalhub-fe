@@ -11,12 +11,13 @@ import type {
 import type { AuthSession, AuthTokens, OAuthProvider, User } from "./types";
 
 /**
- * Toàn bộ bề mặt tiếp xúc với backend auth, map 1-1 với OpenAPI spec tại
- * `http://localhost:3101/docs` (tag `auth`, `auth/oauth`).
- * Backend đổi contract → chỉ file này phải sửa.
+ * The entire contact surface with the auth backend, mapping 1-to-1 to the
+ * OpenAPI spec at `http://localhost:3101/docs` (tags `auth`, `auth/oauth`).
+ * When the backend changes the contract, only this file changes.
  *
- * `schema` và `authRequired` là option `services/client.ts` cắm thêm vào config
- * của axios: schema validate response, authRequired bật Bearer + refresh-on-401.
+ * `schema` and `authRequired` are options `services/client.ts` adds to axios'
+ * config: `schema` validates the response, `authRequired` turns on Bearer plus
+ * refresh-on-401.
  */
 
 /** POST /auth/register → 201 AuthSessionDto. 409 EMAIL_TAKEN. */
@@ -24,7 +25,7 @@ export async function register(input: RegisterInput): Promise<AuthSession> {
   const { email, password, displayName } = input;
   const { data } = await http.post<AuthSession>(
     "/auth/register",
-    // displayName optional — gửi chuỗi rỗng sẽ khác với "không gửi".
+    // displayName is optional — sending an empty string differs from omitting it.
     displayName ? { email, password, displayName } : { email, password },
     { schema: sessionSchema },
   );
@@ -42,8 +43,9 @@ export async function login(input: LoginInput): Promise<AuthSession> {
 /**
  * POST /auth/refresh → 200 TokenPairDto.
  *
- * Được `services/client.ts` gọi tự động khi gặp 401 — **không gọi tay**.
- * Token xoay vòng: trình lại một token đã dùng sẽ thu hồi toàn bộ phiên.
+ * Called automatically by `services/client.ts` on a 401 — **never call it by
+ * hand**. Tokens rotate: presenting an already-used token revokes the whole
+ * session.
  */
 export async function refresh(refreshToken: string): Promise<AuthTokens> {
   const { data } = await http.post<AuthTokens>(
@@ -54,17 +56,17 @@ export async function refresh(refreshToken: string): Promise<AuthTokens> {
   return data;
 }
 
-/** POST /auth/logout → 204. Chỉ thu hồi refresh token gửi lên. */
+/** POST /auth/logout → 204. Revokes only the refresh token that was sent. */
 export async function logout(refreshToken: string): Promise<void> {
   await http.post("/auth/logout", { refreshToken });
 }
 
-/** POST /auth/logout-all → 204. Vô hiệu cả access token đang lưu hành. */
+/** POST /auth/logout-all → 204. Invalidates outstanding access tokens too. */
 export async function logoutAll(): Promise<void> {
   await http.post("/auth/logout-all", undefined, { authRequired: true });
 }
 
-/** GET /auth/me → 200 UserDto (trả thẳng user, không bọc trong `{ user }`). */
+/** GET /auth/me → 200 UserDto (the user directly, not wrapped in `{ user }`). */
 export async function me(signal?: AbortSignal): Promise<User> {
   const { data } = await http.get<User>("/auth/me", {
     authRequired: true,
@@ -79,14 +81,15 @@ export async function verifyEmail(token: string): Promise<void> {
   await http.post("/auth/verify-email", { token });
 }
 
-/** POST /auth/verify-email/resend → 204 kể cả khi email không tồn tại. */
+/** POST /auth/verify-email/resend → 204 even when the email does not exist. */
 export async function resendVerifyEmail(email: string): Promise<void> {
   await http.post("/auth/verify-email/resend", { email });
 }
 
 /**
- * POST /auth/forgot-password → 204 kể cả khi email không tồn tại (cố ý, chống
- * dò email). UI không được suy ra sự tồn tại của tài khoản từ kết quả này.
+ * POST /auth/forgot-password → 204 even when the email does not exist
+ * (deliberate, to prevent account enumeration). The UI must not infer whether
+ * an account exists from this result.
  */
 export async function forgotPassword(
   input: ForgotPasswordInput,
@@ -94,7 +97,7 @@ export async function forgotPassword(
   await http.post("/auth/forgot-password", input);
 }
 
-/** POST /auth/reset-password → 204. Vô hiệu mọi phiên đang mở. */
+/** POST /auth/reset-password → 204. Invalidates every open session. */
 export async function resetPassword(
   token: string,
   input: ResetPasswordInput,
@@ -107,8 +110,8 @@ export async function resetPassword(
 
 /**
  * POST /auth/change-password → 200 AuthSessionDto.
- * Giết mọi phiên cũ và cấp phiên mới — caller BẮT BUỘC thay cặp token bằng
- * cặp trả về, nếu không request kế tiếp sẽ 401.
+ * Kills every old session and issues a new one — the caller MUST replace its
+ * token pair with the returned one, or the next request is a 401.
  */
 export async function changePassword(
   input: ChangePasswordInput,
@@ -123,11 +126,12 @@ export async function changePassword(
 }
 
 /**
- * GET /auth/oauth/{provider} — 302 sang trang đồng ý của provider.
+ * GET /auth/oauth/{provider} — a 302 to the provider's consent screen.
  *
- * Trả URL để `window.location.assign`, KHÔNG gọi bằng axios: backend đặt
- * cookie httpOnly chứa `state` + PKCE verifier, cần điều hướng top-level.
- * Callback URL do backend cấu hình, spec không nhận `redirect_uri`.
+ * Returns a URL for `window.location.assign`; do NOT call it with axios: the
+ * backend sets an httpOnly cookie holding `state` plus the PKCE verifier, which
+ * requires a top-level navigation. The callback URL is configured by the
+ * backend, and the spec takes no `redirect_uri`.
  */
 export function oauthStartUrl(provider: OAuthProvider): string {
   return `${API_BASE_URL}/auth/oauth/${provider}`;
@@ -135,7 +139,7 @@ export function oauthStartUrl(provider: OAuthProvider): string {
 
 /**
  * POST /auth/oauth/exchange → 200 AuthSessionDto.
- * Handoff code dùng một lần, hết hạn sau 60 giây.
+ * The handoff code is single-use and expires after 60 seconds.
  */
 export async function oauthExchange(code: string): Promise<AuthSession> {
   const { data } = await http.post<AuthSession>(

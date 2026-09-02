@@ -1,13 +1,14 @@
 import { z } from "zod";
 
 /**
- * Hai nhóm schema:
- * - Response/event schema: parse body REST và payload socket, bắt backend đổi
- *   shape ngay tại chỗ thay vì để lỗi trôi vào UI.
- * - Input schema: validate composer trước khi gửi.
+ * Two groups of schemas:
+ * - Response/event schemas: parse REST bodies and socket payloads, catching a
+ *   backend shape change on the spot instead of letting it drift into the UI.
+ * - Input schemas: validate the composer before sending.
  *
- * Nguồn: OpenAPI spec `/docs-json` (REST) và `../noalhub-be/docs/chat.md`
- * (socket — không có trong spec, xem `docs/chat.md` §0).
+ * Sources: the OpenAPI spec `/docs-json` (REST) and
+ * `../noalhub-be/docs/chat.md` (sockets — absent from the spec, see
+ * `docs/chat.md` §0).
  */
 
 /* ---- Response schemas (REST) ---- */
@@ -15,8 +16,8 @@ import { z } from "zod";
 export const messageSchema = z.object({
   id: z.string(),
   conversationId: z.string(),
-  // `.nullish()` chứ không `.nullable()`: spec không đánh dấu senderId là
-  // required, nên trường này có thể vắng mặt hẳn thay vì bằng null.
+  // `.nullish()` rather than `.nullable()`: the spec does not mark senderId as
+  // required, so the field may be absent entirely instead of null.
   senderId: z.string().nullish().transform((value) => value ?? null),
   type: z.enum(["text", "system"]),
   body: z.string(),
@@ -30,8 +31,9 @@ export const conversationMemberSchema = z.object({
   displayName: z.string().nullish().transform((value) => value ?? null),
   avatarUrl: z.string().nullish().transform((value) => value ?? null),
   lastReadMessageId: z.string().nullish().transform((value) => value ?? null),
-  // Presence đi kèm response, KHÔNG chỉ qua socket. Bỏ hai trường này thì zod
-  // strip mất và dot presence câm cho tới lúc có `presence:changed` đầu tiên.
+  // Presence rides along with the response, not only over the socket. Omit
+  // these two and zod strips them, leaving the presence dot mute until the
+  // first `presence:changed` arrives.
   status: z.enum(["online", "offline"]).nullish().transform((value) => value ?? null),
   lastSeenAt: z.string().nullish().transform((value) => value ?? null),
 });
@@ -59,9 +61,9 @@ export const messagePageSchema = z.object({
 /* ---- Event payload schemas (socket) ---- */
 
 /**
- * Payload socket được validate y như REST. Handler nào parse fail thì BỎ QUA
- * event đó và log — không được để một event lạ làm sập cả kết nối
- * (`docs/chat.md` §5.4).
+ * Socket payloads are validated exactly like REST. A handler whose parse fails
+ * SKIPS that event and logs — one strange event must never bring down the whole
+ * connection (`docs/chat.md` §5.4).
  */
 export const messageNewEventSchema = z.object({ message: messageSchema });
 
@@ -89,7 +91,7 @@ export const typingEventSchema = z.object({
   isTyping: z.boolean(),
 });
 
-/** Ack của `message:send`. */
+/** The ack for `message:send`. */
 export const sendMessageAckSchema = z.union([
   z.object({ ok: z.literal(true), message: messageSchema }),
   z.object({
@@ -102,9 +104,10 @@ export const sendMessageAckSchema = z.union([
 /* ---- Input schema ---- */
 
 /**
- * Giới hạn 4000 ký tự lấy từ BE doc — vì gửi tin đi qua socket nên DTO của nó
- * KHÔNG nằm trong OpenAPI, con số này chưa được spec bảo chứng
- * (`docs/chat.md` §0 #5). Backend siết lại thì FE chỉ biết qua ack `ok: false`.
+ * The 4000-character limit comes from the backend docs — since sending goes
+ * over the socket, its DTO is NOT in the OpenAPI spec and this number has no
+ * spec backing (`docs/chat.md` §0 #5). If the backend tightens it, the frontend
+ * only finds out through an `ok: false` ack.
  */
 export const MESSAGE_BODY_MAX = 4000;
 

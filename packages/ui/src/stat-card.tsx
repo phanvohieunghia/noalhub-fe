@@ -2,11 +2,12 @@ import { Skeleton } from "./skeleton";
 import { Typography } from "./typography";
 
 /**
- * Ô số liệu cho trang tổng quan.
+ * A stat tile for the overview page.
  *
- * `hint` là chỗ nói rõ số này nghĩa là gì và **không** nghĩa là gì — số đếm
- * không kèm định nghĩa là nguồn hiểu sai kinh điển (ví dụ "7 ngày qua" tính
- * theo giờ server, không theo múi giờ người xem).
+ * `hint` is where the number's meaning — and what it does **not** mean — is
+ * spelled out; a count without a definition is the classic source of
+ * misreading (e.g. "last 7 days" measured in server time, not the viewer's
+ * timezone).
  */
 export function StatCard({
   label,

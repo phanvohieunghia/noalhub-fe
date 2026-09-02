@@ -15,10 +15,10 @@ import { publishChecklist } from "./publish-checklist";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Dialog xác nhận trước khi đăng (`docs/blog-plan.md` §7.4).
+ * The confirmation dialog before publishing (`docs/blog.md` §7.4).
  *
- * Cùng tinh thần với dialog moderation ở `admin-plan.md` §3b: hành động nhìn
- * thấy được từ ngoài thì không cho xảy ra bằng một cú click.
+ * Same spirit as the moderation dialog in `admin-plan.md` §3b: an action
+ * visible to the outside world must not happen on a single click.
  */
 export function PublishDialog({
   values,

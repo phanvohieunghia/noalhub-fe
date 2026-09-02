@@ -7,8 +7,9 @@ import { Button } from "@noalhub/ui/button";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Chỗ hiển thị lỗi dùng chung cho mọi màn hình admin (`docs/admin-plan.md` §1).
- * Nhờ nó, mất role giữa phiên cho ra một câu giải thích thay vì màn hình trắng.
+ * The shared error surface for every admin screen (`docs/admin-plan.md` §1).
+ * Thanks to it, losing a role mid-session produces an explanation rather than a
+ * blank screen.
  */
 export function AdminErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   const t = useTranslations("common.actions");

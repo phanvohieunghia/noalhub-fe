@@ -16,11 +16,12 @@ type DialogProps = {
 };
 
 /**
- * Modal dựng trên Radix Dialog: focus trap, `Esc`, khoá scroll nền, portal và
- * `aria-modal` đều do Radix lo — không tự viết lại.
+ * A modal built on Radix Dialog: focus trap, `Esc`, background scroll lock,
+ * portal and `aria-modal` all come from Radix — none of it is reimplemented.
  *
- * Giữ API `open` / `onClose` (thay vì `onOpenChange` của Radix) để mọi chỗ gọi
- * cũ không phải sửa; Radix chỉ phát `onOpenChange(false)` nên map thẳng được.
+ * The `open` / `onClose` API is kept (instead of Radix's `onOpenChange`) so no
+ * existing call site has to change; Radix only ever emits
+ * `onOpenChange(false)` here, so it maps directly.
  */
 export function Dialog({ open, onClose, title, children }: DialogProps) {
   const t = useTranslations("common");
@@ -32,7 +33,7 @@ export function Dialog({ open, onClose, title, children }: DialogProps) {
         <RadixDialog.Content className="fixed top-1/2 left-1/2 z-50 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-xl bg-background text-foreground shadow-xl focus:outline-none">
           <div className="flex flex-col gap-4 p-5">
             <div className="flex items-start justify-between gap-4">
-              {/* Radix bắt buộc có Title — nó là nguồn của aria-labelledby. */}
+              {/* Radix requires a Title — it is the source of aria-labelledby. */}
               <RadixDialog.Title asChild>
                 <Typography variant="h6" as="h2">
                   {title}

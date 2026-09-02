@@ -8,8 +8,9 @@ export default function AdminLoginPage() {
     <IntlProvider namespace="admin.login">
       <main className="flex flex-1 items-center justify-center p-6">
         <div className="w-full max-w-sm">
-          {/* Form đọc `?next` bằng `useSearchParams()` → bắt buộc có Suspense
-              boundary, nếu không cả route bị ép sang client render lúc build. */}
+          {/* The form reads `?next` with `useSearchParams()` → a Suspense
+              boundary is required, or the whole route is forced to client
+              rendering at build time. */}
           <Suspense>
             <AdminLoginForm />
           </Suspense>

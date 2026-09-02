@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { Geist_Mono, Open_Sans } from "next/font/google";
 
 /*
- * ⚠️ `globals.css` phải được import ở ĐÂY, không phải ở hai file layout.
+ * ⚠️ `globals.css` must be imported HERE, not in the two layout files.
  *
- * Trước khi tách root layout, nó nằm trong `app/layout.tsx`. File đó đã bị xoá
- * (hai root layout — xem chú thích dưới), và đây là module duy nhất mà **cả
- * hai** root layout đều đi qua. Thiếu dòng này thì app vẫn build xanh và vẫn
- * render đủ HTML, chỉ là không có một dòng Tailwind nào — không lỗi ở đâu để
- * lần ra.
+ * Before the root layout was split it lived in `app/layout.tsx`. That file is
+ * gone (two root layouts — see the note below), and this is the only module
+ * **both** root layouts pass through. Without this line the app still builds
+ * green and still renders complete HTML, only without a single line of
+ * Tailwind — and no error anywhere to trace it from.
  */
 import "./globals.css";
 import { appUrl } from "@noalhub/core/blog/seo";
@@ -18,30 +18,32 @@ import { QueryProvider } from "@noalhub/ui/query-provider";
 import { ThemeProvider } from "@noalhub/ui/theme/theme-provider";
 
 /**
- * Khung `<html>` dùng chung cho **cả hai root layout** của app.
+ * The `<html>` shell shared by **both root layouts** of the app.
  *
- * App có hai root layout vì `<html lang>` phải nói đúng ngôn ngữ đang render mà
- * `lang` thì nằm trên `<html>`: `app/[locale]/layout.tsx` biết locale, còn
- * `app/auth/layout.tsx` (OAuth callback, cố ý nằm NGOÀI `[locale]` vì
- * `redirect_uri` đã ghim ở backend và ở console của Google/GitHub) thì không.
- * Hai root layout thì không được có `app/layout.tsx` — xem
+ * The app has two root layouts because `<html lang>` must state the language
+ * being rendered and `lang` lives on `<html>`: `app/[locale]/layout.tsx` knows
+ * the locale, while `app/auth/layout.tsx` (the OAuth callback, deliberately
+ * OUTSIDE `[locale]` because the `redirect_uri` is pinned in the backend and in
+ * the Google/GitHub consoles) does not. With two root layouts there must be no
+ * `app/layout.tsx` — see
  * `docs/01-app/01-getting-started/02-project-structure.md`.
  *
- * Font khai ở module scope, không phải trong component: `next/font/google` tải
- * file lúc build và cần một chỗ khai duy nhất cho mỗi biến thể, gọi hai lần ở
- * hai layout là hai bộ `@font-face` cho cùng một font.
+ * Fonts are declared at module scope, not inside the component:
+ * `next/font/google` downloads the files at build time and needs one declaration
+ * per variant; calling it in both layouts yields two `@font-face` sets for one
+ * font.
  */
 
 /**
- * `next/font/google` tải file font **lúc build** rồi tự host cùng static
- * assets — trình duyệt của người dùng không gọi sang Google, và không có FOUT
- * vì Next chèn sẵn `@font-face` + preload.
+ * `next/font/google` downloads the font files **at build time** and self-hosts
+ * them alongside the static assets — the user's browser never calls Google, and
+ * there is no FOUT because Next emits the `@font-face` and a preload.
  *
- * `subsets` BẮT BUỘC có `vietnamese`: thiếu nó thì chữ có dấu rơi sang font
- * fallback của hệ điều hành, cùng một dòng có hai kiểu chữ khác nhau.
+ * `subsets` MUST include `vietnamese`: without it, accented characters fall back
+ * to the OS font and a single line shows two different typefaces.
  *
- * Open Sans là font biến thiên (300–800) nên không khai `weight` — mọi độ đậm
- * đều nằm trong một file, và `typography.tsx` chỉ dùng 400/500/600.
+ * Open Sans is a variable font (300–800), so no `weight` is declared — every
+ * weight is in one file, and `typography.tsx` only uses 400/500/600.
  */
 const openSans = Open_Sans({
   variable: "--font-open-sans",
@@ -50,15 +52,16 @@ const openSans = Open_Sans({
 });
 
 /**
- * Bản NGHIÊNG phải nạp riêng. `next/font/google` không nhận mảng `style` cho
- * font biến thiên, và không có nó thì trình duyệt **tự bóp nghiêng** chữ đứng
- * (synthetic oblique) — nét dày mỏng sai hẳn so với bản italic thật của Open
- * Sans, thấy rõ nhất ở `a`, `e`, `g`.
+ * The ITALIC face has to be loaded separately. `next/font/google` does not take
+ * a `style` array for variable fonts, and without it the browser **slants the
+ * upright face itself** (synthetic oblique) — the stroke weights come out quite
+ * wrong compared with Open Sans' real italic, most visibly on `a`, `e`, `g`.
  *
- * Hai lần gọi cùng sinh ra `font-family: "Open Sans"`, chỉ khác `font-style`,
- * nên utility `italic` tự chọn đúng bản — không cần khai gì thêm ở chỗ dùng.
- * Biến `--font-open-sans-italic` không ai đọc, nhưng phải gắn `.variable` lên
- * `<html>` thì Next mới giữ lại `@font-face` này.
+ * Both calls produce `font-family: "Open Sans"` and differ only in
+ * `font-style`, so the `italic` utility picks the right face on its own — no
+ * extra declaration at the call site. Nobody reads the
+ * `--font-open-sans-italic` variable, but `.variable` must be on `<html>` for
+ * Next to keep this `@font-face` at all.
  */
 const openSansItalic = Open_Sans({
   variable: "--font-open-sans-italic",
@@ -73,21 +76,22 @@ const geistMono = Geist_Mono({
 });
 
 /**
- * ⚠️ `metadataBase` là BẮT BUỘC từ khi có blog: mọi URL tương đối trong
- * `alternates.canonical` và `openGraph.images` được Next nở ra thành URL tuyệt
- * đối dựa vào nó. Thiếu → build lỗi ở route nào dùng URL tương đối
- * (`docs/blog-plan.md` §6.1).
+ * ⚠️ `metadataBase` has been REQUIRED since the blog arrived: every relative URL
+ * in `alternates.canonical` and `openGraph.images` is expanded to an absolute
+ * URL against it. Missing → a build error on any route using relative URLs
+ * (`docs/blog.md` §6.1).
  *
- * `appUrl()` đọc `NEXT_PUBLIC_APP_URL`, biến bị **inline lúc build** — nên nó
- * phải có trong khối `env:` của `.github/workflows/publish.yml` và trong
- * `build-args` của `apps/web/Dockerfile`, không phải trong `.env` trên VPS.
+ * `appUrl()` reads `NEXT_PUBLIC_APP_URL`, which is **inlined at build time** —
+ * so it must appear in the `env:` block of `.github/workflows/publish.yml` and
+ * in `apps/web/Dockerfile`'s `build-args`, not in the VPS's `.env`.
  *
- * `title.template` chỉ áp cho route CON; `title.default` là tiêu đề khi route
- * không tự khai — không gộp hai thứ này thành một chuỗi.
+ * `title.template` applies only to CHILD routes; `title.default` is the title
+ * when a route declares none — do not merge the two into one string.
  *
- * Mô tả nằm ở `nav.json` chứ không hardcode ở đây: đây là chuỗi người dùng đọc
- * được (trong kết quả tìm kiếm), nên nó phải theo ngôn ngữ của trang. Root
- * layout nào biết locale thì tự ghi đè `description`.
+ * The description lives in `nav.json` rather than hardcoded here: it is a
+ * user-readable string (it appears in search results), so it has to follow the
+ * page's language. Whichever root layout knows the locale overrides
+ * `description` itself.
  */
 export const rootMetadata: Metadata = {
   metadataBase: new URL(appUrl()),
@@ -105,18 +109,19 @@ export function RootHtml({
   children: React.ReactNode;
 }) {
   return (
-    // `suppressHydrationWarning` là BẮT BUỘC ở đây: script dưới đây thêm class
-    // `dark` vào chính thẻ này trước khi React hydrate, nên HTML của server và
-    // của client lệch nhau một cách có chủ đích.
+    // `suppressHydrationWarning` is REQUIRED here: the script below adds the
+    // `dark` class to this very element before React hydrates, so the server's
+    // and the client's HTML differ by design.
     <html
       lang={lang}
       suppressHydrationWarning
       className={`${openSans.variable} ${openSansItalic.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        {/* Đồng bộ, không `defer`/`async`, và phải nằm trước mọi thứ khác —
-            nó chạy trước lần paint đầu để trang không nháy trắng rồi mới tối.
-            Nội dung là hằng số của repo, không có dữ liệu người dùng. */}
+        {/* Synchronous, no `defer`/`async`, and it must come before everything
+            else — it runs before the first paint so the page does not flash
+            white and then go dark. The content is a repo constant; no user data
+            is involved. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">

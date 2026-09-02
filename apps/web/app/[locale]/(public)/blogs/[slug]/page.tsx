@@ -24,30 +24,32 @@ import { Typography } from "@noalhub/ui/typography";
 
 type Props = PageProps<"/[locale]/blogs/[slug]">;
 
-/** Webhook §5.2 xoá tag sớm hơn; con số này là lưới an toàn khi webhook lỡ. */
+/** The §5.2 webhook clears the tag sooner; this number is the safety net when it misses. */
 export const revalidate = 300;
 
 /**
- * ⚠️ `generateStaticParams` **không được phép làm đỏ build**.
+ * ⚠️ `generateStaticParams` **must never redden the build**.
  *
- * `publish.yml` build image trên GitHub runner và chỉ truyền `NEXT_PUBLIC_*`;
- * `API_INTERNAL_URL` là biến runtime của compose nên lúc build **không tồn tại**
- * → `server.ts` rơi về URL công khai và `next build` sẽ gọi API production từ
- * runner. Backend sập, đang deploy, hay DuckDNS trục trặc đúng lúc đó là build
- * FE đỏ — với lỗi hiện ra ở một feature không liên quan gì tới bài viết
- * (`docs/blog-plan.md` §4.4a).
+ * `publish.yml` builds the image on a GitHub runner and passes only
+ * `NEXT_PUBLIC_*`; `API_INTERNAL_URL` is a compose runtime variable and
+ * therefore **does not exist** at build time → `server.ts` falls back to the
+ * public URL and `next build` calls the production API from the runner. A
+ * backend that is down, mid-deploy, or a DuckDNS hiccup at that moment turns the
+ * frontend build red — with the error surfacing in a feature unrelated to posts
+ * (`docs/blog.md` §4.4a).
  *
- * Đổi lại gần như không mất gì: mỗi lần deploy là container mới, ISR cache rỗng,
- * nên pre-render lúc build chỉ tiết kiệm lượt truy cập **đầu tiên** của mỗi bài
- * sau mỗi lần deploy. `dynamicParams` mặc định `true` nên bài không có trong
- * danh sách vẫn render on-demand rồi cache.
+ * Almost nothing is lost in exchange: every deploy is a new container with an
+ * empty ISR cache, so build-time prerendering only saves the **first** visit to
+ * each post after each deploy. `dynamicParams` defaults to `true`, so a post
+ * missing from the list still renders on demand and is then cached.
  */
 export async function generateStaticParams() {
   try {
     const entries = await getBlogSitemapEntries();
-    // Tích locale × slug. Quên `locale` là mọi bài rơi khỏi SSG, kể cả khi
-    // danh sách slug đúng — Next không tự nở thêm segment còn thiếu
-    // (`docs/i18n-plan.md` §8).
+    // The locale × slug product. Forget `locale` and every post falls out of
+    // SSG even with a correct slug list — Next does not expand a missing segment
+    // on its own
+    // (`docs/i18n.md` §8).
     return LOCALES.flatMap((locale) => entries.map((entry) => ({ locale, slug: entry.slug })));
   } catch {
     return [];
@@ -55,9 +57,10 @@ export async function generateStaticParams() {
 }
 
 /**
- * ⚠️ Phải tự `try/catch`: `error.tsx` là error boundary ở client nên nó **không**
- * bắt được lỗi ở đây — lỗi trong `generateMetadata` làm hỏng cả route (§6.4).
- * Trả metadata tối thiểu và để hàm page bên dưới quyết định 404 hay 500.
+ * ⚠️ This must `try/catch` itself: `error.tsx` is a client error boundary and
+ * therefore **cannot** catch anything here — a failure in `generateMetadata`
+ * breaks the whole route (§6.4). Return minimal metadata and let the page
+ * function below decide between 404 and 500.
  */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
@@ -73,12 +76,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: postMetaTitle(post),
     description,
     /*
-     * KHÔNG có `languages`/`hreflang` ở đây, dù mọi route công khai khác đều
-     * có: nội dung bài vẫn là tiếng Việt ở cả hai locale (`docs/i18n-plan.md`
-     * §8.1). Khai `hreflang` như thể có bản dịch là thứ Google đánh dấu lỗi.
+     * NO `languages`/`hreflang` here, unlike every other public route: post
+     * content is Vietnamese in both locales (`docs/i18n.md` §8.1). Declaring
+     * `hreflang` as if a translation existed is something Google flags as an
+     * error.
      */
     alternates: {
-      // `canonicalUrl` chỉ được set khi bài đăng lại từ nguồn khác (§2.3).
+      // `canonicalUrl` is only set when the post is republished from another source (§2.3).
       canonical: post.seo.canonicalUrl ?? `/${locale}/blogs/${post.slug}`,
     },
     robots: { index: !post.seo.noindex, follow: true },
@@ -90,8 +94,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       publishedTime: post.publishedAt ?? undefined,
       modifiedTime: post.updatedAt,
       authors: [post.author.displayName],
-      // `article:section` là số ít, `article:tag` là số nhiều — đúng hình dạng
-      // hai trục: một chuyên mục, nhiều thẻ (§2.6, §6.2).
+      // `article:section` is singular and `article:tag` is plural — matching the
+      // shape of the two axes: one category, many tags (§2.6, §6.2).
       section: post.category?.name,
       tags: post.tags.map((tag) => tag.name),
       locale: locale === "vi" ? "vi_VN" : "en_US",
@@ -109,21 +113,24 @@ export default async function BlogPostPage({ params }: Props) {
 
   const post = await getPublishedPost(slug);
 
-  // 404 = không tồn tại HOẶC chưa publish. Backend cố tình không phân biệt hai
-  // ca đó, nếu không đây là kênh dò slug bài nháp (§2.1).
+  // A 404 means it does not exist OR is unpublished. The backend deliberately
+  // does not distinguish the two, or this becomes a channel for probing draft
+  // slugs (§2.1).
   if (!post) notFound();
 
-  // Slug cũ: backend tra bảng `blog_post_slugs` và vẫn trả bài, nhưng body mang
-  // slug MỚI. Chuyển hướng vĩnh viễn sang URL chính để backlink cũ dồn về một
-  // chỗ (§2.4).
+  // An old slug: the backend consults `blog_post_slugs` and still returns the
+  // post, but the body carries the NEW slug. Redirect permanently to the
+  // canonical URL so old backlinks consolidate in one place (§2.4).
   //
-  // Lưu ý mã trạng thái: `permanentRedirect` của Next trả **308**, không phải
-  // 301 như §2.4 viết. Đừng "sửa" lại — Next không cho chọn mã, và Google nói rõ
-  // 308 được xử lý y hệt 301 (khác biệt duy nhất là 308 giữ nguyên HTTP method,
-  // thứ không liên quan gì tới một trang đọc bằng GET).
-  // `permanentRedirect` của `next/navigation`, không phải `redirect` của
-  // next-intl: bản kia không có biến thể vĩnh viễn. Đổi lại phải tự ghép tiền
-  // tố locale — quên là link cũ đá người đọc về `/vi` bất kể họ đang đọc bản nào.
+  // A note on the status code: Next's `permanentRedirect` answers **308**, not
+  // the 301 §2.4 mentions. Do not "fix" that — Next does not let you choose the
+  // code, and Google states plainly that 308 is handled exactly like 301 (the
+  // only difference is that 308 preserves the HTTP method, which is irrelevant
+  // for a page read with GET).
+  // `permanentRedirect` comes from `next/navigation`, not next-intl's
+  // `redirect`: the latter has no permanent variant. In exchange the locale
+  // prefix has to be added by hand — forget it and an old link throws readers
+  // back to `/vi` whichever version they were reading.
   if (post.slug !== slug) permanentRedirect(`/${locale}/blogs/${post.slug}`);
 
   const related = post.category
@@ -145,7 +152,7 @@ export default async function BlogPostPage({ params }: Props) {
       />
 
       <header className="flex flex-col gap-4">
-        {/* Đúng MỘT <h1> mỗi trang; heading trong nội dung là h2/h3 (§6.2). */}
+        {/* Exactly ONE <h1> per page; headings inside the content are h2/h3 (§6.2). */}
         <Typography variant="h2" as="h1" className="leading-tight">
           {post.title}
         </Typography>
@@ -165,7 +172,7 @@ export default async function BlogPostPage({ params }: Props) {
 
         {post.coverImageUrl ? (
           <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-black/5 dark:bg-white/5">
-            {/* `priority`: ảnh bìa gần như luôn là LCP của trang bài viết. */}
+            {/* `priority`: the cover image is almost always the post page's LCP. */}
             <Image
               src={post.coverImageUrl}
               alt=""

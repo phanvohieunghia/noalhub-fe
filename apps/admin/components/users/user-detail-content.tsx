@@ -80,9 +80,9 @@ export function UserDetailContent({ userId }: { userId: string }) {
         <dt className="opacity-60">{t("detail.usernameChangedAt")}</dt>
         <dd>{data.usernameChangedAt ? df.dateTime(data.usernameChangedAt) : t("neverChanged")}</dd>
 
-        {/* ⚠️ KHÔNG phải trạng thái online: endpoint này không đọc presence
-            (spec nói thẳng). Nhãn là "hoạt động lần cuối", và cố ý không có
-            dot xanh/xám ở đây — xem `docs/admin-plan.md` §2. */}
+        {/* ⚠️ NOT an online state: this endpoint does not read presence (the
+            spec says so outright). The label is "last active", and there is
+            deliberately no green/gray dot here — see `docs/admin-plan.md` §2. */}
         <dt className="opacity-60">{t("columns.lastSeen")}</dt>
         <dd>
           {data.lastSeenAt ? df.dateTime(data.lastSeenAt) : t("neverOnline")}
@@ -92,8 +92,9 @@ export function UserDetailContent({ userId }: { userId: string }) {
         </dd>
       </dl>
 
-      {/* Không có nút hành động nào là đúng hiện trạng: backend chưa có
-          ban/khoá, đổi role, xoá user hay buộc logout (`admin-plan.md` §3/§3b). */}
+      {/* Having no action buttons reflects reality: the backend has no ban/lock,
+          role change, user deletion or forced logout yet
+          (`admin-plan.md` §3/§3b). */}
       <Typography
         variant="body-4"
         className="mt-6 rounded-md border border-black/10 p-3 opacity-60 dark:border-white/15"

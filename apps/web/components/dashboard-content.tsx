@@ -8,7 +8,7 @@ import { useAuthStore } from "@noalhub/api/auth";
 import { ThemeToggle } from "@noalhub/ui/theme/theme-toggle";
 import { Typography } from "@noalhub/ui/typography";
 
-/** Trang mẫu để verify luồng auth end-to-end. */
+/** A sample page for verifying the auth flow end to end. */
 export function DashboardContent() {
   const t = useTranslations("web.dashboard");
   const user = useAuthStore((s) => s.user);

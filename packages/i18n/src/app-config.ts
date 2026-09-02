@@ -13,14 +13,16 @@ import type webFriends from "../messages/vi/web.friends.json";
 import type webProfile from "../messages/vi/web.profile.json";
 
 /**
- * Cây message, lấy hình dạng từ bản **`vi`** — nó là bản gốc, mọi locale khác
- * phải khớp nó (script `check-messages` bắt buộc điều đó ở CI).
+ * The message tree, shaped from the **`vi`** files — `vi` is the source
+ * version and every other locale must match it (the `check-messages` script
+ * enforces that in CI).
  *
- * Khai ở đây để gõ sai khoá là **lỗi TypeScript**, không phải một chuỗi lạ hiện
- * lên giao diện lúc chạy (`docs/i18n-plan.md` §9).
+ * Declared here so that a mistyped key is a **TypeScript error** rather than a
+ * stray string appearing in the UI at runtime (`docs/i18n.md` §9).
  *
- * File này chỉ có tác dụng khi được **import** — augmentation của TypeScript
- * không tự áp cho project. Mỗi app import nó một lần ở `i18n/app-config.ts`.
+ * This file only takes effect when it is **imported** — TypeScript module
+ * augmentation is not applied project-wide on its own. Each app imports it once
+ * from `i18n/app-config.ts`.
  */
 export type AppMessages = {
   common: typeof common;
@@ -43,13 +45,14 @@ export type AppMessages = {
 };
 
 /**
- * CHỈ khai `Messages`, không khai `Locale`.
+ * Declares `Messages` ONLY, deliberately not `Locale`.
  *
- * Khai `Locale` thì `setRequestLocale`/`getTranslations` chỉ nhận `"vi" | "en"`,
- * trong khi `params.locale` mà Next đưa xuống mọi page luôn là `string` (segment
- * động bắt cả `/unknown.txt`). Hệ quả là mỗi page phải `hasLocale()` một lần
- * nữa dù `app/[locale]/layout.tsx` đã `notFound()` cho giá trị rác — kiểm hai
- * lần cho cùng một thứ, đổi lấy đúng một chỗ an toàn hơn.
+ * Declaring `Locale` would narrow `setRequestLocale`/`getTranslations` to
+ * `"vi" | "en"`, while the `params.locale` Next hands to every page is always a
+ * `string` (the dynamic segment also catches `/unknown.txt`). Every page would
+ * then need another `hasLocale()` check even though `app/[locale]/layout.tsx`
+ * already calls `notFound()` on garbage — the same thing verified twice, for
+ * exactly one extra safe spot.
  */
 declare module "next-intl" {
   interface AppConfig {

@@ -10,17 +10,20 @@ import { Button } from "../button";
 import { Typography } from "../typography";
 
 /**
- * Lớp thứ hai sau `AuthGuard`: đã đăng nhập **và** đúng role.
+ * The second layer after `AuthGuard`: signed in **and** holding the right role.
  *
- * Vì sao cần: `AuthGuard` chỉ kiểm `status === "authenticated"`, nghĩa là mọi
- * user thường đăng nhập được vào `/dashboard` của admin. Backend vẫn trả 403 nên
- * không lộ dữ liệu, nhưng UI cho vào là sai và đẻ ra một màn hình toàn lỗi.
+ * Why it is needed: `AuthGuard` only checks `status === "authenticated"`, which
+ * means any ordinary user can walk into admin's `/dashboard`. The backend still
+ * answers 403 so no data leaks, but letting them in is wrong and produces a
+ * screen made entirely of errors.
  *
- * Đặt ở `packages/ui` chứ không ở `apps/admin` vì đây là vỏ session dùng chung,
- * không phải feature của admin — `apps/web` sau này cũng có thể cần chặn theo role.
+ * It lives in `packages/ui` rather than `apps/admin` because it is shared
+ * session chrome, not an admin feature — `apps/web` may need role gating later
+ * too.
  *
- * Guard này là **UX, không phải bảo mật**: role đọc từ `/auth/me` ở client, ai
- * cũng sửa được trong devtools. Ranh giới thật vẫn là 403 của backend.
+ * This guard is **UX, not security**: the role is read from `/auth/me` on the
+ * client and anyone can edit it in devtools. The real boundary is still the
+ * backend's 403.
  */
 export function RoleGuard({ role, children }: { role: UserRole; children: React.ReactNode }) {
   const t = useTranslations("common.guard");
@@ -30,9 +33,9 @@ export function RoleGuard({ role, children }: { role: UserRole; children: React.
   const isDenied = me.isSuccess && me.data.role !== role;
 
   useEffect(() => {
-    // Không auto-redirect. Đá thẳng ra `/login` khi user ĐANG có phiên hợp lệ
-    // là vòng lặp: login xong lại vào đây, lại bị đá ra, không ai đọc kịp lý do.
-    // Màn hình dưới nói rõ lý do và để user tự chọn đăng xuất.
+    // No auto-redirect. Kicking a user with a VALID session out to `/login` is
+    // a loop: they log in, land here, get kicked again, and never get to read
+    // why. The screen below states the reason and lets them choose to sign out.
     if (isDenied) {
       router.prefetch("/login");
     }
@@ -40,8 +43,8 @@ export function RoleGuard({ role, children }: { role: UserRole; children: React.
 
   if (me.isPending) return <RoleSkeleton />;
 
-  // Lỗi tải `/auth/me` (mạng, 5xx) khác hẳn với sai role — đừng gộp thành
-  // "không có quyền", user sẽ đi tìm nhầm nguyên nhân.
+  // A failure to load `/auth/me` (network, 5xx) is nothing like a wrong role —
+  // do not collapse it into "no permission", or the user hunts the wrong cause.
   if (me.isError) {
     return (
       <GuardScreen

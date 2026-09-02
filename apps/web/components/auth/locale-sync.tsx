@@ -6,8 +6,8 @@ import { LocaleSync } from "@noalhub/ui/auth/locale-sync";
 import { useCallback } from "react";
 
 /**
- * Xem `LocaleSync`. Web có tiền tố locale nên đồng bộ = đổi URL — và cũng bằng
- * điều hướng cứng, cùng lý do với `WebLanguageSwitcher`.
+ * See `LocaleSync`. Web has a locale prefix, so syncing means changing the URL —
+ * and by a hard navigation too, for the same reason as `WebLanguageSwitcher`.
  */
 export function WebLocaleSync() {
   const pathname = usePathname();

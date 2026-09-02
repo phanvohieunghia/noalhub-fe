@@ -59,11 +59,11 @@ import { Typography } from "@noalhub/ui/typography";
 const FIELDS = ["name", "slug", "description", "order"] as const;
 
 /**
- * Quản lý chuyên mục (`docs/blog-plan.md` §7.1a).
+ * Category management (`docs/blog.md` §7.1a).
  *
- * Tách khỏi `/posts` vì nó thao tác trên tập khác, và **phải làm trước editor**:
- * không có chuyên mục thì ô select ở editor rỗng và không publish nổi bài nào
- * (§11 bước 4).
+ * Separate from `/posts` because it operates on a different set, and it **has to
+ * come before the editor**: with no categories the editor's select is empty and
+ * nothing can be published (§11, step 4).
  */
 export function CategoryManager() {
   const t = useTranslations("admin.posts.categories");
@@ -74,10 +74,9 @@ export function CategoryManager() {
   const [editing, setEditing] = useState<BlogCategory | "new" | null>(null);
   const [deleting, setDeleting] = useState<BlogCategory | null>(null);
 
-  // `distance: 4` để một cú click vào nút Sửa/Xoá không bị nuốt thành drag.
-  // `sortableKeyboardCoordinates` là cách kéo bằng bàn phím: Space nhấc hàng,
-  // mũi tên di chuyển, Space thả — không có nó thì tính năng này chỉ dùng được
-  // bằng chuột.
+  // `distance: 4` so a click on Edit/Delete is not swallowed as a drag.
+  // `sortableKeyboardCoordinates` is the keyboard drag: Space lifts the row,
+  // arrows move it, Space drops it — without it the feature is mouse-only.
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, {
@@ -97,8 +96,8 @@ export function CategoryManager() {
 
     const next = [...rows];
     next.splice(to, 0, ...next.splice(from, 1));
-    // Backend đòi ĐỦ id (gán `order` = vị trí trong mảng) nên gửi cả danh sách,
-    // không riêng hai hàng vừa đổi chỗ.
+    // The backend requires EVERY id (it assigns `order` from the array
+    // position), so send the whole list, not just the two swapped rows.
     reorder.mutate(next.map((row) => row.id));
   };
 
@@ -125,8 +124,8 @@ export function CategoryManager() {
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
-            // Hàng bảng chỉ đổi chỗ theo chiều dọc và không được ra khỏi
-            // `<tbody>` — thả nó lơ lửng giữa trang là vô nghĩa.
+            // Table rows only move vertically and must not leave `<tbody>` —
+            // dropping one loose in the middle of the page is meaningless.
             modifiers={[restrictToVerticalAxis, restrictToParentElement]}
             onDragEnd={onDragEnd}
           >
@@ -225,8 +224,9 @@ function CategoryDialog({
     },
   });
 
-  // `useWatch` chứ không `watch()`: `watch()` trả về một hàm mà React Compiler
-  // không memo hoá an toàn được, nên nó bỏ tối ưu cả component.
+  // `useWatch` rather than `watch()`: `watch()` returns a function the React
+  // Compiler cannot safely memoize, so it bails out of optimizing the whole
+  // component.
   const slug = useWatch({ control, name: "slug" });
   const slugChanged = Boolean(category) && slug !== category?.slug;
 
@@ -255,8 +255,8 @@ function CategoryDialog({
             type="button"
             className="w-fit text-body-4 underline underline-offset-2 opacity-70 hover:opacity-100"
             onClick={() =>
-              // `getValues` chứ không `useWatch`: đọc một lần lúc bấm, không
-              // cần component render lại theo ô Tên.
+              // `getValues` rather than `useWatch`: read once on click; the
+              // component need not re-render as the Name field changes.
               setValue("slug", slugify(getValues("name")), { shouldValidate: true })
             }
           >
@@ -265,10 +265,11 @@ function CategoryDialog({
         </div>
 
         {/*
-          ⚠️ Cảnh báo NẶNG HƠN một bậc so với đổi slug bài. Bài có bảng
-          `blog_post_slugs` đỡ đòn nên URL cũ được 301 sang slug mới (§2.4);
-          chuyên mục KHÔNG có bảng đó (§2.6), nên URL cũ chết hẳn. Câu chữ ở đây
-          phải nói đúng điều đó, không được viết thành "sẽ được chuyển hướng".
+          ⚠️ A warning ONE STEP heavier than the one for post slugs. Posts have
+          the `blog_post_slugs` table to absorb the change, so old URLs 301 to
+          the new slug (§2.4); categories have NO such table (§2.6), so the old
+          URL dies outright. The wording here has to say that, and must never be
+          softened into "will be redirected".
         */}
         {slugChanged ? (
           <Typography
@@ -317,9 +318,10 @@ function CategoryDialog({
 }
 
 /**
- * Xoá **chỉ khi rỗng**. Backend trả 409 `CATEGORY_NOT_EMPTY` kèm số bài, và câu
- * đó được hiện nguyên trong dialog thay vì một toast lỗi trơ (§7.1a) — người
- * dùng cần biết còn bao nhiêu bài phải dời đi, không phải biết rằng "có lỗi".
+ * Deletion **only when empty**. The backend answers 409 `CATEGORY_NOT_EMPTY`
+ * with the post count, and that sentence is shown verbatim in the dialog rather
+ * than as a bare error toast (§7.1a) — the user needs to know how many posts
+ * they must move, not merely that "something went wrong".
  */
 function DeleteCategoryDialog({
   category,
@@ -368,12 +370,12 @@ function DeleteCategoryDialog({
 }
 
 /**
- * Một hàng kéo được.
+ * One draggable row.
  *
- * Dùng `<tr>` trần thay vì `TableRow` của `@noalhub/ui` vì dnd-kit cần `ref` +
- * `style` transform trực tiếp trên node, còn `TableRow` không nhận ref.
- * Kéo chỉ bằng **handle** chứ không bằng cả hàng: cả hàng kéo được thì không
- * bôi đen được tên/slug để copy.
+ * A bare `<tr>` instead of `@noalhub/ui`'s `TableRow`, because dnd-kit needs a
+ * `ref` and a `style` transform directly on the node, and `TableRow` takes no
+ * ref. Dragging happens by **handle** only, never the whole row: a
+ * fully-draggable row cannot be selected to copy the name or slug.
  */
 function CategoryRow({
   category,
@@ -419,8 +421,8 @@ function CategoryRow({
       <TableCell className="font-medium">{category.name}</TableCell>
       <TableCell className="opacity-70">/{category.slug}</TableCell>
       <TableCell className="tabular-nums">{category.order}</TableCell>
-      {/* Con số này đếm CẢ bài nháp — khác `postCount` ở trang công khai, vốn
-          chỉ đếm bài đã đăng (§2.2). */}
+      {/* This number counts drafts TOO — unlike the public `postCount`, which
+          counts published posts only (§2.2). */}
       <TableCell className="tabular-nums">{category.postCount}</TableCell>
       <TableCell>
         <div className="flex justify-end gap-2">

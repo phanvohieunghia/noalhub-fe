@@ -5,11 +5,11 @@ import { DEFAULT_LOCALE, isLocale } from "./config";
 import { intlLocale } from "./formats";
 
 /**
- * Bản `async` của `useDateFormat`, cho **Server Component bất đồng bộ**.
+ * The `async` counterpart of `useDateFormat`, for **async Server Components**.
  *
- * Hai bản chứ không một: hook không gọi được trong `async function` component,
- * còn `getLocale()` thì không dùng được ở client. Cùng một `formatDate` bên
- * dưới nên hai đường không thể ra kết quả khác nhau.
+ * Two versions rather than one: a hook cannot be called inside an `async
+ * function` component, and `getLocale()` cannot be used on the client. Both sit
+ * on the same `formatDate` underneath, so they cannot disagree.
  */
 export async function getDateFormat() {
   const locale = await getLocale();

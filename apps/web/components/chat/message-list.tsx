@@ -15,7 +15,7 @@ import { useTranslations } from "next-intl";
 import type { ConversationMember, Message } from "@noalhub/api/chat";
 import { Typography } from "@noalhub/ui/typography";
 
-/** "Đang ở đáy" — 0 tuyệt đối không dùng được vì sub-pixel rounding. */
+/** "At the bottom" — an exact 0 is unusable because of sub-pixel rounding. */
 const BOTTOM_THRESHOLD_PX = 80;
 
 type Item =
@@ -53,8 +53,8 @@ export function MessageList({
   const [atBottom, setAtBottom] = useState(true);
   const [anchorLength, setAnchorLength] = useState<number | null>(null);
 
-  // API trả mới→cũ. Đảo một lần ở đây để phần render bên dưới đọc xuôi theo
-  // thời gian như mắt người.
+  // The API returns newest→oldest. Reversed once here so the rendering below
+  // reads forward in time, the way a person does.
   const ordered = useMemo(() => [...messages].reverse(), [messages]);
   const items = useMemo(() => groupMessages(ordered), [ordered]);
 
@@ -62,19 +62,19 @@ export function MessageList({
   const messageCount = ordered.length;
 
   /**
-   * Số tin mới xuất hiện từ lúc người dùng rời khỏi đáy — SUY RA, không phải
-   * đếm bằng effect.
+   * How many new messages arrived since the user left the bottom — DERIVED, not
+   * counted in an effect.
    *
-   * `anchorLength` là độ dài danh sách tại thời điểm rời đáy, và nó chỉ được
-   * đặt trong handler scroll (một event handler). Đếm bằng `setState` trong
-   * effect là thứ ESLint v16 chặn thẳng (`react-hooks/set-state-in-effect`), và
-   * chặn đúng: đó là state suy ra được.
+   * `anchorLength` is the list length at the moment of leaving the bottom, and
+   * it is only set inside the scroll handler (an event handler). Counting with
+   * `setState` in an effect is something ESLint v16 blocks outright
+   * (`react-hooks/set-state-in-effect`), and rightly: this is derivable state.
    */
   const newCount = anchorLength === null ? 0 : Math.max(0, ordered.length - anchorLength);
 
-  /* --- Giữ vị trí đọc khi prepend trang cũ --------------------------------
-     Thêm nội dung vào ĐẦU làm scrollHeight tăng; nếu không bù lại thì màn hình
-     nhảy. Đo trước khi DOM cập nhật, bù ngay sau đó.                        */
+  /* --- Preserving the reading position when prepending an older page ------
+     Adding content at the TOP increases scrollHeight; without compensation the
+     view jumps. Measure before the DOM updates, compensate right after.     */
   const prependAnchorRef = useRef<{ height: number; top: number } | null>(null);
 
   const handleLoadOlder = useCallback(() => {
@@ -97,7 +97,7 @@ export function MessageList({
     node.scrollTop = anchor.top + (node.scrollHeight - anchor.height);
   }, [ordered.length]);
 
-  /* --- Cuộn xuống đáy ---------------------------------------------------- */
+  /* --- Scrolling to the bottom ------------------------------------------- */
   const scrollToBottom = useCallback((smooth: boolean) => {
     const node = scrollRef.current;
     if (!node) return;
@@ -107,7 +107,7 @@ export function MessageList({
     });
   }, []);
 
-  // Lần đầu có dữ liệu: nhảy thẳng xuống đáy, KHÔNG animate.
+  // The first time data arrives: jump straight to the bottom, with NO animation.
   const didInitialScrollRef = useRef(false);
   useEffect(() => {
     if (didInitialScrollRef.current || ordered.length === 0) return;
@@ -116,11 +116,12 @@ export function MessageList({
   }, [ordered.length, scrollToBottom]);
 
   /**
-   * Tin mới về: đang ở đáy (hoặc tin của chính mình) thì theo nó; đã cuộn lên
-   * đọc lịch sử thì KHÔNG giật màn hình của người ta.
+   * A new message arrives: if we are at the bottom (or it is our own message),
+   * follow it; if the user has scrolled up to read history, do NOT yank their
+   * view.
    *
-   * Effect này chỉ chạm DOM (cuộn) — không `setState`. Chính hành động cuộn sẽ
-   * phát event scroll, và handler dưới đây mới là chỗ cập nhật state.
+   * This effect only touches the DOM (scrolling) — no `setState`. The scroll
+   * itself fires a scroll event, and the handler below is where state updates.
    */
   const prevLatestIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
@@ -134,7 +135,7 @@ export function MessageList({
     if (atBottom || isMine) scrollToBottom(true);
   }, [latestId, atBottom, ordered, currentUserId, scrollToBottom]);
 
-  // Tới đáy = đã đọc. Điều kiện "tab visible" và debounce nằm ở ChatPane.
+  // Reaching the bottom means read. The "tab visible" condition and the debounce live in ChatPane.
   useEffect(() => {
     if (atBottom && latestId) onReachBottom(latestId);
   }, [atBottom, latestId, onReachBottom]);
@@ -147,15 +148,16 @@ export function MessageList({
     const nowAtBottom = distance < BOTTOM_THRESHOLD_PX;
 
     setAtBottom(nowAtBottom);
-    // Chốt mốc đếm ĐÚNG lúc rời đáy; về đáy thì xoá mốc. Cả hai nhánh nằm
-    // trong event handler nên setState ở đây là hợp lệ.
+    // The counting anchor is fixed at the exact moment of leaving the bottom, and
+    // cleared on returning. Both branches are inside an event handler, so
+    // setState here is legitimate.
     setAnchorLength((current) => {
       if (nowAtBottom) return null;
       return current ?? messageCount;
     });
-    // Phụ thuộc thẳng vào số tin, không đi qua ref: đây là prop `onScroll` của
-    // một element React, đổi hàm chỉ là gán lại prop — không có
-    // addEventListener nào bị tháo ra gắn lại.
+    // Depending directly on the message count rather than going through a ref:
+    // this is a React element's `onScroll` prop, so a new function is just a
+    // reassigned prop — no addEventListener is torn down and re-attached.
   }, [messageCount]);
 
   const sentinelRef = useTopSentinel(handleLoadOlder, hasOlder && !isFetchingOlder);
@@ -187,8 +189,8 @@ export function MessageList({
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        // `role="log"` + `aria-live="polite"`: screen reader đọc tin mới mà
-        // không cắt lời người dùng đang gõ.
+        // `role="log"` + `aria-live="polite"`: a screen reader announces new
+        // messages without interrupting the user mid-typing.
         role="log"
         aria-live="polite"
         aria-relevant="additions"
@@ -232,10 +234,10 @@ export function MessageList({
 }
 
 /**
- * Gộp tin thành nhóm + chèn `DateSeparator`.
+ * Groups messages and inserts `DateSeparator`s.
  *
- * Nhận mảng đã sắp XUÔI theo thời gian. Tin `system` luôn đứng riêng — nó không
- * thuộc về ai nên không gộp vào nhóm nào.
+ * Takes an array already sorted FORWARD in time. A `system` message always
+ * stands alone — it belongs to nobody, so it joins no group.
  */
 function groupMessages(ordered: Message[]): Item[] {
   const items: Item[] = [];
@@ -290,13 +292,15 @@ function groupMessages(ordered: Message[]): Item[] {
 }
 
 /**
- * Tải trang cũ khi sentinel ở ĐỈNH lọt vào khung nhìn. `IntersectionObserver`
- * chứ không `onScroll` — scroll handler chạy mỗi frame.
+ * Loads an older page when the sentinel at the TOP enters the viewport.
+ * `IntersectionObserver` rather than `onScroll` — a scroll handler runs every
+ * frame.
  */
 function useTopSentinel(onReach: () => void, enabled: boolean) {
   const ref = useRef<HTMLDivElement>(null);
-  // Ghi ref trong effect, KHÔNG trong lúc render: mục đích là giữ callback mới
-  // nhất mà không phải gắn lại observer mỗi lần parent render.
+  // The ref is written in an effect, NEVER during render: the point is to keep
+  // the latest callback without re-attaching the observer on every parent
+  // render.
   const onReachRef = useRef(onReach);
   useEffect(() => {
     onReachRef.current = onReach;

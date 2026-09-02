@@ -1,26 +1,26 @@
 /**
- * Mirror của DTO trong OpenAPI spec (`/docs`, tag `users`).
+ * A mirror of the DTOs in the OpenAPI spec (`/docs`, tag `users`).
  *
- * `UserDto` (hồ sơ của CHÍNH MÌNH) dùng chung với auth — re-export lại đây cho
- * component không phải nhớ nó nằm ở feature nào.
+ * `UserDto` (YOUR OWN profile) is shared with auth — re-exported here so
+ * components need not remember which feature it lives in.
  */
 export type { User, UserLanguage, UserRole } from "../auth/types";
 
 /**
- * `PublicProfileDto` — hồ sơ của người khác. Ít trường hơn `User` rất nhiều:
- * không có email, role, emailVerified. Đừng dùng `User` thay cho kiểu này.
+ * `PublicProfileDto` — someone else's profile. Far fewer fields than `User`: no
+ * email, no role, no emailVerified. Do not substitute `User` for this type.
  */
 export type PublicProfile = {
   id: string;
   username: string;
   displayName: string | null;
   avatarUrl: string | null;
-  /** Ngày tham gia. */
+  /** The join date. */
   createdAt: string;
   /**
-   * Lần cuối chuyển sang offline; `null` = chưa từng online. **Không** phải
-   * trạng thái online hiện tại — endpoint này không tính presence, realtime
-   * phải nghe `presence:changed` trên socket.
+   * When they last went offline; `null` means never online. **Not** the current
+   * online state — this endpoint does not compute presence; realtime requires
+   * listening to `presence:changed` on the socket.
    */
   lastSeenAt: string | null;
 };

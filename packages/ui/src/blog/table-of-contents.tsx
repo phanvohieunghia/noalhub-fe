@@ -5,19 +5,20 @@ import { useTranslations } from "next-intl";
 import { Typography } from "../typography";
 
 /**
- * Mục lục dựng **thẳng từ JSON**, không cần backend và không parse HTML (§3.3).
+ * A table of contents built **straight from the JSON** — no backend call, no
+ * HTML parsing (§3.3).
  *
- * Dùng chung `collectHeadings` với renderer nên `href="#id"` ở đây luôn khớp
- * `id` mà renderer đặt vào DOM — kể cả khi bài có hai heading trùng tên và id
- * phải thêm hậu tố.
+ * It shares `collectHeadings` with the renderer, so every `href="#id"` here
+ * matches the `id` the renderer puts in the DOM — including when a post has two
+ * headings with the same text and the ids need a suffix.
  */
 export function TableOfContents({ doc }: { doc: BlogDoc }) {
-  // `common`: component này dùng ở cả trang bài viết (web) lẫn tab Xem trước
-  // của editor (admin), nên không được ghim namespace của riêng một app (§6).
+  // `common`: this component is used both on the post page (web) and in the
+  // editor's preview tab (admin), so it must not pin one app's namespace (§6).
   const t = useTranslations("common");
   const headings = collectHeadings(doc);
 
-  // Mục lục hai dòng chỉ tốn chỗ (§3.3).
+  // A two-line table of contents is just clutter (§3.3).
   if (headings.length < TOC_MIN_HEADINGS) return null;
 
   return (

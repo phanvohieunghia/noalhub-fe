@@ -26,8 +26,8 @@ export function AdminHeader() {
   const onLogout = async () => {
     setPending(true);
     await logout();
-    // Cache là dữ liệu của MỘT user — không xoá thì admin kế tiếp đăng nhập
-    // trên cùng tab thấy bảng user cũ trong một nhịp.
+    // The cache holds ONE user's data — without clearing it, the next admin to
+    // sign in on this tab sees the previous user table for a beat.
     queryClient.clear();
     router.replace("/login");
   };

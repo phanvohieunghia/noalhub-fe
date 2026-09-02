@@ -1,13 +1,14 @@
 /**
- * Mirror của DTO trong OpenAPI spec (`/docs`, tag `friends`).
- * Đổi ở đây phải kèm đổi zod schema trong `./schemas.ts`.
+ * A mirror of the DTOs in the OpenAPI spec (`/docs`, tag `friends`).
+ * A change here must come with a change to the zod schemas in `./schemas.ts`.
  */
 
 import type { PublicProfile } from "../users/types";
 
 /**
- * Quan hệ nhìn từ phía NGƯỜI GỌI — cùng một cặp user, hai phía thấy hai giá
- * trị khác nhau. `pending_incoming` = họ mời mình, cần mình trả lời.
+ * The relationship as seen from the CALLER's side — for one pair of users, each
+ * side sees a different value. `pending_incoming` means they invited you and
+ * you owe an answer.
  */
 export type FriendState =
   | "none"
@@ -15,11 +16,11 @@ export type FriendState =
   | "pending_incoming"
   | "friends";
 
-/** `FriendDto` — bọc `PublicProfileDto` chứ không phẳng. */
+/** `FriendDto` — it wraps `PublicProfileDto` rather than flattening it. */
 export type Friend = {
   user: PublicProfile;
   state: FriendState;
-  /** Mốc bắt đầu của trạng thái hiện tại: lúc kết bạn, hoặc lúc gửi lời mời. */
+  /** When the current state began: the moment you became friends, or the request was sent. */
   since: string | null;
 };
 
@@ -29,5 +30,5 @@ export type FriendList = {
   total: number;
 };
 
-/** Query của `GET /friends/requests`. Mặc định của backend là `incoming`. */
+/** The query for `GET /friends/requests`. The backend defaults to `incoming`. */
 export type FriendRequestDirection = "incoming" | "outgoing";

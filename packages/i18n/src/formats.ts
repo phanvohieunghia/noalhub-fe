@@ -1,9 +1,9 @@
 import type { Locale } from "./config";
 
 /**
- * Định dạng dùng chung, khai một lần cho cả hai app. Truyền vào `formats` của
- * `getRequestConfig` nên `useFormatter().dateTime(d, "long")` ở bất kỳ đâu cũng
- * ra cùng một kiểu.
+ * Shared formats, declared once for both apps. Passed to `formats` in
+ * `getRequestConfig`, so `useFormatter().dateTime(d, "long")` renders the same
+ * way everywhere.
  */
 export const formats = {
   dateTime: {
@@ -14,8 +14,8 @@ export const formats = {
 } as const;
 
 /**
- * BCP-47 tag để đưa cho `Intl.*`. `vi` một mình cũng chạy, nhưng bản có vùng
- * cho đúng thứ tự ngày/tháng và dấu phân cách nhóm số của khu vực.
+ * The BCP-47 tag handed to `Intl.*`. Plain `vi` works, but the region-qualified
+ * tag gives the right day/month order and number group separators.
  */
 const INTL_LOCALES: Record<Locale, string> = {
   vi: "vi-VN",

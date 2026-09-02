@@ -17,14 +17,16 @@ import type { ConversationMember } from "@noalhub/api/chat";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Hồ sơ công khai của một thành viên hội thoại.
+ * A conversation member's public profile.
  *
- * Hai nguồn, cố ý tách bạch: `GET /users/{username}` cho phần tĩnh (tên, ngày
- * tham gia), còn online/offline lấy từ presence realtime — `lastSeenAt` của
- * endpoint chỉ là mốc offline gần nhất, KHÔNG phải trạng thái hiện tại.
+ * Two sources, deliberately kept apart: `GET /users/{username}` for the static
+ * parts (name, join date), while online/offline comes from realtime presence —
+ * the endpoint's `lastSeenAt` is only the last time they went offline, NOT their
+ * current state.
  *
- * Chỉ fetch khi drawer mở: sidebar có bao nhiêu hội thoại thì bấy nhiêu header
- * cũng chỉ tốn đúng một request khi người dùng thực sự mở.
+ * It fetches only while the drawer is open: however many conversations the
+ * sidebar holds, this costs exactly one request, and only when someone actually
+ * opens it.
  */
 export function MemberProfileDrawer({
   member,
@@ -49,8 +51,8 @@ export function MemberProfileDrawer({
       ? t("presence.online")
       : (cf.lastSeenLabel(presence.lastSeenAt) ?? t("presence.offline"));
 
-  // Chưa có response thì dùng luôn dữ liệu member đã nằm sẵn trong cache chat
-  // — drawer mở ra là có nội dung, phần còn lại điền sau.
+  // Before the response arrives, use the member data already in the chat cache —
+  // the drawer opens with content and fills in the rest afterwards.
   const displayName = data?.displayName ?? member?.displayName ?? name;
   const avatarUrl = data?.avatarUrl ?? member?.avatarUrl ?? null;
 

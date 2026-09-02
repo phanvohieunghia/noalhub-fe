@@ -9,13 +9,14 @@ import { Button } from "@noalhub/ui/button";
 import { useAuthStore } from "@noalhub/api/auth";
 
 /**
- * ⚠️ Namespace là `nav`, KHÔNG phải `web.auth`.
+ * ⚠️ The namespace is `nav`, NOT `web.auth`.
  *
- * Nút này sống ở menu tài khoản của chat và ở dashboard — hai chỗ mà
- * `IntlProvider` chỉ nạp `web.chat` / `web.dashboard`. Ghim vào `web.auth` thì
- * nó ném `MISSING_MESSAGE` **lúc chạy** ở đúng hai chỗ đó, trong khi TypeScript
- * và `check-messages` đều xanh (khoá có thật, chỉ là không được gửi xuống
- * client ở route đó). `nav` là một trong ba namespace mọi trang đều nạp.
+ * This button lives in chat's account menu and on the dashboard — two places
+ * where `IntlProvider` only loads `web.chat` / `web.dashboard`. Pinning it to
+ * `web.auth` makes it throw `MISSING_MESSAGE` **at runtime** in exactly those
+ * two places while TypeScript and `check-messages` both stay green (the key
+ * really exists, it is simply not sent to the client on that route). `nav` is
+ * one of the three namespaces every page loads.
  */
 export function LogoutButton({ className }: { className?: string } = {}) {
   const t = useTranslations("nav");
@@ -27,8 +28,8 @@ export function LogoutButton({ className }: { className?: string } = {}) {
   const onClick = async () => {
     setPending(true);
     await logout();
-    // Cache là dữ liệu của MỘT user — không xoá thì user kế tiếp đăng nhập
-    // trên cùng tab sẽ thấy dữ liệu cũ trong một nhịp.
+    // The cache holds ONE user's data — without clearing it, the next user to
+    // sign in on this tab sees the previous one's data for a beat.
     queryClient.clear();
     router.replace("/login");
   };

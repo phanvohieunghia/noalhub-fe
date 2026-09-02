@@ -19,38 +19,41 @@ import type {
 } from "./types";
 
 /**
- * Tầng thứ tư của feature blog: đường đọc **server-only**, chạy ở Server
- * Component của `apps/web`. Song song với `api.ts` chứ không thay nó.
+ * The blog feature's fourth layer: the **server-only** read path, running in
+ * `apps/web`'s Server Components. Parallel to `api.ts`, not a replacement.
  *
- * Bốn ràng buộc dưới đây đều là lý do kỹ thuật, không phải sở thích
- * (`docs/data-layer.md` §7.1, `docs/blog-plan.md` §4.2):
+ * The four constraints below are all technical, not preferences
+ * (`docs/data-layer.md` §7.1, `docs/blog.md` §4.2):
  *
- * 1. **`import "server-only"` ở dòng đầu.** Lỡ import từ client component thì
- *    lỗi lúc build, không đợi tới lúc chạy.
- * 2. **`fetch` thuần, KHÔNG dùng `http` (axios) của `client.ts`.** Next chỉ cắm
- *    cache/ISR vào `fetch` của chính nó; đi qua axios là mất sạch
- *    `next: { revalidate, tags }` — trang fetch lại mỗi request, ISR thành vô
- *    nghĩa mà build vẫn xanh nên rất khó phát hiện. Thêm nữa `client.ts` kéo
- *    theo token-store (zustand, `localStorage`), thứ không tồn tại trên server.
- * 3. **Vẫn `schema.parse` như tầng api.** Mất response interceptor thì phải tự
- *    validate; không thì backend đổi shape sẽ làm hỏng trang public mà không ai
- *    biết.
- * 4. **404 phải phân biệt được**: hàm đọc một bản ghi trả `null` khi 404 để
- *    route gọi `notFound()`; **mọi lỗi khác thì ném** để `error.tsx` lo. Đảo hai
- *    thứ này là hoặc Google gỡ bài thật khỏi index vì API sập một lần, hoặc
- *    Google thử lại mãi một URL không tồn tại (§6.4).
+ * 1. **`import "server-only"` on the first line.** An accidental import from a
+ *    client component then fails at build time rather than at runtime.
+ * 2. **Plain `fetch`, NOT `client.ts`'s `http` (axios).** Next only wires
+ *    cache/ISR into its own `fetch`; going through axios loses
+ *    `next: { revalidate, tags }` entirely — the page refetches on every
+ *    request, ISR becomes meaningless, and the build stays green so nobody
+ *    notices. On top of that `client.ts` drags in the token store (zustand,
+ *    `localStorage`), which does not exist on the server.
+ * 3. **Still `schema.parse`, like the api layer.** Without the response
+ *    interceptor the validation has to happen here; otherwise a backend shape
+ *    change breaks the public pages with no one the wiser.
+ * 4. **404 must stay distinguishable**: single-record readers return `null` on
+ *    404 so the route can call `notFound()`; **every other error throws** for
+ *    `error.tsx` to handle. Swap the two and either Google drops real posts
+ *    from the index because the API blipped once, or Google keeps retrying a
+ *    URL that does not exist (§6.4).
  */
 
 /* --------------------------------- Cache tag -------------------------------- */
 
 /**
- * Tên tag — nguồn sự thật DUY NHẤT, dùng chung với `POST /api/revalidate`
- * (§5.2). Route handler đó **tự dựng tên tag** từ slug nhận được thay vì nhận
- * tên tag từ body; nó gọi đúng các hàm dưới đây nên hai bên không thể lệch.
+ * Tag names — the ONLY source of truth, shared with `POST /api/revalidate`
+ * (§5.2). That route handler **builds the tag names itself** from the slug it
+ * receives rather than taking tag names from the body; it calls the very
+ * functions below, so the two cannot drift.
  *
- * Vì sao chỉ dùng `revalidateTag`, không `revalidatePath`: `/blogs` và
- * `/blogs?page=2` là **hai path khác nhau**, nên `revalidatePath("/blogs")`
- * không đụng tới trang 2, còn một tag thì phủ hết.
+ * Why only `revalidateTag` and never `revalidatePath`: `/blogs` and
+ * `/blogs?page=2` are **two different paths**, so `revalidatePath("/blogs")`
+ * never touches page 2, while one tag covers all of them.
  */
 export const BLOG_TAGS = {
   list: "blog-list",
@@ -63,12 +66,13 @@ export const BLOG_TAGS = {
 } as const;
 
 /**
- * Số bài mỗi trang công khai (§4.5). Trần của backend là 50; con số này định
- * nghĩa luôn "vượt tổng số trang" ở `/blogs`, nên đừng để mỗi chỗ một giá trị.
+ * Posts per public page (§4.5). The backend's ceiling is 50; this number also
+ * defines "past the last page" on `/blogs`, so do not let it differ between
+ * call sites.
  */
 export const BLOG_PAGE_SIZE = 10;
 
-/** Bài liên quan lấy 4 rồi loại bài hiện tại, còn 3 (§2.5). */
+/** Related posts fetch 4, drop the current post, and show 3 (§2.5). */
 const RELATED_FETCH_LIMIT = 4;
 const RELATED_DISPLAY_COUNT = 3;
 
@@ -78,28 +82,29 @@ const TAXONOMY_REVALIDATE = 3600;
 
 /* ---------------------------------- Fetch ---------------------------------- */
 
-/** Lỗi không-404 từ đường đọc công khai. `error.tsx` của `/blogs` bắt nó (§6.4). */
+/** A non-404 failure on the public read path. `/blogs`'s `error.tsx` catches it (§6.4). */
 export class BlogServerError extends Error {
   readonly status: number;
 
   constructor(status: number, path: string) {
-    super(`Không đọc được dữ liệu blog (${status}) từ ${path}`);
+    super(`Failed to read blog data (${status}) from ${path}`);
     this.name = "BlogServerError";
     this.status = status;
   }
 }
 
 /**
- * Base URL khi fetch **ở server**.
+ * The base URL for fetching **on the server**.
  *
- * `NEXT_PUBLIC_API_BASE_URL` bị inline lúc build và trỏ ra domain công khai;
- * container Next dùng chính nó thì request đi ra internet, vòng qua nginx rồi
- * quay lại cùng máy. `API_INTERNAL_URL` là biến **runtime** (không
- * `NEXT_PUBLIC_`) trỏ thẳng vào service backend trong docker network (§4.3).
+ * `NEXT_PUBLIC_API_BASE_URL` is inlined at build time and points at the public
+ * domain; if the Next container used it, the request would go out to the
+ * internet, round through nginx and come back to the same machine.
+ * `API_INTERNAL_URL` is a **runtime** variable (no `NEXT_PUBLIC_`) pointing
+ * straight at the backend service inside the docker network (§4.3).
  *
- * Đọc trong hàm chứ không ở module scope: giá trị chỉ có lúc chạy, còn lúc
- * `next build` trên CI runner thì không — và khi đó rơi về URL công khai là
- * hành vi đúng (§4.4a).
+ * Read inside the function rather than at module scope: the value only exists
+ * at runtime, not during `next build` on a CI runner — and falling back to the
+ * public URL there is the correct behaviour (§4.4a).
  */
 function serverApiBaseUrl(): string {
   const internal = process.env.API_INTERNAL_URL;
@@ -113,20 +118,22 @@ type FetchOptions = {
 };
 
 /**
- * `next` là phần Next thêm vào `RequestInit` của Web API — nó chỉ có kiểu khi
- * `next/types/global.d.ts` được nạp, mà package này **cố tình không phụ thuộc
- * `next`** (nó là tầng dữ liệu, dùng được ngoài React lẫn ngoài Next).
+ * `next` is Next's addition to the Web API's `RequestInit` — it is only typed
+ * when `next/types/global.d.ts` is loaded, and this package **deliberately does
+ * not depend on `next`** (it is the data layer, usable outside React and
+ * outside Next).
  *
- * Khai lại đúng hình dạng đó ở đây thay vì kéo cả `next` vào `devDependencies`.
- * Runtime không đổi: `fetch` đã bị Next vá và nó đọc thẳng `init.next`.
+ * So the shape is redeclared here instead of pulling `next` into
+ * `devDependencies`. Runtime is unaffected: Next has patched `fetch` and it
+ * reads `init.next` directly.
  */
 type NextFetchInit = RequestInit & {
   next?: { revalidate?: number | false; tags?: string[] };
 };
 
 /**
- * Trả `null` khi 404, ném `BlogServerError` với mọi mã lỗi khác — xem ràng buộc
- * (4) ở đầu file.
+ * Returns `null` on 404 and throws `BlogServerError` on every other status —
+ * see constraint (4) at the top of this file.
  */
 async function getJson(
   path: string,
@@ -137,8 +144,9 @@ async function getJson(
     if (value !== undefined && value !== "") url.searchParams.set(key, String(value));
   }
 
-  // Gán qua biến có kiểu chứ không truyền object literal thẳng: literal sẽ bị
-  // excess-property check của TS chặn vì `RequestInit` gốc không có `next`.
+  // Assigned through a typed variable rather than passing an object literal:
+  // TS's excess-property check would reject the literal, since the base
+  // `RequestInit` has no `next`.
   const init: NextFetchInit = {
     headers: { Accept: "application/json" },
     next: { revalidate, tags },
@@ -152,20 +160,20 @@ async function getJson(
   return response.json();
 }
 
-/* --------------------------------- Bài viết -------------------------------- */
+/* ----------------------------------- Posts --------------------------------- */
 
 /**
- * `GET /blog/posts` — chỉ bài `published`, sort `publishedAt DESC` (lọc ở
- * backend, không phải ở FE).
+ * `GET /blog/posts` — `published` posts only, sorted `publishedAt DESC`
+ * (filtered on the backend, not the frontend).
  *
- * Mọi lượt gọi đều mang tag `blog-list`; lọc theo chuyên mục/thẻ thì mang thêm
- * tag riêng của lát cắt đó, để webhook §5.2 xoá đúng phần cần xoá.
+ * Every call carries the `blog-list` tag; filtering by category or tag adds
+ * that slice's own tag, so the §5.2 webhook invalidates exactly what it should.
  */
 export async function getPublishedPosts(
   query: BlogPostQuery = {},
 ): Promise<BlogPostList> {
-  // Kiểu tường minh: `BLOG_TAGS` là `as const` nên suy kiểu sẽ ra mảng literal
-  // `"blog-list"[]` và không push thêm tag nào vào được.
+  // An explicit type: `BLOG_TAGS` is `as const`, so inference would produce a
+  // literal `"blog-list"[]` array that no other tag could be pushed into.
   const tags: string[] = [BLOG_TAGS.list];
   if (query.category) tags.push(BLOG_TAGS.category(query.category));
   if (query.tag) tags.push(BLOG_TAGS.tag(query.tag));
@@ -181,27 +189,30 @@ export async function getPublishedPosts(
     revalidate: LIST_REVALIDATE,
   });
 
-  // Danh sách không có ca 404 hợp lệ: `?category=khong-ton-tai` là lỗi backend
-  // hoặc lỗi contract, không phải "trang này không tồn tại". Route kiểm tra
-  // chuyên mục/thẻ có thật bằng `getBlogCategory`/`getBlogTag` trước đó (§6.5).
+  // A listing has no legitimate 404 case: `?category=does-not-exist` is a
+  // backend or contract bug, not "this page does not exist". The route already
+  // verified the category/tag exists via `getBlogCategory`/`getBlogTag` (§6.5).
   if (data === null) throw new BlogServerError(404, "/blog/posts");
 
   return blogPostListSchema.parse(data);
 }
 
 /**
- * `GET /blog/posts/{slug}` — `null` khi không tồn tại **hoặc chưa publish**
- * (backend không phân biệt hai ca: phân biệt là mở kênh dò slug bài nháp, §2.1).
+ * `GET /blog/posts/{slug}` — `null` when it does not exist **or is not
+ * published** (the backend does not distinguish the two: distinguishing them
+ * would open a channel for probing draft slugs, §2.1).
  *
- * ⚠️ Bài trả về có thể mang **slug khác** slug đã hỏi: backend tra bảng
- * `blog_post_slugs` nên URL cũ vẫn ra bài, nhưng body là slug mới (§2.4). Chỗ
- * gọi phải so `post.slug !== slug` rồi `permanentRedirect` — nếu không, hai URL
- * cùng nội dung và backlink cũ không dồn về đâu cả.
+ * ⚠️ The returned post may carry a **different slug** than the one asked for:
+ * the backend consults the `blog_post_slugs` table, so old URLs still resolve,
+ * but the body holds the new slug (§2.4). The call site must compare
+ * `post.slug !== slug` and `permanentRedirect` — otherwise two URLs share one
+ * content and old backlinks consolidate nowhere.
  */
 export async function getPublishedPost(slug: string): Promise<BlogPost | null> {
   const data = await getJson(`/blog/posts/${encodeURIComponent(slug)}`, {
-    // Tag theo slug ĐÃ HỎI: webhook gửi cả slug cũ lẫn slug mới khi đổi slug
-    // (§5.2b), nên bản cache dưới URL cũ cũng bị xoá.
+    // Tagged by the slug that was ASKED FOR: on a slug change the webhook sends
+    // both the old and the new slug (§5.2b), so the copy cached under the old
+    // URL is invalidated too.
     tags: [BLOG_TAGS.post(slug)],
     revalidate: DETAIL_REVALIDATE,
   });
@@ -210,12 +221,12 @@ export async function getPublishedPost(slug: string): Promise<BlogPost | null> {
 }
 
 /**
- * Bài liên quan — dùng lại `GET /blog/posts`, **không** thêm endpoint (§2.5).
+ * Related posts — reusing `GET /blog/posts`, with **no** extra endpoint (§2.5).
  *
- * Lọc theo **chuyên mục** chứ không theo thẻ: mỗi bài có đúng một chuyên mục
- * nên đây là truy vấn xác định, còn thứ tự của `tags` không được contract cam
- * kết là có nghĩa. Lấy 4 để bù cho bài hiện tại bị loại — không thì bài nào
- * cũng chỉ còn 2.
+ * Filtered by **category** rather than tag: each post has exactly one category,
+ * making this a deterministic query, whereas the contract promises nothing
+ * about the order of `tags`. Four are fetched to compensate for dropping the
+ * current post — otherwise every post would show only 2.
  */
 export async function getRelatedPosts(
   categorySlug: string,
@@ -231,17 +242,17 @@ export async function getRelatedPosts(
     .slice(0, RELATED_DISPLAY_COUNT);
 }
 
-/** Vài bài mới nhất — dùng cho `not-found.tsx` của `/blogs` (§2.5, §6.4). */
+/** The latest few posts — used by `/blogs`'s `not-found.tsx` (§2.5, §6.4). */
 export async function getLatestPosts(limit = 3): Promise<BlogPostListItem[]> {
   const { items } = await getPublishedPosts({ limit });
   return items;
 }
 
-/* --------------------------- Chuyên mục và thẻ ----------------------------- */
+/* --------------------------- Categories and tags --------------------------- */
 
 /**
- * `GET /blog/categories` — `postCount` chỉ đếm bài `published` (§2.1). Dùng cho
- * nav của layout công khai và cho trang chuyên mục.
+ * `GET /blog/categories` — `postCount` counts only `published` posts (§2.1).
+ * Used by the public layout's nav and by the category pages.
  */
 export async function getBlogCategories(): Promise<BlogCategory[]> {
   const data = await getJson("/blog/categories", {
@@ -257,11 +268,12 @@ export async function getBlogCategories(): Promise<BlogCategory[]> {
 }
 
 /**
- * Một chuyên mục theo slug. Không có endpoint riêng và cũng không cần: danh
- * sách chuyên mục là tập nhỏ, đã cache sẵn dưới tag `blog-categories`, nên tra
- * trong đó rẻ hơn một endpoint mới phải nuôi mãi.
+ * One category by slug. There is no dedicated endpoint and none is needed: the
+ * category list is a small set already cached under the `blog-categories` tag,
+ * so looking it up there is cheaper than a new endpoint to maintain forever.
  *
- * `undefined` = chuyên mục không tồn tại → route gọi `notFound()` (§6.5).
+ * `undefined` means the category does not exist → the route calls `notFound()`
+ * (§6.5).
  */
 export async function getBlogCategory(
   slug: string,
@@ -270,7 +282,7 @@ export async function getBlogCategory(
   return categories.find((category) => category.slug === slug);
 }
 
-/** `GET /blog/tags` — chỉ mục thẻ ở `/blogs/tag`. KHÔNG dùng cho sitemap (§2.6). */
+/** `GET /blog/tags` — the tag index at `/blogs/tag`. NOT used for the sitemap (§2.6). */
 export async function getBlogTags(): Promise<BlogTag[]> {
   const data = await getJson("/blog/tags", {
     tags: [BLOG_TAGS.tags],
@@ -290,11 +302,11 @@ export async function getBlogTag(slug: string): Promise<BlogTag | undefined> {
 }
 
 /**
- * `GET /blog/sitemap-entries` — **mọi** bài published, không phân trang.
+ * `GET /blog/sitemap-entries` — **every** published post, unpaginated.
  *
- * Endpoint riêng chứ không phải `GET /blog/posts?limit=…`: khi số bài vượt
- * limit thì sitemap **âm thầm thiếu URL**, build vẫn xanh nên không ai phát
- * hiện (§2.1).
+ * Its own endpoint rather than `GET /blog/posts?limit=…`: once the post count
+ * passes the limit the sitemap would **silently miss URLs** while the build
+ * stayed green, so nobody would notice (§2.1).
  */
 export async function getBlogSitemapEntries(): Promise<BlogSitemapEntry[]> {
   const data = await getJson("/blog/sitemap-entries", {

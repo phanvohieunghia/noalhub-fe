@@ -1,11 +1,11 @@
-# Kế hoạch blog — trang công khai (`apps/web`) + editor (`apps/admin`)
+# Blog — trang công khai (`apps/web`) + editor (`apps/admin`)
 
 |                |                                                                                                                                                                       |
 | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Status**     | ✅ **Đã chốt** (2026-08-30) · **rà vòng 2** — thêm 6 chỗ sẽ vỡ lúc code + 6 lỗ contract (chỉ mục ở **§12.3**) · **rà vòng 3** — chốt **hai trục phân loại: chuyên mục + thẻ** (**§2.6**), kéo theo sửa §1–§2, §4.5, §5.2, §6, §7, §10–§12. · ✅ **Đã implement** (2026-08-31) — cả FE lẫn BE; sai lệch so với plan ghi ở **§12.4**                                     |
 | **Mục tiêu**   | Bài viết soạn/sửa trong `apps/admin`, lưu ở DB backend, nhấn **Publish** thì mới xuất hiện công khai ở `apps/web`, có đủ SEO (metadata, OG, canonical, sitemap, JSON-LD) |
 | **Contract**   | `http://localhost:3101/docs-json` — **đã có 12 endpoint blog**. §2 là contract gốc; bản đã implement ở `docs/blog.md` của repo `noalhub-be`                        |
-| **Liên quan**  | `docs/data-layer.md` §7 (ngoại lệ đường đọc của blog đã được ghi chính thức ở đó; §4 dưới đây là phần chi tiết triển khai), `docs/monorepo-plan.md`, `docs/admin-plan.md`                                   |
+| **Liên quan**  | `docs/data-layer.md` §7 (ngoại lệ đường đọc của blog đã được ghi chính thức ở đó; §4 dưới đây là phần chi tiết triển khai), `docs/monorepo.md`, `docs/admin-plan.md`                                   |
 
 ---
 

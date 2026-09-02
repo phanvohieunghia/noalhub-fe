@@ -5,39 +5,41 @@ import { absoluteUrl } from "@noalhub/core/blog/seo";
 import { DEFAULT_LOCALE, LOCALES } from "@noalhub/i18n/config";
 
 /**
- * **Dựng lúc chạy, không lúc build.**
+ * **Built at runtime, not at build time.**
  *
- * `sitemap.ts` mặc định được prerender lúc `next build`, mà lúc đó
- * `API_INTERNAL_URL` chưa tồn tại và backend production có thể không với tới
- * được từ CI (§4.4a). Kết cục đo được khi smoke test: **sitemap rỗng suốt tới
- * một tiếng sau mỗi lần deploy**, và không ai thấy vì build vẫn xanh.
+ * `sitemap.ts` is prerendered during `next build` by default, and at that point
+ * `API_INTERNAL_URL` does not exist and the production backend may be
+ * unreachable from CI (§4.4a). The measured outcome during a smoke test: **an
+ * empty sitemap for up to an hour after every deploy**, unnoticed because the
+ * build stayed green.
  *
- * `force-dynamic` bỏ hẳn lượt prerender đó. Tải lên backend không đổi: `fetch`
- * trong `server.ts` vẫn cache 3600 giây và vẫn mang tag `blog-sitemap`, nên
- * webhook §5.2 vẫn xoá được — chỉ có phần ráp XML là làm lại mỗi request, và nó
- * gần như không tốn gì.
+ * `force-dynamic` drops that prerender entirely. Backend load is unchanged: the
+ * `fetch` in `server.ts` still caches for 3600 seconds and still carries the
+ * `blog-sitemap` tag, so the §5.2 webhook can still invalidate it — only the XML
+ * assembly is redone per request, and that costs next to nothing.
  */
 export const dynamic = "force-dynamic";
 
 /**
- * Sitemap gồm: `/blogs`, từng bài, từng chuyên mục (§6.3).
+ * The sitemap contains: `/blogs`, each post, and each category (§6.3).
  *
- * KHÔNG gồm:
- * - `?page=N` — Google tự bò theo link phân trang (§4.5), và mỗi trang danh sách
- *   là nội dung gần trùng nhau.
- * - trang **thẻ** — thẻ là `noindex, follow` (§2.6); đưa URL noindex vào sitemap
- *   là gửi tín hiệu mâu thuẫn.
- * - `/` — trang chủ vẫn nằm sau `AuthGuard`, xem `robots.ts`.
+ * It does NOT contain:
+ * - `?page=N` — Google follows the pagination links itself (§4.5), and each
+ *   listing page is near-duplicate content.
+ * - **tag** pages — tags are `noindex, follow` (§2.6); putting a noindex URL in
+ *   the sitemap sends contradictory signals.
+ * - `/` — the home page is still behind `AuthGuard`, see `robots.ts`.
  *
- * Từ khi có i18n, **mỗi URL xuất hiện một lần cho mỗi locale**, kèm khối
- * `alternates.languages` trỏ chéo sang bản kia (`docs/i18n-plan.md` §8). Liệt kê
- * một locale thôi thì bản còn lại chỉ vào index được qua đường bò link.
+ * Since i18n, **each URL appears once per locale**, with an
+ * `alternates.languages` block cross-referencing the other (`docs/i18n.md` §8).
+ * Listing only one locale leaves the other reachable for indexing only by
+ * crawling links.
  *
- * Ngoại lệ là **bài viết**: chúng có mặt ở cả hai locale nhưng KHÔNG khai
- * `alternates`, vì nội dung vẫn là tiếng Việt ở cả hai (§8.1).
+ * The exception is **posts**: they appear in both locales but declare NO
+ * `alternates`, because the content is Vietnamese in both (§8.1).
  */
 
-/** `hreflang` cho một đường dẫn đã dịch. `x-default` trỏ về locale mặc định. */
+/** `hreflang` for a translated path. `x-default` points at the default locale. */
 function languagesFor(path: string) {
   return {
     languages: {
@@ -76,10 +78,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 }
 
 /**
- * Lỗi tạm thời của backend thì **để nó ném** — sitemap 500 làm Google thử lại,
- * còn sitemap 200-nhưng-rỗng nói với Google rằng site không còn URL nào. Hàm này
- * chỉ nuốt ca 404 (`server.ts` đã quy về mảng rỗng) và giữ chữ ký gọn cho
- * `Promise.all`.
+ * A transient backend failure is **left to throw** — a 500 sitemap makes Google
+ * retry, while a 200-but-empty sitemap tells Google the site has no URLs left.
+ * This function only absorbs the 404 case (`server.ts` already maps that to an
+ * empty array) and keeps a tidy signature for `Promise.all`.
  */
 async function safe<T>(load: () => Promise<T[]>, fallback: T[]): Promise<T[]> {
   const result = await load();

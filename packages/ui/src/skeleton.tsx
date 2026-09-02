@@ -1,6 +1,7 @@
 /**
- * Khối placeholder lúc đang tải. `aria-hidden` vì vùng chứa nó đã có
- * `aria-busy`/`role="status"` — screen reader không cần biết về từng khối xám.
+ * A placeholder block while loading. `aria-hidden` because its container
+ * already carries `aria-busy`/`role="status"` — a screen reader has no use for
+ * each individual gray box.
  */
 export function Skeleton({ className = "" }: { className?: string }) {
   return (

@@ -2,10 +2,10 @@ import { ApiError } from "@noalhub/api/errors";
 import type { Message } from "@noalhub/api/message";
 
 /**
- * Thông điệp hiển thị cho một lỗi bất kỳ, dưới dạng khoá i18n (§7.3).
+ * The message shown for an arbitrary error, as an i18n key (§7.3).
  *
- * `ApiError.message` do backend soạn nên ưu tiên dùng — nhưng chỉ để HIỂN THỊ.
- * Muốn phân nhánh logic thì switch trên `code`, không parse message.
+ * `ApiError.message` is written by the backend and is preferred — but for
+ * DISPLAY only. To branch on logic, switch on `code`; never parse the message.
  */
 export function errorText(error: unknown): Message | string {
   if (error instanceof ApiError) {
@@ -15,7 +15,7 @@ export function errorText(error: unknown): Message | string {
   return { key: "common.errors.generic" };
 }
 
-/** Thông điệp cho mã lỗi trong ack socket (`{ ok: false, code }`). */
+/** The message for an error code in a socket ack (`{ ok: false, code }`). */
 export function ackErrorText(code: string | undefined): Message {
   switch (code) {
     case "SOCKET_OFFLINE":

@@ -7,13 +7,14 @@ import { Typography } from "@noalhub/ui/typography";
 import { ChatUserMenu } from "./chat-user-menu";
 
 /**
- * Nút "Mới" CHƯA có ở giai đoạn 1: tạo DM cần `userId`, mà backend chưa có
- * endpoint tìm người dùng (`GET /api/users?search=` — xem `docs/chat.md` §0 #2).
+ * There is NO "New" button in phase 1: creating a DM needs a `userId`, and the
+ * backend has no user search endpoint yet (`GET /api/users?search=` — see
+ * `docs/chat.md` §0 #2).
  *
- * Cố ý không vẽ nút disabled: nút bấm không được là lời hứa suông. Khi endpoint
- * đó có thật thì mở lại `NewDirectConversationDialog` ở đây.
+ * A disabled button is deliberately not drawn: a button must not be an empty
+ * promise. When that endpoint exists, reopen `NewDirectConversationDialog` here.
  *
- * "Bạn bè" đã nằm trong `ChatUserMenu` nên không lặp lại ở đây.
+ * "Friends" already lives in `ChatUserMenu`, so it is not repeated here.
  */
 export function ChatSidebarHeader() {
   const t = useTranslations("web.chat.sidebar");

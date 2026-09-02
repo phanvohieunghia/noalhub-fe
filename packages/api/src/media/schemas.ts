@@ -5,17 +5,19 @@ import type { Message } from "../message";
 import type { MediaKind } from "./types";
 
 /* ------------------------------------------------------------------------- *
- * Allowlist — bản sao của `src/media/media-limits.ts` bên backend
+ * Allowlist — a copy of the backend's `src/media/media-limits.ts`
  * ------------------------------------------------------------------------- */
 
 /**
- * ⚠️ **Bản sao có chủ đích, và là bản sao thứ yếu.** Nguồn sự thật là
- * `media-limits.ts` bên `noalhub-be`; backend vẫn từ chối độc lập bằng
- * `MEDIA_MIME_NOT_ALLOWED` / `MEDIA_TOO_LARGE` dù FE có kiểm hay không.
+ * ⚠️ **A deliberate copy, and the secondary one.** The source of truth is
+ * `media-limits.ts` in `noalhub-be`; the backend rejects independently with
+ * `MEDIA_MIME_NOT_ALLOWED` / `MEDIA_TOO_LARGE` whether or not the frontend
+ * checks.
  *
- * Giữ ở đây chỉ để **hỏng sớm và hỏng có nghĩa**: chọn nhầm một file 40MB thì
- * biết ngay lúc chọn, thay vì sau khi đã đẩy hết 40MB lên mạng rồi mới ăn 400.
- * Lệch với backend thì hậu quả là lỗi hiện muộn hơn — không phải lỗ hổng.
+ * It is kept here only to **fail early and fail meaningfully**: picking a 40MB
+ * file by mistake is known at selection time rather than after pushing all
+ * 40MB over the network and then taking a 400. Drift from the backend means an
+ * error appears later — it is not a security hole.
  */
 export const MEDIA_MIME_TO_KIND: Record<string, MediaKind> = {
   "image/jpeg": "image",
@@ -38,14 +40,15 @@ export const MEDIA_KIND_MAX_BYTES: Record<MediaKind, number> = {
 };
 
 /**
- * SVG chặt hơn hẳn ảnh thường: nhịp `complete` bên backend phải **đọc trọn
- * file** về để sanitize, chi phí đó nằm trên RAM của server — khác hẳn mọi mime
- * còn lại chỉ cần 512 byte đầu.
+ * SVG is far more restricted than ordinary images: the backend's `complete`
+ * step has to **read the whole file** back to sanitize it, and that cost lands
+ * on the server's RAM — unlike every other mime, which only needs the first 512
+ * bytes.
  */
 export const SVG_MIME = "image/svg+xml";
 export const SVG_MAX_BYTES = 512 * 1024;
 
-/** Chỉ mime `kind === "image"` — dùng cho `accept` của input chèn ảnh. */
+/** Only the `kind === "image"` mimes — used for the image input's `accept`. */
 export const MEDIA_IMAGE_MIMES = Object.keys(MEDIA_MIME_TO_KIND).filter(
   (mime) => MEDIA_MIME_TO_KIND[mime] === "image",
 );
@@ -66,12 +69,12 @@ function formatBytes(bytes: number): string {
 }
 
 /**
- * `null` = file dùng được. Ngược lại là khoá i18n + tham số để component dịch
- * (`Message`), không phải câu đã dịch sẵn: hàm này chạy ở module scope, không
- * biết locale nào cả.
+ * `null` means the file is usable. Otherwise it is an i18n key plus parameters
+ * for the component to translate (`Message`), never a pre-translated sentence:
+ * this function runs at module scope and knows no locale.
  *
- * Nhận `File` chứ không nhận `{ type, size }` rời: hai tham số cùng đến từ một
- * vật thể thì tách ra chỉ tạo cơ hội truyền chéo nhau.
+ * It takes a `File` rather than a loose `{ type, size }`: two parameters coming
+ * from one object only create the chance to pass them crossed over.
  */
 export function describeMediaRejection(
   file: File,
@@ -99,7 +102,7 @@ export function describeMediaRejection(
 }
 
 /* ------------------------------------------------------------------------- *
- * Schema phản hồi
+ * Response schemas
  * ------------------------------------------------------------------------- */
 
 const mediaKindSchema = z.enum(["image", "video", "file"]);

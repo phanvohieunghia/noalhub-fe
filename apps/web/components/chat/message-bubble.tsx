@@ -52,8 +52,8 @@ export function MessageBubble({
           <span role="alert" className="text-[11px] text-red-600 dark:text-red-400">
             {m(ackErrorText(message.errorCode))}
           </span>
-          {/* Gửi lại dùng ĐÚNG `id` cũ — backend idempotent theo id, nên retry
-              không bao giờ tạo tin thứ hai. */}
+          {/* A resend uses the SAME `id` — the backend is idempotent on id, so a
+              retry never creates a second message. */}
           <button
             type="button"
             onClick={() => onRetry(message)}

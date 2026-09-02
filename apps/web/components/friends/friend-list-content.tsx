@@ -15,10 +15,10 @@ import { useFriendRequests, useFriends } from "@noalhub/api/friends";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Danh sách bạn bè.
+ * The friend list.
  *
- * `FriendDto` bọc user trong `friend.user` — KHÔNG phẳng; `since` ở đây là mốc
- * kết bạn.
+ * `FriendDto` wraps the user in `friend.user` — it is NOT flat; `since` here is
+ * when the friendship began.
  */
 export function FriendListContent() {
   const t = useTranslations("web.friends");
@@ -27,7 +27,7 @@ export function FriendListContent() {
   const [findOpen, setFindOpen] = useState(false);
 
   const { data, isPending, error } = useFriends();
-  // Chỉ cần con số cho badge; chiều đến là thứ cần hành động.
+  // Only the count is needed for the badge; incoming requests are what need action.
   const { data: incoming } = useFriendRequests("incoming");
   const incomingCount = incoming?.total ?? 0;
 

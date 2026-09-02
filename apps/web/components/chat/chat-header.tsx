@@ -24,7 +24,7 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
 
   return (
     <div className="flex shrink-0 items-center gap-3 border-b border-black/10 px-4 py-3 dark:border-white/10">
-      {/* Nút back chỉ có nghĩa ở mobile — desktop luôn thấy sidebar. */}
+      {/* The back button only means anything on mobile — desktop always shows the sidebar. */}
       <Link
         href="/chat"
         aria-label={t("backToList")}
@@ -33,7 +33,7 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
         ◀
       </Link>
 
-      {/* Avatar mở hồ sơ; group chưa xác định được "người kia" nên chỉ là hình. */}
+      {/* The avatar opens the profile; a group has no single "other person", so it is just an image. */}
       {peer ? (
         <button
           type="button"

@@ -6,8 +6,9 @@ import { Spinner } from "@noalhub/ui/spinner";
 import { useChatRealtime } from "./chat-realtime-provider";
 
 /**
- * Chỉ hiện khi socket KHÔNG online. Gửi tin đi qua socket nên mất kết nối là
- * mất khả năng gửi — người dùng phải thấy điều đó, không phải đoán.
+ * Shown only while the socket is NOT online. Messages go over the socket, so a
+ * lost connection means losing the ability to send — the user has to see that,
+ * not guess it.
  */
 export function ConnectionBanner() {
   const t = useTranslations("web.chat.connection");

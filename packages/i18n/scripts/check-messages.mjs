@@ -4,24 +4,26 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /**
- * So cây khoá của mọi locale với `vi` (`docs/i18n-plan.md` §9).
+ * Compare every locale's key tree against `vi` (`docs/i18n.md` §9).
  *
- * Vì sao phải chạy ở CI chứ không chỉ tin vào code review: `loadAllMessages`
- * cố ý fallback về `vi` khi thiếu khoá, nên một chuỗi bị quên **không** gây lỗi
- * lúc chạy — nó chỉ hiện ra tiếng Việt giữa giao diện tiếng Anh, và người duy
- * nhất phát hiện sẽ là người dùng.
+ * Why this runs in CI instead of relying on code review: `loadAllMessages`
+ * deliberately falls back to `vi` for a missing key, so a forgotten string does
+ * **not** throw at runtime — it just shows up as Vietnamese inside the English
+ * UI, and the only person who notices is the user.
  *
- * Kiểm cả hai chiều: thiếu khoá là chuỗi chưa dịch, thừa khoá là chuỗi đã bị xoá
- * ở `vi` mà bản dịch còn sót — rác, và là dấu hiệu hai bên đang lệch nhau.
+ * Checked in both directions: a missing key is an untranslated string, an extra
+ * key is a string deleted from `vi` whose translation was left behind — dead
+ * weight, and a sign the two sides have drifted.
  *
- * Kiểm luôn tham số ICU: `{count}` ở `vi` mà bản `en` viết `{total}` thì chuỗi
- * đó ném lỗi format **lúc chạy**, không phải hiện sai chữ.
+ * ICU parameters are checked too: `{count}` in `vi` against `{total}` in `en`
+ * makes that string throw a formatting error **at runtime**, not merely render
+ * the wrong words.
  */
 
 const MESSAGES_DIR = join(fileURLToPath(new URL("../messages", import.meta.url)));
 const BASE_LOCALE = "vi";
 
-/** `{ "a.b.c": ["count"] }` — đường dẫn khoá → tên tham số trong chuỗi. */
+/** `{ "a.b.c": ["count"] }` — key path → parameter names used in the string. */
 function flatten(tree, prefix = "", out = {}) {
   for (const [key, value] of Object.entries(tree)) {
     const path = prefix ? `${prefix}.${key}` : key;
@@ -30,15 +32,15 @@ function flatten(tree, prefix = "", out = {}) {
     } else if (value && typeof value === "object") {
       flatten(value, path, out);
     } else {
-      throw new Error(`Giá trị không hợp lệ ở khoá "${path}"`);
+      throw new Error(`Invalid value at key "${path}"`);
     }
   }
   return out;
 }
 
 /**
- * Tên tham số trong một chuỗi ICU: `{name}`, `{count, plural, ...}`, và tag
- * `<tag>`. Bỏ qua phần thân của plural/select — chỉ cần đúng bộ TÊN.
+ * Parameter names in an ICU string: `{name}`, `{count, plural, ...}` and
+ * `<tag>`. Plural/select bodies are ignored — only the set of NAMES matters.
  */
 function placeholders(message) {
   const names = new Set();
@@ -69,25 +71,25 @@ for (const locale of locales.filter((name) => name !== BASE_LOCALE)) {
 
   for (const key of Object.keys(base)) {
     if (!(key in target)) {
-      problems.push(`${locale}: thiếu khoá "${key}"`);
+      problems.push(`${locale}: missing key "${key}"`);
       continue;
     }
     const expected = base[key].join(", ");
     const actual = target[key].join(", ");
     if (expected !== actual) {
-      problems.push(`${locale}: khoá "${key}" có tham số [${actual}], ${BASE_LOCALE} là [${expected}]`);
+      problems.push(`${locale}: key "${key}" has params [${actual}], ${BASE_LOCALE} has [${expected}]`);
     }
   }
 
   for (const key of Object.keys(target)) {
-    if (!(key in base)) problems.push(`${locale}: thừa khoá "${key}" (không có ở ${BASE_LOCALE})`);
+    if (!(key in base)) problems.push(`${locale}: extra key "${key}" (absent from ${BASE_LOCALE})`);
   }
 }
 
 if (problems.length > 0) {
-  console.error(`check-messages: ${problems.length} vấn đề\n`);
+  console.error(`check-messages: ${problems.length} problem(s)\n`);
   for (const problem of problems) console.error(`  - ${problem}`);
   process.exit(1);
 }
 
-console.log(`check-messages: ${Object.keys(base).length} khoá, ${locales.length} locale — khớp.`);
+console.log(`check-messages: ${Object.keys(base).length} keys, ${locales.length} locales — in sync.`);

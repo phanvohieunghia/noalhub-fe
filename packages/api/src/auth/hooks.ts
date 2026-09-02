@@ -14,7 +14,7 @@ import type {
 } from "./schemas";
 
 /**
- * Query key factory — nguồn sự thật DUY NHẤT cho key của feature auth.
+ * Query key factory — the ONLY source of truth for the auth feature's keys.
  */
 export const authKeys = {
   all: ["auth"] as const,
@@ -22,11 +22,11 @@ export const authKeys = {
 };
 
 /**
- * Thông tin user hiện tại.
+ * The current user.
  *
- * Chỉ chạy khi CÓ refresh token: access token nằm trong memory nên sau reload
- * nó rỗng, `services/client.ts` sẽ tự refresh rồi retry. Không có refresh token
- * thì gọi chỉ tổ nhận 401.
+ * Runs only when a refresh token EXISTS: the access token lives in memory, so
+ * after a reload it is empty and `services/client.ts` refreshes then retries.
+ * With no refresh token, calling this only earns a 401.
  */
 export function useMe() {
   const status = useAuthStore((s) => s.status);
@@ -65,13 +65,13 @@ export function useLogout() {
 
   return useMutation({
     mutationFn: () => logout(),
-    // Cache là dữ liệu của MỘT user — không xoá thì user kế tiếp đăng nhập
-    // trên cùng tab sẽ thấy dữ liệu cũ trong một nhịp.
+    // The cache holds ONE user's data — without clearing it, the next user to
+    // sign in on this tab sees the previous one's data for a beat.
     onSettled: () => queryClient.clear(),
   });
 }
 
-/** Đăng xuất mọi thiết bị. Vô hiệu cả access token đang lưu hành. */
+/** Sign out on every device. Invalidates outstanding access tokens too. */
 export function useLogoutAll() {
   const queryClient = useQueryClient();
   const reset = useAuthStore((s) => s.reset);
@@ -100,8 +100,9 @@ export function useResetPassword(token: string) {
 }
 
 /**
- * Đổi mật khẩu khi đang đăng nhập. Backend giết mọi phiên cũ và trả về phiên
- * mới — phải ghi đè token ngay, nếu không request kế tiếp sẽ 401.
+ * Change the password while signed in. The backend kills every old session and
+ * returns a new one — the tokens must be overwritten immediately, or the next
+ * request is a 401.
  */
 export function useChangePassword() {
   const queryClient = useQueryClient();
@@ -122,7 +123,7 @@ export function useVerifyEmail() {
 
   return useMutation({
     mutationFn: (token: string) => authApi.verifyEmail(token),
-    // emailVerified vừa đổi → user trong cache đã cũ.
+    // emailVerified just changed → the cached user is stale.
     onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.me() }),
   });
 }
@@ -133,11 +134,11 @@ export function useResendVerifyEmail() {
   });
 }
 
-/** Bước cuối luồng OAuth: đổi handoff code lấy session. */
+/** The final OAuth step: exchange the handoff code for a session. */
 /**
- * URL bắt đầu OAuth. Không phải hook (chỉ là điều hướng top-level, không có
- * request nào để cache) nhưng vẫn re-export ở đây để component không phải
- * import `service.ts` — xem `docs/data-layer.md` §1.
+ * The OAuth start URL. Not a hook (it is just a top-level navigation with no
+ * request to cache), but re-exported here so components never have to import
+ * `service.ts` — see `docs/data-layer.md` §1.
  */
 export const oauthStartUrl = authApi.oauthStartUrl;
 

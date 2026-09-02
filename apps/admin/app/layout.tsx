@@ -13,14 +13,14 @@ import { NavigationProgress } from "@noalhub/ui/navigation-progress";
 import { QueryProvider } from "@noalhub/ui/query-provider";
 import { ThemeProvider } from "@noalhub/ui/theme/theme-provider";
 
-/** Xem chú thích ở `apps/web/app/root-html.tsx` — hai app dùng chung một font. */
+/** See the note in `apps/web/app/root-html.tsx` — both apps share one font. */
 const openSans = Open_Sans({
   variable: "--font-open-sans",
   subsets: ["latin", "vietnamese"],
   display: "swap",
 });
 
-/** Bản nghiêng cho variant `caption` — xem chú thích ở `apps/web/app/root-html.tsx`. */
+/** The italic face for the `caption` variant — see the note in `apps/web/app/root-html.tsx`. */
 const openSansItalic = Open_Sans({
   variable: "--font-open-sans-italic",
   subsets: ["latin", "vietnamese"],
@@ -34,19 +34,20 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * Admin **không** có segment `[locale]`: nó nằm sau đăng nhập, không được
- * index, không ai share link — URL phân biệt ngôn ngữ chẳng để làm gì
- * (`docs/i18n-plan.md` §3.2). Locale đến từ cookie, đọc ở `i18n/request.ts`.
+ * Admin has **no** `[locale]` segment: it sits behind login, is never indexed
+ * and nobody shares its links — language-distinguishing URLs would buy nothing
+ * (`docs/i18n.md` §3.2). The locale comes from the cookie, read in
+ * `i18n/request.ts`.
  *
- * Vì vậy `<html lang>` phải hỏi next-intl chứ không đọc được từ params.
+ * So `<html lang>` has to ask next-intl; it cannot be read from params.
  */
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const locale = await getLocale();
   return (
-    // Xem chú thích ở `apps/web/app/root-html.tsx` — hai app cố ý giống hệt nhau
-    // ở khối này, kể cả key localStorage.
+    // See the note in `apps/web/app/root-html.tsx` — both apps are deliberately
+    // identical in this block, down to the localStorage key.
     <html
       lang={isLocale(locale) ? locale : DEFAULT_LOCALE}
       suppressHydrationWarning
@@ -59,11 +60,12 @@ export default async function RootLayout({
         <ThemeProvider>
           <QueryProvider>
             <AuthProvider>
-              {/* Namespace của từng trang do layout con bọc thêm; ở đây chỉ có
-                  `common`/`nav`/`validation` mà mọi trang đều dùng. */}
+              {/* Per-page namespaces are added by child layouts; here there is
+                  only `common`/`nav`/`validation`, which every page uses. */}
               <IntlProvider>
-                {/* Trong `IntlProvider` vì nó đọc `common.states.loading`; một
-                    lần cho cả app, không gắn vào header. */}
+                {/* Inside `IntlProvider` because it reads
+                    `common.states.loading`; mounted once for the whole app, not
+                    attached to a header. */}
                 <NavigationProgress />
                 <AdminLocaleSync />
                 {children}

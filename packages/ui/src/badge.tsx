@@ -1,12 +1,13 @@
 type BadgeTone = "neutral" | "success" | "warning" | "danger" | "info";
 
 /**
- * Nhãn trạng thái nhỏ. `tone` là **ngữ nghĩa**, không phải màu — chỗ gọi nói
- * "cảnh báo", không nói "vàng", để sau này đổi bảng màu ở đúng một chỗ.
+ * A small status label. `tone` is **semantic**, not a color — the call site says
+ * "warning", never "yellow", so the palette changes in exactly one place later.
  *
- * Cố ý có `warning` tách khỏi `danger`: §3b của `docs/admin-plan.md` yêu cầu
- * phân biệt được khoá tạm (`suspended`) với khoá vĩnh viễn (`banned`); dùng
- * chung một sắc đỏ là mời gọi bấm sai.
+ * `warning` is deliberately separate from `danger`: §3b of
+ * `docs/admin-plan.md` requires telling a temporary lock (`suspended`) apart
+ * from a permanent one (`banned`); one shade of red for both invites the wrong
+ * click.
  */
 export function Badge({
   tone = "neutral",

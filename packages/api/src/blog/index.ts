@@ -1,11 +1,11 @@
 /**
- * Barrel công khai của feature `blog`.
+ * The public barrel of the `blog` feature.
  *
- * CHỦ Ý không export `./api` (component chỉ chạm tầng hooks) và **cũng không
- * export `./server`**: trộn `server.ts` vào đây là kéo `server-only` vào mọi
- * client component import `@noalhub/api/blog` — build đỏ ở một chỗ không liên
- * quan. Trang công khai import `@noalhub/api/blog/server` riêng
- * (`docs/data-layer.md` §7.1).
+ * `./api` is DELIBERATELY not exported (components only touch the hooks layer)
+ * and **neither is `./server`**: folding `server.ts` in here would drag
+ * `server-only` into every client component that imports `@noalhub/api/blog` —
+ * a red build somewhere entirely unrelated. Public pages import
+ * `@noalhub/api/blog/server` separately (`docs/data-layer.md` §7.1).
  */
 export * from "./hooks";
 export * from "./types";

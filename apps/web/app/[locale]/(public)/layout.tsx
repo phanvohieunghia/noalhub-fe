@@ -6,25 +6,26 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { SiteFooter } from "@/components/layout/site-footer";
 
 /**
- * Khung của vùng **công khai** (blog). Thiếu file này thì blog thừa hưởng root
- * layout, mà root layout chỉ bọc `AuthProvider` + `QueryProvider` và **không có
- * header/footer nào**: bài viết nổi lơ lửng, không đường về `/blogs`, không nav,
- * không footer (`docs/blog-plan.md` §6.1).
+ * The shell of the **public** area (the blog). Without this file the blog
+ * inherits the root layout, which only wraps `AuthProvider` + `QueryProvider`
+ * and has **no header or footer at all**: posts float free, with no way back to
+ * `/blogs`, no nav and no footer (`docs/blog.md` §6.1).
  *
- * **Chuyên mục nằm ở nav chính** — đó là lý do nó tồn tại như một trục riêng
- * (§2.6). Thẻ thì KHÔNG lên nav, chỉ xuất hiện dưới mỗi bài: cho cả hai trục lên
- * nav là tự tạo ra hàng chục URL gần trùng nhau.
+ * **Categories live in the main nav** — that is why they exist as their own axis
+ * (§2.6). Tags do NOT reach the nav and appear only under each post: putting
+ * both axes in the nav manufactures dozens of near-duplicate URLs.
  */
 export default async function PublicLayout({ children, params }: LayoutProps<"/[locale]">) {
   const { locale } = await params;
-  // Nhắc lại ở mỗi nhóm route: `setRequestLocale` chỉ có hiệu lực trong nhánh
-  // đang render, và thiếu nó là blog rơi khỏi static rendering (§3.1).
+  // Repeated in each route group: `setRequestLocale` only applies to the branch
+  // being rendered, and missing it drops the blog out of static rendering
+  // (§3.1).
   setRequestLocale(locale);
   const t = await getTranslations("nav");
 
-  // Nav hỏng không được làm chết trang bài viết: backend sập thì bài vẫn phải
-  // đọc được (nó có cache riêng). `error.tsx` của `/blogs` lo lỗi của NỘI DUNG,
-  // còn đây chỉ là điều hướng.
+  // A broken nav must not kill the post page: if the backend is down the post
+  // must still be readable (it has its own cache). `/blogs`'s `error.tsx`
+  // handles CONTENT failures; this is only navigation.
   const categories = await getBlogCategories().catch(() => []);
 
   return (

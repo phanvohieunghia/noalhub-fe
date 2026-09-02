@@ -8,13 +8,14 @@ import {
 } from "./config";
 
 /**
- * Cấu hình định tuyến của **`apps/web`**. `apps/admin` KHÔNG dùng file này: nó
- * không có segment `[locale]`, locale đọc thẳng từ cookie (`docs/i18n-plan.md`
- * §3.2).
+ * Routing config for **`apps/web`**. `apps/admin` does NOT use this file: it
+ * has no `[locale]` segment and reads the locale straight from the cookie
+ * (`docs/i18n.md` §3.2).
  *
- * `localePrefix: "always"` — `/vi/blogs/x` và `/en/blogs/x` là hai URL khác
- * nhau, nên mỗi bản có canonical và `hreflang` riêng. `as-needed` (vi không
- * prefix) làm sitemap và cache nginx phức tạp hơn hẳn mà chỉ được cái URL đẹp.
+ * `localePrefix: "always"` — `/vi/blogs/x` and `/en/blogs/x` are two different
+ * URLs, so each gets its own canonical and `hreflang`. `as-needed` (no prefix
+ * for vi) makes the sitemap and the nginx cache markedly more complex and buys
+ * only prettier URLs.
  */
 export const routing = defineRouting({
   locales: LOCALES,
@@ -22,9 +23,10 @@ export const routing = defineRouting({
   localePrefix: "always",
 
   /*
-   * Dùng chung tên cookie với admin để đổi ngôn ngữ ở một app là app kia cũng
-   * theo (cùng domain ở production). `httpOnly` mặc định là false — đúng ý:
-   * `LanguageSwitcher` ghi cookie ngay ở client rồi mới điều hướng.
+   * The cookie name is shared with admin so that changing the language in one
+   * app carries over to the other (same domain in production). `httpOnly`
+   * defaults to false, which is what we want: `LanguageSwitcher` writes the
+   * cookie on the client and only then navigates.
    */
   localeCookie: {
     name: LOCALE_COOKIE,

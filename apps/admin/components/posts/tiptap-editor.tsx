@@ -25,12 +25,13 @@ import { ImageUploadButton } from "../media/image-upload-button";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Node `image` mang thêm `width`/`height` **ngay từ đợt 1**.
+ * The `image` node carries `width`/`height` **from day one**.
  *
- * Thêm sau là phải migrate `jsonb` của mọi bài đã viết, nên làm luôn. Không có
- * hai số này thì `next/image` hoặc phải đoán tỉ lệ (ảnh méo), hoặc rơi về `<img>`
- * (mất tối ưu), hoặc ăn **CLS** — một chỉ số Core Web Vitals, tức là nằm đúng
- * trong mục tiêu SEO của cả plan (`docs/blog-plan.md` §3.1b).
+ * Adding them later would mean a `jsonb` migration across every post ever
+ * written, so they go in now. Without the two numbers, `next/image` either
+ * guesses the ratio (distorted images), falls back to `<img>` (losing
+ * optimization), or takes a **CLS** hit — a Core Web Vitals metric, and
+ * therefore squarely inside this plan's SEO goal (`docs/blog.md` §3.1b).
  */
 const BlogImage = Image.extend({
   addAttributes() {
@@ -43,15 +44,17 @@ const BlogImage = Image.extend({
 });
 
 /**
- * Editor Tiptap, cấu hình **đúng bằng allowlist §3.1** — không hơn một node nào.
+ * The Tiptap editor, configured to **exactly the §3.1 allowlist** — not one node
+ * more.
  *
- * Schema của editor, schema validate ở backend và renderer
- * (`packages/ui/src/blog/post-content.tsx`) phải là cùng một danh sách; đây là
- * một trong ba chỗ đó.
+ * The editor's schema, the backend's write validation and the renderer
+ * (`packages/ui/src/blog/post-content.tsx`) must be the same list; this is one
+ * of those three places.
  *
- * ⚠️ KHÔNG cắm `CodeBlockLowlight`: nó đổi shape của node `codeBlock` trong
- * JSON, và việc đó phải được chốt trước chứ không lén thêm vào (§3.1c). Đợt này
- * chỉ **lưu** `language`, chưa tô màu.
+ * ⚠️ Do NOT plug in `CodeBlockLowlight`: it changes the shape of the
+ * `codeBlock` node in the JSON, and that has to be decided deliberately rather
+ * than slipped in (§3.1c). This pass only **stores** `language`; no
+ * highlighting.
  */
 export function TiptapEditor({
   value,
@@ -65,22 +68,23 @@ export function TiptapEditor({
   const m = useMessage();
   const [dropError, setDropError] = useState<Message | string | null>(null);
   /*
-   * `editorProps` được đóng gói lúc TẠO editor, nên handler bên trong không thể
-   * đóng bao lên biến `editor` (lúc đó nó còn chưa tồn tại). Ref là đường duy
-   * nhất để chúng nói chuyện với instance đã dựng xong.
+   * `editorProps` is captured when the editor is CREATED, so the handlers inside
+   * cannot close over the `editor` variable (it does not exist yet at that
+   * point). A ref is their only way to talk to the finished instance.
    */
   const editorRef = useRef<Editor | null>(null);
   const dropUpload = useUploadMedia({ allow: MEDIA_IMAGE_MIMES });
 
   /**
-   * Kéo-thả và dán ảnh — đường mà người viết thật sự dùng; dialog là đường dự
-   * phòng cho ảnh đã có URL.
+   * Drag-and-drop and paste for images — the path authors actually use; the
+   * dialog is the fallback for images that already have a URL.
    *
-   * Chèn **sau khi upload xong**, không chèn trước một node tạm rồi thay `src`:
-   * node tạm phải mang `blob:` hoặc `data:`, mà cả hai đều bị `sanitizeBlogDoc`
-   * (chạy ở `onUpdate`) bỏ ngay trong nhịp sau — ảnh sẽ biến mất giữa chừng.
-   * Đổi lại là ảnh chỉ hiện ra khi đã lên máy chủ; thanh tiến độ dưới toolbar
-   * lấp khoảng chờ đó.
+   * Inserted **after the upload finishes**, rather than inserting a placeholder
+   * node and swapping its `src`: a placeholder would need `blob:` or `data:`,
+   * and `sanitizeBlogDoc` (running in `onUpdate`) drops both on the very next
+   * beat — the image would vanish mid-edit. In exchange the image appears only
+   * once it is on the server; the progress bar under the toolbar fills that
+   * wait.
    */
   const uploadAndInsert = useCallback(
     (file: File) => {
@@ -99,20 +103,21 @@ export function TiptapEditor({
   );
 
   const editor = useEditor({
-    // Bắt buộc với SSR của Next: render ngay ở lượt đầu sẽ lệch hydration.
+    // Required with Next's SSR: rendering on the first pass mismatches hydration.
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({
-        // `<h1>` là tiêu đề bài, nội dung chỉ h2/h3 (§6.2).
+        // `<h1>` is the post title; content only has h2/h3 (§6.2).
         heading: { levels: [2, 3] },
-        // Không có trong allowlist §3.1 — bật lên là đẻ ra mark mà renderer bỏ,
-        // tức là người viết gạch chân xong lưu lại thì chữ trở về bình thường.
+        // Not in the §3.1 allowlist — enabling it produces a mark the renderer
+        // drops, so an author underlines something, saves, and the text comes
+        // back plain.
         underline: false,
         link: {
           openOnClick: false,
           protocols: ["http", "https", "mailto"],
-          // Lớp chặn thứ nhất cho `href`. `sanitizeBlogDoc` là lớp thứ hai và
-          // mới là lớp bắt buộc — cái này chỉ để người viết biết ngay tại chỗ.
+          // The first gate for `href`. `sanitizeBlogDoc` is the second and the
+          // mandatory one — this exists so the author finds out on the spot.
           isAllowedUri: (url) => isSafeLinkHref(url),
         },
       }),
@@ -125,13 +130,15 @@ export function TiptapEditor({
           "blog-content min-h-80 rounded-md border border-black/15 px-4 py-3 outline-none focus:border-foreground/60 dark:border-white/20",
       },
       /*
-       * Trả `true` = "đã xử lý, ProseMirror đừng làm gì nữa". Bắt buộc với ảnh:
-       * hành vi mặc định của cả hai là chèn `<img src="data:…">` từ clipboard/OS,
-       * thứ `allowBase64: false` và `sanitizeBlogDoc` sẽ vứt — người viết thấy
-       * ảnh hiện ra rồi mất, không hiểu vì sao.
+       * Returning `true` means "handled, ProseMirror should do nothing more".
+       * Required for images: the default behaviour of both is to insert
+       * `<img src="data:…">` straight from the clipboard/OS, which
+       * `allowBase64: false` and `sanitizeBlogDoc` then discard — the author
+       * watches the image appear and vanish with no explanation.
        *
-       * Chỉ nuốt sự kiện khi thật sự có FILE ảnh: dán chữ, dán HTML, kéo một
-       * đoạn văn trong bài đều phải đi tiếp đường mặc định.
+       * The event is only swallowed when there really is an image FILE: pasting
+       * text, pasting HTML, or dragging a paragraph within the post must all
+       * continue down the default path.
        */
       handlePaste: (_view, event) => {
         const file = firstImageFile(event.clipboardData?.files);
@@ -147,17 +154,17 @@ export function TiptapEditor({
         return true;
       },
     },
-    // Làm sạch NGAY trong editor, không đợi lúc submit: nhờ vậy preview (§8) và
-    // thứ sẽ được lưu là cùng một cây, không có "lúc soạn thì thấy, lưu xong thì
-    // mất".
+    // Sanitized RIGHT IN the editor rather than at submit time: that way the
+    // preview (§8) and what will be saved are the same tree, with no "visible
+    // while writing, gone after saving".
     onUpdate: ({ editor: instance }) => onChange(sanitizeBlogDoc(instance.getJSON())),
   });
 
   /*
-   * Gán trong effect, không gán thẳng trong thân render: ghi vào ref lúc render
-   * là hành vi không an toàn với StrictMode/concurrent (và `react-hooks/refs`
-   * chặn đúng chỗ này). Handler paste/drop chỉ chạy sau khi đã mount, nên độ
-   * trễ một nhịp của effect không quan sát được.
+   * Assigned in an effect rather than directly in the render body: writing to a
+   * ref during render is unsafe under StrictMode/concurrent (and
+   * `react-hooks/refs` flags exactly this). The paste/drop handlers only run
+   * after mount, so the effect's one-beat delay is unobservable.
    */
   useEffect(() => {
     editorRef.current = editor;
@@ -297,8 +304,8 @@ function Toolbar({
         {t("imageText")}
       </ToolbarButton>
 
-      {/* Chỉ hiện khi con trỏ đang trong khối mã — một ô select luôn hiện nhưng
-          hầu như luôn vô tác dụng là mời gọi bấm nhầm. */}
+      {/* Shown only while the cursor is inside a code block — a select that is
+          always visible but almost always inert invites misclicks. */}
       {inCodeBlock ? (
         <select
           aria-label={t("codeLanguage")}
@@ -358,8 +365,8 @@ function Divider() {
 }
 
 /**
- * Dialog thay cho `window.prompt`: prompt chặn cả tab, không style được, và trên
- * mobile thì gần như không dùng nổi.
+ * A dialog in place of `window.prompt`: prompt blocks the whole tab, cannot be
+ * styled, and is close to unusable on mobile.
  */
 function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }) {
   const t = useTranslations("admin.posts.editorToolbar");
@@ -378,8 +385,9 @@ function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }
       setError(t("linkInvalid"));
       return;
     }
-    // KHÔNG đặt `target`/`rel` ở đây: renderer tự quyết định (§3.1a), và ghi
-    // chúng vào dữ liệu là mở lại đúng cửa mà allowlist attr vừa đóng.
+    // Do NOT set `target`/`rel` here: the renderer decides them (§3.1a), and
+    // writing them into the data reopens the door the attribute allowlist just
+    // closed.
     editor.chain().focus().extendMarkRange("link").setLink({ href: value }).run();
     onClose();
   };
@@ -409,17 +417,19 @@ function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }
 }
 
 /**
- * Hai đường chèn ảnh: **tải lên** (đường chính) và **dán URL** (ảnh đã có sẵn
- * trên host được phép, ví dụ Unsplash).
+ * Two ways to insert an image: **upload** (the main path) and **paste a URL**
+ * (for images already hosted somewhere allowed, e.g. Unsplash).
  *
- * Tải lên xong thì `src` được điền hộ chứ KHÔNG chèn thẳng vào bài: người viết
- * còn phải gõ `alt`, và một ảnh đã nằm trong bài rồi thì gỡ ra sửa phiền hơn
- * nhiều so với bấm thêm một nút.
+ * After an upload the `src` is filled in but the image is NOT inserted straight
+ * into the post: the author still has to write the `alt`, and pulling an
+ * already-inserted image back out to edit it is far more annoying than one extra
+ * click.
  *
- * Editor tự đo kích thước thật rồi ghi vào node (§3.1b). Đo không được (ảnh
- * chết, CORS, host chặn hotlink) thì để `null` và **cảnh báo tại chỗ**: renderer
- * vẫn hiện được nhưng phải rơi về khung `aspect-video`, và người viết nên biết
- * điều đó trước khi bài lên sóng.
+ * The editor measures the real dimensions and writes them into the node
+ * (§3.1b). When measuring fails (dead image, CORS, hotlink protection) they stay
+ * `null` and it **warns on the spot**: the renderer still works but falls back
+ * to an `aspect-video` frame, and the author should know that before the post
+ * goes live.
  */
 function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void }) {
   const t = useTranslations("admin.posts.editorToolbar");
@@ -477,8 +487,9 @@ function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void 
             setSrc(asset.url);
             setError(null);
             setNotice(null);
-            // Tên file gốc là gợi ý `alt` tốt hơn ô trống, nhưng chỉ khi người
-            // viết chưa gõ gì — ghi đè thứ họ vừa gõ là mất dữ liệu.
+            // The original filename is a better `alt` suggestion than an empty
+            // field, but only while the author has typed nothing — overwriting
+            // what they just wrote loses data.
             setAlt((current) => current || suggestAltFrom(asset.originalName));
           }}
         />
@@ -518,7 +529,7 @@ function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void 
   );
 }
 
-/** `naturalWidth`/`naturalHeight` của ảnh, hoặc `null` nếu không tải được. */
+/** The image's `naturalWidth`/`naturalHeight`, or `null` if it will not load. */
 function measureImage(src: string): Promise<{ width: number; height: number } | null> {
   return new Promise((resolve) => {
     const image = new window.Image();
@@ -528,7 +539,7 @@ function measureImage(src: string): Promise<{ width: number; height: number } | 
   });
 }
 
-/** File ảnh đầu tiên trong một `FileList`, nếu có. */
+/** The first image file in a `FileList`, if any. */
 function firstImageFile(files: FileList | null | undefined): File | undefined {
   if (!files) return undefined;
   return Array.from(files).find((file) =>
@@ -537,12 +548,13 @@ function firstImageFile(files: FileList | null | undefined): File | undefined {
 }
 
 /**
- * Chèn một asset đã upload vào vị trí con trỏ, kèm kích thước thật.
+ * Inserts an uploaded asset at the cursor, with its real dimensions.
  *
- * Đo bằng `measureImage` chứ không lấy `asset.width`/`asset.height`: backend cố
- * ý để hai cột đó `null` (đọc chúng cần giải mã ảnh phía server, thứ đã chốt là
- * không làm). Trình duyệt thì vừa tải ảnh đó xong và biết chính xác — nên chỗ
- * rẻ nhất để có con số là ở đây.
+ * Measured with `measureImage` rather than read from
+ * `asset.width`/`asset.height`: the backend deliberately leaves those columns
+ * `null` (filling them would require decoding images server-side, which was
+ * ruled out). The browser has just loaded the image and knows exactly — so this
+ * is the cheapest place to get the numbers.
  */
 async function insertImageAsset(
   editor: Editor,
@@ -566,12 +578,13 @@ async function insertImageAsset(
 }
 
 /**
- * Tên file → gợi ý `alt`: bỏ đuôi, đổi `-`/`_` thành khoảng trắng.
+ * Filename → `alt` suggestion: drop the extension, turn `-`/`_` into spaces.
  *
- * Chỉ là **gợi ý**. `alt` đúng mô tả nội dung ảnh cho người không nhìn thấy nó,
- * còn tên file thì thường là `IMG_2931`; người viết vẫn phải sửa. Để trống hẳn
- * thì tệ hơn — ảnh không alt là lỗi a11y im lặng, còn một chuỗi vô nghĩa nằm
- * đó ít nhất còn nhắc người ta sửa.
+ * A **suggestion** only. A good `alt` describes the image's content to someone
+ * who cannot see it, while a filename is usually `IMG_2931`; the author still
+ * has to fix it. Leaving it empty is worse — an image with no alt is a silent
+ * a11y bug, whereas a meaningless string at least prompts someone to correct
+ * it.
  */
 function suggestAltFrom(fileName: string | null): string {
   if (!fileName) return "";

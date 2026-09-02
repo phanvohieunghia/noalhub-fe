@@ -4,7 +4,7 @@ import { LocaleSync } from "@noalhub/ui/auth/locale-sync";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 
-/** Xem `LocaleSync`. Admin không có locale trên URL nên chỉ cần render lại. */
+/** See `LocaleSync`. Admin URLs carry no locale, so a re-render is enough. */
 export function AdminLocaleSync() {
   const router = useRouter();
   const onMismatch = useCallback(() => router.refresh(), [router]);

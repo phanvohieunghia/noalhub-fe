@@ -18,36 +18,40 @@ import type {
 } from "./types";
 
 /**
- * Đường **client** của feature blog — chỉ `apps/admin` dùng (§4, §7.3 của
- * `docs/data-layer.md`). Mọi endpoint ở đây cần token + role `admin`.
+ * The blog feature's **client** path — used only by `apps/admin` (§4 and §7.3
+ * of `docs/data-layer.md`). Every endpoint here needs a token plus the `admin`
+ * role.
  *
- * Trang công khai KHÔNG đi qua file này: nó đọc bằng `./server.ts` (fetch thuần,
- * không token, có cache/ISR của Next). Hai đường song song, cố ý — lý do đầy đủ
- * ở `docs/data-layer.md` §7.
+ * Public pages do NOT go through this file: they read via `./server.ts` (a
+ * plain fetch, no token, with Next's cache/ISR). Two parallel paths,
+ * deliberately — the full reasoning is in `docs/data-layer.md` §7.
  *
- * Contract: `/admin/blog/*` trong `/docs-json` (tag `admin-blog`).
+ * Contract: `/admin/blog/*` in `/docs-json` (tag `admin-blog`).
  */
 
-/* --------------------------------- Bài viết -------------------------------- */
+/* ----------------------------------- Posts --------------------------------- */
 
 /**
- * Payload ghi. Bất đối xứng với đường đọc là **cố ý** (§2.3): ghi gửi
- * `categoryId`/`tagIds`, đọc nhận `category`/`tags` đã nở `{ slug, name }`.
+ * The write payload. Its asymmetry with the read path is **deliberate** (§2.3):
+ * writes send `categoryId`/`tagIds`, reads receive `category`/`tags` already
+ * expanded to `{ slug, name }`.
  *
- * Suy thẳng từ `toBlogPostPayload` thay vì khai lại: hai khai báo cho cùng một
- * hình dạng thì sớm muộn cũng lệch, và lệch ở đây nghĩa là gửi sai lên backend.
+ * Inferred straight from `toBlogPostPayload` rather than redeclared: two
+ * declarations of one shape drift sooner or later, and drift here means sending
+ * the wrong thing to the backend.
  */
 export type BlogPostWritePayload = ReturnType<typeof toBlogPostPayload>;
 
-/** `PATCH` gửi kèm `version` đang giữ — lệch thì 409 `POST_CONFLICT` (§7.3). */
+/** `PATCH` sends the `version` being held — a mismatch is a 409 `POST_CONFLICT` (§7.3). */
 export type UpdateBlogPostInput = BlogPostWritePayload & { version: number };
 
 /**
  * GET /admin/blog/posts → 200 `{ items, total, page, limit }`. 403, 429.
  *
- * Bảng quản trị: **mọi** trạng thái, sort `updatedAt DESC` — khác public
- * (`publishedAt DESC`). Đừng đồng bộ hai kiểu sort cho "nhất quán": sửa lỗi
- * chính tả ở bài cũ mà đẩy nó lên đầu trang blog là sai (§2.1a).
+ * The admin table: **every** status, sorted `updatedAt DESC` — unlike the
+ * public list (`publishedAt DESC`). Do not align the two sorts for
+ * "consistency": fixing a typo in an old post must not push it to the top of
+ * the blog (§2.1a).
  */
 export async function listAdminBlogPosts(
   query: AdminBlogPostQuery = {},
@@ -71,7 +75,7 @@ export async function listAdminBlogPosts(
 /**
  * GET /admin/blog/posts/{id} → 200 `BlogPostDto`. 403, 404 `POST_NOT_FOUND`.
  *
- * Theo **id**, không theo slug: slug đổi được, id thì không (§2.2).
+ * By **id**, not slug: slugs change, ids do not (§2.2).
  */
 export async function getAdminBlogPost(
   id: string,
@@ -87,9 +91,10 @@ export async function getAdminBlogPost(
 /**
  * POST /admin/blog/posts → 201 `BlogPostDto`.
  *
- * Tạo bản nháp rỗng. `/posts/new` gọi hàm này rồi `router.replace` sang
- * `/posts/[id]` ngay, để mọi thao tác sau chỉ có MỘT đường lưu (§7.1).
- * Slug do backend sinh và bảo đảm duy nhất — FE không đoán hộ.
+ * Creates an empty draft. `/posts/new` calls this and immediately
+ * `router.replace`s to `/posts/[id]`, so every later action has exactly ONE
+ * save path (§7.1). The slug is generated and kept unique by the backend — the
+ * frontend does not guess it.
  */
 export async function createBlogPost(
   input: { title: string } = { title: "Bài viết không tên" },
@@ -103,7 +108,7 @@ export async function createBlogPost(
 
 /**
  * PATCH /admin/blog/posts/{id} → 200 `BlogPostDto`.
- * 409 `POST_CONFLICT` khi `version` lệch, 409 `SLUG_TAKEN` khi slug bị chiếm.
+ * 409 `POST_CONFLICT` on a `version` mismatch, 409 `SLUG_TAKEN` when the slug is taken.
  */
 export async function updateBlogPost(
   id: string,
@@ -119,11 +124,12 @@ export async function updateBlogPost(
 
 /**
  * POST /admin/blog/posts/{id}/publish → 200 `BlogPostDto`.
- * 422 `POST_NOT_PUBLISHABLE` khi thiếu field bắt buộc (gồm cả **chuyên mục**).
+ * 422 `POST_NOT_PUBLISHABLE` when a required field is missing (including the
+ * **category**).
  *
- * Tách khỏi `PATCH` vì khác nhau về audit, về validate, và về side effect:
- * đặt `publishedAt` + backend bắn webhook revalidate (§5.2). FE **không** gọi
- * webhook — lý do ở §5.2.
+ * Separate from `PATCH` because it differs in auditing, validation and side
+ * effects: it sets `publishedAt` and the backend fires the revalidate webhook
+ * (§5.2). The frontend does **not** call that webhook — see §5.2.
  */
 export async function publishBlogPost(id: string): Promise<BlogPost> {
   const { data } = await http.post<BlogPost>(
@@ -134,7 +140,7 @@ export async function publishBlogPost(id: string): Promise<BlogPost> {
   return data;
 }
 
-/** POST /admin/blog/posts/{id}/unpublish → 200. Gỡ công khai, giữ nội dung. */
+/** POST /admin/blog/posts/{id}/unpublish → 200. Takes it off the public site, keeps the content. */
 export async function unpublishBlogPost(id: string): Promise<BlogPost> {
   const { data } = await http.post<BlogPost>(
     `/admin/blog/posts/${encodeURIComponent(id)}/unpublish`,
@@ -147,9 +153,9 @@ export async function unpublishBlogPost(id: string): Promise<BlogPost> {
 /**
  * DELETE /admin/blog/posts/{id} → 204.
  *
- * **Xoá mềm**: backend chuyển `status = archived`, hàng vẫn nằm trong DB và slug
- * vẫn bị chiếm (§2.2). Không có xoá cứng ở UI — xoá cứng một bài đã index là để
- * lại 404 vĩnh viễn ở Google.
+ * A **soft delete**: the backend moves it to `status = archived`, the row stays
+ * in the DB and the slug stays taken (§2.2). There is no hard delete in the UI —
+ * hard-deleting an indexed post leaves a permanent 404 in Google.
  */
 export async function archiveBlogPost(id: string): Promise<void> {
   await http.delete(`/admin/blog/posts/${encodeURIComponent(id)}`, {
@@ -157,11 +163,11 @@ export async function archiveBlogPost(id: string): Promise<void> {
   });
 }
 
-/* ------------------------------- Chuyên mục -------------------------------- */
+/* -------------------------------- Categories ------------------------------- */
 
 /**
  * GET /admin/blog/categories → 200 `BlogCategoryDto[]`.
- * `postCount` tính **cả bài nháp** — khác `/blog/categories` công khai (§2.2).
+ * `postCount` includes **drafts** — unlike the public `/blog/categories` (§2.2).
  */
 export async function listAdminBlogCategories(
   signal?: AbortSignal,
@@ -189,9 +195,10 @@ export async function createBlogCategory(
 /**
  * PATCH /admin/blog/categories/{id} → 200.
  *
- * ⚠️ Đổi **slug** làm hỏng `/blogs/category/<cũ>` đã index: chuyên mục KHÔNG có
- * bảng lịch sử như `blog_post_slugs` của bài (§2.6). UI phải cảnh báo rõ là URL
- * cũ 404 vĩnh viễn, không phải "sẽ được chuyển hướng".
+ * ⚠️ Changing the **slug** breaks the already-indexed
+ * `/blogs/category/<old>`: categories have NO history table like posts'
+ * `blog_post_slugs` (§2.6). The UI must warn plainly that the old URL 404s
+ * permanently — it is not "going to be redirected".
  */
 export async function updateBlogCategory(
   id: string,
@@ -208,8 +215,9 @@ export async function updateBlogCategory(
 /**
  * PUT /admin/blog/categories/reorder → 204.
  *
- * Gửi **đủ** id theo thứ tự mới; backend gán lại `order` = vị trí trong mảng,
- * trong một transaction. Thiếu/thừa/trùng id → 400 `VALIDATION_FAILED`.
+ * Send **every** id in the new order; the backend reassigns `order` to each
+ * array position inside one transaction. Missing, extra or duplicate ids →
+ * 400 `VALIDATION_FAILED`.
  */
 export async function reorderBlogCategories(ids: string[]): Promise<void> {
   await http.put("/admin/blog/categories/reorder", { ids }, {
@@ -219,8 +227,9 @@ export async function reorderBlogCategories(ids: string[]): Promise<void> {
 
 /**
  * DELETE /admin/blog/categories/{id} → 204.
- * 409 `CATEGORY_NOT_EMPTY` (kèm số bài) khi mục còn bài — bài không có chuyên
- * mục thì không publish được, nên xoá bừa là làm mồ côi bài đang chạy (§2.6).
+ * 409 `CATEGORY_NOT_EMPTY` (with the post count) while the category still has
+ * posts — a post without a category cannot be published, so deleting carelessly
+ * orphans live posts (§2.6).
  */
 export async function deleteBlogCategory(id: string): Promise<void> {
   await http.delete(`/admin/blog/categories/${encodeURIComponent(id)}`, {
@@ -228,9 +237,9 @@ export async function deleteBlogCategory(id: string): Promise<void> {
   });
 }
 
-/* ----------------------------------- Thẻ ----------------------------------- */
+/* ----------------------------------- Tags ---------------------------------- */
 
-/** GET /admin/blog/tags → 200. Cấp dữ liệu cho ô multi-select ở editor. */
+/** GET /admin/blog/tags → 200. Feeds the editor's multi-select. */
 export async function listAdminBlogTags(
   signal?: AbortSignal,
 ): Promise<BlogTag[]> {
@@ -243,10 +252,11 @@ export async function listAdminBlogTags(
 }
 
 /**
- * POST /admin/blog/tags → 201 (hoặc 200 khi thẻ đã tồn tại).
+ * POST /admin/blog/tags → 201 (or 200 when the tag already exists).
  *
- * Backend tự `slugify` từ `name`, và **trùng slug thì trả về thẻ đang có** chứ
- * không 409: người viết chỉ muốn gắn thẻ, không quan tâm nó mới hay cũ (§2.2).
+ * The backend `slugify`s `name` itself and, **on a slug collision, returns the
+ * existing tag** rather than a 409: the author just wants the tag attached and
+ * does not care whether it is new (§2.2).
  */
 export async function createBlogTag(name: string): Promise<BlogTag> {
   const { data } = await http.post<BlogTag>(

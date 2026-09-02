@@ -5,7 +5,7 @@
 | **Status** | Bắt buộc áp dụng cho **mọi feature mới**. Đang được `auth`, `chat`, `friends`, `users` tuân thủ |
 | **Ngày** | 2026-07-25 (rà lại theo code: 2026-08-17 · chuyển sang monorepo: 2026-08-17) |
 | **Phạm vi** | Cách định nghĩa kiểu dữ liệu, hàm gọi API, và React Query hooks |
-| **Liên quan** | [`docs/auth.md`](./auth.md) — feature mẫu, theo đủ convention này · [`docs/chat.md`](./chat.md) — ngoại lệ đường **ghi** (qua socket, §6) · [`docs/blog-plan.md`](./blog-plan.md) — ngoại lệ đường **đọc** (server-only, §7) |
+| **Liên quan** | [`docs/auth.md`](./auth.md) — feature mẫu, theo đủ convention này · [`docs/chat.md`](./chat.md) — ngoại lệ đường **ghi** (qua socket, §6) · [`docs/blog.md`](./blog.md) — ngoại lệ đường **đọc** (server-only, §7) |
 | **Contract** | OpenAPI spec: `http://localhost:3101/docs` (JSON: `/docs-json`) |
 
 ---
@@ -47,7 +47,7 @@ tầng dữ liệu chứ không phải của UI, nên chỗ đúng của chúng 
 
 `API_BASE_URL` đã bao gồm tiền tố `/api`; **tầng api viết path không có `/api`**
 (`/auth/login`, `/chat/conversations`). Env chỉ chứa origin — và env do **app đang build**
-cung cấp, package không tự có `.env` (xem `docs/monorepo-plan.md` §2).
+cung cấp, package không tự có `.env` (xem `docs/monorepo.md` §2).
 
 | Tầng | File | Trách nhiệm | KHÔNG được làm |
 |---|---|---|---|
@@ -502,7 +502,7 @@ Bốn ràng buộc của `server.ts`, cả bốn đều là lý do kỹ thuật:
 `NEXT_PUBLIC_API_BASE_URL` bị inline lúc build và trỏ ra domain công khai. Container Next
 dùng chính nó để fetch ở server thì request đi ra internet, vòng qua nginx rồi quay lại cùng
 máy. `server.ts` đọc `process.env.API_INTERNAL_URL ?? API_BASE_URL` — biến **runtime**, không
-`NEXT_PUBLIC_`. Chi tiết triển khai và thay đổi kéo theo ở compose: `docs/blog-plan.md` §4.3.
+`NEXT_PUBLIC_`. Chi tiết triển khai và thay đổi kéo theo ở compose: `docs/blog.md` §4.3.
 
 ### 7.3 Ai dùng đường nào
 

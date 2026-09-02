@@ -3,9 +3,9 @@
 import { useTranslations } from "next-intl";
 
 /**
- * Lọc CLIENT-SIDE danh sách đã tải — backend chưa có endpoint tìm kiếm hội
- * thoại. Nghĩa là nó không tìm được hội thoại nằm ở trang chưa tải; đó là giới
- * hạn đã biết, không phải bug.
+ * CLIENT-SIDE filtering of what is already loaded — the backend has no
+ * conversation search endpoint. That means it cannot find a conversation on a
+ * page not yet fetched; a known limitation, not a bug.
  */
 export function ConversationSearch({
   value,

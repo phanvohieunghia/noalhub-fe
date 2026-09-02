@@ -1,16 +1,17 @@
 /**
- * Bảng "trần": chỉ style + a11y, không giữ state, không biết phân trang hay
- * sort. Dựng một lần ở đây thay vì copy markup vào từng màn hình admin.
+ * A "bare" table: styling and a11y only — no state, no knowledge of pagination
+ * or sorting. Built once here instead of copying markup into every admin
+ * screen.
  *
- * `TableRoot` bọc `overflow-x-auto` để bảng rộng cuộn trong khung của nó, không
- * đẩy cả trang trượt ngang trên màn nhỏ.
+ * `TableRoot` wraps it in `overflow-x-auto` so a wide table scrolls inside its
+ * own frame rather than making the whole page slide sideways on small screens.
  */
 export function TableRoot({
   caption,
   className = "",
   children,
 }: {
-  /** Mô tả cho screen reader; ẩn khỏi mắt thường vì tiêu đề trang đã nói rồi. */
+  /** A description for screen readers; visually hidden since the page title already says it. */
   caption: string;
   className?: string;
   children: React.ReactNode;
@@ -77,8 +78,9 @@ export function TableCell({
 }
 
 /**
- * Ô trải hết bề ngang cho trạng thái rỗng / lỗi. `colSpan` bắt buộc truyền:
- * đoán sai số cột thì bảng lệch, và không có cách nào đoán đúng từ đây.
+ * A full-width cell for empty and error states. `colSpan` is required: guessing
+ * the column count wrong skews the table, and there is no way to guess right
+ * from in here.
  */
 export function TableEmptyRow({
   colSpan,

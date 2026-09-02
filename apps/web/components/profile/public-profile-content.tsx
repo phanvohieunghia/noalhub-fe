@@ -20,10 +20,10 @@ import type { PublicProfile } from "@noalhub/api/users";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Hồ sơ công khai của người khác (`GET /users/{username}`).
+ * Someone else's public profile (`GET /users/{username}`).
  *
- * Ít trường hơn hồ sơ của chính mình — không email, không vai trò. Trang riêng
- * cho mình là `/profile`.
+ * Fewer fields than your own profile — no email, no role. Your own page is
+ * `/profile`.
  */
 export function PublicProfileContent({ username }: { username: string }) {
   const t = useTranslations("web.profile");
@@ -76,7 +76,7 @@ export function PublicProfileContent({ username }: { username: string }) {
         </div>
         <div className="flex justify-between gap-4">
           <dt className="opacity-70">{t("facts.lastSeen")}</dt>
-          {/* Mốc offline gần nhất, KHÔNG phải trạng thái online hiện tại. */}
+          {/* When they last went offline, NOT the current online state. */}
           <dd>{cf.lastSeenLabel(data.lastSeenAt) ?? t("facts.neverOnline")}</dd>
         </div>
       </dl>
@@ -85,12 +85,13 @@ export function PublicProfileContent({ username }: { username: string }) {
 }
 
 /**
- * Mở DM với người này.
+ * Open a DM with this person.
  *
- * `POST /chat/conversations/direct` là **idempotent** — đã có hội thoại thì trả
- * về đúng cái cũ, chưa có thì tạo. Nên không cần dò danh sách trước: cứ gọi rồi
- * điều hướng theo `id` trả về. Hook đã ghi hội thoại vào cache và invalidate
- * danh sách, nên sidebar tự có mục mới.
+ * `POST /chat/conversations/direct` is **idempotent** — if a conversation exists
+ * it returns that one, otherwise it creates one. So there is no need to search
+ * the list first: just call it and navigate to the returned `id`. The hook
+ * already writes the conversation into the cache and invalidates the list, so
+ * the sidebar gets its new entry on its own.
  */
 function MessageButton({ user }: { user: PublicProfile }) {
   const t = useTranslations("web.profile.public");
@@ -99,7 +100,7 @@ function MessageButton({ user }: { user: PublicProfile }) {
   const myId = useAuthStore((s) => s.user?.id ?? null);
   const createDirect = useCreateDirectConversation();
 
-  // Hồ sơ của chính mình thì không có DM để mở.
+  // On your own profile there is no DM to open.
   if (myId && myId === user.id) return null;
 
   return (

@@ -8,14 +8,17 @@ import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 
 /**
- * Chỗ **duy nhất** biến kết quả tính toán của `@noalhub/core/chat/format`
- * thành chữ. Gộp `t` và các `Intl.*` formatter vào một hook vì hai lý do:
+ * The **only** place that turns `@noalhub/core/chat/format`'s computations into
+ * words. `t` and the `Intl.*` formatters are combined into one hook for two
+ * reasons:
  *
- * 1. Cùng một mốc thời gian phải đọc giống hệt nhau ở sidebar, ở header và ở
- *    drawer hồ sơ — ba chỗ tự ghép chuỗi là ba cách viết ngày khác nhau.
- * 2. `new Intl.DateTimeFormat` là hàm đắt và danh sách chat gọi nó cho **từng
- *    dòng** ở mỗi lần render. `useMemo` giữ formatter sống qua các lần render,
- *    chỉ dựng lại khi đổi ngôn ngữ (`docs/i18n-plan.md` §7.1).
+ * 1. The same timestamp must read identically in the sidebar, the header and
+ *    the profile drawer — three places assembling their own strings means three
+ *    different date formats.
+ * 2. `new Intl.DateTimeFormat` is expensive and the chat list calls it for
+ *    **every row** on every render. `useMemo` keeps the formatters alive across
+ *    renders, rebuilding them only when the language changes (`docs/i18n.md`
+ *    §7.1).
  */
 export function useChatFormat() {
   const t = useTranslations("web.chat");
@@ -40,7 +43,7 @@ export function useChatFormat() {
 
   return useMemo(
     () => ({
-      /** Tên hiển thị của hội thoại, đã rơi về nhãn mặc định nếu cần. */
+      /** The conversation's display name, already fallen back to a default label if needed. */
       conversationName(conversation: Conversation, currentUserId: string | null): string {
         const result = conversationName(conversation, currentUserId);
         if ("name" in result) return result.name;
@@ -53,13 +56,13 @@ export function useChatFormat() {
         );
       },
 
-      /** Giờ của một tin: "14:32". */
+      /** A message's time: "14:32". */
       messageTime(iso: string): string {
         const date = new Date(iso);
         return Number.isNaN(date.getTime()) ? "" : fmt.time.format(date);
       },
 
-      /** Nhãn cho `DateSeparator`. */
+      /** The label for `DateSeparator`. */
       dayLabel(iso: string): string {
         const day = dayKind(iso);
         switch (day.kind) {
@@ -74,7 +77,7 @@ export function useChatFormat() {
         }
       },
 
-      /** Timestamp cạnh mỗi hội thoại ở sidebar: giờ nếu hôm nay, còn lại là ngày. */
+      /** The timestamp beside each conversation in the sidebar: a time if today, otherwise a date. */
       conversationTimestamp(iso: string | null): string {
         const day = dayKind(iso);
         switch (day.kind) {
@@ -89,7 +92,7 @@ export function useChatFormat() {
         }
       },
 
-      /** "Hoạt động 3 giờ trước". `null` khi không có mốc nào để nói. */
+      /** "Active 3 hours ago". `null` when there is no timestamp to speak of. */
       lastSeenLabel(iso: string | null): string | null {
         const seen = lastSeen(iso);
         switch (seen.kind) {

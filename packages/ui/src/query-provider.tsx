@@ -31,14 +31,14 @@ function makeQueryClient() {
 }
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
-  // useState → mỗi lần mount tạo đúng một client. KHÔNG khai báo ở module
-  // scope: trên server sẽ bị chia sẻ giữa các request → rò rỉ dữ liệu user.
+  // useState → exactly one client per mount. Never declare it at module scope:
+  // on the server it would be shared across requests → user data leaks.
   const [client] = useState(makeQueryClient);
 
   return (
     <QueryClientProvider client={client}>
       {children}
-      {/* Devtools là devDependency — bundler loại khỏi production build. */}
+      {/* Devtools is a devDependency — the bundler drops it from production builds. */}
       {process.env.NODE_ENV === "development" && (
         <ReactQueryDevtools initialIsOpen={false} />
       )}

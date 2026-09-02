@@ -19,8 +19,9 @@ export function AdminSidebar() {
       </Typography>
       <nav aria-label={ta("mainNav")} className="flex flex-col gap-0.5">
         {NAV_ITEMS.map((item) => {
-          // startsWith để `/users/[id]` vẫn sáng mục "Người dùng"; chặn khớp
-          // nhầm tiền tố bằng cách đòi ký tự kế tiếp là "/".
+          // startsWith so `/users/[id]` still highlights the "Users" item;
+          // false prefix matches are ruled out by requiring the next character
+          // to be "/".
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
           if (item.disabled) {

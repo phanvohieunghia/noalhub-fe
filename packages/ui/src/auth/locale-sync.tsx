@@ -7,18 +7,22 @@ import { useLocale } from "next-intl";
 import { useEffect } from "react";
 
 /**
- * Điểm **duy nhất** mà `user.language` thắng cookie (`docs/i18n-plan.md` §4.2).
+ * The **only** point where `user.language` beats the cookie (`docs/i18n.md`
+ * §4.2).
  *
- * SSR không biết user là ai: token nằm trong `tokenStore` chứ không phải cookie
- * (`docs/auth.md`), nên lúc render server chỉ có cookie để dựa vào. Sau khi
- * `bootstrap()` hoặc login xong thì mới biết lựa chọn thật của tài khoản — lúc
- * đó nếu lệch thì kéo cookie và giao diện theo tài khoản.
+ * SSR does not know who the user is: the token lives in `tokenStore`, not in a
+ * cookie (`docs/auth.md`), so a server render has nothing but the cookie to go
+ * on. The account's real choice is known only once `bootstrap()` or login has
+ * finished — and if it differs, the cookie and the UI are pulled to match the
+ * account.
  *
- * Hệ quả đã biết và chấp nhận (§10): đăng nhập trên máy lạ có cookie `en` trong
- * khi tài khoản là `vi` sẽ thấy giao diện đổi một nhịp ngay sau khi vào. Không
- * tránh được khi server không biết user trước lúc render.
+ * A known, accepted consequence (§10): signing in on an unfamiliar machine
+ * whose cookie says `en` while the account says `vi` shows the UI switch one
+ * beat after entry. Unavoidable while the server cannot know the user before
+ * rendering.
  *
- * Đăng xuất **không** reset về `vi`: người ta vừa đọc bằng tiếng Anh xong.
+ * Logging out does **not** reset to `vi`: the person was just reading in
+ * English.
  */
 export function LocaleSync({ onMismatch }: { onMismatch: (locale: Locale) => void }) {
   const me = useMe();

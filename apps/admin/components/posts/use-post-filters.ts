@@ -6,16 +6,18 @@ import { useCallback, useEffect, useState } from "react";
 import { adminBlogPostQuerySchema, type AdminBlogPostQuery } from "@noalhub/api/blog";
 
 /**
- * Filter của bảng bài viết sống trong **URL searchParams**, không trong state —
- * link share được và nút back đi đúng đường. Cùng khuôn với `use-user-filters`;
- * hai hook riêng vì hai bảng có tập filter khác nhau (`status` vs `role`).
+ * The post table's filters live in the **URL searchParams**, not in state — so
+ * links stay shareable and the back button behaves. Shaped like
+ * `use-user-filters`; two separate hooks because the two tables have different
+ * filter sets (`status` vs `role`).
  */
 export function usePostFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // `.catch()` trong schema nuốt mọi giá trị rác trên URL (`?page=abc`) về mặc
-  // định — người ta sửa tay thanh địa chỉ suốt, đừng để nó làm vỡ trang.
+  // The schema's `.catch()` folds any junk in the URL (`?page=abc`) back to the
+  // default — people edit the address bar all the time; that must not break the
+  // page.
   const query: AdminBlogPostQuery = adminBlogPostQuerySchema.parse({
     page: searchParams.get("page") ?? undefined,
     limit: searchParams.get("limit") ?? undefined,
@@ -37,8 +39,8 @@ export function usePostFilters() {
         }
       }
 
-      // Đổi filter thì phải về trang 1: giữ `page=5` với bộ lọc mới là cách
-      // chắc chắn nhất để nhận một bảng rỗng khó hiểu.
+      // A filter change resets to page 1: keeping `page=5` under a new filter is
+      // the surest way to get a baffling empty table.
       if (!("page" in next)) params.delete("page");
 
       router.replace(params.size ? `/posts?${params}` : "/posts", { scroll: false });
@@ -46,8 +48,8 @@ export function usePostFilters() {
     [router, searchParams],
   );
 
-  // Debounce ô tìm kiếm: mỗi phím là một request + một entry lịch sử nếu ghi
-  // thẳng vào URL.
+  // Debounce the search box: written straight to the URL, every keystroke is a
+  // request plus a history entry.
   useEffect(() => {
     const current = query.q ?? "";
     const next = searchInput.trim();

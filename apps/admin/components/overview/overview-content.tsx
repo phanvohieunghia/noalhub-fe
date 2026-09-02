@@ -10,10 +10,11 @@ import { AdminErrorState } from "../admin-error-state";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Tổng quan — 4 số từ `GET /admin/stats`.
+ * The overview — four numbers from `GET /admin/stats`.
  *
- * Backend **không cache** endpoint này, nhưng nó cũng không phải realtime: có
- * nút refresh và mốc "cập nhật lúc" thay vì để người đọc tưởng số tự chạy.
+ * The backend does **not** cache this endpoint, but it is not realtime either:
+ * there is a refresh button and an "updated at" stamp, rather than letting the
+ * reader assume the numbers move on their own.
  */
 export function OverviewContent() {
   const t = useTranslations("admin.overview");
@@ -38,8 +39,8 @@ export function OverviewContent() {
           {t("title")}
         </Typography>
         <div className="text-body-4 flex items-center gap-3 opacity-60">
-          {/* dataUpdatedAt = lúc response về, không phải lúc backend tính. Đủ
-              chính xác cho mục đích "số này cũ chưa". */}
+          {/* dataUpdatedAt is when the response arrived, not when the backend
+              computed it. Accurate enough for "how stale is this number?". */}
           {stats.dataUpdatedAt ? (
             <span>{t("updatedAt", { date: df.dateTime(new Date(stats.dataUpdatedAt).toISOString()) })}</span>
           ) : null}

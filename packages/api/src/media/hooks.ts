@@ -10,15 +10,16 @@ import { MessageError } from "../message";
 
 
 /**
- * Upload một file qua đủ ba nhịp, kèm tiến độ và một đường huỷ.
+ * Uploads one file through all three steps, with progress and a way to cancel.
  *
- * **Không có query key và không invalidate gì cả** — cố ý. Media không có
- * endpoint liệt kê, và asset vừa upload không nằm trong cache nào: thứ duy nhất
- * gọi bên gọi cần là `url` trả về để nhét vào bài viết. Dùng `useMutation` chỉ
- * để có sẵn `isPending` / `error` / `reset` quen thuộc.
+ * **No query key and no invalidation at all** — deliberately. Media has no list
+ * endpoint, and a freshly uploaded asset is in no cache: the only thing the
+ * caller needs is the returned `url` to drop into a post. `useMutation` is used
+ * purely for the familiar `isPending` / `error` / `reset`.
  *
- * `progress` là state riêng chứ không nhét vào React Query: nó đổi hàng chục
- * lần mỗi giây, mà cache của React Query không phải chỗ cho dữ liệu như vậy.
+ * `progress` is separate state rather than something in React Query: it changes
+ * dozens of times per second, and React Query's cache is not the place for
+ * data like that.
  */
 export function useUploadMedia(options: { allow?: readonly string[] } = {}) {
   const { allow } = options;
@@ -28,9 +29,10 @@ export function useUploadMedia(options: { allow?: readonly string[] } = {}) {
   const mutation = useMutation<MediaAsset, Error, File>({
     mutationFn: async (file) => {
       /*
-       * Kiểm ở client TRƯỚC khi gọi presign. Backend vẫn kiểm độc lập — đây chỉ
-       * để hỏng sớm: chọn nhầm file 40MB thì biết ngay lúc chọn, thay vì sau khi
-       * đã đẩy hết 40MB lên mạng.
+       * Checked on the client BEFORE calling presign. The backend still checks
+       * independently — this is only to fail early: picking a 40MB file by
+       * mistake is known at selection time, not after pushing all 40MB over the
+       * network.
        */
       const rejection = describeMediaRejection(file, { allow });
       if (rejection) throw new MessageError(rejection);
@@ -53,8 +55,9 @@ export function useUploadMedia(options: { allow?: readonly string[] } = {}) {
   });
 
   /**
-   * Huỷ nhịp đang chạy. Row `pending` bên backend **không** được dọn từ đây:
-   * không có endpoint xoá, và job dọn của backend xoá nó sau 24h.
+   * Cancels the step in flight. The backend's `pending` row is **not** cleaned
+   * up here: there is no delete endpoint, and the backend's cleanup job removes
+   * it after 24h.
    */
   const cancel = useCallback(() => abortRef.current?.abort(), []);
 

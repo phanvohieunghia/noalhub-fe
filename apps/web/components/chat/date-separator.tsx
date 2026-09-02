@@ -4,7 +4,7 @@ import { Typography } from "@noalhub/ui/typography";
 
 import { useChatFormat } from "./use-chat-format";
 
-/** "Hôm nay" / "Hôm qua" / "3 tháng bảy". */
+/** "Today" / "Yesterday" / "3 July". */
 export function DateSeparator({ iso }: { iso: string }) {
   const label = useChatFormat().dayLabel(iso);
   if (!label) return null;

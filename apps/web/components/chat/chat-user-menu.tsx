@@ -13,15 +13,16 @@ import { ThemeToggle } from "@noalhub/ui/theme/theme-toggle";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Menu tài khoản của khu vực chat, mở từ icon ba gạch ở đầu sidebar.
+ * The chat area's account menu, opened from the hamburger icon at the top of the
+ * sidebar.
  *
- * Chat là màn hình cao đúng viewport, không có header chung và không có
- * `SiteFooter` — nên đây là chỗ DUY NHẤT trong `/chat` để xem mình đang đăng
- * nhập bằng tài khoản nào, đổi giao diện và đăng xuất.
+ * Chat is exactly viewport-height with no shared header and no `SiteFooter` — so
+ * this is the ONLY place inside `/chat` to see which account you are signed in
+ * as, change the appearance, and sign out.
  *
- * Dựng trên `DropdownMenu` của `@noalhub/ui` giống hệt menu tài khoản bên
- * admin: click ra ngoài, `Esc`, `aria-expanded` và định vị tránh tràn viewport
- * đều do Radix lo.
+ * Built on `@noalhub/ui`'s `DropdownMenu`, exactly like admin's account menu:
+ * outside clicks, `Esc`, `aria-expanded` and viewport-aware positioning all come
+ * from Radix.
  */
 export function ChatUserMenu() {
   const t = useTranslations("web.chat.header");

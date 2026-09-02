@@ -4,12 +4,12 @@ import { NAMESPACES, type Namespace } from "./namespaces";
 export type MessageTree = { [key: string]: string | MessageTree };
 
 /**
- * Nạp một file message.
+ * Load a single message file.
  *
- * Import động với template literal: cả webpack lẫn turbopack đều đọc được mẫu
- * này và sinh một chunk cho **mỗi** file trong `messages/`. Nối chuỗi đường dẫn
- * từ biến ngoài (`import(path)`) thì bundler bó tay và gói cả thư mục vào một
- * chunk.
+ * A dynamic import with a template literal: both webpack and turbopack can read
+ * this pattern and emit one chunk per file in `messages/`. Building the path
+ * from an outside variable (`import(path)`) defeats the bundler, which then
+ * bundles the whole directory into a single chunk.
  */
 async function loadNamespace(
   locale: Locale,
@@ -22,16 +22,17 @@ async function loadNamespace(
 }
 
 /**
- * Toàn bộ message của một locale, dùng cho `getRequestConfig`.
+ * Every message of a locale, for `getRequestConfig`.
  *
- * **Vì sao nạp hết ở server mà không lọc theo route:** `getRequestConfig` chỉ
- * nhận locale, không nhận pathname, nên ở tầng đó không có cách nào biết route
- * hiện tại (proxy có pathname nhưng không đưa được header vào request mà
- * `headers()` đọc được, trừ khi dùng API nội bộ của Next).
+ * **Why the server loads all of them instead of filtering by route:**
+ * `getRequestConfig` only receives the locale, not the pathname, so at that
+ * layer there is no way to know the current route (the proxy has the pathname
+ * but cannot put a header on the request where `headers()` would see it,
+ * short of Next internals).
  *
- * Đổi lại không mất gì: đây là chuỗi ở **server**, không đi vào bundle của
- * trình duyệt. Phần thực sự tốn — payload gửi cho client — vẫn được cắt theo
- * route, bằng `pickMessages` ở mỗi layout (§5).
+ * Nothing is lost by it: these are **server** strings, they never enter the
+ * browser bundle. The part that actually costs — the payload sent to the
+ * client — is still cut per route by `pickMessages` in each layout (§5).
  */
 export async function loadAllMessages(locale: Locale): Promise<MessageTree> {
   const tree: MessageTree = {};
@@ -49,9 +50,9 @@ export async function loadAllMessages(locale: Locale): Promise<MessageTree> {
 }
 
 /**
- * Cắt ra đúng những namespace mà một nhóm route cần, để truyền cho
- * `NextIntlClientProvider`. Đây là chỗ việc chia namespace có tác dụng thật:
- * trang blog không phải tải hai chục chuỗi của chat.
+ * Slice out exactly the namespaces a route group needs, to hand to
+ * `NextIntlClientProvider`. This is where splitting into namespaces actually
+ * pays off: the blog page never downloads chat's strings.
  */
 export function pickMessages(
   messages: MessageTree,
@@ -66,9 +67,9 @@ export function pickMessages(
 }
 
 /**
- * Đặt `value` vào cây theo đường dẫn có dấu chấm: `web.auth` → `{ web: { auth } }`.
- * `next-intl` hiểu dấu chấm là đường dẫn khoá, nên đây là cách để
- * `useTranslations("web.auth")` tìm thấy file `web.auth.json`.
+ * Put `value` into the tree along a dotted path: `web.auth` → `{ web: { auth } }`.
+ * `next-intl` reads a dot as a key path, so this is what makes
+ * `useTranslations("web.auth")` find the `web.auth.json` file.
  */
 function assign(tree: MessageTree, path: string, value: MessageTree): void {
   const parts = path.split(".");
@@ -90,12 +91,12 @@ function read(tree: MessageTree, path: string): MessageTree | null {
 }
 
 /**
- * `vi` làm nền cho mọi locale khác.
+ * `vi` is the base every other locale is layered on.
  *
- * Đây là lưới an toàn cho production, không phải giấy phép để thiếu chuỗi:
- * `pnpm --filter @noalhub/i18n check-messages` chạy ở CI và fail nếu cây khoá
- * của `en` lệch với `vi` (§9). Có nó thì một khoá bị quên hiện ra tiếng Việt,
- * chứ không phải hiện tên khoá cho người dùng đọc.
+ * This is a production safety net, not a licence to leave strings out:
+ * `pnpm --filter @noalhub/i18n check-messages` runs in CI and fails when `en`'s
+ * key tree drifts from `vi` (§9). With it, a forgotten key renders as
+ * Vietnamese rather than showing the raw key name to the user.
  */
 function deepMerge(base: MessageTree, override: MessageTree): MessageTree {
   const out: MessageTree = { ...base };

@@ -7,11 +7,12 @@ import { MessageBubble } from "./message-bubble";
 import type { ConversationMember, Message } from "@noalhub/api/chat";
 
 /**
- * Nhóm tin liên tiếp của cùng một người: avatar và tên chỉ hiện một lần.
+ * A run of consecutive messages from one person: the avatar and name appear
+ * once.
  *
- * `Message` chỉ mang `senderId` — tên/avatar phải tra từ `members` của hội
- * thoại, nên map đó được truyền xuống từ `ChatPane` (đừng để mỗi bubble tự
- * `find()` trong mảng).
+ * A `Message` carries only `senderId` — names and avatars have to be looked up
+ * in the conversation's `members`, so that map is passed down from `ChatPane`
+ * (never let each bubble `find()` through the array itself).
  */
 export function MessageGroup({
   messages,
@@ -30,7 +31,7 @@ export function MessageGroup({
   const mine = senderId !== null && senderId === currentUserId;
   const sender = senderId ? members.get(senderId) : undefined;
 
-  // senderId null = người gửi đã bị xoá khỏi hệ thống (ON DELETE SET NULL).
+  // A null senderId means the sender was deleted from the system (ON DELETE SET NULL).
   const name =
     senderId === null ? t("deletedUser") : (sender?.displayName ?? t("unknownUser"));
 

@@ -8,11 +8,12 @@ import { listItemDescription } from "@noalhub/core/blog/seo";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Thẻ bài trong danh sách.
+ * A post card in a listing.
  *
- * `readingMinutes` đến từ **backend** chứ không tính ở đây: list item cố tình
- * không có `content` lẫn `contentText` để 20 bài không nặng vài trăm KB, nên FE
- * không có gì để tính (`docs/blog-plan.md` §2.3a).
+ * `readingMinutes` comes from the **backend** rather than being computed here:
+ * list items deliberately carry neither `content` nor `contentText` so 20 posts
+ * do not weigh hundreds of KB, leaving the frontend nothing to compute from
+ * (`docs/blog.md` §2.3a).
  */
 export function PostCard({ post }: { post: BlogPostListItem }) {
   const t = useTranslations("web.blog.post");
@@ -42,7 +43,7 @@ export function PostCard({ post }: { post: BlogPostListItem }) {
           {post.category.name}
         </Link>
 
-        {/* h2: trang danh sách chỉ có MỘT h1 là tiêu đề trang (§6.2). */}
+        {/* h2: a listing page has exactly ONE h1, the page title (§6.2). */}
         <Typography variant="h5" as="h2" className="leading-snug">
           <Link href={`/blogs/${post.slug}`} className="hover:underline">
             {post.title}

@@ -30,9 +30,10 @@ export function ConversationList() {
   const { data, isPending, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useConversations();
 
-  // Thứ tự giữ NGUYÊN như backend trả về (nó sort theo last_message_at, cột
-  // không lộ ra DTO nên client không sort lại được cho đúng). Cache được patch
-  // theo cách đẩy hội thoại vừa có tin lên đầu — xem hooks.ts.
+  // The order is kept EXACTLY as the backend returned it (it sorts by
+  // last_message_at, a column not exposed in the DTO, so the client cannot
+  // re-sort correctly). The cache is patched by moving a conversation that just
+  // received a message to the front — see hooks.ts.
   const conversations = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data]);
 
   const filtered = useMemo(() => {
@@ -90,7 +91,7 @@ export function ConversationList() {
           </ul>
         )}
 
-        {/* Lọc client-side ẩn mất sentinel → chỉ tải thêm khi không lọc. */}
+        {/* Client-side filtering hides the sentinel → only load more when unfiltered. */}
         {query.trim() ? null : (
           <div ref={sentinelRef} className="flex justify-center py-2">
             {isFetchingNextPage ? <Spinner /> : null}
@@ -102,12 +103,12 @@ export function ConversationList() {
 }
 
 /**
- * Tải thêm khi sentinel lọt vào khung nhìn. `IntersectionObserver` chứ không
- * `onScroll` — scroll handler chạy mỗi frame.
+ * Loads more when the sentinel enters the viewport. `IntersectionObserver`
+ * rather than `onScroll` — a scroll handler runs every frame.
  */
 function useInfiniteScroll(onReach: () => void, enabled: boolean) {
   const ref = useRef<HTMLDivElement>(null);
-  // Ghi ref trong effect, KHÔNG trong lúc render.
+  // The ref is written in an effect, NEVER during render.
   const onReachRef = useRef(onReach);
   useEffect(() => {
     onReachRef.current = onReach;

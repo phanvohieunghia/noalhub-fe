@@ -1,17 +1,18 @@
 /**
- * Mirror của DTO trong OpenAPI spec (`/docs-json`, tag `admin`), KHÔNG suy từ
- * schema DB của backend. Ba endpoint duy nhất hiện có:
+ * A mirror of the DTOs in the OpenAPI spec (`/docs-json`, tag `admin`), NOT
+ * inferred from the backend's DB schema. The only three endpoints today:
  * `GET /admin/stats`, `GET /admin/users`, `GET /admin/users/{id}`.
  *
- * ⚠️ Lệch đã biết giữa spec và shape thật (xem `docs/admin-plan.md` §1):
- * `displayName`, `avatarUrl`, `emailVerifiedAt`, `lastSeenAt`,
- * `usernameChangedAt` được spec khai `type: "object", nullable: true` — đó là
- * lỗi generate của Nest Swagger. Shape thật là `string | null`, và đó là thứ
- * chép ở đây. Cùng loại lệch với ghi chú đầu `chat/types.ts`.
+ * ⚠️ Known drift between the spec and the real shape (see
+ * `docs/admin-plan.md` §1): `displayName`, `avatarUrl`, `emailVerifiedAt`,
+ * `lastSeenAt` and `usernameChangedAt` are declared as
+ * `type: "object", nullable: true` — a Nest Swagger generation bug. The real
+ * shape is `string | null`, which is what is written here. Same class of drift
+ * as the note at the top of `chat/types.ts`.
  *
- * ⚠️ `AdminUserDto` **chưa có** `status`/`restrictions`: mô hình trạng thái tài
- * khoản ở `docs/admin-plan.md` §3b mới là contract đề xuất, backend chưa làm.
- * Đừng thêm vào đây trước khi spec có.
+ * ⚠️ `AdminUserDto` does **not yet** have `status`/`restrictions`: the account
+ * state model in `docs/admin-plan.md` §3b is a proposed contract the backend
+ * has not built. Do not add them here before the spec does.
  */
 
 import type { UserRole } from "../auth/types";
@@ -19,9 +20,10 @@ import type { UserRole } from "../auth/types";
 export type { UserRole };
 
 /**
- * `AdminUserDto` — bản đầy đủ cho admin. KHÁC `User` (hồ sơ của chính mình) và
- * `PublicProfile` (hồ sơ người khác), đừng tái dùng hai kiểu kia cho bảng admin:
- * `User` không có `lastSeenAt`, `PublicProfile` không có `email`/`role`.
+ * `AdminUserDto` — the full record for admins. DIFFERENT from `User` (your own
+ * profile) and `PublicProfile` (someone else's); do not reuse either for the
+ * admin table: `User` has no `lastSeenAt`, `PublicProfile` has no
+ * `email`/`role`.
  */
 export type AdminUser = {
   id: string;
@@ -31,25 +33,25 @@ export type AdminUser = {
   displayName: string | null;
   avatarUrl: string | null;
   /**
-   * `null` = chưa verify email. Trạng thái `pending_verification` ở §3b **suy ra
-   * từ trường này**, backend không lưu thành cột riêng.
+   * `null` means the email is unverified. The `pending_verification` state in
+   * §3b is **derived from this field**; the backend stores no separate column.
    */
   emailVerifiedAt: string | null;
   /**
-   * Lần cuối chuyển sang offline. **KHÔNG phải trạng thái online** — endpoint
-   * admin không đọc presence (spec nói thẳng). Nhãn UI phải là "hoạt động lần
-   * cuối", không phải dot xanh/xám.
+   * When they last went offline. **NOT an online state** — the admin endpoints
+   * do not read presence (the spec says so outright). The UI label must be
+   * "last active", never a green/gray dot.
    */
   lastSeenAt: string | null;
-  /** `null` = chưa từng đổi username. */
+  /** `null` means the username has never been changed. */
   usernameChangedAt: string | null;
   createdAt: string;
 };
 
 /**
- * `AdminUserListDto` — phân trang **offset**, khác hẳn cursor của chat.
- * `page`/`limit` là echo lại query: dựng phân trang từ response thay vì tin vào
- * state của client.
+ * `AdminUserListDto` — **offset** pagination, quite unlike chat's cursor.
+ * `page`/`limit` echo the query back: build the pagination from the response
+ * rather than trusting client state.
  */
 export type AdminUserList = {
   items: AdminUser[];
@@ -58,22 +60,22 @@ export type AdminUserList = {
   limit: number;
 };
 
-/** Query của `GET /admin/users`. `limit` tối đa **100** (ràng buộc backend). */
+/** The query for `GET /admin/users`. `limit` maxes at **100** (a backend constraint). */
 export type AdminUserListQuery = {
   page?: number;
   limit?: number;
-  /** Khớp gần đúng trên email + username. */
+  /** Fuzzy match across email + username. */
   q?: string;
   role?: UserRole;
 };
 
 /**
- * `AdminStatsDto`. Spec ghi rõ backend **không cache**: số liệu tính lúc gọi,
- * nhưng cũng không phải realtime. UI đặt `staleTime` ngắn + nút refresh thay vì
- * vẽ như dashboard sống.
+ * `AdminStatsDto`. The spec states the backend does **not** cache: the figures
+ * are computed per call, but they are not realtime either. The UI uses a short
+ * `staleTime` plus a refresh button rather than drawing a live dashboard.
  *
- * ⚠️ `totalUsers` sẽ gồm cả tài khoản bị ban/suspend khi §3b có thật —
- * `suspendedUsers`/`bannedUsers` mới là đề xuất, chưa có trong spec.
+ * ⚠️ `totalUsers` will include banned/suspended accounts once §3b is real —
+ * `suspendedUsers`/`bannedUsers` are proposals not present in the spec.
  */
 export type AdminStats = {
   totalUsers: number;

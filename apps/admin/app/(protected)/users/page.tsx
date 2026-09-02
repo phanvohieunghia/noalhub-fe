@@ -11,8 +11,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * `useSearchParams()` (filter đọc từ URL) bắt buộc nằm dưới một Suspense
- * boundary, nếu không cả route bị ép sang client render lúc build.
+ * `useSearchParams()` (the filters read from the URL) must sit under a Suspense
+ * boundary, or the whole route is forced to client rendering at build time.
  */
 export default function UsersPage() {
   return (

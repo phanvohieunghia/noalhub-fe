@@ -7,16 +7,16 @@ type SelectProps = Omit<React.ComponentPropsWithoutRef<"select">, "children"> & 
   label: string;
   options: SelectOption[];
   error?: string;
-  /** Nhãn cho lựa chọn rỗng (`value=""`). Bỏ trống = không có mục rỗng. */
+  /** Label for the empty choice (`value=""`). Omitted means no empty option. */
   placeholder?: string;
 };
 
 /**
- * `<select>` gốc của trình duyệt, chỉ thêm nhãn + trạng thái lỗi — cùng khuôn
- * với `Input` để form trộn hai thứ không bị lệch.
+ * The browser's native `<select>`, with only a label and an error state added —
+ * shaped like `Input` so a form mixing the two stays aligned.
  *
- * Cố tình không dựng dropdown tự vẽ: filter của admin cần chạy được bằng bàn
- * phím và trên mobile, mà đó là chỗ combobox tự chế hay hỏng nhất.
+ * Deliberately not a custom-drawn dropdown: admin's filters have to work by
+ * keyboard and on mobile, which is exactly where hand-rolled comboboxes break.
  */
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
   { label, options, error, placeholder, id, className = "", ...props },

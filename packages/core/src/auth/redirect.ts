@@ -1,30 +1,30 @@
 export const DEFAULT_REDIRECT = "/chat";
 
 /**
- * Chỉ chấp nhận đường dẫn nội bộ. Không có hàm này thì
- * `/login?next=https://evil.com` trở thành lỗ hổng open-redirect.
+ * Accepts internal paths only. Without this,
+ * `/login?next=https://evil.com` becomes an open-redirect hole.
  */
 export function safeRedirect(
   next: string | null | undefined,
   /**
-   * Đích khi `next` vắng hoặc không an toàn. `DEFAULT_REDIRECT` là route của
-   * `apps/web`; `apps/admin` truyền đích của nó vào đây thay vì tự viết lại
-   * phần kiểm tra open-redirect.
+   * Where to go when `next` is absent or unsafe. `DEFAULT_REDIRECT` is an
+   * `apps/web` route; `apps/admin` passes its own destination in here rather
+   * than reimplementing the open-redirect check.
    */
   fallback: string = DEFAULT_REDIRECT,
 ): string {
   if (!next) return fallback;
   if (!next.startsWith("/")) return fallback;
-  // `//evil.com` và `/\evil.com` đều bị trình duyệt hiểu là protocol-relative.
+  // Browsers read both `//evil.com` and `/\evil.com` as protocol-relative.
   if (next.startsWith("//") || next.startsWith("/\\")) return fallback;
   return next;
 }
 
 /**
- * Luồng OAuth đi qua provider rồi quay về callback do BACKEND cấu hình —
- * spec không nhận `redirect_uri`, nên không thể mang `next` theo query string.
- * Gửi tạm qua sessionStorage: sống đúng trong tab đang bắt tay, tự mất khi
- * đóng tab.
+ * The OAuth flow goes through the provider and returns to a callback configured
+ * by the BACKEND — the spec takes no `redirect_uri`, so `next` cannot ride
+ * along in the query string. It is parked in sessionStorage instead: alive only
+ * in the tab doing the handshake, gone when that tab closes.
  */
 const OAUTH_NEXT_KEY = "nh.oauth.next";
 

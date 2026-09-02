@@ -8,19 +8,21 @@ export type BlogHeading = {
   text: string;
 };
 
-/** Bài có ít hơn 3 heading thì không hiện TOC — mục lục hai dòng chỉ tốn chỗ (§3.3). */
+/** Fewer than 3 headings means no TOC — a two-line table of contents is just clutter (§3.3). */
 export const TOC_MIN_HEADINGS = 3;
 
 /**
- * Quét **cả cây một lượt** lấy mọi heading kèm `id` đã khử trùng.
+ * Walks **the whole tree in one pass**, collecting every heading with a
+ * de-duplicated `id`.
  *
- * Vì sao một lượt: hai heading trùng tên trong một bài cho ra hai `id` trùng, và
- * anchor sẽ luôn nhảy về cái đầu tiên. Đánh số hậu tố (`gioi-thieu`,
- * `gioi-thieu-2`) chỉ đúng khi biết toàn bộ danh sách, không làm được ở từng
- * node rời (§3.3).
+ * Why one pass: two headings with the same text produce the same `id`, and the
+ * anchor would always jump to the first one. Numbering the duplicates
+ * (`gioi-thieu`, `gioi-thieu-2`) is only correct with the full list in hand —
+ * it cannot be done per isolated node (§3.3).
  *
- * Renderer (`post-content.tsx`) và mục lục (`table-of-contents.tsx`) gọi CHUNG
- * hàm này trên cùng một doc, nên hai bên không bao giờ lệch nhau.
+ * The renderer (`post-content.tsx`) and the table of contents
+ * (`table-of-contents.tsx`) call THIS function on the same doc, so the two can
+ * never disagree.
  */
 export function collectHeadings(doc: BlogDoc): BlogHeading[] {
   const headings: BlogHeading[] = [];
@@ -30,7 +32,7 @@ export function collectHeadings(doc: BlogDoc): BlogHeading[] {
     if (node.type !== "heading") continue;
 
     const text = inlineText(node.content);
-    // Heading rỗng vẫn phải có id ổn định, nếu không hai heading rỗng lại trùng.
+    // An empty heading still needs a stable id, or two empty ones collide again.
     const base = slugify(text) || `muc-${headings.length + 1}`;
     const seen = used.get(base) ?? 0;
     used.set(base, seen + 1);

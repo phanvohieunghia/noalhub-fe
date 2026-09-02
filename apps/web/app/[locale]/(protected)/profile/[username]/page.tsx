@@ -12,14 +12,15 @@ export async function generateMetadata({
   return { title: t("title") };
 }
 
-/** `params` là async ở Next 16 — await ở server rồi truyền xuống client. */
+/** `params` is async in Next 16 — await it on the server, then pass it down to the client. */
 export default async function PublicProfilePage(props: PageProps<"/[locale]/profile/[username]">) {
   const { locale, username } = await props.params;
   setRequestLocale(locale);
 
   /*
-   * `web.chat` đi kèm vì `PublicProfileContent` dùng `useChatFormat()` cho dòng
-   * "hoạt động gần nhất" — cùng một cách nói với trong chat, nên cùng namespace.
+   * `web.chat` comes along because `PublicProfileContent` uses `useChatFormat()`
+   * for the "last active" line — the same phrasing as in chat, hence the same
+   * namespace.
    */
   return (
     <IntlProvider namespace="web.profile">

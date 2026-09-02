@@ -1,8 +1,8 @@
 const SIZES = { sm: "size-4", md: "size-5" } as const;
 
 /**
- * Vòng xoay chờ. Mặc định `aria-hidden` — trạng thái tải phải được thông báo
- * bởi vùng chứa (`role="status"` + text), không phải bởi hình xoay.
+ * A loading spinner. `aria-hidden` by default — the loading state must be
+ * announced by the container (`role="status"` plus text), not by the animation.
  */
 export function Spinner({
   size = "sm",

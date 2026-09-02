@@ -17,14 +17,14 @@ import type {
 } from "./types";
 
 /* ------------------------------------------------------------------------- *
- * Allowlist — nửa FE của trust boundary (§3, §3.1, §3.1a)
+ * Allowlist — the frontend half of the trust boundary (§3, §3.1, §3.1a)
  * ------------------------------------------------------------------------- */
 
 /**
- * Node/mark cho phép (§3.1). Danh sách này phải TRÙNG với schema của editor
- * (`apps/admin`), với validate khi ghi ở backend, và với renderer
- * (`packages/ui/src/blog/post-content.tsx`). Lệch một chỗ là dữ liệu ghi được
- * mà không hiện được, hoặc ngược lại.
+ * The allowed nodes and marks (§3.1). This list must MATCH the editor's schema
+ * (`apps/admin`), the backend's write validation, and the renderer
+ * (`packages/ui/src/blog/post-content.tsx`). Drift in one place means data that
+ * can be written but not displayed, or the other way round.
  */
 export const BLOG_BLOCK_TYPES = [
   "paragraph",
@@ -45,13 +45,14 @@ export const BLOG_MARK_TYPES = [
   "link",
 ] as const;
 
-/** `<h1>` là tiêu đề bài (§6.2) — nội dung chỉ h2/h3. */
+/** `<h1>` is the post title (§6.2) — content only has h2/h3. */
 export const BLOG_HEADING_LEVELS = [2, 3] as const;
 
 /**
- * Ngôn ngữ cho `codeBlock` (§3.1c). Đợt này chỉ LƯU, chưa tô màu — nhưng phải
- * chốt danh sách bây giờ vì `language` là attr trong schema, thêm sau là migrate
- * `jsonb`. Cùng danh sách ở editor, backend và renderer.
+ * Languages for `codeBlock` (§3.1c). This pass only STORES them, no
+ * highlighting yet — but the list has to be settled now because `language` is a
+ * schema attribute, and adding to it later means a `jsonb` migration. The same
+ * list lives in the editor, the backend and the renderer.
  */
 export const BLOG_CODE_LANGUAGES = [
   "bash",
@@ -68,50 +69,52 @@ export const BLOG_CODE_LANGUAGES = [
 ] as const;
 
 /**
- * Scheme an toàn cho `link.href` (§3.1a).
+ * The safe schemes for `link.href` (§3.1a).
  *
- * ⚠️ Kiểm bằng `new URL()` rồi so `protocol`, **không** regex trên chuỗi thô:
- * `java\tscript:` lách được regex mà trình duyệt vẫn chạy. Đây chính là stored
- * XSS mà §3 tuyên bố đã đóng — không có hàm này thì tuyên bố đó sai.
+ * ⚠️ Checked with `new URL()` and a `protocol` comparison, **never** a regex on
+ * the raw string: `java\tscript:` slips past a regex and browsers still run it.
+ * This is exactly the stored XSS §3 claims to have closed — without this
+ * function that claim is false.
  */
 const SAFE_LINK_PROTOCOLS = ["http:", "https:", "mailto:"];
 
 /**
- * Host được phép cho `image.src` (§3.1a).
+ * The allowed hosts for `image.src` (§3.1a).
  *
- * Re-export từ `@noalhub/config/blog-image-hosts.mjs`, cũng chính là file mà
- * `images.remotePatterns` của cả hai app đọc. Trước đây danh sách bị chép tay
- * ba chỗ và đã lệch thật; giữ re-export này để phía tiêu thụ vẫn import từ
- * `@noalhub/api/blog` như cũ, không phải biết tới package config.
+ * Re-exported from `@noalhub/config/blog-image-hosts.mjs`, the same file both
+ * apps' `images.remotePatterns` read. The list used to be hand-copied in three
+ * places and really did drift; this re-export keeps consumers importing from
+ * `@noalhub/api/blog` as before, without needing to know the config package.
  */
 export { BLOG_IMAGE_DEV_HOSTS, BLOG_IMAGE_HOSTS };
 
-/** Ba segment tĩnh cùng cấp với `/blogs/[slug]` — slug bài trùng là mở không được (§4.5). */
+/** Three static segments living beside `/blogs/[slug]` — a post whose slug collides cannot be opened (§4.5). */
 export const RESERVED_POST_SLUGS = ["category", "tag", "rss.xml"] as const;
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-/** `href` chỉ được là `http:`/`https:`/`mailto:` — xem `SAFE_LINK_PROTOCOLS`. */
+/** `href` may only be `http:`/`https:`/`mailto:` — see `SAFE_LINK_PROTOCOLS`. */
 export function isSafeLinkHref(href: unknown): href is string {
   if (typeof href !== "string" || href.length === 0) return false;
   try {
     return SAFE_LINK_PROTOCOLS.includes(new URL(href).protocol);
   } catch {
-    // URL tương đối (`/gioi-thieu`) không parse được nếu không có base. Bài viết
-    // dẫn link nội bộ là chuyện thường, nên cho qua — nhưng chỉ dạng `/…`, để
-    // `javascript:…` không lọt qua cửa này.
+    // A relative URL (`/gioi-thieu`) cannot be parsed without a base. Posts
+    // linking internally is routine, so it is allowed — but only in the `/…`
+    // form, so `javascript:…` cannot slip through this door.
     return href.startsWith("/") && !href.startsWith("//");
   }
 }
 
 /**
- * `src` phải là `https:` + host thuộc `BLOG_IMAGE_HOSTS`, hoặc — chỉ ngoài
- * production — `http:` + host thuộc `BLOG_IMAGE_DEV_HOSTS` (`localhost`).
+ * `src` must be `https:` with a host in `BLOG_IMAGE_HOSTS`, or — outside
+ * production only — `http:` with a host in `BLOG_IMAGE_DEV_HOSTS`
+ * (`localhost`).
  *
- * Ngoại lệ `http:` cố tình KHÔNG phải một cờ riêng: nó gắn cứng vào danh sách
- * host dev, vốn rỗng khi `NODE_ENV=production`. Nghĩa là ở production nhánh
- * dưới không thể true dù src có là gì, và ràng buộc "ảnh công khai luôn https"
- * vẫn nguyên vẹn.
+ * The `http:` exception is deliberately NOT its own flag: it is welded to the
+ * dev host list, which is empty when `NODE_ENV=production`. That means the
+ * second branch cannot be true in production whatever the src is, and the
+ * "public images are always https" constraint stays intact.
  */
 export function isSafeImageSrc(src: unknown): src is string {
   if (typeof src !== "string" || src.length === 0) return false;
@@ -130,21 +133,23 @@ export function isSafeImageSrc(src: unknown): src is string {
 }
 
 /* ------------------------------------------------------------------------- *
- * Làm sạch document (§3.1, §3.1a)
+ * Document sanitization (§3.1, §3.1a)
  * ------------------------------------------------------------------------- */
 
 /**
- * Chuẩn hoá một document Tiptap về đúng allowlist: giữ node/mark/attr hợp lệ,
- * **bỏ im lặng** phần còn lại.
+ * Normalizes a Tiptap document down to the allowlist: valid nodes, marks and
+ * attributes are kept, everything else is **dropped silently**.
  *
- * Vì sao làm sạch chứ không `z.object(...)` nghiêm ngặt: §3.1 yêu cầu "node lạ
- * → renderer bỏ qua im lặng, một node lạ không được làm trắng cả trang". Một
- * schema nghiêm ngặt làm đúng điều ngược lại — bản Tiptap sau thêm một attr là
- * `parse` ném, trang bài viết trả 500. Sạch-và-nới ở đây, nghiêm ngặt ở lớp
- * ngoài (`blogPostSchema`) là chỗ phân chia đúng.
+ * Why sanitize instead of a strict `z.object(...)`: §3.1 requires "an unknown
+ * node → the renderer ignores it silently; one unknown node must not blank the
+ * page". A strict schema does exactly the opposite — the next Tiptap release
+ * adds an attribute, `parse` throws, and the post page 500s. Lenient
+ * sanitization here and strictness at the outer layer (`blogPostSchema`) is the
+ * right split.
  *
- * Hàm dùng cho CẢ hai chiều: đọc (server.ts + api.ts) và ghi (editor gửi lên).
- * Nhờ vậy thứ lưu ở DB và thứ render ra luôn là cùng một tập.
+ * The function is used in BOTH directions: reading (server.ts + api.ts) and
+ * writing (what the editor sends). So what sits in the DB and what gets
+ * rendered are always the same set.
  */
 export function sanitizeBlogDoc(value: unknown): BlogDoc {
   const content = isRecord(value) && value.type === "doc" ? value.content : null;
@@ -170,8 +175,8 @@ function sanitizeBlock(raw: unknown): BlogBlockNode | null {
       return { type: "paragraph", content: sanitizeInline(raw.content) };
 
     case "heading": {
-      // Level ngoài [2,3] thì hạ về h2 thay vì bỏ cả heading: mất một mục lục
-      // còn hơn mất nguyên đoạn nội dung dưới nó.
+      // A level outside [2,3] falls back to h2 rather than dropping the whole
+      // heading: losing a TOC entry beats losing the section under it.
       const level = attrs.level === 3 ? 3 : 2;
       return {
         type: "heading",
@@ -200,7 +205,7 @@ function sanitizeBlock(raw: unknown): BlogBlockNode | null {
       return {
         type: "codeBlock",
         attrs: { language },
-        // Trong codeBlock, text không mang mark nào.
+        // Inside a codeBlock, text carries no marks.
         content: sanitizeInline(raw.content).filter(isTextNode),
       };
     }
@@ -209,7 +214,7 @@ function sanitizeBlock(raw: unknown): BlogBlockNode | null {
       return { type: "horizontalRule" };
 
     case "image": {
-      // src sai allowlist → bỏ hẳn ảnh (không có "text con" để giữ lại).
+      // A src outside the allowlist → drop the image entirely (there is no child text to keep).
       if (!isSafeImageSrc(attrs.src)) return null;
       return {
         type: "image",
@@ -223,7 +228,7 @@ function sanitizeBlock(raw: unknown): BlogBlockNode | null {
     }
 
     default:
-      // Node lạ (extension của bản Tiptap sau) — bỏ im lặng, không ném (§3.1).
+      // An unknown node (an extension from a later Tiptap) — dropped silently, never thrown on (§3.1).
       return null;
   }
 }
@@ -264,8 +269,9 @@ function sanitizeMarks(value: unknown): BlogMark[] {
     if (!isRecord(raw) || typeof raw.type !== "string") continue;
     if (raw.type === "link") {
       const href = isRecord(raw.attrs) ? raw.attrs.href : undefined;
-      // href bẩn → bỏ MARK nhưng giữ text (§3.1a): link hỏng thành chữ thường.
-      // `target`/`rel` cố tình không đọc từ dữ liệu — renderer tự đặt.
+      // A dirty href → drop the MARK but keep the text (§3.1a): a bad link
+      // degrades to plain words. `target`/`rel` are deliberately not read from
+      // data — the renderer sets them.
       if (isSafeLinkHref(href)) marks.push({ type: "link", attrs: { href } });
       continue;
     }
@@ -299,7 +305,7 @@ const nullableString = z
   .nullish()
   .transform((value) => value ?? null);
 
-/** `content` đi qua bộ làm sạch trên, không qua `z.object` — lý do ở §3.1. */
+/** `content` goes through the sanitizer above, not `z.object` — see §3.1. */
 export const blogDocSchema = z.unknown().transform(sanitizeBlogDoc);
 
 export const blogTaxonomyRefSchema = z.object({
@@ -356,9 +362,9 @@ export const blogPostListItemSchema = z.object({
 });
 
 /**
- * `page`/`limit` dùng `.catch()` chứ không bắt buộc — cùng lý do với
- * `adminUserListSchema`: thiếu hai số echo lại thì phân trang vẫn dựng được từ
- * query đã gửi, không đáng để cả trang vỡ.
+ * `page`/`limit` use `.catch()` rather than being required — same reason as
+ * `adminUserListSchema`: without the two echoed numbers, pagination can still
+ * be built from the query we sent, and it is not worth breaking the page.
  */
 export const blogPostListSchema = z.object({
   items: z.array(blogPostListItemSchema),
@@ -402,15 +408,17 @@ export const blogSitemapEntrySchema = z.object({
 export const blogSitemapEntryListSchema = z.array(blogSitemapEntrySchema);
 
 /* ------------------------------------------------------------------------- *
- * Input schema — form ở apps/admin
+ * Input schemas — the forms in apps/admin
  * ------------------------------------------------------------------------- */
 
 /**
- * ⚠️ Ràng buộc min/max ở đây phải KHỚP DTO backend (`docs/data-layer.md` §5).
- * Đã đối chiếu với `src/admin/dto/blog-write.dto.ts` bên repo `noalhub-be`:
- * title 200, slug 120, excerpt 500, metaTitle 120, metaDescription 320, URL 2048,
- * tối đa 20 thẻ. Đổi một bên mà quên bên kia thì form báo hợp lệ rồi backend trả
- * `VALIDATION_FAILED` — người dùng thấy lỗi ở chỗ không có ô nào sai.
+ * ⚠️ The min/max constraints here must MATCH the backend DTO
+ * (`docs/data-layer.md` §5). Checked against
+ * `src/admin/dto/blog-write.dto.ts` in the `noalhub-be` repo: title 200, slug
+ * 120, excerpt 500, metaTitle 120, metaDescription 320, URL 2048, at most 20
+ * tags. Change one side and forget the other and the form accepts the input
+ * before the backend answers `VALIDATION_FAILED` — the user sees an error where
+ * no field looks wrong.
  */
 export const blogSlugSchema = z
   .string()
@@ -420,18 +428,19 @@ export const blogSlugSchema = z
   .regex(SLUG_PATTERN, "validation.slug.pattern")
   .refine(
     (slug) => !(RESERVED_POST_SLUGS as readonly string[]).includes(slug),
-    // Không phải quy ước thẩm mỹ: ba chuỗi này là segment tĩnh dưới `/blogs`,
-    // Next luôn cho segment tĩnh thắng segment động nên bài sẽ không mở được.
+    // Not a cosmetic rule: these three strings are static segments under
+    // `/blogs`, and Next always lets a static segment beat a dynamic one, so the
+    // post would never open.
     { message: "validation.slug.reserved" },
   );
 
 /**
- * Ô nhập URL của form: **giữ nguyên `string`**, không `.transform()` về `null`.
+ * The form's URL field: **stays a `string`**, with no `.transform()` to `null`.
  *
- * Transform ở đây sẽ làm kiểu vào và kiểu ra của schema khác nhau, mà
- * react-hook-form giữ giá trị theo kiểu VÀO — `value={null}` là input
- * uncontrolled và React cảnh báo. Việc quy `""` về `null` để lên dây là của
- * `toBlogPostPayload` bên dưới, đúng một chỗ.
+ * A transform here would make the schema's input and output types differ, and
+ * react-hook-form holds values in the INPUT type — `value={null}` makes the
+ * input uncontrolled and React complains. Turning `""` into `null` for the wire
+ * is `toBlogPostPayload`'s job below, in exactly one place.
  */
 const linkUrlField = z
   .string()
@@ -449,23 +458,25 @@ const imageUrlField = z
   );
 
 /**
- * Form của editor — **phẳng**, kể cả nhóm `seo` vốn lồng trong DTO.
+ * The editor's form — **flat**, including the `seo` group that is nested in the
+ * DTO.
  *
- * Phẳng vì form là chuyện của react-hook-form và của panel SEO, còn hình dạng
- * lồng là chuyện của contract; `toBlogPostPayload` nối hai thứ đó lại. Trộn hai
- * hình dạng vào một kiểu là chỗ hay sinh lỗi "sửa DTO thì form câm lặng hỏng".
+ * Flat because the form belongs to react-hook-form and the SEO panel, while the
+ * nested shape belongs to the contract; `toBlogPostPayload` joins the two.
+ * Mixing both shapes into one type is where "change the DTO and the form breaks
+ * silently" bugs come from.
  *
- * `categorySlug` để rỗng được: **lưu nháp không bắt buộc chọn chuyên mục**. Ràng
- * buộc "bắt buộc khi publish" nằm ở checklist của nút Publish, không ở đây —
- * bắt buộc ngay lúc tạo thì mỗi lần mở `/posts/new` đều phải quyết định một
- * chuyện chưa nghĩ tới (§2.6, §7.4).
+ * `categorySlug` may be empty: **saving a draft does not require a category**.
+ * The "required to publish" constraint lives in the Publish button's checklist,
+ * not here — requiring it at creation time would force a decision nobody has
+ * made yet every time `/posts/new` opens (§2.6, §7.4).
  */
 export const blogPostFormSchema = z.object({
   title: z.string().trim().min(1, "validation.post.titleRequired").max(200),
   slug: blogSlugSchema,
   excerpt: z.string().trim().max(500),
-  // Nội dung không validate từng node ở đây — `sanitizeBlogDoc` lo phần đó lúc
-  // dựng payload, và nó LỌC chứ không từ chối (§3.1).
+  // Content is not validated node by node here — `sanitizeBlogDoc` does that
+  // when the payload is built, and it FILTERS rather than rejects (§3.1).
   content: z.custom<BlogDoc>(
     (value) => typeof value === "object" && value !== null,
     "validation.post.contentInvalid",
@@ -483,13 +494,14 @@ export const blogPostFormSchema = z.object({
 export type BlogPostFormValues = z.infer<typeof blogPostFormSchema>;
 
 /**
- * DTO → giá trị form. `null` thành `""` vì input không giữ được `null`.
+ * DTO → form values. `null` becomes `""` because inputs cannot hold `null`.
  *
- * ⚠️ Form giữ **slug** của chuyên mục/thẻ, không giữ id — vì `BlogPostDto` chỉ
- * trả `{ slug, name }` đã nở, không trả id (§2.3). Bất đối xứng đó là cố ý ở
- * phía đọc, nhưng nó đẩy sang phía ghi một việc: đổi slug về id lúc dựng payload
- * (`toBlogPostPayload`), tra trong chính hai danh sách mà editor đã tải sẵn cho
- * ô select và ô thẻ. Không có endpoint nào phải thêm.
+ * ⚠️ The form holds category/tag **slugs**, not ids — because `BlogPostDto`
+ * only returns the expanded `{ slug, name }`, never ids (§2.3). That asymmetry
+ * is deliberate on the read side, but it hands the write side one job: convert
+ * slugs back to ids while building the payload (`toBlogPostPayload`), looking
+ * them up in the very lists the editor already loaded for the select and the
+ * tag field. No extra endpoint is needed.
  */
 export function toBlogPostFormValues(post: BlogPost): BlogPostFormValues {
   return {
@@ -509,17 +521,18 @@ export function toBlogPostFormValues(post: BlogPost): BlogPostFormValues {
 }
 
 /**
- * Giá trị form → payload lên dây.
+ * Form values → the wire payload.
  *
- * Bốn việc, đều chỉ làm ở đây: quy `""` về `null`, gom nhóm `seo` lại, đổi slug
- * chuyên mục/thẻ về **id**, và **làm sạch `content` một lần nữa trước khi ghi**
- * — để thứ nằm trong DB đã thuộc allowlist §3.1/§3.1a, không phụ thuộc vào việc
- * editor có gửi đúng hay không.
+ * Four jobs, all done only here: turn `""` into `null`, regroup the `seo`
+ * fields, convert category/tag slugs back to **ids**, and **sanitize `content`
+ * once more before writing** — so that what lands in the DB is already within
+ * the §3.1/§3.1a allowlist, regardless of whether the editor sent it correctly.
  *
- * ⚠️ Chỉ gọi khi hai danh sách taxonomy đã tải xong. Slug không tra ra id thì bị
- * bỏ, nên gọi với danh sách rỗng (query đang tải hoặc vừa lỗi) sẽ **âm thầm gỡ
- * hết thẻ và chuyên mục của bài**. Editor vì vậy khoá nút Lưu tới khi cả hai
- * query có dữ liệu — đó là ràng buộc thật, không phải chi tiết trang trí.
+ * ⚠️ Call this only once both taxonomy lists have loaded. A slug that resolves
+ * to no id is dropped, so calling it with empty lists (queries still loading or
+ * just failed) **silently strips every tag and the category from the post**.
+ * That is why the editor disables Save until both queries have data — a real
+ * constraint, not a decorative detail.
  */
 export function toBlogPostPayload(
   values: BlogPostFormValues,
@@ -550,7 +563,7 @@ export function toBlogPostPayload(
   };
 }
 
-/** Doc rỗng cho bài mới — `content` không bao giờ được `undefined`. */
+/** The empty doc for a new post — `content` must never be `undefined`. */
 export function emptyBlogDoc(): BlogDoc {
   return { type: "doc", content: [] };
 }
@@ -564,17 +577,19 @@ export const blogCategoryFormSchema = z.object({
     .max(120)
     .regex(SLUG_PATTERN, "validation.slug.pattern"),
   description: z.string().trim().max(320),
-  // `z.number()` + `valueAsNumber` ở chỗ register, KHÔNG `z.coerce.number()`:
-  // coerce làm kiểu VÀO của schema thành `unknown`, và react-hook-form giữ giá
-  // trị theo kiểu vào — resolver sẽ không khớp `useForm<BlogCategoryFormValues>`.
+  // `z.number()` plus `valueAsNumber` at the register call, NOT
+  // `z.coerce.number()`: coercion makes the schema's INPUT type `unknown`, and
+  // react-hook-form holds values in the input type — the resolver would then
+  // not match `useForm<BlogCategoryFormValues>`.
   order: z.number("validation.category.orderNumber").int().min(0).max(999),
 });
 
 export type BlogCategoryFormValues = z.infer<typeof blogCategoryFormSchema>;
 
 /**
- * Query của bảng `/posts` — parse thẳng từ URL searchParams (nguồn sự thật của
- * filter), nên mọi trường optional và `page`/`limit` phải coerce.
+ * The `/posts` table's query — parsed straight from the URL searchParams (the
+ * source of truth for filters), so every field is optional and `page`/`limit`
+ * must be coerced.
  */
 export const adminBlogPostQuerySchema = z.object({
   page: z.coerce.number().int().min(1).catch(1),
@@ -583,5 +598,5 @@ export const adminBlogPostQuerySchema = z.object({
   status: blogPostStatusSchema.optional().catch(undefined),
 });
 
-/** `?page=` của trang công khai. `limit` KHÔNG lấy từ URL — xem §4.5. */
+/** The public pages' `?page=`. `limit` is NOT taken from the URL — see §4.5. */
 export const blogPageParamSchema = z.coerce.number().int().min(1);

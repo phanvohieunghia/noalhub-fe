@@ -14,17 +14,19 @@ import { Typography } from "@noalhub/ui/typography";
 type Props = PageProps<"/[locale]/blogs/tag/[tag]">;
 
 /**
- * Trang thẻ — **`noindex, follow`**, không vào sitemap, không lên nav
- * (`docs/blog-plan.md` §2.6, §6.5).
+ * The tag page — **`noindex, follow`**, absent from the sitemap and from the
+ * nav
+ * (`docs/blog.md` §2.6, §6.5).
  *
- * Vẫn đặt canonical dù noindex: hai chỉ thị trả lời hai câu hỏi khác nhau, và
- * canonical còn được các công cụ khác dùng.
+ * A canonical is still set despite noindex: the two directives answer different
+ * questions, and other tools read the canonical.
  *
- * KHÔNG có `generateStaticParams` (và cũng không có `export const revalidate`):
- * số thẻ không kiểm soát được, pre-render hết là kéo dài build cho một tập trang
- * mà Google không index — và trang có phân trang nên nó đọc `searchParams`, thứ
- * không đi cùng tĩnh hoá được (xem ghi chú dài ở trang chuyên mục). Cache nằm ở
- * tầng `fetch` với tag `blog-tag:<slug>`.
+ * There is NO `generateStaticParams` (and no `export const revalidate` either):
+ * the number of tags is uncontrolled, prerendering them all lengthens the build
+ * for a set of pages Google will not index — and the page is paginated, so it
+ * reads `searchParams`, which cannot coexist with static generation (see the
+ * long note on the category page). Caching happens at the `fetch` layer under
+ * the `blog-tag:<slug>` tag.
  */
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { locale, tag: slug } = await params;
@@ -34,8 +36,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const tag = await getBlogTag(slug).catch(() => undefined);
   if (!tag) return { title: t("fallbackTitle"), robots: { index: false, follow: true } };
 
-  // Không khai `languages`: trang này `noindex` nên `hreflang` chẳng nói với ai
-  // điều gì, và nó vẫn là lát cắt của nội dung chưa dịch (§8.1).
+  // No `languages` declared: this page is `noindex`, so `hreflang` tells nobody
+  // anything, and it is still a slice of untranslated content (§8.1).
   return {
     title: page > 1 ? t("titleWithPage", { name: tag.name, page }) : `#${tag.name}`,
     description: t("metaDescription", { name: tag.name }),

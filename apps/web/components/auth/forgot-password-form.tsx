@@ -52,7 +52,7 @@ export function ForgotPasswordForm() {
       </header>
 
       {sent ? (
-        // Không tiết lộ email có tồn tại hay không — tránh dò tài khoản.
+        // Never reveal whether the email exists — this prevents account enumeration.
         <FormSuccess message={t("sent")} />
       ) : (
         <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>

@@ -1,74 +1,78 @@
 /**
- * Allowlist host cho ảnh trong bài viết (`docs/blog-plan.md` §6.2) — NGUỒN SỰ
- * THẬT DUY NHẤT cho cả ba nơi cần nó:
+ * Host allowlist for images inside posts (`docs/blog.md` §6.2) — THE SINGLE
+ * SOURCE OF TRUTH for all three places that need it:
  *
  *   1. `images.remotePatterns` — `apps/web/next.config.ts`
- *   2. `images.remotePatterns` — `apps/admin/next.config.ts` (tab Xem trước)
- *   3. `isSafeImageSrc` — `packages/api/src/blog/schemas.ts` (validate lúc ghi)
+ *   2. `images.remotePatterns` — `apps/admin/next.config.ts` (preview tab)
+ *   3. `isSafeImageSrc` — `packages/api/src/blog/schemas.ts` (validation on write)
  *
- * Vì sao là `.mjs` chứ không phải `.ts` trong `packages/api`: `next.config.ts`
- * được nạp TRƯỚC khi `transpilePackages` có hiệu lực, nên nó không import được
- * package nội bộ (chúng export TS thô). JS thuần thì không cần transpile, nên
- * config nạp thẳng được — và đó là toàn bộ lý do file này tồn tại.
+ * Why `.mjs` here rather than `.ts` in `packages/api`: `next.config.ts` is
+ * loaded BEFORE `transpilePackages` takes effect, so it cannot import an
+ * internal package (they export raw TS). Plain JS needs no transpiling, so the
+ * config can load it directly — which is the entire reason this file exists.
  *
- * Đây là POLICY BẢO MẬT, không phải config vận hành: nó là lớp phòng thủ thứ
- * hai cho stored XSS qua `image.src` (xem `packages/ui/src/blog/post-content.tsx`).
- * Vì vậy nó được hardcode chứ KHÔNG đọc từ env — nới allowlist phải đi qua PR,
- * chứ không phải qua một biến môi trường sửa được lúc deploy. Thêm nữa
- * `isSafeImageSrc` chạy cả ở client (editor Tiptap), nên env cũng sẽ phải là
- * `NEXT_PUBLIC_*` và bị inline vào bundle — đổi tính bất biến lấy đúng số không.
+ * This is a SECURITY POLICY, not operational config: it is the second line of
+ * defence against stored XSS through `image.src` (see
+ * `packages/ui/src/blog/post-content.tsx`). That is why it is hardcoded and NOT
+ * read from env — widening the allowlist must go through a PR, not through an
+ * environment variable editable at deploy time. On top of that `isSafeImageSrc`
+ * also runs on the client (the Tiptap editor), so the env var would have to be
+ * `NEXT_PUBLIC_*` and inlined into the bundle anyway — trading away
+ * immutability for exactly nothing.
  */
 
 /**
- * `next build` luôn đặt `NODE_ENV=production`, nên một bản build production
- * KHÔNG BAO GIỜ mang theo host dev — kể cả khi build ngay trên máy này. Ở phía
- * client, Next inline hằng số này rồi cắt nhánh chết, nên `"localhost"` cũng
- * không lọt vào bundle production.
+ * `next build` always sets `NODE_ENV=production`, so a production build NEVER
+ * carries a dev host — not even when built on this machine. On the client Next
+ * inlines this constant and drops the dead branch, so `"localhost"` never
+ * reaches the production bundle either.
  */
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
-/** Host production. Luôn `https:` — xem `isSafeImageSrc`. */
+/** Production hosts. Always `https:` — see `isSafeImageSrc`. */
 export const BLOG_IMAGE_HOSTS = [
   "images.unsplash.com",
   "img-noalhub.duckdns.org",
 ];
 
 /**
- * Host chỉ dùng khi phát triển, và là ngoại lệ `http:` DUY NHẤT.
+ * Development-only hosts, and the ONLY `http:` exception.
  *
- * Hẹp có chủ đích: đúng hostname `localhost` (không phải `127.0.0.1`, không
- * phải `*.localhost`), mọi port — media dev đổi port thì không phải sửa file
- * này. Bỏ trống `port` là khớp mọi port: `matchRemotePattern` chỉ so port khi
- * pattern có khai nó.
+ * Deliberately narrow: the exact hostname `localhost` (not `127.0.0.1`, not
+ * `*.localhost`), any port — so moving the dev media server to another port
+ * needs no edit here. Leaving `port` empty matches every port:
+ * `matchRemotePattern` only compares the port when the pattern declares one.
  *
- * `http:` mở ở đây an toàn CHÍNH VÌ nó gắn với `localhost`: một origin mà chỉ
- * máy của lập trình viên mới trỏ tới được, nên không có bề mặt tấn công từ xa
- * như khi mở `http:` cho một host công khai. Đừng thêm host non-localhost vào
- * danh sách này — cần host mới thì nó thuộc về `BLOG_IMAGE_HOSTS` và phải là
- * `https:`.
+ * Allowing `http:` here is safe PRECISELY because it is tied to `localhost`: an
+ * origin only the developer's own machine can reach, so it has none of the
+ * remote attack surface that opening `http:` on a public host would. Do not add
+ * non-localhost hosts to this list — a new host belongs in `BLOG_IMAGE_HOSTS`
+ * and must be `https:`.
  */
 export const BLOG_IMAGE_DEV_HOSTS = IS_PRODUCTION ? [] : ["localhost"];
 
 /**
- * Dạng `images.remotePatterns` của Next, để hai `next.config.ts` khỏi tự map.
+ * Next's `images.remotePatterns` shape, so neither `next.config.ts` has to map it.
  *
- * Protocol ở đây phải nói cùng một câu với `isSafeImageSrc`: `https:` cho host
- * production, `http:` cho host dev. Lệch một vế là rơi lại đúng cái bug mà file
- * này sinh ra để xoá — ảnh ghi được ở editor nhưng `next/image` trả 400.
+ * The protocol here must say the same thing as `isSafeImageSrc`: `https:` for
+ * production hosts, `http:` for dev hosts. Diverge on either side and you are
+ * back to the bug this file exists to erase — one the editor accepts to write
+ * but `next/image` answers with a 400.
  */
 /**
- * `images.dangerouslyAllowLocalIP` cho hai `next.config.ts`.
+ * `images.dangerouslyAllowLocalIP` for both `next.config.ts` files.
  *
- * Vì sao cần, ngoài allowlist: image optimizer của Next 16 resolve DNS của host
- * upstream rồi TỪ CHỐI mọi IP private/loopback — chống SSRF, chạy TRƯỚC cả
- * `remotePatterns`. Nên `localhost` có nằm trong allowlist thì ảnh dev vẫn hỏng,
- * và thông báo trả về client là `400 "url" parameter is not allowed`, giống hệt
- * lỗi allowlist. Sự thật chỉ nằm ở log server:
+ * Why this is needed beyond the allowlist: Next 16's image optimizer resolves
+ * the upstream host's DNS and REJECTS every private/loopback IP — SSRF
+ * protection, running BEFORE `remotePatterns`. So even with `localhost` in the
+ * allowlist dev images break, and the client-facing message is
+ * `400 "url" parameter is not allowed` — identical to an allowlist failure. The
+ * truth only shows up in the server log:
  *
  *   ⨯ upstream image http://localhost:9000/... resolved to private ip ["::1","127.0.0.1"]
  *
- * Buộc vào đúng `IS_PRODUCTION` như `BLOG_IMAGE_DEV_HOSTS`: hai thứ này phải
- * bật/tắt cùng nhau, tách ra là lại mất một buổi đi tìm.
+ * Tied to the same `IS_PRODUCTION` as `BLOG_IMAGE_DEV_HOSTS`: the two must
+ * switch on and off together; splitting them costs another afternoon of hunting.
  */
 export const BLOG_IMAGE_ALLOW_LOCAL_IP = !IS_PRODUCTION;
 

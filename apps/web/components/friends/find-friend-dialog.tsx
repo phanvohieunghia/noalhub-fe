@@ -28,11 +28,11 @@ import type { PublicProfile } from "@noalhub/api/users";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Tìm bạn theo username.
+ * Find a friend by username.
  *
- * Khớp **tuyệt đối** (`GET /users/{username}`): nhập đúng mới ra, backend không
- * có tìm mờ. Vì vậy chỉ tìm khi submit — gõ dở dang mà bắn request thì vừa tốn
- * vừa luôn 404.
+ * An **exact** match (`GET /users/{username}`): only the right input finds
+ * anyone, since the backend has no fuzzy search. So it searches on submit only —
+ * firing on every keystroke is both wasteful and always a 404.
  */
 export function FindFriendDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useTranslations("web.friends");
@@ -51,7 +51,7 @@ export function FindFriendDialog({ open, onClose }: { open: boolean; onClose: ()
   const onSubmit = handleSubmit((values) => setSubmitted(values.username));
 
   function close() {
-    // Mở lại là một lượt tìm mới — đừng để kết quả của người trước còn nằm đó.
+    // Reopening starts a fresh search — do not leave the previous person's result behind.
     setSubmitted(undefined);
     reset();
     onClose();
@@ -100,10 +100,10 @@ export function FindFriendDialog({ open, onClose }: { open: boolean; onClose: ()
 }
 
 /**
- * Quan hệ với người vừa tìm.
+ * The relationship with the person just found.
  *
- * `PublicProfileDto` KHÔNG kèm trạng thái quan hệ, nên suy từ ba danh sách đã
- * có sẵn trong cache. `null` = mình, không phải "chưa quen".
+ * `PublicProfileDto` carries NO relationship state, so it is derived from the
+ * three lists already in the cache. `null` means it is you, not "not connected".
  */
 function useFriendState(username: string | undefined): FriendState | null {
   const me = useAuthStore((s) => s.user?.username ?? null);
@@ -149,8 +149,8 @@ function SearchResult({ user, state }: { user: PublicProfile; state: FriendState
       {sendRequest.isError ? (
         <FormError message={m(sendErrorText(sendRequest.error))} />
       ) : sendRequest.isSuccess ? (
-        // Hai bên cùng bấm kết bạn thì backend nối luôn — đọc `state` của
-        // response chứ đừng đoán là "đang chờ".
+        // When both sides send a request the backend connects them immediately —
+        // read the response's `state` rather than assuming "pending".
         <FormSuccess
           message={
             sendRequest.data.state === "friends" ? t("request.nowFriends") : t("request.sent")
@@ -183,7 +183,7 @@ function sendErrorText(error: unknown): Message {
   return { key: "web.friends.request.errors.failed" };
 }
 
-/** Trạng thái quan hệ quyết định hiện gì — không phải lúc nào cũng "Kết bạn". */
+/** The relationship state decides what to show — it is not always "Add friend". */
 function FriendshipAction({
   state,
   pending,

@@ -15,18 +15,20 @@ import { Typography } from "@noalhub/ui/typography";
 type Props = PageProps<"/[locale]/blogs">;
 
 /**
- * Danh sách nằm ngay ở `/blogs`, phân trang bằng **query string**
- * (`docs/blog-plan.md` §4.5).
+ * The listing lives at `/blogs` itself, paginated through the **query
+ * string**
+ * (`docs/blog.md` §4.5).
  *
- * Vì sao không `/blogs/list`: đó là segment TĨNH cùng cấp với `/blogs/[slug]`,
- * mà Next luôn cho segment tĩnh thắng segment động — một bài đặt slug `list` sẽ
- * vĩnh viễn không mở được. Để danh sách ở chính `/blogs` thì không sinh ra slug
- * cấm nào.
+ * Why not `/blogs/list`: that would be a STATIC segment beside `/blogs/[slug]`,
+ * and Next always lets a static segment beat a dynamic one — a post whose slug
+ * is `list` would be permanently unopenable. Keeping the listing at `/blogs`
+ * itself creates no forbidden slugs.
  *
- * Hệ quả đã chấp nhận, KHÔNG phải cấu hình sai: đụng vào `searchParams` là Next
- * bỏ tĩnh hoá, mỗi request một lần render. Bù lại bằng cache ở **tầng `fetch`**
- * (`server.ts` gắn `revalidate: 60` + tag `blog-list`), nên trang render mỗi
- * request nhưng không đấm vào backend mỗi request, và webhook §5.2 vẫn xoá được
+ * An accepted consequence, NOT a misconfiguration: touching `searchParams` makes
+ * Next drop static generation, so the page renders per request. That is offset
+ * by caching at the **`fetch` layer** (`server.ts` sets `revalidate: 60` plus
+ * the `blog-list` tag), so the page renders per request without hitting the
+ * backend per request, and the §5.2 webhook can still clear the
  * cache qua `revalidateTag`.
  */
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
@@ -41,11 +43,11 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     description: t("metaDescription"),
     alternates: {
       ...alternates,
-      // Phân trang phải giữ được `?page=` trong canonical, nên trang 2 trở đi
-      // dùng canonical riêng thay vì bản không query của `localeAlternates`.
+      // Pagination has to keep `?page=` in the canonical, so page 2 onwards uses
+      // its own canonical instead of `localeAlternates`' query-less version.
       canonical: listCanonical(`/${locale}/blogs`, page),
-      // Feed chỉ có MỘT bản, tiếng Việt (§8) — trỏ thẳng vào nó, đừng để trình
-      // đọc feed phải đi qua redirect của đường cũ.
+      // There is only ONE feed, in Vietnamese (§8) — point straight at it rather
+      // than sending feed readers through the old path's redirect.
       types: { "application/rss+xml": `/${DEFAULT_LOCALE}/blogs/rss.xml` },
     },
   };
@@ -61,8 +63,8 @@ export default async function BlogListPage({ params, searchParams }: Props) {
 
   const list = await getPublishedPosts({ page, limit: BLOG_PAGE_SIZE });
 
-  // `?page=99` khi chỉ có 2 trang là URL sai, không phải danh sách rỗng — trang
-  // 200 rỗng bị index như nội dung mỏng (§4.5).
+  // `?page=99` with only 2 pages is a wrong URL, not an empty list — an empty
+  // 200 gets indexed as thin content (§4.5).
   if (isPageOutOfRange(page, list.total, list.limit)) notFound();
 
   return (

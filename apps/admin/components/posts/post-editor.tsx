@@ -47,12 +47,14 @@ import { useUnsavedChanges } from "./use-unsaved-changes";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Tên field mà token đầu câu trong `ErrorResponseDto.details` có thể khớp.
+ * The field names the first token of an `ErrorResponseDto.details` sentence may
+ * match.
  *
- * Chỉ liệt kê field mà **tên trên dây trùng tên trong form**. `categoryId` và
- * `tagIds` cố ý vắng mặt: form giữ slug (`categorySlug`/`tagSlugs`) nên
- * `setError` sẽ gắn lỗi vào một field không tồn tại và form kẹt im lặng. Chúng
- * rơi lên banner — đó chính là hành vi dự phòng mà `applyApiError` mô tả.
+ * Only fields whose **wire name equals the form name** are listed. `categoryId`
+ * and `tagIds` are deliberately absent: the form holds slugs
+ * (`categorySlug`/`tagSlugs`), so `setError` would attach the error to a
+ * nonexistent field and the form would jam silently. They fall through to the
+ * banner — exactly the fallback `applyApiError` describes.
  */
 const KNOWN_FIELDS = [
   "title",
@@ -66,25 +68,26 @@ const KNOWN_FIELDS = [
 ] as const;
 
 /**
- * Editor bài viết (`docs/blog-plan.md` §7.1, §7.3).
+ * The post editor (`docs/blog.md` §7.1, §7.3).
  *
- * Mô hình lưu đã chốt: một bản nội dung duy nhất, **sửa thẳng bản live**, và
- * **chỉ lưu khi bấm nút**. Không autosave, kể cả với bài nháp. Hệ quả phải chấp
- * nhận, ghi ra để sau này không ai tưởng là bug:
+ * The save model is settled: one single copy of the content, **edited live**,
+ * and **saved only on click**. No autosave, not even for drafts. The
+ * consequences we accept, written down so nobody later mistakes them for bugs:
  *
- * - Sửa bài đã publish là sửa thẳng cái đang hiển thị công khai.
- * - Mất điện là mất bài. Đổi lại: không có bản dở nào tự đẩy lên public, và
- *   backend chỉ cần một cột nội dung.
+ * - Editing a published post edits what the public is seeing right now.
+ * - A power cut loses the work. In exchange: no half-finished version ever
+ *   reaches the public on its own, and the backend needs a single content
+ *   column.
  */
 export function PostEditor({ postId }: { postId: string }) {
   const post = useAdminBlogPost(postId);
   const categories = useAdminBlogCategories();
   const tags = useAdminBlogTags();
 
-  // Cả ba query đều phải xong và đều phải THÀNH CÔNG. Không chỉ vì narrow kiểu:
-  // `toBlogPostPayload` đổi slug chuyên mục/thẻ sang id bằng hai danh sách kia,
-  // nên mở editor khi chúng lỗi là mời người dùng bấm Lưu và **gỡ sạch thẻ +
-  // chuyên mục của bài** mà không báo gì.
+  // All three queries must have finished and SUCCEEDED. Not just for type
+  // narrowing: `toBlogPostPayload` converts category/tag slugs to ids using
+  // those two lists, so opening the editor while they have failed invites a Save
+  // that **strips every tag and the category from the post** without a word.
   const failed = [post, categories, tags].find((query) => query.isError);
   if (failed) {
     return (
@@ -101,9 +104,10 @@ export function PostEditor({ postId }: { postId: string }) {
     );
   }
 
-  // ⚠️ Chờ CẢ BA query, không chỉ query bài. `toBlogPostPayload` đổi slug chuyên
-  // mục/thẻ sang id bằng hai danh sách này; gọi nó khi danh sách còn rỗng sẽ âm
-  // thầm gỡ hết thẻ và chuyên mục của bài ngay lần Lưu đầu tiên.
+  // ⚠️ Wait for ALL THREE queries, not just the post. `toBlogPostPayload`
+  // converts category/tag slugs to ids using these lists; calling it while they
+  // are still empty silently strips every tag and the category on the very first
+  // Save.
   if (!post.data || !categories.data || !tags.data) {
     return (
       <main className="flex w-full flex-col gap-4 p-6">
@@ -155,21 +159,23 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
     defaultValues: toBlogPostFormValues(post),
   });
   const { register, handleSubmit, setError, setValue, reset, formState } = form;
-  // `useWatch` chứ không `watch()`: `watch()` trả về một hàm mà React Compiler
-  // không memo hoá an toàn được, nên nó bỏ tối ưu cả component — mà đây là
-  // component nặng nhất của admin (editor + preview cùng lúc).
+  // `useWatch` rather than `watch()`: `watch()` returns a function the React
+  // Compiler cannot safely memoize, so it bails out of optimizing the whole
+  // component — and this is admin's heaviest component (editor plus preview at
+  // once).
   //
-  // Cast là an toàn ở đây: `useWatch` không có `name` khai kiểu `DeepPartial` cho
-  // trường hợp chung, nhưng `defaultValues` của form này do
-  // `toBlogPostFormValues` dựng nên MỌI field đều có mặt — không field nào có
-  // thể là `undefined` lúc chạy.
+  // The cast is safe here: `useWatch` without a `name` is typed `DeepPartial`
+  // for the general case, but this form's `defaultValues` come from
+  // `toBlogPostFormValues`, so EVERY field is present — none can be `undefined`
+  // at runtime.
   const values = useWatch({ control: form.control }) as BlogPostFormValues;
 
-  // Lưới an toàn duy nhất thay cho autosave (§7.3).
+  // The only safety net standing in for autosave (§7.3).
   useUnsavedChanges(formState.isDirty);
 
-  // `version` mới về sau mỗi mutation; đồng bộ form với bản server trả về để
-  // lần Lưu kế tiếp không gửi version cũ và tự tạo ra 409 giả.
+  // A new `version` arrives after every mutation; sync the form with what the
+  // server returned so the next Save does not send a stale version and
+  // manufacture a false 409.
   useEffect(() => {
     reset(toBlogPostFormValues(post), { keepDefaultValues: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -186,9 +192,10 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
     try {
       const saved = await update.mutateAsync({
         ...toBlogPostPayload(input, { categories, tags }),
-        // Optimistic locking: backend so `version` và trả 409 `POST_CONFLICT`
-        // nếu lệch. Không có nó thì hai tab của cùng một người — chuyện rất hay
-        // xảy ra khi soạn bài dài — âm thầm ghi đè lẫn nhau (§7.3).
+        // Optimistic locking: the backend compares `version` and answers 409
+        // `POST_CONFLICT` on a mismatch. Without it, two tabs belonging to the
+        // same person — very common on a long post — silently overwrite each
+        // other (§7.3).
         version: post.version,
       });
       applyFresh(saved);
@@ -243,9 +250,10 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
         </div>
 
         {/*
-          409 không phải "lỗi rồi thử lại": bản trên server đã khác, và ghi đè nó
-          là mất công của người khác (hoặc của chính mình ở tab kia). Nên UI đưa
-          đúng một lối ra — tải lại — và nói thẳng cái giá của nó (§7.3).
+          A 409 is not "an error, try again": the server's copy has diverged, and
+          overwriting it throws away someone else's work (or your own, in the
+          other tab). So the UI offers exactly one way out — reload — and states
+          its cost plainly (§7.3).
         */}
         {conflict ? (
           <div
@@ -278,9 +286,10 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
             />
 
             {/*
-              `setValue` với `shouldDirty` — nếu không, upload xong rồi rời
-              trang sẽ KHÔNG bị `useUnsavedChanges` chặn, và ảnh bìa vừa chọn
-              mất im lặng dù file đã nằm trên máy chủ.
+              `setValue` with `shouldDirty` — otherwise leaving the page after an
+              upload is NOT blocked by `useUnsavedChanges`, and the cover image
+              just chosen is lost silently even though the file is already on the
+              server.
             */}
             <CoverImageField
               value={values.coverImageUrl}
@@ -303,13 +312,15 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
             </div>
 
             {/*
-              Preview dùng ĐÚNG renderer của trang công khai
-              (`@noalhub/ui/blog/post-content`), không phải một bản dựng lại. Đó
-              là lý do renderer nằm ở `packages/ui` chứ không ở `apps/web`: một
-              code path thì preview không bao giờ lệch với bản thật (§8).
+              The preview uses the public site's EXACT renderer
+              (`@noalhub/ui/blog/post-content`), not a reimplementation. That is
+              why the renderer lives in `packages/ui` rather than `apps/web`: one
+              code path means the preview can never drift from the real thing
+              (§8).
 
-              Cả hai tab đều được mount, chỉ ẩn/hiện: unmount editor Tiptap mỗi
-              lần đổi tab là mất undo history và mất vị trí con trỏ.
+              Both tabs stay mounted and are only shown or hidden: unmounting the
+              Tiptap editor on every tab switch loses the undo history and the
+              cursor position.
             */}
             <div className={tab === "edit" ? undefined : "hidden"}>
               <TiptapEditor
@@ -373,12 +384,13 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
 }
 
 /**
- * Ảnh bìa: khi đã có ảnh thì hiện chính tấm ảnh, không phải một ô URL.
+ * The cover image: once there is an image, show the image, not a URL field.
  *
- * URL chỉ là chi tiết cài đặt — người viết cần biết "ảnh bìa trông thế nào",
- * và một chuỗi `https://…/9f3c1e.webp` không trả lời được câu đó. Ô dán URL vẫn
- * còn nhưng chỉ xuất hiện khi CHƯA có ảnh (lối vào cho ảnh từ nguồn ngoài);
- * có ảnh rồi thì đổi/xoá là hai nút.
+ * The URL is an implementation detail — the author needs to know "what does the
+ * cover look like", and the string `https://…/9f3c1e.webp` does not answer
+ * that. The paste-a-URL field still exists but appears only while there is NO
+ * image (the way in for externally hosted images); once there is one, replacing
+ * and removing are two buttons.
  */
 function CoverImageField({
   value,
@@ -402,9 +414,10 @@ function CoverImageField({
         <div className="flex flex-col gap-2">
           <div className="overflow-hidden rounded-md border border-black/10 dark:border-white/15">
             {/*
-              `<img>` thuần chứ không `next/image`: URL có thể vừa được dán tay
-              và chưa nằm trong `remotePatterns` — qua optimizer là 400 ngay
-              giữa lúc soạn bài. Xem `OgPreview` trong `seo-panel.tsx`.
+              A plain `<img>` rather than `next/image`: the URL may have just been
+              pasted by hand and not be in `remotePatterns` — through the
+              optimizer that is a 400 in the middle of writing. See `OgPreview`
+              in `seo-panel.tsx`.
             */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -444,15 +457,16 @@ function CoverImageField({
 }
 
 /**
- * Vì không autosave nên chỉ báo này là thứ **duy nhất** người viết dựa vào để
- * biết công của mình đã an toàn hay chưa (§7.3).
+ * With no autosave, this indicator is the **only** thing telling the author
+ * whether their work is safe (§7.3).
  */
 function SaveState({ isDirty, savedAt }: { isDirty: boolean; savedAt: Date | null }) {
   const t = useTranslations("admin.posts");
   const locale = useLocale();
   /*
-   * Giờ lưu gần nhất, theo locale đang xem. Formatter dựng ở đây chứ không ở
-   * module scope: locale chỉ biết được lúc chạy (`docs/i18n-plan.md` §7.1).
+   * The last save time, in the locale being viewed. The formatter is built here
+   * rather than at module scope: the locale is only known at runtime
+   * (`docs/i18n.md` §7.1).
    */
   const timeFormat = useMemo(
     () => new Intl.DateTimeFormat(intlLocale(isLocale(locale) ? locale : DEFAULT_LOCALE), {
@@ -507,10 +521,11 @@ function TabButton({
 }
 
 /**
- * Xoá **mềm** — bài chuyển sang `archived`, slug vẫn bị chiếm (§2.2).
+ * A **soft** delete — the post moves to `archived` and the slug stays taken
+ * (§2.2).
  *
- * Bài `draft` chưa từng lên công khai nên "gỡ" là sai ngữ cảnh: với nó đây là
- * "bỏ bài nháp". Cùng một hành động, khác chữ.
+ * A `draft` was never public, so "unpublish" is the wrong word for it: there
+ * this reads as "discard draft". Same action, different wording.
  */
 function ArchiveButton({
   status,

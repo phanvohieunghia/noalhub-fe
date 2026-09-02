@@ -17,9 +17,9 @@ import { Input } from "@noalhub/ui/input";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Admin dùng LẠI nguyên tầng dữ liệu của web (`useLogin`, `loginSchema`) —
- * không có bản sao contract nào ở đây. Khác biệt duy nhất là UI và việc KHÔNG
- * mở đường đăng ký / OAuth: cửa vào admin chỉ có một.
+ * Admin REUSES web's data layer wholesale (`useLogin`, `loginSchema`) — there is
+ * no copy of the contract here. The only differences are the UI and the absence
+ * of any signup / OAuth path: admin has exactly one door.
  */
 export function AdminLoginForm() {
   const t = useTranslations("admin.login");
@@ -42,9 +42,10 @@ export function AdminLoginForm() {
     try {
       await login.mutateAsync(values);
 
-      // Chặn ngay tại cửa: user thường đăng nhập đúng mật khẩu vẫn là phiên hợp
-      // lệ, nhưng không có việc gì trong này. `RoleGuard` cũng chặn, chỗ này chỉ
-      // để họ đọc được lý do ở đúng form vừa bấm thay vì rơi vào màn hình chặn.
+      // Stopped at the door: an ordinary user with the right password still has
+      // a valid session, but has nothing to do in here. `RoleGuard` stops them
+      // too; this exists so they read the reason on the form they just
+      // submitted rather than landing on a block screen.
       if (useAuthStore.getState().user?.role !== "admin") {
         await logout();
         setFormError({ key: "admin.login.notAdmin" });

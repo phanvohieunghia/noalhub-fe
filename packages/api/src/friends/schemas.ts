@@ -3,9 +3,9 @@ import { z } from "zod";
 import { publicProfileSchema } from "../users/schemas";
 
 /**
- * Form schema. Ràng buộc giữ KHỚP `ChangeUsernameDto` (3–32 ký tự, chữ
- * thường/số/`_`/`-`) vì cùng nói về một định danh — lệch là tìm hụt người có
- * username hợp lệ.
+ * The form schema. Its constraints MATCH `ChangeUsernameDto` (3–32 characters,
+ * lowercase letters/digits/`_`/`-`) because both describe the same identifier —
+ * drift means failing to find people whose username is perfectly valid.
  */
 export const findFriendSchema = z.object({
   username: z

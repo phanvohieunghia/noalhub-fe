@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next";
 
 /**
- * Admin không có gì để index — chặn toàn bộ (`docs/blog-plan.md` §6.1).
+ * Admin has nothing to index — block everything (`docs/blog.md` §6.1).
  *
- * Đây là biện pháp bổ sung chứ không phải hàng rào: ranh giới thật vẫn là
- * `AuthGuard` + `RoleGuard` + 403 của backend. robots.txt chỉ nói với crawler
- * tử tế, nó không chặn ai cả.
+ * A supplementary measure, not a fence: the real boundary is still
+ * `AuthGuard` + `RoleGuard` + the backend's 403. robots.txt only speaks to
+ * well-behaved crawlers; it blocks nobody.
  */
 export default function robots(): MetadataRoute.Robots {
   return {

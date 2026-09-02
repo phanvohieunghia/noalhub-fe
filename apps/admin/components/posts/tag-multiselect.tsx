@@ -14,15 +14,17 @@ import { Input } from "@noalhub/ui/input";
 const MAX_SUGGESTIONS = 8;
 
 /**
- * Thẻ = **multi-select có tìm kiếm, cho tạo mới tại chỗ** (§7.1a).
+ * Tags are a **searchable multi-select that can create on the spot** (§7.1a).
  *
- * Ngược hẳn với ô chuyên mục, và đó không phải chuyện thẩm mỹ: tập chuyên mục là
- * cố định do admin quản lý, còn thẻ thì mọc theo bài. Backend tự `slugify` từ
- * tên và **trùng slug thì trả về thẻ đang có** chứ không 409 — người viết chỉ
- * muốn gắn thẻ, không quan tâm nó mới hay cũ (§2.2).
+ * The exact opposite of the category field, and not for cosmetic reasons: the
+ * category set is fixed and admin-managed, while tags grow with the posts. The
+ * backend `slugify`s the name itself and, **on a slug collision, returns the
+ * existing tag** rather than a 409 — the author just wants the tag attached and
+ * does not care whether it is new (§2.2).
  *
- * Component giữ **slug**, không giữ id: `BlogPostDto` chỉ trả `{ slug, name }`
- * nên form phải nói cùng ngôn ngữ đó; `toBlogPostPayload` đổi sang id lúc gửi.
+ * The component holds **slugs**, not ids: `BlogPostDto` only returns
+ * `{ slug, name }`, so the form has to speak the same language;
+ * `toBlogPostPayload` converts to ids when sending.
  */
 export function TagMultiselect({
   tags,
@@ -47,8 +49,9 @@ export function TagMultiselect({
     .filter((tag) => (query ? tag.name.toLowerCase().includes(query) : true))
     .slice(0, MAX_SUGGESTIONS);
 
-  // Chỉ mời tạo mới khi không có thẻ nào TRÙNG TÊN — nếu không thì gõ đúng tên
-  // một thẻ đã có vẫn thấy nút "Tạo", và người dùng sẽ bấm.
+  // Only offer creation when no tag has that EXACT NAME — otherwise typing an
+  // existing tag's name still shows a "Create" button, and people will click
+  // it.
   const exactExists = tags.some((tag) => tag.name.toLowerCase() === query);
   const canCreate = query.length > 0 && !exactExists;
 
@@ -76,8 +79,8 @@ export function TagMultiselect({
         onChange={(event) => setSearch(event.target.value)}
         onKeyDown={(event) => {
           if (event.key !== "Enter") return;
-          // Ô này nằm trong <form> của editor — Enter mặc định sẽ submit và lưu
-          // bài giữa chừng.
+          // This field sits inside the editor's <form> — Enter would otherwise
+          // submit and save the post mid-edit.
           event.preventDefault();
           if (suggestions.length > 0 && !canCreate) add(suggestions[0].slug);
           else if (canCreate) void create();

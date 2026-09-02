@@ -26,7 +26,7 @@ export function ConversationListItem({
   const peer = otherMember(conversation, currentUserId);
   const last = conversation.lastMessage;
 
-  // "Bạn: …" để phân biệt tin mình gửi mà không phải mở hội thoại ra xem.
+  // A "You: …" prefix distinguishes your own messages without opening the conversation.
   const preview = !last
     ? t("noMessages")
     : last.senderId === currentUserId
@@ -37,8 +37,8 @@ export function ConversationListItem({
     <li>
       <Link
         href={`/chat/${conversation.id}`}
-        // `aria-current="page"` là cách screen reader biết item nào đang mở —
-        // tô màu nền một mình không nói được điều đó.
+        // `aria-current="page"` is how a screen reader knows which item is open —
+        // a background color alone says nothing.
         aria-current={active ? "page" : undefined}
         className={`flex items-center gap-3 rounded-lg p-2 transition-colors ${
           active

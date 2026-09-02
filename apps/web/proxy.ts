@@ -2,24 +2,25 @@ import { routing } from "@noalhub/i18n/routing";
 import createMiddleware from "next-intl/middleware";
 
 /**
- * Từ Next 16, `middleware.ts` đổi tên thành `proxy.ts` — cùng một cơ chế, chỉ
- * khác tên file và tên hàm export (`docs/01-app/01-getting-started/16-proxy.md`).
+ * As of Next 16, `middleware.ts` is renamed `proxy.ts` — the same mechanism,
+ * only a different file name and export name
+ * (`docs/01-app/01-getting-started/16-proxy.md`).
  *
- * Việc duy nhất ở đây: redirect `/` → `/vi`, chèn tiền tố locale cho đường dẫn
- * chưa có, và gắn cookie `NOALHUB_LOCALE` theo thứ tự ưu tiên ở §4.2 (URL →
- * cookie → `Accept-Language` → `vi`).
+ * Its only job: redirect `/` → `/vi`, add the locale prefix to paths that lack
+ * one, and set the `NOALHUB_LOCALE` cookie following §4.2's priority order
+ * (URL → cookie → `Accept-Language` → `vi`).
  */
 export const proxy = createMiddleware(routing);
 
 export const config = {
   /*
-   * Loại trừ, theo đúng thứ tự lý do:
-   * - `api`, `_next`, `_vercel`: không phải trang.
-   * - `auth/callback`: `redirect_uri` đã ghim ở backend và ở console của
-   *   Google/GitHub. Thêm tiền tố locale vào đây là hỏng đăng nhập OAuth.
-   * - Mọi đường dẫn có dấu chấm: file tĩnh (`favicon.ico`, `robots.txt`,
-   *   `sitemap.xml`, và cả `blogs/rss.xml` — feed chỉ có một bản tiếng Việt,
-   *   §8).
+   * Exclusions, in order of reason:
+   * - `api`, `_next`, `_vercel`: not pages.
+   * - `auth/callback`: the `redirect_uri` is pinned in the backend and in the
+   *   Google/GitHub consoles. Adding a locale prefix here breaks OAuth sign-in.
+   * - Any path containing a dot: static files (`favicon.ico`, `robots.txt`,
+   *   `sitemap.xml`, and `blogs/rss.xml` too — there is only one Vietnamese
+   *   feed, §8).
    */
   matcher: "/((?!api|_next|_vercel|auth/callback|.*\\..*).*)",
 };

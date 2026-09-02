@@ -5,8 +5,8 @@ import { Suspense } from "react";
 import { LoginForm } from "@/components/auth/login-form";
 
 /**
- * `getTranslations` chứ không `useTranslations`: `generateMetadata` chạy ngoài
- * cây React, không có hook nào ở đó (`docs/i18n-plan.md` §7.3).
+ * `getTranslations`, not `useTranslations`: `generateMetadata` runs outside the
+ * React tree, where no hook exists (`docs/i18n.md` §7.3).
  */
 export async function generateMetadata({ params }: PageProps<"/[locale]/login">): Promise<Metadata> {
   const { locale } = await params;
@@ -18,7 +18,7 @@ export default async function LoginPage({ params }: PageProps<"/[locale]/login">
   const { locale } = await params;
   setRequestLocale(locale);
 
-  // LoginForm dùng useSearchParams (đọc ?next=) → bắt buộc có Suspense boundary.
+  // LoginForm uses useSearchParams (reading ?next=) → a Suspense boundary is required.
   return (
     <Suspense fallback={null}>
       <LoginForm />

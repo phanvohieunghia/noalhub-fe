@@ -4,46 +4,50 @@ import { revalidateTag } from "next/cache";
 
 import { BLOG_TAGS } from "@noalhub/api/blog/server";
 
-/** Không được cache: nó là cửa nhận lệnh, không phải trang. */
+/** Never cached: this is a command endpoint, not a page. */
 export const dynamic = "force-dynamic";
 
 const SLUG_PATTERN = /^[a-z0-9-]+$/;
-/** Body vài nghìn phần tử là một cần gạt DoS — mỗi phần tử là một lệnh xoá cache. */
+/** A body with thousands of entries is a DoS lever — each entry is a cache invalidation. */
 const MAX_ITEMS_PER_ARRAY = 50;
 
 /**
- * Webhook revalidate — **backend** gọi sau khi đổi trạng thái bài
- * (`docs/blog-plan.md` §5.2).
+ * The revalidate webhook — called by the **backend** after a post's status
+ * changes
+ * (`docs/blog.md` §5.2).
  *
  * ```
- * POST http://web:3000/api/revalidate        (nội bộ trong docker network)
+ * POST http://web:3000/api/revalidate        (internal to the docker network)
  * x-revalidate-secret: <shared secret>
  * { "slugs": ["bai-viet-abc", "slug-cu"], "categories": ["huong-dan"], "tags": ["react"] }
  * ```
  *
- * ⚠️ **Người gọi phải là backend, không phải `apps/admin`.** Admin là code chạy
- * trong trình duyệt — nhét secret vào đó là công khai secret, còn gọi không
- * secret là mở cho bất kỳ ai spam revalidate. Backend gọi ngay tại chỗ nó đổi
- * `status` thì MỌI đường làm bài published (nút bấm, script seed, đồng bộ sau
- * này) đều kéo theo revalidate, không sót đường nào.
+ * ⚠️ **The caller must be the backend, not `apps/admin`.** Admin is code running
+ * in a browser — putting the secret there publishes it, and calling without a
+ * secret lets anyone spam revalidation. With the backend calling at the exact
+ * point it changes `status`, EVERY path that publishes a post (a button, a seed
+ * script, a future sync job) triggers revalidation, with none missed.
  *
- * ⚠️ Đây là đường **nội bộ**: nginx `deny all` cho `location = /api/revalidate`
- * ở server block công khai (§5.2c). Secret là lớp hai, không phải lớp duy nhất.
+ * ⚠️ This is an **internal** endpoint: nginx `deny all`s
+ * `location = /api/revalidate` in the public server block (§5.2c). The secret is
+ * the second layer, not the only one.
  *
- * ⚠️ ISR cache nằm **trong từng container**. Hiện chỉ có một container `web` nên
- * không sao; ngày nào scale lên 2 replica thì một cú webhook chỉ làm mới đúng
- * một cái — lúc đó cần shared cache handler.
+ * ⚠️ The ISR cache lives **inside each container**. There is only one `web`
+ * container today, so this is fine; the day it scales to 2 replicas one webhook
+ * refreshes exactly one of them — at which point a shared cache handler is
+ * needed.
  */
 export async function POST(request: Request) {
   const secret = process.env.WEB_REVALIDATE_SECRET;
   if (!secret) {
-    // Chưa cấu hình thì từ chối hẳn thay vì mở cửa không khoá. Blog vẫn đúng,
-    // chỉ chậm: ISR 60 giây là lưới an toàn có sẵn (§5.1).
+    // Unconfigured means refuse outright rather than leave the door unlocked.
+    // The blog is still correct, only slower: the 60-second ISR is the safety
+    // net already in place (§5.1).
     return Response.json({ error: "not_configured" }, { status: 503 });
   }
 
   if (!isValidSecret(request.headers.get("x-revalidate-secret"), secret)) {
-    // Sai hoặc thiếu secret → 401 và KHÔNG nói gì thêm (§5.2a).
+    // A wrong or missing secret → 401 and NOTHING more is said (§5.2a).
     return new Response(null, { status: 401 });
   }
 
@@ -63,19 +67,19 @@ export async function POST(request: Request) {
   }
 
   /**
-   * Chỉ dùng `revalidateTag`, KHÔNG `revalidatePath`: `/blogs` và
-   * `/blogs?page=2` là hai path khác nhau nên `revalidatePath("/blogs")` không
-   * đụng tới trang 2, còn một tag thì phủ hết (§5.2).
+   * `revalidateTag` only, never `revalidatePath`: `/blogs` and `/blogs?page=2`
+   * are two different paths, so `revalidatePath("/blogs")` never touches page 2,
+   * while one tag covers all of them (§5.2).
    *
-   * Tên tag do **phía web tự dựng** từ slug nhận được — body không mang tên tag
-   * hay đường dẫn nào. Nếu không thì endpoint này thành công cụ ép render bất kỳ
-   * route nào của app.
+   * The tag names are **built by the web side** from the slugs received — the
+   * body carries no tag names and no paths. Otherwise this endpoint becomes a
+   * tool for forcing a re-render of any route in the app.
    *
-   * `{ expire: 0 }` chứ không `"max"`: `"max"` là stale-while-revalidate, tức là
-   * lượt F5 đầu tiên sau khi Publish vẫn thấy bản cũ. Yêu cầu của §5.2 là "bấm
-   * Publish, F5 thấy ngay". `updateTag` cho ngữ nghĩa đó nhưng chỉ chạy được
-   * trong Server Action, không phải Route Handler — nên `{ expire: 0 }` là dạng
-   * đúng cho webhook, và docs của Next nói thẳng như vậy.
+   * `{ expire: 0 }` rather than `"max"`: `"max"` is stale-while-revalidate, so
+   * the first F5 after Publish still shows the old version. §5.2's requirement
+   * is "press Publish, F5, see it". `updateTag` gives those semantics but only
+   * works inside a Server Action, not a Route Handler — so `{ expire: 0 }` is
+   * the right form for a webhook, and Next's docs say exactly that.
    */
   const expireNow = { expire: 0 };
 
@@ -84,10 +88,11 @@ export async function POST(request: Request) {
   revalidateTag(BLOG_TAGS.categories, expireNow);
   revalidateTag(BLOG_TAGS.tags, expireNow);
 
-  // `slugs` là số NHIỀU vì đổi slug phải xoá cả bản cũ lẫn bản mới (§2.4, §5.2b).
+  // `slugs` is PLURAL because a slug change must invalidate both the old and the new (§2.4, §5.2b).
   for (const slug of slugs) revalidateTag(BLOG_TAGS.post(slug), expireNow);
-  // Dời bài sang mục khác thì backend gửi CẢ mục cũ lẫn mục mới; gỡ một thẻ
-  // cũng vậy, nếu không `/blogs/tag/<cũ>` còn liệt kê bài đó thêm 300 giây.
+  // Moving a post to another category makes the backend send BOTH the old and
+  // the new one; removing a tag likewise, or `/blogs/tag/<old>` keeps listing
+  // that post for another 300 seconds.
   for (const slug of categories) revalidateTag(BLOG_TAGS.category(slug), expireNow);
   for (const slug of tags) revalidateTag(BLOG_TAGS.tag(slug), expireNow);
 
@@ -95,11 +100,12 @@ export async function POST(request: Request) {
 }
 
 /**
- * So sánh **timing-safe**, không phải `===`.
+ * A **timing-safe** comparison, not `===`.
  *
- * `timingSafeEqual` ném khi hai buffer khác độ dài, nên phải kiểm độ dài trước —
- * và chính việc kiểm đó đã rò rỉ độ dài secret. Chấp nhận được: cái cần giấu là
- * nội dung, và đường này đã bị nginx chặn từ ngoài (§5.2c).
+ * `timingSafeEqual` throws when the buffers differ in length, so the length has
+ * to be checked first — and that check itself leaks the secret's length.
+ * Acceptable: what must stay hidden is the content, and this endpoint is already
+ * blocked from outside by nginx (§5.2c).
  */
 function isValidSecret(provided: string | null, expected: string): boolean {
   if (!provided) return false;
@@ -110,7 +116,8 @@ function isValidSecret(provided: string | null, expected: string): boolean {
 }
 
 /**
- * `undefined` → mảng rỗng (trường không bắt buộc). `null` trả về = body sai
+ * `undefined` → an empty array (the field is optional). Returning `null` means
+ * a malformed
  * shape → 400.
  */
 function readSlugArray(body: unknown, key: string): string[] | null {
@@ -120,10 +127,10 @@ function readSlugArray(body: unknown, key: string): string[] | null {
   if (value === undefined) return [];
   if (!Array.isArray(value) || value.length > MAX_ITEMS_PER_ARRAY) return null;
 
-  // Regex khớp cho cả ba mảng vì slug bài, slug chuyên mục và slug thẻ cùng một
-  // dạng (§2.6). Phần tử sai dạng làm hỏng cả request thay vì bị bỏ qua im
-  // lặng: backend gửi sai thì phải biết ngay, không phải đi tìm vì sao cache
-  // không xoá.
+  // One regex covers all three arrays because post, category and tag slugs share
+  // a shape (§2.6). A malformed entry fails the whole request rather than being
+  // skipped silently: if the backend sends something wrong it has to be obvious
+  // immediately, not a hunt for why the cache never cleared.
   return value.every((item) => typeof item === "string" && SLUG_PATTERN.test(item))
     ? (value as string[])
     : null;

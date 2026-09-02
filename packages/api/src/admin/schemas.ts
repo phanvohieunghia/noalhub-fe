@@ -1,12 +1,13 @@
 import { z } from "zod";
 
 /**
- * Response schema của feature admin — parse body REST để bắt backend đổi shape
- * ngay tại chỗ thay vì để lỗi trôi vào bảng.
+ * Response schemas for the admin feature — REST bodies are parsed so a backend
+ * shape change is caught right here instead of drifting into the table.
  *
- * Mọi trường nullable dùng `.nullish().transform(...)` chứ không `.nullable()`:
- * spec khai chúng sai kiểu (xem `./types.ts`), nên trường có thể vắng mặt hẳn
- * thay vì bằng `null`. Cùng cách xử lý với `chat/schemas.ts`.
+ * Every nullable field uses `.nullish().transform(...)` rather than
+ * `.nullable()`: the spec types them incorrectly (see `./types.ts`), so a field
+ * may be absent entirely instead of `null`. Same treatment as
+ * `chat/schemas.ts`.
  */
 
 const nullableString = z
@@ -28,9 +29,9 @@ export const adminUserSchema = z.object({
 });
 
 /**
- * `page`/`limit` để `.catch()` chứ không bắt buộc: nếu backend chỉ trả
- * `items` + `total` thì phân trang vẫn dựng được từ query đã gửi, không đáng
- * để cả bảng vỡ vì thiếu hai số echo lại.
+ * `page`/`limit` use `.catch()` instead of being required: if the backend only
+ * returns `items` + `total`, pagination can still be built from the query we
+ * sent — not worth breaking the whole table over two echoed numbers.
  */
 export const adminUserListSchema = z.object({
   items: z.array(adminUserSchema),
@@ -47,12 +48,13 @@ export const adminStatsSchema = z.object({
 });
 
 /**
- * Input schema của filter bảng user. Dùng để parse **URL searchParams** (nguồn
- * sự thật của filter, để link share được) — nên mọi trường đều optional và
- * `page`/`limit` phải coerce: searchParams luôn là chuỗi.
+ * The input schema for the user table's filters. It parses **URL searchParams**
+ * (the source of truth for filters, so links stay shareable) — hence every
+ * field is optional and `page`/`limit` must be coerced: searchParams are always
+ * strings.
  *
- * `limit` max 100 để khớp DTO backend; lệch là backend trả `VALIDATION_FAILED`
- * sau khi UI đã coi là hợp lệ.
+ * `limit` maxes at 100 to match the backend DTO; drift means the backend
+ * answers `VALIDATION_FAILED` after the UI already accepted the input.
  */
 export const adminUserListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).catch(1),

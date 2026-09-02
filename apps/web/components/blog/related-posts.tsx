@@ -6,18 +6,20 @@ import type { BlogPostListItem } from "@noalhub/api/blog";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Khối "Bài liên quan" cuối mỗi bài — 3 bài **cùng chuyên mục**.
+ * The "Related posts" block at the end of each post — 3 posts from the **same
+ * category**.
  *
- * Lọc theo chuyên mục chứ không theo thẻ: mỗi bài có đúng một chuyên mục nên đây
- * là truy vấn xác định, còn `tags` là **tập không có thứ tự** — "thẻ đầu tiên"
- * chỉ là thẻ nào người viết gõ trước (`docs/blog-plan.md` §2.5, §2.6).
+ * Filtered by category rather than tag: each post has exactly one category,
+ * making this a deterministic query, while `tags` is an **unordered set** — the
+ * "first tag" is merely whichever the author typed first (`docs/blog.md` §2.5,
+ * §2.6).
  */
 export function RelatedPosts({ posts }: { posts: BlogPostListItem[] }) {
   const t = useTranslations("web.blog.post");
   const df = useDateFormat();
 
-  // Bài duy nhất trong chuyên mục thì không có gì để hiện — bỏ hẳn khối, đừng
-  // để một tiêu đề trống lơ lửng.
+  // The only post in a category has nothing to show — drop the whole block
+  // rather than leaving an empty heading hanging.
   if (posts.length === 0) return null;
 
   return (

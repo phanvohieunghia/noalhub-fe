@@ -2,7 +2,7 @@ import { useTranslations } from "next-intl";
 
 import { Typography } from "@noalhub/ui/typography";
 
-/** Màn hình bên phải khi ở `/chat` mà chưa chọn hội thoại nào. */
+/** The right-hand pane on `/chat` when no conversation is selected yet. */
 export function ChatEmptyState() {
   const t = useTranslations("web.chat.conversation");
 

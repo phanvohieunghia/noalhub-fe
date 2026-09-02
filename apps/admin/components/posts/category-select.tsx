@@ -8,11 +8,12 @@ import { Select } from "@noalhub/ui/select";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Chuyên mục = **select một giá trị, không cho gõ tự do** (§7.1a).
+ * A category is a **single-value select with no free typing** (§7.1a).
  *
- * Cho gõ tự do là mở lại đúng cái cửa mà §2.6 vừa đóng: chỉ cần một lần gõ nhầm
- * `Hướng dẫn` thay vì chọn `Hướng dẫn` có sẵn là site có hai chuyên mục trùng
- * tên, hai URL, và nav hiện cả hai. Tạo mới phải sang `/posts/categories`.
+ * Free typing reopens exactly the door §2.6 closed: one mistyped `Hướng dẫn`
+ * instead of picking the existing `Hướng dẫn` gives the site two categories with
+ * the same name, two URLs, and both of them in the nav. Creating one happens in
+ * `/posts/categories`.
  */
 export function CategorySelect({
   categories,
@@ -26,11 +27,12 @@ export function CategorySelect({
   onChange: (slug: string) => void;
   error?: string;
   /**
-   * Bài **đang đăng** thì không có mục "— Chưa chọn —".
+   * A **published** post has no "— none —" option.
    *
-   * Backend chặn ca đó bằng 422 (bài published bắt buộc có chuyên mục), nên để mục
-   * rỗng ở đây chỉ là mời người dùng bấm rồi mới báo lỗi — đúng cái "bắt họ đi hai
-   * vòng" mà §7.4 nói. Bản nháp thì ngược lại: để trống là hợp lệ.
+   * The backend rejects that case with a 422 (a published post must have a
+   * category), so leaving an empty option here only invites a click that then
+   * errors — the exact "two round trips" §7.4 warns about. Drafts are the
+   * opposite: empty is valid.
    */
   required?: boolean;
 }) {

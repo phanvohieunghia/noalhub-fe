@@ -5,9 +5,9 @@ import { useTranslations } from "next-intl";
 import type { ConversationMember } from "@noalhub/api/chat";
 
 /**
- * "An đang nhập…". Tự tắt sau 5s nhờ TTL trong ephemeral store — event
- * `typing:stop` được phép rơi theo thiết kế backend, nên không thể chỉ dựa vào
- * nó.
+ * "An is typing…". It clears itself after 5s thanks to the TTL in the ephemeral
+ * store — the backend's design allows `typing:stop` to be dropped, so it cannot
+ * be relied on alone.
  */
 export function TypingIndicator({
   userIds,
@@ -16,11 +16,11 @@ export function TypingIndicator({
   userIds: string[];
   members: Map<string, ConversationMember>;
 }) {
-  // Hook phải đứng trước mọi nhánh `return` — kể cả nhánh rỗng ngay dưới.
+  // Hooks must come before every `return` branch — including the empty one below.
   const t = useTranslations("web.chat.typing");
   const tm = useTranslations("web.chat.messages");
 
-  // Giữ chiều cao cố định để bubble cuối không nhảy lên xuống mỗi lần ai đó gõ.
+  // A fixed height keeps the last bubble from jumping whenever someone types.
   if (userIds.length === 0) return <div className="h-5" />;
 
   const names = userIds.map((id) => members.get(id)?.displayName ?? tm("unknownUser"));

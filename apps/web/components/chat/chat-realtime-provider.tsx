@@ -21,16 +21,17 @@ export function useChatRealtime() {
 }
 
 /**
- * Gọi `useChatSocket()` ĐÚNG MỘT LẦN cho cả cây chat, và phát trạng thái kết
- * nối xuống qua context.
+ * Calls `useChatSocket()` EXACTLY ONCE for the whole chat tree, and publishes
+ * the connection state downward through context.
  *
- * Đặt ở layout của route group nên đổi hội thoại không unmount nó — socket
- * không bị dựng lại mỗi lần điều hướng. Gọi hook này ở hai chỗ là mỗi tin
- * append hai lần.
+ * It lives in the route group's layout, so switching conversations does not
+ * unmount it — the socket is not rebuilt on every navigation. Calling this hook
+ * in two places appends every message twice.
  */
 export function ChatRealtimeProvider({ children }: { children: React.ReactNode }) {
-  // Hook cần biết hội thoại đang mở để invalidate đúng key sau reconnect. Lấy
-  // từ URL vì đó là nguồn sự thật duy nhất cho "đang mở cái nào".
+  // The hook needs the open conversation to invalidate the right key after a
+  // reconnect. Taken from the URL, the single source of truth for "which one is
+  // open".
   const params = useParams<{ conversationId?: string }>();
   const value = useChatSocket(params?.conversationId);
 

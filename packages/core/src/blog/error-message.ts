@@ -4,12 +4,12 @@ import type { Message } from "@noalhub/api/message";
 import { adminErrorText } from "../admin/error-message";
 
 /**
- * Thông điệp lỗi cho các màn hình blog trong `apps/admin`. Trả về khoá i18n —
- * xem `adminErrorText`.
+ * Error messages for the blog screens in `apps/admin`. Returns an i18n key —
+ * see `adminErrorText`.
  *
- * Bọc ngoài `adminErrorText` chứ không thay nó: 403/429/404/mất mạng vẫn nói
- * đúng câu cũ, ở đây chỉ thêm những mã riêng của blog (§2.3) mà người viết bài
- * cần một hành động cụ thể chứ không phải một câu chung chung.
+ * It wraps `adminErrorText` rather than replacing it: 403/429/404/offline still
+ * say what they always said, and this only adds the blog-specific codes (§2.3)
+ * where the author needs a concrete action instead of a generic sentence.
  */
 export function blogErrorText(error: unknown): Message | string {
   if (error instanceof ApiError) {
@@ -19,7 +19,7 @@ export function blogErrorText(error: unknown): Message | string {
       case ERROR_CODES.slugTaken:
         return { key: "common.errors.slugTaken" };
       case ERROR_CODES.postNotPublishable:
-        // Backend liệt kê field còn thiếu trong `message`; giữ nguyên câu đó.
+        // The backend lists the missing fields in `message`; keep that sentence.
         return {
           key: "common.errors.postNotPublishable",
           values: { message: error.message },
@@ -27,7 +27,7 @@ export function blogErrorText(error: unknown): Message | string {
       case ERROR_CODES.categorySlugTaken:
         return { key: "common.errors.categorySlugTaken" };
       case ERROR_CODES.categoryNotEmpty:
-        // `message` của backend kèm số bài — đúng thứ người dùng cần biết.
+        // The backend's `message` includes the post count — exactly what the user needs.
         return error.message;
       default:
         break;

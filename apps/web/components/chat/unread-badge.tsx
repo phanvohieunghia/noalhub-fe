@@ -3,8 +3,8 @@
 import { useTranslations } from "next-intl";
 
 /**
- * Pill số tin chưa đọc. Số trần không đủ cho screen reader → kèm `sr-only`
- * diễn giải đầy đủ.
+ * The unread-count pill. A bare number tells a screen reader nothing → it is
+ * paired with a full `sr-only` description.
  */
 export function UnreadBadge({ count }: { count: number }) {
   const t = useTranslations("web.chat.sidebar");

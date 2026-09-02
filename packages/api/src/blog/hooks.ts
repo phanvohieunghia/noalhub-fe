@@ -8,12 +8,12 @@ import type { BlogCategoryFormValues } from "./schemas";
 import type { AdminBlogPostQuery, BlogCategory, BlogPost } from "./types";
 
 /**
- * Đường **client** — chỉ `apps/admin` dùng. Trang công khai của `apps/web` đọc
- * bằng `@noalhub/api/blog/server` (§4 của `docs/blog-plan.md`), không qua đây:
- * React Query fetch ở client thì HTML đầu tiên rỗng và `generateMetadata`
- * không có dữ liệu — tức là không có SEO.
+ * The **client** path — used only by `apps/admin`. The public pages of
+ * `apps/web` read through `@noalhub/api/blog/server` (§4 of `docs/blog.md`),
+ * never through here: with React Query fetching on the client the first HTML is
+ * empty and `generateMetadata` has no data — which means no SEO.
  *
- * Query key factory là nguồn sự thật DUY NHẤT cho key của feature này.
+ * The query key factory is the ONLY source of truth for this feature's keys.
  */
 export const blogKeys = {
   all: ["blog"] as const,
@@ -26,8 +26,8 @@ export const blogKeys = {
 };
 
 /**
- * Bảng bài viết. `keepPreviousData` để bảng không nháy về skeleton mỗi lần đổi
- * trang hay gõ ô tìm kiếm — cùng lý do với `useAdminUsers`.
+ * The post table. `keepPreviousData` keeps it from flashing back to a skeleton
+ * on every page change or keystroke — the same reason as `useAdminUsers`.
  */
 export function useAdminBlogPosts(query: AdminBlogPostQuery = {}) {
   return useQuery({
@@ -42,9 +42,10 @@ export function useAdminBlogPost(id: string | undefined) {
     queryKey: blogKeys.postDetail(id ?? ""),
     queryFn: ({ signal }) => blogApi.getAdminBlogPost(id!, signal),
     enabled: Boolean(id),
-    // Editor sửa thẳng bản live và không autosave (§7.3): refetch nền sẽ ghi đè
-    // bản đang gõ dở bằng bản trên server. `version` + 409 mới là cơ chế phát
-    // hiện xung đột, không phải refetch.
+    // The editor edits the live record and does not autosave (§7.3): a
+    // background refetch would overwrite the half-typed draft with the server's
+    // copy. `version` plus a 409 is the conflict-detection mechanism, not
+    // refetching.
     staleTime: Infinity,
     refetchOnMount: false,
   });
@@ -56,8 +57,8 @@ export function useCreateBlogPost() {
   return useMutation({
     mutationFn: (input?: { title: string }) => blogApi.createBlogPost(input),
     onSuccess: (post) => {
-      // Ghi thẳng detail vào cache: `/posts/new` replace sang `/posts/[id]`
-      // ngay sau đó, không phải fetch lại bài vừa tạo.
+      // Write the detail straight into the cache: `/posts/new` replaces to
+      // `/posts/[id]` right after, so the new post need not be fetched again.
       queryClient.setQueryData(blogKeys.postDetail(post.id), post);
       queryClient.invalidateQueries({ queryKey: blogKeys.posts() });
     },
@@ -74,8 +75,8 @@ export function useUpdateBlogPost(id: string) {
 }
 
 /**
- * Publish và unpublish đổi `postCount` của chuyên mục/thẻ, nên phải invalidate
- * cả hai danh sách đó — không chỉ danh sách bài.
+ * Publish and unpublish change the `postCount` of categories and tags, so both
+ * of those lists must be invalidated — not just the post list.
  */
 export function usePublishBlogPost(id: string) {
   const queryClient = useQueryClient();
@@ -103,7 +104,7 @@ export function useUnpublishBlogPost(id: string) {
   });
 }
 
-/** Xoá **mềm** (`status = archived`, §2.2) — bản ghi vẫn còn nên chỉ invalidate. */
+/** A **soft** delete (`status = archived`, §2.2) — the record remains, so only invalidate. */
 export function useArchiveBlogPost() {
   const queryClient = useQueryClient();
 
@@ -143,17 +144,18 @@ export function useUpdateBlogCategory() {
       blogApi.updateBlogCategory(id, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: blogKeys.categories() });
-      // Đổi tên mục là đổi `category.name` nở sẵn trong mọi bài đang cache.
+      // Renaming a category changes the `category.name` expanded into every cached post.
       queryClient.invalidateQueries({ queryKey: blogKeys.posts() });
     },
   });
 }
 
 /**
- * Kéo-thả sắp xếp chuyên mục.
+ * Drag-and-drop category ordering.
  *
- * Optimistic: danh sách phải nhảy ngay dưới ngón tay, chờ round-trip mới đổi
- * chỗ là cảm giác kéo bị "trượt". Lỗi thì trả lại snapshot cũ.
+ * Optimistic: the list has to move under the finger immediately — waiting for a
+ * round-trip before reordering feels like the drag "slipped". On error the old
+ * snapshot is restored.
  */
 export function useReorderBlogCategories() {
   const queryClient = useQueryClient();
@@ -206,7 +208,7 @@ export function useAdminBlogTags() {
   });
 }
 
-/** Tạo thẻ ngay trong editor; trùng slug thì backend trả thẻ đang có (§2.2). */
+/** Create a tag from inside the editor; on a slug collision the backend returns the existing one (§2.2). */
 export function useCreateBlogTag() {
   const queryClient = useQueryClient();
 

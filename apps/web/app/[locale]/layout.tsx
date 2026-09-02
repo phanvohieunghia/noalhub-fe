@@ -11,12 +11,13 @@ import { WebLocaleSync } from "@/components/auth/locale-sync";
 import { RootHtml, rootMetadata } from "../root-html";
 
 /**
- * Root layout của toàn bộ phần có ngôn ngữ. Đây là nơi `<html lang>` nói đúng
- * thứ tiếng đang render — `lang` sai thì trình đọc màn hình đọc tiếng Anh bằng
- * giọng tiếng Việt, và Google coi trang là tiếng Việt bất kể nội dung.
+ * The root layout for everything that has a language. This is where
+ * `<html lang>` states the language actually being rendered — a wrong `lang`
+ * makes a screen reader read English in a Vietnamese voice, and makes Google
+ * treat the page as Vietnamese regardless of its content.
  *
- * `generateStaticParams` cho phép Next dựng sẵn cả hai locale lúc build. Thiếu
- * nó thì mọi trang blog rơi khỏi SSG và nginx hết cache (§10).
+ * `generateStaticParams` lets Next prebuild both locales. Without it every blog
+ * page falls out of SSG and nginx loses its cache (§10).
  */
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
@@ -37,25 +38,27 @@ export default async function LocaleLayout({
 }: LayoutProps<"/[locale]">) {
   const { locale } = await params;
 
-  // `[locale]` bắt mọi đường dẫn không khớp route nào khác (`/unknown.txt`),
-  // nên giá trị ở đây chưa chắc là locale — phải kiểm rồi mới dùng.
+  // `[locale]` catches every path that matches no other route
+  // (`/unknown.txt`), so this value is not necessarily a locale — validate
+  // before using it.
   if (!hasLocale(LOCALES, locale)) notFound();
 
   /*
-   * BẮT BUỘC, và phải gọi trước mọi `getTranslations` trong cây: thiếu nó thì
-   * next-intl phải đọc request để biết locale, và cả route rơi khỏi static
-   * rendering — blog mất SSG, nginx mất cache (§3.1).
+   * REQUIRED, and it must run before any `getTranslations` in the tree: without
+   * it next-intl has to read the request to learn the locale, and the whole
+   * route drops out of static rendering — the blog loses SSG and nginx loses its
+   * cache (§3.1).
    */
   setRequestLocale(locale);
 
   return (
     <RootHtml lang={locale}>
-      {/* Provider ở đây chỉ mang `common`/`nav`/`validation`. Mỗi nhóm route
-          tự bọc thêm namespace của mình — xem `IntlProvider`. */}
-      {/* `NavigationProgress` phải nằm TRONG `IntlProvider` — nó đọc
-          `common.states.loading` cho dòng sr-only. Đặt một lần ở đây, không gắn
-          vào từng header: `/dashboard`, `/profile`, `/friends` không có header
-          nào (xem chú thích trong chính component). */}
+      {/* The provider here carries only `common`/`nav`/`validation`. Each route
+          group wraps its own namespace — see `IntlProvider`. */}
+      {/* `NavigationProgress` must live INSIDE `IntlProvider` — it reads
+          `common.states.loading` for its sr-only line. Mounted once here rather
+          than attached to each header: `/dashboard`, `/profile` and `/friends`
+          have no header at all (see the note in the component itself). */}
       <IntlProvider>
         <NavigationProgress />
         <WebLocaleSync />

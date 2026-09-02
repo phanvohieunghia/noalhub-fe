@@ -8,19 +8,20 @@ import { Breadcrumb } from "@/components/blog/breadcrumb";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Dynamic vì cùng lý do với `sitemap.ts` và `rss.xml`: bản prerender lúc build
- * là bản **rỗng**, và nó sống tới hết `revalidate` sau mỗi lần deploy. Cache nằm
- * ở tầng `fetch` (`blog-tags`, 3600 giây).
+ * Dynamic for the same reason as `sitemap.ts` and `rss.xml`: the build-time
+ * prerender is **empty**, and it lives out the full `revalidate` after every
+ * deploy. Caching happens at the `fetch` layer (`blog-tags`, 3600 seconds).
  */
 export const dynamic = "force-dynamic";
 
 /**
- * Chỉ mục thẻ. Là trang **thật** (danh sách thẻ + số bài), khác `/blogs/category`
- * trần vốn chỉ redirect — nhưng vẫn `noindex`, vì nó là mục lục của các trang
- * noindex (`docs/blog-plan.md` §6.5).
+ * The tag index. A **real** page (the tag list plus post counts), unlike the
+ * bare `/blogs/category` which only redirects — but still `noindex`, because it
+ * is a table of contents for
+ * noindex (`docs/blog.md` §6.5).
  *
- * `follow` vẫn bật: Google không index trang này nhưng vẫn đi theo link vào các
- * bài bên trong.
+ * `follow` stays on: Google does not index this page but still follows its
+ * links into the posts.
  */
 export async function generateMetadata({
   params,
@@ -41,8 +42,9 @@ export default async function TagIndexPage({ params }: PageProps<"/[locale]/blog
   setRequestLocale(locale);
   const t = await getTranslations("web.blog");
 
-  // Chỉ mục thẻ là trang `noindex` và chỉ để điều hướng, nên hiện danh sách rỗng
-  // khi backend trục trặc là đánh đổi đúng; nội dung thật thì `error.tsx` lo.
+  // The tag index is `noindex` and purely navigational, so showing an empty list
+  // when the backend hiccups is the right trade; real content is `error.tsx`'s
+  // job.
   const tags = await getBlogTags().catch(() => []);
 
   return (

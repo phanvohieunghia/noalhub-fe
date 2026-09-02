@@ -1,9 +1,9 @@
 /**
- * Bật kiểu cho khoá message trong app này.
+ * Turns on typing for message keys in this app.
  *
- * Import "trống" là có chủ ý: `@noalhub/i18n/app-config` khai `declare module
- * "next-intl"`, mà augmentation chỉ có hiệu lực khi file chứa nó nằm trong đồ
- * thị import của project. Xoá dòng này là mọi `t("khoa.sai")` lại biên dịch
- * được (`docs/i18n-plan.md` §9).
+ * The "empty" import is deliberate: `@noalhub/i18n/app-config` declares
+ * `declare module "next-intl"`, and module augmentation only takes effect while
+ * the file holding it is in the project's import graph. Delete this line and
+ * every `t("wrong.key")` compiles again (`docs/i18n.md` §9).
  */
 import "@noalhub/i18n/app-config";

@@ -4,17 +4,18 @@ import { isMessage, type Message } from "@noalhub/api/message";
 import { useTranslations } from "next-intl";
 
 /**
- * Dịch những thông điệp **do tầng dữ liệu sinh ra**, không phải do component
- * viết: message của zod trong các file `schemas.ts` của `@noalhub/api`, và
- * kết quả của các hàm `ErrorText` trong `packages/core`.
+ * Translates messages **produced by the data layer** rather than written by a
+ * component: zod messages in `@noalhub/api`'s `schemas.ts` files, and the
+ * output of the `ErrorText` helpers in `packages/core`.
  *
- * Vì sao chúng là khoá chứ không phải câu: schema và hàm map lỗi chạy ở module
- * scope, nạp một lần lúc import, không biết locale của request nào
- * (`docs/i18n-plan.md` §7.3). Nên chúng nói `"validation.email.invalid"`, còn
- * việc dịch xảy ra ở đây — đúng lúc render, đúng locale.
+ * Why those are keys and not sentences: schemas and error mappers run at module
+ * scope, loaded once at import time, with no request locale in sight
+ * (`docs/i18n.md` §7.3). So they say `"validation.email.invalid"`, and the
+ * translation happens here — at render time, in the right locale.
  *
- * Chuỗi không khớp khoá nào đi thẳng qua: đó là câu do **backend** soạn, không
- * có bản dịch, hiện nguyên văn (§7.3 chấp nhận điều này ở đợt này).
+ * A string matching no key passes straight through: that is a sentence written
+ * by the **backend**, which has no translation and is shown verbatim (§7.3
+ * accepts this for now).
  */
 export function useMessage() {
   const t = useTranslations();
@@ -25,10 +26,10 @@ export function useMessage() {
     const values = isMessage(message) ? message.values : undefined;
 
     /*
-     * Ép kiểu là bắt buộc và chỉ ở đúng chỗ này: khoá đến từ runtime (schema
-     * zod, hàm map lỗi), nên kiểu khoá tĩnh của next-intl không kiểm được. Đổi
-     * lại `has()` kiểm ngay trước khi dịch, nên khoá sai ra chuỗi khoá chứ
-     * không ném lỗi.
+     * The cast is required, and belongs only here: the key comes from runtime
+     * (a zod schema, an error mapper), so next-intl's static key type cannot
+     * check it. In exchange `has()` checks right before translating, so a bad
+     * key renders as the key string instead of throwing.
      */
     const translate = t as unknown as {
       (key: string, values?: Record<string, string | number>): string;

@@ -7,15 +7,15 @@ import { absoluteUrl } from "@noalhub/core/blog/seo";
 export type Crumb = { label: string; href?: string };
 
 /**
- * Breadcrumb hiển thị **và** `BreadcrumbList` JSON-LD từ cùng một mảng.
+ * The visible breadcrumb **and** the `BreadcrumbList` JSON-LD, from one array.
  *
- * Dùng chung một nguồn là cố ý: có structured data mà trang không có breadcrumb
- * thật là thứ Google coi là không khớp, và hai danh sách viết rời sẽ lệch ngay
- * lần sửa đầu tiên (§6.1, §6.2).
+ * Sharing a single source is deliberate: structured data on a page with no real
+ * breadcrumb is a mismatch in Google's eyes, and two separately written lists
+ * drift apart on the first edit (§6.1, §6.2).
  *
- * Nhờ có trục chuyên mục, bài viết được breadcrumb **ba cấp**:
- * Blog → <chuyên mục> → <tiêu đề bài>. Không có trục đó thì chỉ còn hai cấp và
- * gần như vô nghĩa (§6.2).
+ * The category axis is what gives posts a **three-level** breadcrumb:
+ * Blog → <category> → <post title>. Without that axis there are only two levels
+ * and it is close to meaningless (§6.2).
  */
 export function Breadcrumb({ items }: { items: Crumb[] }) {
   const t = useTranslations("web.blog.breadcrumb");
@@ -32,7 +32,7 @@ export function Breadcrumb({ items }: { items: Crumb[] }) {
                   {item.label}
                 </Link>
               ) : (
-                // Mục cuối là trang hiện tại — không link về chính nó.
+                // The last item is the current page — it does not link to itself.
                 <span aria-current="page">{item.label}</span>
               )}
             </li>

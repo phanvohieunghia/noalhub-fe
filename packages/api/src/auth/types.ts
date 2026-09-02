@@ -1,13 +1,14 @@
 /**
- * Mirror của DTO trong OpenAPI spec (`/docs`, tag `auth`).
- * Đổi ở đây phải kèm đổi zod schema trong `./schemas.ts`.
+ * A mirror of the DTOs in the OpenAPI spec (`/docs`, tag `auth`).
+ * A change here must come with a change to the zod schemas in `./schemas.ts`.
  */
 
 export type UserRole = "user" | "admin";
 
 /**
- * Ngôn ngữ giao diện, lưu trên tài khoản. Mirror của enum `UserLanguage` bên
- * backend (`src/users/language.ts`) — thêm ngôn ngữ là đổi cả hai đầu cùng lúc.
+ * The interface language, stored on the account. A mirror of the backend's
+ * `UserLanguage` enum (`src/users/language.ts`) — adding a language means
+ * changing both ends at once.
  */
 export type UserLanguage = "vi" | "en";
 
@@ -15,21 +16,21 @@ export type UserLanguage = "vi" | "en";
 export type User = {
   id: string;
   email: string;
-  /** Định danh công khai, duy nhất. Hệ thống cấp lúc tạo tài khoản. */
+  /** The public, unique identifier. Assigned by the system at signup. */
   username: string;
-  /** Lần đổi username gần nhất. `null` = chưa từng đổi. */
+  /** When the username last changed. `null` means never. */
   usernameChangedAt: string | null;
   /**
-   * Mốc sớm nhất được đổi username tiếp. `null` = đổi được ngay.
-   * Backend là nguồn sự thật — đừng tự cộng 6 tháng ở frontend.
+   * The earliest the username may change again. `null` means right now.
+   * The backend is the source of truth — do not add six months on the frontend.
    */
   nextUsernameChangeAt: string | null;
   emailVerified: boolean;
   role: UserRole;
   /**
-   * Ngôn ngữ giao diện người dùng đã chọn. Đây là NGUỒN SỰ THẬT — cookie
-   * `NOALHUB_LOCALE` chỉ là lớp đệm để SSR có gì đó dùng trước khi biết user là
-   * ai (`docs/i18n-plan.md` §4.2).
+   * The interface language the user picked. This is THE SOURCE OF TRUTH — the
+   * `NOALHUB_LOCALE` cookie is only a buffer so SSR has something to work with
+   * before it knows who the user is (`docs/i18n.md` §4.2).
    */
   language: UserLanguage;
   displayName: string | null;
@@ -41,7 +42,7 @@ export type User = {
 export type AuthTokens = {
   accessToken: string;
   refreshToken: string;
-  /** TTL access token, tính bằng giây (ví dụ 900). */
+  /** The access token TTL in seconds (e.g. 900). */
   expiresIn: number;
   tokenType: string;
 };
@@ -53,4 +54,4 @@ export type AuthSession = AuthTokens & {
 
 export type OAuthProvider = "google" | "github";
 
-// `ErrorResponseDto` dùng chung mọi feature → `lib/api/errors.ts`.
+// `ErrorResponseDto` is shared by every feature → `lib/api/errors.ts`.

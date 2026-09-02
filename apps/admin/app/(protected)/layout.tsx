@@ -5,11 +5,11 @@ import { AdminHeader } from "../../components/layout/admin-header";
 import { AdminSidebar } from "../../components/layout/admin-sidebar";
 
 /**
- * Hai lớp chồng nhau, không thay thế nhau: `AuthGuard` lo "có phiên không",
- * `RoleGuard` lo "phiên đó có phải admin không". Bỏ lớp thứ hai thì mọi user
- * thường đăng nhập được vào đây (`docs/admin-plan.md` §1).
+ * Two layers stacked, not substituted: `AuthGuard` answers "is there a
+ * session?", `RoleGuard` answers "is that session an admin?". Drop the second
+ * and any ordinary user can sign in here (`docs/admin-plan.md` §1).
  *
- * Cả hai chỉ là UX — ranh giới thật vẫn là 403 của backend.
+ * Both are UX only — the real boundary is still the backend's 403.
  */
 export default function ProtectedLayout({
   children,

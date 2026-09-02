@@ -1,9 +1,10 @@
 /**
- * Barrel công khai của feature `admin`.
+ * The public barrel of the `admin` feature.
  *
- * CHỦ Ý không export `./api`: component chỉ được chạm tầng hooks
- * (`docs/data-layer.md` §1). Barrel này chỉ nên được `apps/admin` dùng —
- * `apps/web` import vào là dấu hiệu đặt màn hình quản trị sai chỗ.
+ * `./api` is DELIBERATELY not exported: components may only touch the hooks
+ * layer (`docs/data-layer.md` §1). This barrel should only be used by
+ * `apps/admin` — an import from `apps/web` is a sign an admin screen ended up
+ * in the wrong place.
  */
 export * from "./hooks";
 export * from "./types";

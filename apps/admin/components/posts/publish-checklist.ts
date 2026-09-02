@@ -1,26 +1,27 @@
 import type { BlogPostFormValues } from "@noalhub/api/blog";
 
-/** Slug backend sinh cho bản nháp trống — dấu hiệu bài chưa được đặt tên thật. */
+/** The slug the backend generates for an empty draft — a sign the post has no real title yet. */
 const DEFAULT_SLUG_PREFIX = "bai-viet-khong-ten";
 
 export type PublishIssue = {
   id: string;
-  /** Khoá i18n trong `admin.posts.publish.issues.*` — file này không biết locale. */
+  /** An i18n key under `admin.posts.publish.issues.*` — this file knows no locale. */
   messageKey: string;
-  /** `true` = không cho bấm Đăng. `false` = cảnh báo mềm, vẫn đăng được. */
+  /** `true` disables Publish. `false` is a soft warning that still allows publishing. */
   blocking: boolean;
 };
 
 /**
- * Checklist của nút Publish (`docs/blog-plan.md` §7.4).
+ * The Publish button's checklist (`docs/blog.md` §7.4).
  *
- * **Chuyên mục là chặn cứng**, không phải cảnh báo mềm: backend cũng sẽ trả
- * `POST_NOT_PUBLISHABLE` (§2.2), nên để người dùng bấm rồi mới báo lỗi là bắt họ
- * đi hai vòng.
+ * **The category is a hard block**, not a soft warning: the backend would answer
+ * `POST_NOT_PUBLISHABLE` anyway (§2.2), so letting the user click and only then
+ * reporting it sends them round twice.
  *
- * Ba mục còn lại là cảnh báo: bài thiếu ảnh bìa vẫn là bài đúng, chỉ là chia sẻ
- * lên mạng xã hội sẽ xấu. Chặn cứng thứ không thật sự hỏng là cách nhanh nhất
- * làm người ta học cách bỏ qua checklist.
+ * The other three are warnings: a post without a cover image is still a correct
+ * post, it merely shares badly on social media. Hard-blocking things that are
+ * not actually broken is the fastest way to teach people to ignore the
+ * checklist.
  */
 export function publishChecklist(
   values: BlogPostFormValues,
@@ -36,8 +37,8 @@ export function publishChecklist(
     });
   }
 
-  // Đăng bản đang gõ dở nghĩa là độc giả thấy nội dung CŨ trong khi editor hiện
-  // nội dung mới — không có autosave nên khoảng lệch này hoàn toàn im lặng (§7.3).
+  // Publishing with unsaved edits means readers see the OLD content while the
+  // editor shows the new — with no autosave, that gap is entirely silent (§7.3).
   if (hasUnsavedChanges) {
     issues.push({
       id: "unsaved",

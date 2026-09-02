@@ -1,18 +1,19 @@
 import { blogPageParamSchema } from "@noalhub/api/blog";
 
 /**
- * Đọc `?page=` của các trang danh sách công khai.
+ * Reads `?page=` on the public listing pages.
  *
- * `null` = giá trị không hợp lệ → chỗ gọi phải `notFound()`, **không** render
- * danh sách rỗng trả 200: trang 200 rỗng bị Google index như nội dung mỏng
- * (`docs/blog-plan.md` §4.5, §6.5).
+ * `null` means an invalid value → the call site must `notFound()`, and must
+ * **not** render an empty list with a 200: an empty 200 gets indexed by Google
+ * as thin content (`docs/blog.md` §4.5, §6.5).
  *
- * Vắng mặt hoặc rỗng thì là trang 1, không phải lỗi — `/blogs`, `/blogs?page=1`
- * và `/blogs?page=` là ba URL cùng một nội dung, và cả ba canonical về `/blogs`.
+ * Absent or empty means page 1, not an error — `/blogs`, `/blogs?page=1` and
+ * `/blogs?page=` are three URLs with one content, and all three canonicalize to
+ * `/blogs`.
  */
 export function readPageParam(value: string | string[] | undefined): number | null {
   if (value === undefined || value === "") return 1;
-  // `?page=1&page=2` cho ra mảng — không đoán ý người gõ, coi là URL sai.
+  // `?page=1&page=2` produces an array — do not guess the intent; treat it as a bad URL.
   if (typeof value !== "string") return null;
 
   const parsed = blogPageParamSchema.safeParse(value);
@@ -20,12 +21,13 @@ export function readPageParam(value: string | string[] | undefined): number | nu
 }
 
 /**
- * `?page` vượt tổng số trang cũng là URL sai. Kiểm được là nhờ `total` trong
- * envelope (§2.1a) — không có nó thì không phân biệt được "trang 9 không tồn
- * tại" với "trang 9 tình cờ rỗng".
+ * A `?page` past the last page is also a bad URL. This check is possible thanks
+ * to `total` in the envelope (§2.1a) — without it there is no way to tell "page
+ * 9 does not exist" from "page 9 happens to be empty".
  *
- * Ngoại lệ: danh sách rỗng hoàn toàn (`total === 0`) thì trang 1 vẫn hợp lệ —
- * đó là trạng thái đúng của site khi chưa có bài, không phải lỗi (§6.5).
+ * The exception: with a completely empty list (`total === 0`) page 1 is still
+ * valid — that is the site's correct state before any posts exist, not an error
+ * (§6.5).
  */
 export function isPageOutOfRange(page: number, total: number, limit: number): boolean {
   if (total === 0) return page > 1;

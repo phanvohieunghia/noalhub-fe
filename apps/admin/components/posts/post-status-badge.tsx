@@ -5,9 +5,10 @@ import { Badge } from "@noalhub/ui/badge";
 import { useTranslations } from "next-intl";
 
 /**
- * `tone` là **ngữ nghĩa**, không phải màu — và ba trạng thái phải nhìn khác
- * nhau ngay từ xa: `published` là thứ độc giả đang thấy, `archived` là thứ đã
- * gỡ khỏi công khai (xoá mềm, §2.2), `draft` là chưa ai thấy.
+ * `tone` is **semantic**, not a color — and the three states must look different
+ * at a glance: `published` is what readers see right now, `archived` has been
+ * taken off the public site (a soft delete, §2.2), `draft` is what nobody has
+ * seen.
  */
 const TONES = {
   draft: { tone: "neutral", key: "draft" },

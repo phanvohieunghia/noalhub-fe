@@ -1,14 +1,14 @@
 /**
- * Script chạy TRƯỚC lần paint đầu tiên, nhúng thẳng vào `<head>` của cả hai
- * app. Không có nó thì trang luôn vẽ ở màu sáng rồi mới nhảy sang tối khi React
- * hydrate xong — nháy trắng mỗi lần tải.
+ * A script that runs BEFORE the first paint, inlined into the `<head>` of both
+ * apps. Without it the page always paints light and only flips to dark once
+ * React has hydrated — a white flash on every load.
  *
- * Cố ý là một **chuỗi**, không phải hàm rồi `.toString()`: minifier được phép
- * đổi tên biến và inline hàm, và một hàm bị đổi tên khi stringify sẽ chạy sai
- * hoặc không chạy.
+ * Deliberately a **string**, not a function passed through `.toString()`: a
+ * minifier is free to rename variables and inline functions, and a renamed
+ * function stringifies into something that misbehaves or does not run at all.
  *
- * Vì vậy `noalhub-theme` ở đây là hằng số cứng, không import `THEME_STORAGE_KEY`
- * được — bundler không thay được biến vào trong chuỗi. Đổi key thì phải đổi
- * cả hai chỗ; `types.ts` có chú thích nhắc lại.
+ * That is why `noalhub-theme` is hardcoded here instead of importing
+ * `THEME_STORAGE_KEY` — a bundler cannot substitute a variable inside a string.
+ * Changing the key means changing both places; `types.ts` carries a reminder.
  */
 export const THEME_INIT_SCRIPT = `try{var t=localStorage.getItem("noalhub-theme");var d=t==="dark"||((!t||t==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d)}catch(e){}`;

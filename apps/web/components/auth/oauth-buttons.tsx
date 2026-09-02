@@ -16,7 +16,7 @@ const PROVIDERS: { id: OAuthProvider; label: string; icon: string }[] = [
 export function OAuthButtons({ next }: { next?: string }) {
   const t = useTranslations("web.auth.oauth");
 
-  // Điều hướng ra ngoài origin → dùng window.location, không dùng <Link>.
+  // Navigating off-origin → use window.location, never <Link>.
   const go = (provider: OAuthProvider) => {
     rememberOAuthNext(next);
     window.location.assign(oauthStartUrl(provider));

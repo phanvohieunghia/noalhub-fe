@@ -4,12 +4,13 @@ import { LanguageSwitcher } from "@noalhub/ui/language-switcher";
 import { useRouter } from "next/navigation";
 
 /**
- * `LanguageSwitcher` cho admin: URL không có locale (§3.2), nên chỉ cần ghi
- * cookie rồi bảo Next render lại từ server bằng cookie mới.
+ * The admin `LanguageSwitcher`: admin URLs carry no locale (§3.2), so it only
+ * has to write the cookie and ask Next to re-render from the server with it.
  *
- * `router.refresh()` chứ không `location.reload()`: giữ nguyên state của client
- * (bộ lọc đang chọn, nội dung đang soạn trong editor), chỉ lấy lại phần server
- * render — mà phần server chính là chỗ chứa message.
+ * `router.refresh()` rather than `location.reload()`: client state is preserved
+ * (the selected filters, the draft in the editor) while only the
+ * server-rendered part is refetched — and the server-rendered part is where the
+ * messages live.
  */
 export function AdminLanguageSwitcher({ className }: { className?: string }) {
   const router = useRouter();

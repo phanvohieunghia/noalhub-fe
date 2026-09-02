@@ -3,11 +3,12 @@
 import { forwardRef } from "react";
 
 /**
- * Textarea tự cao dần tới `max-h-40` rồi mới cuộn trong nó.
+ * A textarea that grows to `max-h-40` and only then scrolls internally.
  *
- * Auto-grow làm ngay trong `onInput` bằng cách chạm style — KHÔNG dùng
- * `useEffect` + `setState`: ESLint v16 có rule `react-hooks/set-state-in-effect`,
- * và đo lại chiều cao là việc của DOM chứ không phải của state.
+ * Auto-growing happens right in `onInput` by touching the style — NOT with
+ * `useEffect` + `setState`: ESLint v16 has the
+ * `react-hooks/set-state-in-effect` rule, and remeasuring a height is the DOM's
+ * job, not state's.
  */
 export const MessageTextarea = forwardRef<
   HTMLTextAreaElement,

@@ -6,18 +6,18 @@ import { Button } from "./button";
 import { Typography } from "./typography";
 
 /**
- * Phân trang **offset** — hợp với `GET /admin/users` (`page`/`limit`), KHÔNG
- * dùng cho chat (cursor-based, không có khái niệm số trang).
+ * **Offset** pagination — matching `GET /admin/users` (`page`/`limit`). NOT for
+ * chat, which is cursor-based and has no notion of a page number.
  *
- * Component không giữ state: trang hiện tại đến từ URL searchParams để link
- * share được, và `onPageChange` chỉ báo ngược lên.
+ * The component holds no state: the current page comes from the URL's
+ * searchParams so links are shareable, and `onPageChange` only reports upward.
  */
 export function Pagination({
   page,
   limit,
   total,
   onPageChange,
-  /** Đang tải trang mới — khoá nút để tránh bấm dồn nhiều trang. */
+  /** A new page is loading — disable the buttons so clicks cannot stack up. */
   isLoading = false,
 }: {
   page: number;
@@ -36,8 +36,8 @@ export function Pagination({
       aria-label={t("label")}
       className="flex flex-wrap items-center justify-between gap-3 pt-3 text-body-3"
     >
-      {/* aria-live: đổi trang bằng nút không làm focus nhảy, screen reader cần
-          được báo phạm vi mới. */}
+      {/* aria-live: changing page by button does not move focus, so a screen
+          reader has to be told the new range. */}
       <Typography variant="body-2" aria-live="polite" className="opacity-70">
         {total === 0 ? t("empty") : t("range", { from, to, total })}
       </Typography>

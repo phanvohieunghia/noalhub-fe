@@ -1,4 +1,6 @@
-import { Typography } from "./typography"; /** Banner cho lỗi cấp form (5xx, mất mạng, lỗi không gắn với field nào). */
+import { Typography } from "./typography";
+
+/** Banner for form-level errors (5xx, offline, anything not tied to a field). */
 export function FormError({ message }: { message?: string | null }) {
   if (!message) return null;
 

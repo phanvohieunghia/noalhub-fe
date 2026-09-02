@@ -4,8 +4,8 @@ import { Spinner } from "@noalhub/ui/spinner";
 
 export function SendButton({ disabled, pending }: { disabled: boolean; pending: boolean }) {
   return (
-    // `type="submit"` thật, để form gửi được bằng bàn phím chứ không chỉ bằng
-    // chuột.
+    // A real `type="submit"`, so the form can be sent from the keyboard and not
+    // only with the mouse.
     <button
       type="submit"
       disabled={disabled}

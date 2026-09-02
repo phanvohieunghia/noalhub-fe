@@ -21,7 +21,7 @@ import { ApiError } from "@noalhub/api/errors";
 import type { Message } from "@noalhub/api/chat";
 import { Typography } from "@noalhub/ui/typography";
 
-/** Gộp nhiều lần "đã tới đáy" thành một request. */
+/** Collapses repeated "reached the bottom" events into one request. */
 const MARK_READ_DEBOUNCE_MS = 500;
 
 export function ChatPane({ conversationId }: { conversationId: string }) {
@@ -39,31 +39,32 @@ export function ChatPane({ conversationId }: { conversationId: string }) {
     [messagesQuery.data],
   );
 
-  // `Message` chỉ mang `senderId`; tên/avatar nằm ở `members` của hội thoại.
-  // Dựng map một lần ở đây thay vì để mỗi bubble tự tìm trong mảng.
+  // A `Message` carries only `senderId`; names and avatars live in the
+  // conversation's `members`. The map is built once here rather than letting
+  // every bubble search the array.
   const members = useMemo(() => memberMap(conversationQuery.data), [conversationQuery.data]);
 
   const markReadDebounced = useDebouncedMarkRead(markRead);
 
   const handleReachBottom = useCallback(
     (latestMessageId: string) => {
-      // Ba điều kiện cùng lúc, thiếu cái nào cũng thành "đọc hộ" người dùng:
-      // đang mở (component này tồn tại), đã cuộn tới đáy (MessageList gọi), và
-      // tab đang được xem.
+      // Three conditions at once; missing any of them marks messages read on the
+      // user's behalf: the conversation is open (this component exists), it is
+      // scrolled to the bottom (MessageList calls in), and the tab is visible.
       if (document.visibilityState !== "visible") return;
       markReadDebounced(latestMessageId);
     },
     [markReadDebounced],
   );
 
-  // Gửi lại dùng ĐÚNG `id` cũ — đó là điều kiện để backend dedupe.
+  // A resend uses the SAME `id` — that is what lets the backend dedupe.
   const handleRetry = useCallback(
     (message: Message) => send({ id: message.id, body: message.body }),
     [send],
   );
 
-  // Spec không có 403: người không phải thành viên nhận 404 y như hội thoại
-  // không tồn tại. Một màn hình cho cả hai, và KHÔNG logout.
+  // The spec has no 403: a non-member gets the same 404 as a nonexistent
+  // conversation. One screen for both, and NO logout.
   const notFound =
     conversationQuery.error instanceof ApiError && conversationQuery.error.status === 404;
 
@@ -109,10 +110,11 @@ export function ChatPane({ conversationId }: { conversationId: string }) {
 }
 
 /**
- * Debounce + chống gửi lại cùng một con trỏ.
+ * Debouncing plus a guard against resending the same cursor.
  *
- * Con trỏ đã đọc chỉ được TIẾN. `id` là UUID v7 nên so sánh chuỗi là so sánh
- * thời gian — nhờ đó cuộn lên đọc tin cũ không đẩy con trỏ lùi lại.
+ * The read cursor may only move FORWARD. `id` is a UUID v7, so a string
+ * comparison is a time comparison — which is why scrolling up to read old
+ * messages never pushes the cursor backwards.
  */
 function useDebouncedMarkRead(markRead: (messageId: string) => void) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

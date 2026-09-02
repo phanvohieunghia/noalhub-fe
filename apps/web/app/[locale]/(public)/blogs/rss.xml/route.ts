@@ -4,55 +4,62 @@ import { DEFAULT_LOCALE } from "@noalhub/i18n/config";
 import { getTranslations } from "next-intl/server";
 
 /**
- * Cùng lý do với `sitemap.ts`: prerender lúc build cho ra **feed rỗng** cho tới
- * khi hết `revalidate` sau mỗi lần deploy (đo được khi smoke test). Cache vẫn
- * nằm ở tầng `fetch` với tag `blog-list`, nên backend không bị gọi thêm.
+ * Same reason as `sitemap.ts`: the build-time prerender produces an **empty
+ * feed** until `revalidate` elapses after each deploy (measured during a smoke
+ * test). Caching still happens at the `fetch` layer under the `blog-list` tag,
+ * so the backend takes no extra calls.
  */
 export const dynamic = "force-dynamic";
 
-/** Vẫn dùng cho header `Cache-Control` gửi ra CDN/nginx. */
+/** Still used for the `Cache-Control` header sent to the CDN/nginx. */
 const FEED_MAX_AGE = 3600;
 
 const FEED_SIZE = 20;
 
 /**
- * RSS **tóm tắt**: `<description>` chỉ mang `excerpt`, không mang toàn bài
- * (`docs/blog-plan.md` §6.6).
+ * A **summary** feed: `<description>` carries only the `excerpt`, never the
+ * full post
+ * (`docs/blog.md` §6.6).
  *
- * Đây là chỗ plan tự mâu thuẫn và đã gỡ: `rss.xml` là XML string nên nó cần
- * **chuỗi HTML đã escape**, trong khi §3 chốt "không có đường nào nhả HTML thô"
- * và renderer ở `packages/ui/src/blog/post-content.tsx` trả React element.
+ * This is where the plan contradicted itself, and the contradiction was
+ * resolved: `rss.xml` is an XML string and therefore needs **escaped HTML
+ * strings**, while §3 settled that "no path emits raw HTML" and the renderer in
+ * `packages/ui/src/blog/post-content.tsx` returns React elements.
  *
- * Viết thêm một `postContentToHtml()` để lấp chỗ đó là dựng lại đúng cái đường
- * nhả HTML mà §3 vừa xoá — tự escape, tự map từng node, tự giữ đồng bộ với
- * renderer React mãi mãi, và sai một chỗ escape là XSS trong reader của người
- * khác. Feed tóm tắt là chuẩn quen thuộc và tốn 0 đồng: `excerpt` luôn có sẵn
+ * Writing a `postContentToHtml()` to fill that gap rebuilds exactly the
+ * HTML-emitting path §3 removed — hand-rolled escaping, a hand-rolled node map,
+ * kept in sync with the React renderer forever, and one escaping mistake is XSS
+ * inside someone else's reader. A summary feed is a familiar standard and costs
+ * nothing: `excerpt` is always there
  * (§2.3b).
  *
- * Nếu sau này thật sự cần full-content feed thì `postContentToHtml()` phải nằm
- * **cạnh** renderer trong `packages/ui/src/blog/`, dùng chung một bảng map node
- * — không phải một bản sao thứ hai đặt trong file này.
+ * If a full-content feed is ever genuinely needed, `postContentToHtml()` must
+ * live **next to** the renderer in `packages/ui/src/blog/`, sharing one node
+ * map — not as a second copy inside this file.
  *
- * **MỘT feed duy nhất, tiếng Việt** (`docs/i18n-plan.md` §8): nội dung bài chưa
- * dịch nên feed thứ hai chỉ khác nhau ở tiêu đề kênh, còn từng bài thì giống hệt
- * — hai feed cùng nội dung là chuyện phiền cho reader chứ không phải tính năng.
- * Route vẫn nằm trong `[locale]` (không thể để ngoài, vì `(public)` mới có
- * layout của blog), nhưng `/en/blogs/rss.xml` cố ý trả **đúng** feed tiếng Việt.
- * Đường cũ `/blogs/rss.xml` được `next.config.ts` redirect 308 sang bản `vi`.
+ * **A SINGLE feed, in Vietnamese** (`docs/i18n.md` §8): the post content is not
+ * translated, so a second feed would differ only in the channel title while
+ * every item stayed identical — two feeds with the same content are a nuisance
+ * for readers, not a feature. The route still lives inside `[locale]` (it cannot
+ * sit outside, since only `(public)` has the blog layout), but
+ * `/en/blogs/rss.xml` deliberately returns **the same** Vietnamese feed. The old
+ * `/blogs/rss.xml` is 308-redirected to the `vi` version by `next.config.ts`.
  */
 export async function GET() {
-  // Khoá cứng vào `vi`, không đọc locale của request: xem chú thích trên.
+  // Hardcoded to `vi` rather than reading the request's locale: see the note above.
   const t = await getTranslations({ locale: DEFAULT_LOCALE, namespace: "web.blog.rss" });
 
-  // ⚠️ Cùng lý do với `generateStaticParams` ở §4.4a, và đây là chỗ nó **đã vỡ
-  // thật**: Route Handler được Next prerender lúc `next build`, mà lúc đó
-  // `API_INTERNAL_URL` chưa tồn tại nên `server.ts` gọi ra API production từ
-  // GitHub runner. Backend không trả được là **build FE đỏ vì một file RSS**.
+  // ⚠️ Same reason as `generateStaticParams` in §4.4a, and this is where it
+  // **actually broke**: Next prerenders Route Handlers during `next build`, when
+  // `API_INTERNAL_URL` does not exist yet, so `server.ts` calls the production
+  // API from the GitHub runner. A backend that cannot answer means **a red
+  // frontend build over one RSS file**.
   //
-  // §4.4a chỉ nêu `generateStaticParams` vì đó là ca tác giả plan tìm ra, nhưng
-  // luật nó phát biểu ("build FE không được phụ thuộc backend đang sống") áp cho
-  // MỌI route prerender lúc build. Feed rỗng tạm thời rẻ hơn một điểm gãy trong
-  // CD, và `revalidate` sinh lại nó ở lượt truy cập sau.
+  // §4.4a only mentions `generateStaticParams` because that is the case the plan's
+  // author hit, but the rule it states ("the frontend build must not depend on a
+  // live backend") applies to EVERY route prerendered at build time. A
+  // temporarily empty feed is cheaper than a break in CD, and `revalidate`
+  // regenerates it on the next visit.
   const items = await getPublishedPosts({ limit: FEED_SIZE })
     .then((list) => list.items)
     .catch(() => []);
@@ -76,7 +83,7 @@ ${items.map(itemXml).join("\n")}
   return new Response(body, {
     headers: {
       "Content-Type": "application/rss+xml; charset=utf-8",
-      // Đường đi qua CDN/nginx cũng nên biết feed sống được bao lâu.
+      // The CDN/nginx path should also know how long the feed stays fresh.
       "Cache-Control": `public, max-age=0, s-maxage=${FEED_MAX_AGE}`,
     },
   });
@@ -102,8 +109,8 @@ function itemXml(post: {
 }
 
 /**
- * Năm ký tự bắt buộc của XML. `&` phải thay ĐẦU TIÊN, nếu không những lần thay
- * sau lại escape chính dấu `&` mình vừa sinh ra (`&lt;` thành `&amp;lt;`).
+ * XML's five mandatory characters. `&` must be replaced FIRST, or the later
+ * replacements escape the `&` we just produced (`&lt;` becoming `&amp;lt;`).
  */
 function escapeXml(value: string): string {
   return value

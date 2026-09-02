@@ -1,33 +1,35 @@
 /**
- * Bảng màu dùng chung cho `apps/web` và `apps/admin`.
+ * The color system shared by `apps/web` and `apps/admin`.
  *
- * Ba tầng, đọc từ dưới lên:
- *   1. `@theme` — hai THANG màu (`brand`, `neutral`), hằng số, không đổi theo
- *      chế độ sáng/tối. Đây là bảng nguyên liệu.
- *   2. `:root` / `.dark` — TOKEN NGỮ NGHĨA trỏ vào một bậc của thang. Đây là
- *      chỗ duy nhất biết light khác dark ở đâu.
- *   3. `@theme inline` — nối token ngữ nghĩa vào utility của Tailwind.
+ * Three layers, read bottom-up:
+ *   1. `@theme` — the two color SCALES (`brand`, `neutral`): constants that do
+ *      not change between light and dark. These are the raw materials.
+ *   2. `:root` / `.dark` — SEMANTIC TOKENS pointing at one step of a scale.
+ *      This is the only place that knows how light differs from dark.
+ *   3. `@theme inline` — wires the semantic tokens into Tailwind utilities.
  *
- * ⚠️ Tầng 3 BẮT BUỘC có `inline`. Không có nó, Tailwind copy giá trị lúc build
- * (tức là giá trị của `:root`) vào từng utility, và `.dark` đổi biến cũng
- * không đổi được màu — dark mode câm lặng không hoạt động.
+ * ⚠️ Layer 3 MUST use `inline`. Without it Tailwind copies the build-time value
+ * (that is, `:root`'s value) into every utility, and changing the variable in
+ * `.dark` changes no color — dark mode silently stops working.
  *
- * Component **chỉ dùng token ngữ nghĩa** (`bg-surface`, `text-muted-foreground`).
- * Gọi thẳng bậc thang (`bg-brand-700`) là mời lại đúng con bug này: `brand-700`
- * là nút ở light nhưng là đường viền ở dark. Ngoại lệ: biểu đồ, avatar sinh màu
- * theo tên — chỗ cần một dải màu chứ không phải một vai trò.
+ * Components use **semantic tokens only** (`bg-surface`, `text-muted-foreground`).
+ * Reaching for a scale step (`bg-brand-700`) invites exactly this bug back:
+ * `brand-700` is a button in light but a border in dark. Exceptions: charts and
+ * name-derived avatar colors — places that need a range, not a role.
  *
- * Chi tiết cách dựng thang (nội suy OKLCH từ 4 màu gốc) ở `docs/theme-plan.md` §5.
+ * How the scales were built (OKLCH interpolation from 4 source colors):
+ * `docs/theme.md` §5.
  */
 
 @theme {
-  /* Ba bậc 200/300/400 là màu gốc của thương hiệu, giữ nguyên tuyệt đối.
-     ⚠️ Cả BỐN màu được đưa đều nằm ở nửa SÁNG (màu tối nhất, `#0ABAB5`, chỉ
-     đạt 2.4:1 trên nền trắng) — không màu nào làm chữ hay nút được ở light.
-     Nên nửa dưới thang (500→950) là do mình kéo dài ra: giữ hue teal, hạ dần
-     độ sáng và chroma. Đó mới là chỗ lấy màu chữ và màu nút.
-     Hue trôi 173° (mint) → 212° (teal thẫm); chroma phải hạ ở nửa dưới mới nằm
-     trong gamut sRGB. */
+  /* Steps 200/300/400 are the brand's source colors, kept exactly as given.
+     ⚠️ All FOUR source colors sit in the LIGHT half (the darkest, `#0ABAB5`,
+     only reaches 2.4:1 on white) — none of them can carry text or a button in
+     light mode. So the lower half of the scale (500→950) is our extension:
+     the teal hue is kept while lightness and chroma step down. That half is
+     where text and button colors come from.
+     Hue drifts 173° (mint) → 212° (deep teal); chroma has to come down in the
+     lower half to stay inside the sRGB gamut. */
   --color-brand-50: #e9fcf4;
   --color-brand-100: #d0f7e8;
   --color-brand-200: #adeed9;
@@ -40,10 +42,10 @@
   --color-brand-900: #002e35;
   --color-brand-950: #001a1f;
 
-  /* Xám cùng hue 200° với `brand-900`, chroma 0.006–0.016: đọc ra là "xám"
-     nhưng đứng cạnh brand thì không lệch tông.
-     ⚠️ Đây là GHI ĐÈ palette `neutral` mặc định của Tailwind — chủ ý, để
-     `text-neutral-500` cũ tự ám xanh theo thương hiệu. */
+  /* Grays sharing `brand-900`'s 200° hue at chroma 0.006–0.016: they read as
+     "gray" but never clash next to a brand color.
+     ⚠️ This OVERRIDES Tailwind's default `neutral` palette — deliberately, so
+     that existing `text-neutral-500` picks up the brand's tint. */
   --color-neutral-50: #f6fbfc;
   --color-neutral-100: #eaf2f2;
   --color-neutral-200: #d8e2e2;
@@ -56,30 +58,31 @@
   --color-neutral-900: #172323;
   --color-neutral-950: #0a1414;
 
-  /* Hồng phấn `#FFEDF3` không nằm trên trục teal (hue 355° so với 173–212°),
-     nên nó KHÔNG phải một bậc của thang brand — nó là màu nhấn thứ hai, dùng
-     cho nền vùng highlight/callout. Hai bậc kia là do mình dựng để nó còn dùng
-     được ở dark. */
+  /* The blush `#FFEDF3` is off the teal axis (hue 355° against 173–212°), so
+     it is NOT a step of the brand scale — it is the secondary accent, used as
+     the background of highlight/callout areas. The other two steps are ours,
+     so it stays usable in dark mode. */
   --color-blush-100: #ffedf3;
   --color-blush-600: #7f3b58;
   --color-blush-900: #562f3f;
 }
 
 /**
- * `dark:` của Tailwind v4 mặc định bám `prefers-color-scheme`. Khai lại để nó
- * bám class trên `<html>` — nếu không, lựa chọn tường minh của user (`light`
- * trên máy đang dark) sẽ bị hệ điều hành ghi đè.
+ * Tailwind v4's `dark:` follows `prefers-color-scheme` by default. Redeclared
+ * to follow the class on `<html>` instead — otherwise the user's explicit
+ * choice (`light` on a machine set to dark) is overridden by the OS.
  */
 /**
- * Thang chữ. Mỗi bậc khai kèm `--line-height` và `--letter-spacing` để một
- * utility `text-h1` mang đủ ba thứ — chia lẻ thành `text-4xl leading-tight
- * tracking-tight` ở từng chỗ gọi là cách để chúng lệch nhau sau ba tháng.
+ * The type scale. Each step declares `--line-height` and `--letter-spacing` so
+ * that a single `text-h1` utility carries all three — spelling it out as
+ * `text-4xl leading-tight tracking-tight` at each call site is how they drift
+ * apart three months later.
  *
- * Tiêu đề càng lớn thì line-height càng CHẶT và letter-spacing càng ÂM: ở cỡ
- * lớn, khoảng cách mặc định trông rời rạc; ở cỡ nhỏ thì ngược lại, cần thoáng
- * để đọc đoạn dài.
+ * The larger the heading, the TIGHTER the line-height and the more NEGATIVE the
+ * letter-spacing: at large sizes the defaults look loose; at small sizes it is
+ * the reverse, long paragraphs need air.
  *
- * Bậc `--text-*` là namespace của Tailwind → tự có `text-h1`, `text-body`…
+ * `--text-*` is Tailwind's namespace → `text-h1`, `text-body`… come for free.
  */
 @theme {
   --text-h1: 2.25rem;
@@ -104,9 +107,10 @@
   --text-h6: 1rem;
   --text-h6--line-height: 1.5;
 
-  /* `title` KHÔNG phải bậc heading: nó là nhãn của một khối (card, hàng bảng,
-     ô thống kê). Cùng dải cỡ với h4–h6 nhưng line-height CHẶT hơn (nhãn thường
-     một dòng) và letter-spacing DƯƠNG — chữ đặc mà giãn nhẹ thì dễ quét mắt. */
+  /* `title` is NOT a heading step: it labels a block (a card, a table row, a
+     stat tile). Same size range as h4–h6 but with a TIGHTER line-height (labels
+     are usually one line) and a POSITIVE letter-spacing — dense text with a
+     little air is easier to scan. */
   --text-title-1: 1.25rem;
   --text-title-1--line-height: 1.4;
   --text-title-1--letter-spacing: 0.005em;
@@ -123,9 +127,9 @@
   --text-title-4--line-height: 1.45;
   --text-title-4--letter-spacing: 0.01em;
 
-  /* Bốn bậc thân chữ. `body-2` là mặc định của cả hệ; `body-1` chỉ dùng cho
-     đoạn mở đầu (lead). Cỡ càng nhỏ thì line-height càng CHẶT lại — chữ nhỏ
-     dòng thưa quá thì mắt lạc dòng. */
+  /* Four body steps. `body-2` is the system default; `body-1` is only for a
+     lead paragraph. The smaller the size, the TIGHTER the line-height — small
+     text set too loose makes the eye lose the line. */
   --text-body-1: 1.125rem;
   --text-body-1--line-height: 1.7;
 
@@ -138,8 +142,9 @@
   --text-body-4: 0.75rem;
   --text-body-4--line-height: 1.55;
 
-  /* `caption` cùng cỡ `body-4` nhưng LUÔN in nghiêng — phân biệt bằng dáng chữ
-     chứ không bằng cỡ, để chú thích ảnh nằm cạnh thân bài vẫn tách bạch. */
+  /* `caption` is the same size as `body-4` but ALWAYS italic — distinguished by
+     style rather than size, so an image caption next to body text still reads
+     as separate. */
   --text-caption: 0.75rem;
   --text-caption--line-height: 1.5;
   --text-caption--letter-spacing: 0.01em;
@@ -154,18 +159,18 @@
   --surface-foreground: var(--color-brand-900);
   --muted: var(--color-neutral-100);
   --highlight: var(--color-blush-100);
-  --highlight-foreground: var(--color-blush-600); /* 7.0:1 trên nền hồng */
-  --muted-foreground: var(--color-neutral-600); /* 5.6:1 trên --background */
+  --highlight-foreground: var(--color-blush-600); /* 7.0:1 on the blush background */
+  --muted-foreground: var(--color-neutral-600); /* 5.6:1 on --background */
   --border: var(--color-neutral-200);
-  --primary: var(--color-brand-600); /* chữ trắng trên nút: 5.1:1 */
+  --primary: var(--color-brand-600); /* white text on the button: 5.1:1 */
   --primary-hover: var(--color-brand-700); /* 7.3:1 */
   --primary-foreground: #ffffff;
-  --accent: var(--color-brand-700); /* link & chữ nhấn, 7.3:1 */
-  --ring: var(--color-brand-400); /* Tiffany gốc — chỉ làm viền focus, không làm chữ */
+  --accent: var(--color-brand-700); /* links & emphasized text, 7.3:1 */
+  --ring: var(--color-brand-400); /* the original Tiffany — focus ring only, never text */
 
-  /* Trạng thái KHÔNG lấy từ thang brand. `success` phải là xanh LÁ rõ rệt, đừng
-     ngả teal: thang brand giờ là teal, một `success` teal nữa thì "thành công"
-     và "màu thương hiệu" nhìn như nhau. */
+  /* Status colors are NOT taken from the brand scale. `success` must be clearly
+     GREEN, not teal-leaning: the brand scale is teal now, and a teal `success`
+     would make "succeeded" and "brand color" look like the same thing. */
   --danger: #b42318;
   --success: #16803c;
   --warning: #b54708;
@@ -174,21 +179,21 @@
 .dark {
   --background: var(--color-brand-900);
   --foreground: var(--color-neutral-50); /* 14.0:1 */
-  /* Ở dark, surface SÁNG hơn background — không phải trắng. */
+  /* In dark, surface is LIGHTER than the background — not white. */
   --surface: var(--color-brand-800);
   --surface-foreground: var(--color-neutral-50);
   --muted: var(--color-brand-800);
   --highlight: var(--color-blush-900);
   --highlight-foreground: var(--color-blush-100); /* 10.0:1 */
-  --muted-foreground: var(--color-neutral-400); /* 5.5:1 trên --background */
+  --muted-foreground: var(--color-neutral-400); /* 5.5:1 on --background */
   --border: var(--color-brand-700);
-  --primary: var(--color-brand-400); /* Tiffany gốc, cuối cùng cũng có đất diễn */
-  /* Và hover cũng SÁNG lên, không tối đi. */
+  --primary: var(--color-brand-400); /* the original Tiffany, finally with room to shine */
+  /* And hover goes LIGHTER, not darker. */
   --primary-hover: var(--color-brand-300);
-  /* Chữ TỐI trên nút, không phải trắng: `#0ABAB5` quá sáng để mang chữ trắng
-     (2.4:1); chữ gần-đen cho 7.5:1. */
+  /* DARK text on the button, not white: `#0ABAB5` is too light to carry white
+     text (2.4:1); near-black text gives 7.5:1. */
   --primary-foreground: var(--color-brand-950);
-  --accent: var(--color-brand-300); /* 8.9:1 — link & chữ nhấn */
+  --accent: var(--color-brand-300); /* 8.9:1 — links & emphasized text */
   --ring: var(--color-brand-400);
 
   --danger: #f97066;

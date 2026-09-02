@@ -4,14 +4,14 @@ import { useEffect } from "react";
 import { tokenStore, useAuthStore } from "@noalhub/api/auth";
 
 /**
- * Bọc quanh toàn app. Khôi phục phiên lúc mount nhưng render children ngay —
- * phần public không bị chặn bởi bootstrap.
+ * Wraps the whole app. Restores the session on mount but renders children
+ * immediately — public pages are never blocked on bootstrap.
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void useAuthStore.getState().bootstrap();
 
-    // Tab khác logout → tab này cũng thoát.
+    // Another tab logged out → this tab signs out too.
     return tokenStore.onExternalClear(() => {
       useAuthStore.getState().reset();
     });

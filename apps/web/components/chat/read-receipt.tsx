@@ -5,11 +5,12 @@ import { useTranslations } from "next-intl";
 import type { ConversationMember } from "@noalhub/api/chat";
 
 /**
- * `✓` đã gửi · `✓✓` đã có người đọc.
+ * `✓` sent · `✓✓` read by someone.
  *
- * Backend không trả cờ "đã đọc" cho từng tin — nó trả `lastReadMessageId` của
- * từng thành viên. So sánh được vì id là UUID v7 (sắp theo thời gian): tin này
- * đã đọc nếu con trỏ của người khác >= id của nó.
+ * The backend returns no per-message "read" flag — it returns each member's
+ * `lastReadMessageId`. The comparison works because ids are UUID v7
+ * (chronologically ordered): this message is read when someone else's cursor is
+ * >= its id.
  */
 export function ReadReceipt({
   messageId,

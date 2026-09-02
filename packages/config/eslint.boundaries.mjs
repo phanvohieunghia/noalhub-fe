@@ -1,10 +1,10 @@
 /**
- * Ranh giới import dùng chung cho cả monorepo.
+ * Shared import boundaries for the whole monorepo.
  *
- * Mục tiêu không phải "cho code đẹp" mà là giữ cho bước TÁCH REPO trong tương
- * lai còn rẻ (docs/monorepo-plan.md §4): ngày nào `apps/web` và `apps/admin`
- * còn import chéo nhau, hoặc `packages/*` còn với ngược lên `apps/*`, thì
- * `git filter-repo` sẽ cho ra một repo không build được.
+ * The goal is not "tidy code" but keeping a future REPO SPLIT cheap
+ * (docs/monorepo.md §4): as long as `apps/web` and `apps/admin` import each
+ * other, or `packages/*` reaches back up into `apps/*`, `git filter-repo`
+ * will produce a repo that does not build.
  */
 export const boundaryRules = {
   "no-restricted-imports": [
@@ -14,12 +14,12 @@ export const boundaryRules = {
         {
           group: ["@noalhub/api/src/*", "@noalhub/*/src/*"],
           message:
-            "Import qua barrel công khai của package (vd `@noalhub/api/auth`), đừng chọc thẳng vào `src/`.",
+            "Import through the package's public barrel (e.g. `@noalhub/api/auth`); do not reach into `src/`.",
         },
         {
           group: ["**/apps/*"],
           message:
-            "packages/* không được phụ thuộc vào apps/*. Cần dùng chung thì đẩy code xuống packages/.",
+            "packages/* must not depend on apps/*. Shared code belongs down in packages/.",
         },
       ],
     },

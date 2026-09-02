@@ -3,23 +3,23 @@ import { create } from "zustand";
 import type { PresenceEntry, PresenceStatus } from "./types";
 
 /**
- * Typing và presence KHÔNG vào React Query: chúng đổi vài lần mỗi giây và
- * không có "nguồn sự thật" để refetch. Nhét vào cache là ép invalidate liên
- * tục (`docs/chat.md` §5.7).
+ * Typing and presence do NOT go into React Query: they change several times a
+ * second and have no "source of truth" to refetch from. Putting them in the
+ * cache would mean invalidating constantly (`docs/chat.md` §5.7).
  */
 
-/** Backend không persist `typing`; client tự tắt sau khoảng này. */
+/** The backend does not persist `typing`; the client clears it after this long. */
 const TYPING_TTL_MS = 5_000;
 
 type TypingKey = `${string}:${string}`;
 
-/** Timeout theo từng (conversation, user) — nằm ngoài state để không re-render. */
+/** One timeout per (conversation, user) — kept outside state so it causes no re-render. */
 const typingTimers = new Map<TypingKey, ReturnType<typeof setTimeout>>();
 
 type EphemeralState = {
-  /** conversationId → danh sách userId đang nhập. */
+  /** conversationId → the list of userIds currently typing. */
   typingByConversation: Record<string, string[]>;
-  /** userId → presence. Vắng mặt = KHÔNG RÕ, không phải offline. */
+  /** userId → presence. Absent means UNKNOWN, not offline. */
   presenceByUser: Record<string, PresenceEntry>;
 
   setTyping: (conversationId: string, userId: string, isTyping: boolean) => void;
@@ -61,8 +61,8 @@ export const useEphemeralStore = create<EphemeralState>((set, get) => ({
       };
     });
 
-    // TTL: thiếu nó thì "đang nhập…" treo vĩnh viễn khi event `typing:stop`
-    // rơi mất — mà nó ĐƯỢC PHÉP rơi theo thiết kế của backend.
+    // TTL: without it, "typing…" hangs forever whenever a `typing:stop` event
+    // is dropped — and the backend's design ALLOWS it to be dropped.
     if (isTyping) {
       const timer = setTimeout(() => {
         typingTimers.delete(key);

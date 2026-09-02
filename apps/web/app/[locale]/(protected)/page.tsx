@@ -5,8 +5,9 @@ import { Typography } from "@noalhub/ui/typography";
 
 export default function Home() {
   return (
-    // Cột ngoài giữ footer dán đáy; phần căn giữa nội dung chuyển xuống lớp
-    // trong, nếu không footer cũng bị kéo vào giữa màn hình.
+    // The outer column keeps the footer pinned to the bottom; the content
+    // centering moves to the inner layer, or the footer gets pulled into the
+    // middle of the screen too.
     <div className="flex flex-1 flex-col bg-background font-sans">
       <div className="flex flex-1 flex-col items-center justify-center">
         <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-surface text-surface-foreground sm:items-start">

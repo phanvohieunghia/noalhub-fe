@@ -14,27 +14,29 @@ import { collectHeadings } from "@noalhub/core/blog/headings";
 import "./post-content.css";
 
 /**
- * Renderer Tiptap JSON → React. **Một code path** cho `apps/web` (bản thật) và
- * `apps/admin` (preview, §8) — nhờ vậy preview không bao giờ lệch bản thật.
+ * The Tiptap JSON → React renderer. **One code path** for `apps/web` (the real
+ * thing) and `apps/admin` (the preview, §8) — which is why the preview can
+ * never drift from what readers see.
  *
- * Ba ràng buộc, cả ba đều có lý do ở `docs/blog-plan.md`:
+ * Three constraints, all justified in `docs/blog.md`:
  *
- * 1. **KHÔNG import `@tiptap/*`** (§3.2). Chạm vào Tiptap là kéo cả bộ editor
- *    vào bundle công khai của `apps/web`, nơi không ai soạn thảo gì. Tiptap chỉ
- *    tồn tại trong `apps/admin`.
- * 2. **Không có đường nào nhả HTML thô** (§3). Không `dangerouslySetInnerHTML`,
- *    không `innerHTML` — đó là loại an toàn do kiến trúc chứ không do kỷ luật.
- * 3. **Node/attr lạ thì bỏ im lặng, không ném** (§3.1). Một node lạ không được
- *    làm trắng cả trang bài viết.
+ * 1. **Never import `@tiptap/*`** (§3.2). Touching Tiptap drags the whole
+ *    editor into `apps/web`'s public bundle, where nobody edits anything.
+ *    Tiptap exists only inside `apps/admin`.
+ * 2. **No path that emits raw HTML** (§3). No `dangerouslySetInnerHTML`, no
+ *    `innerHTML` — safety by architecture rather than by discipline.
+ * 3. **Unknown nodes/attrs are dropped silently, never thrown on** (§3.1). One
+ *    strange node must not blank out an entire post.
  *
- * `sanitizeBlogDoc` (tầng schema) đã lọc một lượt khi dữ liệu vào; các lần kiểm
- * `isSafeLinkHref`/`isSafeImageSrc` dưới đây là **lớp thứ hai**, cố ý trùng:
- * renderer nhận doc từ nhiều đường (server fetch, cache, state của editor) và
- * chỉ cần một đường quên lọc là có stored XSS (§3.1a).
+ * `sanitizeBlogDoc` (the schema layer) already filters once on the way in; the
+ * `isSafeLinkHref`/`isSafeImageSrc` checks below are a **second layer**,
+ * deliberately redundant: the renderer receives docs from several paths (server
+ * fetch, cache, editor state) and one path forgetting to filter is enough for
+ * stored XSS (§3.1a).
  */
 export function PostContent({ doc }: { doc: BlogDoc }) {
-  // Quét cả cây MỘT lượt lấy id đã khử trùng — cùng hàm mà mục lục dùng, nên
-  // anchor và TOC không thể lệch nhau (§3.3).
+  // Walk the tree ONCE for de-duplicated ids — the same function the table of
+  // contents uses, so anchors and the TOC cannot diverge (§3.3).
   const headings = collectHeadings(doc);
   let headingCursor = 0;
 
@@ -58,11 +60,11 @@ function Block({
 }) {
   switch (node.type) {
     case "paragraph":
-      // Đoạn rỗng là cách người viết tạo khoảng nghỉ — giữ chiều cao dòng.
+      // An empty paragraph is how an author adds a pause — keep the line height.
       return <p>{node.content?.length ? <Inline nodes={node.content} /> : <br />}</p>;
 
     case "heading": {
-      // `<h1>` là tiêu đề bài (§6.2) nên nội dung chỉ có h2/h3.
+      // `<h1>` is the post title (§6.2), so content only ever has h2/h3.
       const Tag = node.attrs.level === 3 ? "h3" : "h2";
       return <Tag id={headingId}>{<Inline nodes={node.content ?? []} />}</Tag>;
     }
@@ -127,12 +129,13 @@ function ListItems({ items }: { items: BlogListItemNode[] }) {
 }
 
 /**
- * Ảnh trong bài.
+ * An image inside a post.
  *
- * Có `width`/`height` thật → `next/image` dùng đúng kích thước. `null` (editor
- * không đo được: ảnh chết, CORS) → khung `aspect-video` + `fill` +
- * `object-contain`: ảnh không méo, và quan trọng hơn là **không có CLS** — một
- * chỉ số Core Web Vitals, tức là nằm đúng trong mục tiêu SEO của plan (§3.1b).
+ * With real `width`/`height` → `next/image` uses the exact dimensions. With
+ * `null` (the editor could not measure: dead image, CORS) → an `aspect-video`
+ * frame plus `fill` and `object-contain`: the image is not distorted and, more
+ * importantly, there is **no CLS** — a Core Web Vitals metric, and therefore
+ * squarely inside this plan's SEO goal (§3.1b).
  */
 function ContentImage({
   node,
@@ -140,7 +143,7 @@ function ContentImage({
   node: Extract<BlogBlockNode, { type: "image" }>;
 }) {
   const { src, alt, width, height } = node.attrs;
-  // Lớp phòng thủ thứ hai — xem ghi chú đầu file.
+  // The second line of defence — see the note at the top of this file.
   if (!isSafeImageSrc(src)) return null;
 
   if (width && height) {
@@ -176,8 +179,8 @@ function Text({ node }: { node: BlogTextNode }) {
   const marks = node.marks ?? [];
   let content: React.ReactNode = node.text;
 
-  // Mark ký tự bọc từ trong ra ngoài; `link` để cuối cùng nên nó là thẻ ngoài
-  // cùng — `<a><strong>…</strong></a>` chứ không phải ngược lại.
+  // Character marks wrap from the inside out; `link` is applied last so it is
+  // the outermost tag — `<a><strong>…</strong></a>`, not the other way round.
   for (const mark of marks) {
     switch (mark.type) {
       case "bold":
@@ -198,14 +201,14 @@ function Text({ node }: { node: BlogTextNode }) {
   }
 
   const link = marks.find((mark) => mark.type === "link");
-  // href sai ràng buộc → KHÔNG render thẻ <a> nhưng GIỮ text con: link hỏng
-  // thành chữ thường, không mất chữ (§3.1a).
+  // An href failing the constraints → no <a> is rendered but the child text is
+  // KEPT: a bad link degrades to plain text rather than losing words (§3.1a).
   if (link && isSafeLinkHref(link.attrs.href)) {
     const isInternal = link.attrs.href.startsWith("/");
     content = (
       <a
         href={link.attrs.href}
-        // `target`/`rel` do renderer đặt, KHÔNG nhận từ dữ liệu (§3.1a).
+        // `target`/`rel` are set by the renderer, NEVER taken from data (§3.1a).
         {...(isInternal ? {} : { target: "_blank", rel: "nofollow noopener" })}
       >
         {content}

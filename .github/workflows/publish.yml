@@ -20,7 +20,7 @@ env:
   NEXT_PUBLIC_API_BASE_URL: https://api-noalhub.duckdns.org
   NEXT_PUBLIC_WS_URL: https://ws-noalhub.duckdns.org
   # Origin công khai của apps/web. Cần từ khi có blog: `metadataBase`, canonical,
-  # OG, sitemap và JSON-LD đều dựng URL tuyệt đối từ nó (docs/blog-plan.md §6.1).
+  # OG, sitemap và JSON-LD đều dựng URL tuyệt đối từ nó (docs/blog.md §6.1).
   # Thiếu biến này thì build VẪN XANH nhưng mọi URL tuyệt đối ra `undefined/...`.
   # Admin không đọc tới nó, nhưng truyền cho cả hai để hai job không lệch cấu hình.
   NEXT_PUBLIC_APP_URL: https://noalhub.duckdns.org
@@ -227,7 +227,7 @@ jobs:
           # bằng 200". `proxy.ts` không được bundle vào image là một hỏng hóc có
           # thật, và khi đó `/` trả thẳng 200 của một trang không có locale —
           # `-L` ở trên sẽ nuốt gọn. Dòng này là chốt chặn cho đúng ca đó
-          # (`docs/i18n-plan.md` §3.1: `localePrefix: "always"`).
+          # (`docs/i18n.md` §3.1: `localePrefix: "always"`).
           landed=$(curl -sSL --max-redirs 3 -o /dev/null -w '%{url_effective}' https://noalhub.duckdns.org/)
           if [ "$landed" != "https://noalhub.duckdns.org/vi" ]; then
             echo "/ hạ cánh ở $landed, mong đợi https://noalhub.duckdns.org/vi — proxy locale không chạy?"

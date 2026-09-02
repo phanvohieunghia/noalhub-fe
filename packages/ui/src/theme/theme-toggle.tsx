@@ -14,13 +14,13 @@ const MODE_ICONS: Record<ThemeMode, string> = {
 };
 
 /**
- * Ba nút trong một nhóm, **không** phải nút bập bênh hai trạng thái: `system`
- * phải chọn được tường minh, và user phải nhìn ra mình đang ở chế độ nào —
- * một cái nút bập bênh không nói được "đang theo hệ thống".
+ * Three buttons in a group, **not** a two-state toggle: `system` has to be
+ * explicitly selectable, and the user has to see which mode they are in — a
+ * toggle cannot say "following the system".
  */
 export function ThemeToggle({ className = "" }: { className?: string }) {
-  // `common` là namespace mọi trang của cả hai app đều nạp — component dùng
-  // chung không được ghim namespace của riêng một app (`docs/i18n-plan.md` §6).
+  // `common` is the namespace every page of both apps loads — a shared
+  // component must not pin one app's namespace (`docs/i18n.md` §6).
   const t = useTranslations("common.theme");
   const { mode, setMode, mounted } = useTheme();
 
@@ -28,10 +28,10 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     <div
       role="group"
       aria-label={t("label")}
-      // Trước khi hydrate, client chưa biết mode nào đang chọn (server không
-      // đọc được localStorage). Vẫn render đủ 3 nút để không nhảy layout,
-      // nhưng ẩn phần đánh dấu "đang chọn" — bật lên thì lần vẽ đầu sẽ tô sai
-      // ô rồi mới nhảy sang ô đúng.
+      // Before hydration the client does not know which mode is selected (the
+      // server cannot read localStorage). All 3 buttons still render so the
+      // layout does not shift, but the "selected" marking is hidden — showing
+      // it would paint the wrong button first and then jump to the right one.
       className={`inline-flex items-center gap-0.5 rounded-full border border-border p-0.5 ${className}`}
     >
       {THEME_MODES.map((value) => {

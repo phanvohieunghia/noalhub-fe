@@ -1,12 +1,12 @@
 import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE, isLocale, type Locale } from "./config";
 
 /**
- * Ghi cookie locale từ **client**. Cố ý không `HttpOnly` (§4.2): ghi được ngay
- * ở đây thì `LanguageSwitcher` đổi giao diện tức thì, không phải đợi một vòng
- * request chỉ để server ghi hộ.
+ * Write the locale cookie from the **client**. Deliberately not `HttpOnly`
+ * (§4.2): writing it here lets `LanguageSwitcher` switch the UI immediately
+ * instead of waiting a full request round-trip for the server to write it.
  *
- * `Secure` chỉ bật khi đang chạy HTTPS — bật vô điều kiện thì cookie bị trình
- * duyệt bỏ qua ở `http://localhost` và dev không đổi được ngôn ngữ.
+ * `Secure` is only set on HTTPS — setting it unconditionally makes the browser
+ * drop the cookie on `http://localhost`, so language switching breaks in dev.
  */
 export function writeLocaleCookie(locale: Locale): void {
   if (typeof document === "undefined") return;

@@ -1,9 +1,9 @@
 /**
- * Hằng số i18n dùng chung cho **cả hai app**. File này không import gì từ
- * `next-intl` để nó nạp được ở mọi nơi: proxy (edge), server component, client
- * component, và cả `scripts/check-messages.mjs`.
+ * i18n constants shared by **both apps**. This file imports nothing from
+ * `next-intl` so it can load anywhere: the proxy (edge), server components,
+ * client components, and `scripts/check-messages.mjs`.
  *
- * Xem `docs/i18n-plan.md`.
+ * See `docs/i18n.md`.
  */
 
 export const LOCALES = ["vi", "en"] as const;
@@ -11,22 +11,25 @@ export const LOCALES = ["vi", "en"] as const;
 export type Locale = (typeof LOCALES)[number];
 
 /**
- * Ngôn ngữ khi không có tín hiệu nào khác. Phải khớp `DEFAULT_USER_LANGUAGE`
- * của backend (`src/users/language.ts`) — lệch thì user mới sẽ thấy giao diện
- * một đằng còn `user.language` một nẻo ngay sau khi đăng ký.
+ * The language used when there is no other signal. Must match the backend's
+ * `DEFAULT_USER_LANGUAGE` (`src/users/language.ts`) — if they drift, a new user
+ * gets one language in the UI and another in `user.language` right after
+ * signing up.
  */
 export const DEFAULT_LOCALE: Locale = "vi";
 
 /**
- * Lớp đệm để SSR biết ngôn ngữ **trước** khi gọi `/auth/me`. Nguồn sự thật vẫn
- * là `user.language` ở backend; cookie chỉ chạy trước một nhịp.
+ * The buffer that lets SSR know the language **before** calling `/auth/me`. The
+ * source of truth is still `user.language` on the backend; the cookie merely
+ * runs one beat ahead.
  *
- * KHÔNG `HttpOnly`: `LanguageSwitcher` phải đọc/ghi được từ client, nếu không
- * mỗi lần đổi ngôn ngữ phải đi vòng qua server và giao diện nháy.
+ * NOT `HttpOnly`: `LanguageSwitcher` has to read and write it from the client,
+ * otherwise every language change has to round-trip through the server and the
+ * UI flashes.
  */
 export const LOCALE_COOKIE = "NOALHUB_LOCALE";
 
-/** 1 năm. Ngắn hơn thì người dùng quay lại sau kỳ nghỉ là mất lựa chọn. */
+/** One year. Anything shorter loses the choice for a user returning from a holiday. */
 export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 export function isLocale(value: unknown): value is Locale {
@@ -36,12 +39,12 @@ export function isLocale(value: unknown): value is Locale {
 }
 
 /**
- * Chọn locale gần nhất từ `Accept-Language`. Chỉ dùng cho khách vào lần đầu —
- * ai đã có cookie hoặc đã đăng nhập thì không đi qua đây.
+ * Pick the closest locale from `Accept-Language`. Only for first-time visitors —
+ * anyone with a cookie or a session never reaches this.
  *
- * So khớp theo tiền tố ngôn ngữ (`en-US` → `en`), bỏ qua `q=`: với đúng hai
- * ngôn ngữ thì thứ tự xuất hiện đã đủ, kéo cả thư viện negotiator vào edge
- * bundle chỉ để sắp xếp hai phần tử là không đáng.
+ * Matched on the language prefix (`en-US` → `en`), ignoring `q=`: with exactly
+ * two languages the order of appearance is enough, and pulling a negotiator
+ * library into the edge bundle just to sort two items is not worth it.
  */
 export function localeFromAcceptLanguage(header: string | null): Locale | null {
   if (!header) return null;

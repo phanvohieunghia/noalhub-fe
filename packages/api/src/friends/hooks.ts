@@ -7,7 +7,7 @@ import { getPublicProfile } from "../users/api";
 import { userKeys } from "../users/hooks";
 import type { FriendRequestDirection } from "./types";
 
-/** Query key factory — nguồn sự thật DUY NHẤT cho key của feature friends. */
+/** Query key factory — the ONLY source of truth for the friends feature's keys. */
 export const friendKeys = {
   all: ["friends"] as const,
   list: () => [...friendKeys.all, "list"] as const,
@@ -24,8 +24,9 @@ export function useFriends() {
 }
 
 /**
- * Lời mời đang chờ. Hai chiều là hai request riêng của backend nên cũng là hai
- * query riêng — nhét chung một key thì chiều này ghi đè chiều kia.
+ * Pending requests. The two directions are separate backend requests and are
+ * therefore separate queries — sharing one key would let each direction
+ * overwrite the other.
  */
 export function useFriendRequests(
   direction: FriendRequestDirection = "incoming",
@@ -37,12 +38,12 @@ export function useFriendRequests(
 }
 
 /**
- * Tìm người theo username — khớp TUYỆT ĐỐI qua `GET /users/{username}`.
+ * Find someone by username — an EXACT match through `GET /users/{username}`.
  *
- * Backend không có endpoint tìm mờ, và `PublicProfileDto` không kèm trạng thái
- * quan hệ; trạng thái đó suy ra từ danh sách bạn/lời mời ở component (xem
- * `findFriendState`). Chỉ chạy khi đã submit — gõ dở mà bắn request thì vừa tốn
- * vừa luôn 404.
+ * The backend has no fuzzy-search endpoint, and `PublicProfileDto` carries no
+ * relationship state; that state is derived from the friend/request lists in
+ * the component (see `findFriendState`). It only runs after submit — firing on
+ * every keystroke is both wasteful and always a 404.
  */
 export function useFindUserByUsername(username: string | undefined) {
   return useQuery({
@@ -54,8 +55,9 @@ export function useFindUserByUsername(username: string | undefined) {
 }
 
 /**
- * Gửi lời mời. Nếu người kia đang mời mình, backend chấp nhận luôn và trả
- * `state = "friends"` — nên phải invalidate cả danh sách bạn, không chỉ lời mời.
+ * Send a request. If the other person already invited you, the backend accepts
+ * immediately and returns `state = "friends"` — so the friend list must be
+ * invalidated too, not just the requests.
  */
 export function useSendFriendRequest() {
   const queryClient = useQueryClient();
@@ -77,7 +79,7 @@ export function useAcceptFriendRequest() {
   });
 }
 
-/** Từ chối lời mời đến, hoặc huỷ lời mời đã gửi — cùng một endpoint. */
+/** Decline an incoming request, or cancel one you sent — the same endpoint. */
 export function useRemoveFriendRequest() {
   const queryClient = useQueryClient();
 
