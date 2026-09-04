@@ -92,7 +92,10 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
-    a11y: { test: "todo" },
+    // "error" makes an axe violation fail the story in `test-storybook`, which is
+    // the whole point of running it in CI. The default scaffold ships "todo",
+    // which reports violations and then passes anyway.
+    a11y: { test: "error" },
     // Both apps are App Router. Without this, `@storybook/nextjs` mocks the
     // Pages Router and every `next/navigation` hook (`usePathname`,
     // `useSearchParams`, `useRouter`) throws when the story renders.

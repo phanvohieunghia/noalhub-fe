@@ -171,9 +171,13 @@
   /* Status colors are NOT taken from the brand scale. `success` must be clearly
      GREEN, not teal-leaning: the brand scale is teal now, and a teal `success`
      would make "succeeded" and "brand color" look like the same thing. */
-  --danger: #b42318;
-  --success: #16803c;
-  --warning: #b54708;
+  --danger: #b42318; /* 5.2:1 on its own /12 tint */
+  /* These two are darker than the usual Tailwind-ish greens/ambers on purpose.
+     A status color is read at its SMALLEST on a Badge — 12px, normal weight, on
+     a 12–15% tint of itself — and that is where the ratio has to hold: #16803c
+     and #b54708 came out at 4.27 and 4.19 there, i.e. below 4.5. */
+  --success: #15703a; /* 5.0:1 on its own /12 tint, 5.9:1 on --background */
+  --warning: #a03f07; /* 5.0:1 on its own /15 tint, 6.3:1 on --background */
 }
 
 .dark {

@@ -43,6 +43,12 @@
     "storybook": {
       "cache": false,
       "persistent": true
+    },
+    "test-storybook:ci": {
+      "dependsOn": [
+        "build-storybook"
+      ],
+      "cache": false
     }
   }
 }

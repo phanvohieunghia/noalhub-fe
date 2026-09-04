@@ -96,7 +96,88 @@ Môi trường render của component trong Storybook cần giống hệt với 
 | GĐ 4.1 — Form story (`react-hook-form` + `zod`) | ✅ Xong (`src/components/Form.stories.tsx`) |
 | GĐ 4.2 — Mock API bằng `msw` | ⏸️ Chưa làm — `packages/ui` hiện thuần trình bày, không có component nào tự gọi API nên chưa có đối tượng để mock. Chỉ cài `msw` khi xuất hiện component như vậy. |
 | GĐ 5.1 — Build tĩnh (`pnpm --filter @noalhub/storybook build`) | ✅ Chạy được, xuất ra `storybook-static/` |
-| GĐ 5.2 — Chromatic CI | ⏸️ Chưa làm — cần tạo project Chromatic và `CHROMATIC_PROJECT_TOKEN` trong GitHub Secrets trước. |
+| GĐ 5.2 — CI kiểm thử story + a11y (`@storybook/test-runner` + Playwright) | ✅ Xong — `.github/workflows/storybook.yml` |
+| GĐ 5.1 — Deploy image Docker lên ghcr (`apps/storybook/Dockerfile`) | ✅ Xong — job `storybook` trong `publish.yml`; phần compose + nginx còn phải thêm ở repo BE, xem §6 |
+| GĐ 5.2 — Chromatic (visual regression) | ⏸️ Bỏ qua có chủ đích — xem §7 |
+
+### Kiểm thử tự động trong CI
+
+`@storybook/test-runner` mở **từng story** trong một trang Chromium thật, nên
+việc render được tính là bài test: story nào ném lỗi lúc mount (thiếu key i18n,
+hook gọi ngoài provider) là CI đỏ mà không ai phải viết assertion. Story có
+`play` function thì được chạy luôn.
+
+Addon `@storybook/addon-a11y` của Storybook 10 tự nối vào test-runner — không
+cần `axe-playwright` hay file `.storybook/test-runner.ts` như hướng dẫn cũ. Mức
+độ nghiêm ngặt khai ở `parameters.a11y.test` trong `preview.tsx`:
+
+* `"error"` — vi phạm axe làm đỏ CI (đang dùng).
+* `"todo"` — báo cáo rồi vẫn cho qua.
+* `"off"` — bỏ hẳn. Đặt ở từng story khi có lý do rõ ràng, đừng tắt toàn cục.
+
+```bash
+pnpm --filter @noalhub/storybook test-storybook      # cần một Storybook đang chạy
+pnpm turbo run test-storybook:ci --filter=@noalhub/storybook   # tự build + tự dựng server
+```
+
+Lần đầu chạy phải cài browser: `pnpm --filter @noalhub/storybook exec playwright install chromium`.
+
+Workflow chỉ kích hoạt khi `apps/storybook`, `packages/{ui,config,i18n}` hoặc
+lockfile đổi — sửa `apps/web` không có cách nào làm đỏ nó.
+
+## 6. Deploy (Docker + VPS, cùng đường ống với web/admin)
+
+Storybook build ra **web tĩnh**, không có server, nên runtime của image là
+`nginx:alpine` phục vụ file chứ không phải node như hai app kia — image ~50MB
+thay vì ~200MB. Cũng vì thế nó không nhận build-arg `NEXT_PUBLIC_*` nào: không
+có gì để inline vào bundle.
+
+* `apps/storybook/Dockerfile` — build context là **gốc repo** (pnpm workspace
+  cần lockfile + toàn bộ `packages/*`).
+* `apps/storybook/nginx.conf` — nginx **bên trong** container. Đừng nhầm với
+  reverse proxy ở repo backend.
+* Job `storybook` trong `.github/workflows/publish.yml` đẩy image lên
+  `ghcr.io/<owner>/noalhub-fe-storybook`. Job `deploy` **cố tình không**
+  `needs` nó: Storybook hỏng thì không được phép chặn bản production của
+  web/admin.
+
+### Phần còn lại nằm ở repo backend
+
+Compose và nginx reverse proxy thuộc repo khác, nên hai mảnh dưới đây phải thêm
+tay ở đó trước khi VPS phục vụ được Storybook.
+
+`docker-compose.prod.yml`:
+
+```yaml
+storybook:
+  image: ghcr.io/<owner>/noalhub-fe-storybook:${FE_IMAGE_TAG:-latest}
+  restart: unless-stopped
+  networks: [web]
+```
+
+vhost nginx cho `storybook-noalhub.duckdns.org` — trỏ `proxy_pass` vào
+`http://storybook:80`.
+
+> ⚠️ Đọc lại comment dài trong `publish.yml` ở bước reload nginx: nginx phân
+> giải tên upstream **một lần** lúc nạp config rồi cache IP vĩnh viễn, nên mỗi
+> lần recreate container là phải `nginx -s reload`. Thêm `storybook` vào danh
+> sách `up -d` mà quên nó thì đúng lỗi cũ: hai domain đổi chỗ cho nhau mà cả
+> hai vẫn trả 200.
+
+Xong hai mảnh đó thì sửa job `deploy`: thêm `storybook` vào `docker compose
+pull` và `up -d`, và thêm nó vào vòng lặp kiểm tra tag đang chạy.
+
+## 7. Vì sao chưa dùng Chromatic
+
+Chromatic làm hai việc: host trang Storybook và **visual regression** (chụp ảnh
+từng story rồi so pixel với baseline). Phần khó tự làm là phần thứ hai, vì nó
+cần môi trường render giống hệt nhau qua mỗi lần chạy — tự dựng thì font và
+anti-aliasing lệch một chút là toàn bộ snapshot báo đỏ giả.
+
+Hiện tại `test-runner` + a11y đã bắt được nhóm lỗi đắt nhất (story vỡ, tương
+phản màu không đạt) mà không phụ thuộc dịch vụ ngoài và không tốn quota. Chỉ
+nên thêm Chromatic khi thực sự cần chặn thay đổi giao diện ngoài ý muốn; lúc đó
+cần tạo project và đặt `CHROMATIC_PROJECT_TOKEN` trong GitHub Secrets.
 
 ### Chạy thử
 

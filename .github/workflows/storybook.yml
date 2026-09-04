@@ -1,0 +1,68 @@
+name: Storybook
+
+# Chỉ chạy khi thứ Storybook render thực sự đổi. Sửa apps/web hay apps/admin
+# không thể làm đỏ job này, nên không cần bắt cả repo phải chờ nó.
+on:
+  pull_request:
+    paths:
+      - 'apps/storybook/**'
+      - 'packages/ui/**'
+      - 'packages/config/**'
+      - 'packages/i18n/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/storybook.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/storybook/**'
+      - 'packages/ui/**'
+      - 'packages/config/**'
+      - 'packages/i18n/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/storybook.yml'
+  workflow_dispatch:
+
+# Push liên tiếp vào cùng một PR thì chỉ giữ run mới nhất — run cũ không còn
+# nói lên điều gì về code hiện tại.
+concurrency:
+  group: storybook-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      # Cài cả workspace: stories import @noalhub/ui, mà package đó lại kéo theo
+      # @noalhub/config và @noalhub/i18n. `--filter` ở đây chỉ tổ thiếu.
+      - run: pnpm install --frozen-lockfile
+
+      # Chỉ Chromium. test-runner mặc định chạy trên đúng một browser, tải thêm
+      # firefox/webkit là hai phút CI không dùng vào việc gì. `--with-deps` cài
+      # thư viện hệ thống mà runner ubuntu không có sẵn.
+      - name: Cài Chromium cho Playwright
+        run: pnpm --filter @noalhub/storybook exec playwright install chromium --with-deps
+
+      # `build-storybook` là dependency của task này trong turbo.json, nên bản
+      # tĩnh được dựng trước rồi test-runner mới bắn vào nó. Chạy trên bản build
+      # chứ không phải dev server: đó đúng là thứ sẽ được deploy, và nó không
+      # phải biên dịch lại từng story lúc test.
+      - name: Chạy stories + kiểm tra a11y
+        run: pnpm turbo run test-storybook:ci --filter=@noalhub/storybook
+
+      # Bản tĩnh vẫn giữ lại kể cả khi test đỏ — mở nó ra xem thường nhanh hơn
+      # đọc log axe.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: storybook-static
+          path: apps/storybook/storybook-static
+          retention-days: 7

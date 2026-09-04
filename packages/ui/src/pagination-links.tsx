@@ -84,7 +84,12 @@ function PageLink({
   children: React.ReactNode;
 }) {
   if (disabled) {
-    return <span className="opacity-30">{children}</span>;
+    // `text-muted-foreground` rather than fading the normal color with
+    // `opacity-30`: at 30% the label landed on #b3b3b3, 2.1:1 against the
+    // surface — unreadable, and axe fails the story over it. The muted token is
+    // what "present but inactive" is supposed to look like here, and it holds
+    // 5.8:1.
+    return <span className="text-muted-foreground">{children}</span>;
   }
 
   return (

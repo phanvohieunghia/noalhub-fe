@@ -234,9 +234,15 @@ Primary vẫn là một **token**: đổi ý thì sửa hai dòng trong `theme.c
 brand giờ là teal, một `success` teal nữa thì "thành công" và "màu thương hiệu" nhìn như nhau:
 
 ```css
-:root { --danger: #b42318; --success: #16803c; --warning: #b54708; }
+:root { --danger: #b42318; --success: #15703a; --warning: #a03f07; }
 .dark { --danger: #f97066; --success: #4ade80; --warning: #f79009; }
 ```
+
+Ba màu light đậm hơn mức thường thấy là **cố ý**. Chỗ một màu trạng thái bị đọc ở kích
+thước nhỏ nhất là trên Badge — 12px, weight thường, nền là chính nó pha loãng 12–15% —
+và đó mới là chỗ tỉ lệ tương phản phải đạt. `#16803c` và `#b54708` cũ chỉ được 4.27 và
+4.19 ở đó, dưới ngưỡng 4.5 của WCAG AA; bản mới được 5.0. Đổi hai giá trị này thì chạy
+lại `pnpm turbo run test-storybook:ci --filter=@noalhub/storybook` để axe xác nhận.
 
 ### 5.6 Khai báo trong Tailwind
 

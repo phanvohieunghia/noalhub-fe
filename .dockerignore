@@ -6,6 +6,8 @@ node_modules
 **/.next
 .turbo
 **/.turbo
+storybook-static
+**/storybook-static
 .git
 .gitignore
 docs

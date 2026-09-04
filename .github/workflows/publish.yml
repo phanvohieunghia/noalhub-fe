@@ -5,8 +5,8 @@ on:
     branches: [main]
     # Bỏ qua file không đi vào image — sửa README không cần build lại.
     paths-ignore:
-      - '**.md'
-      - 'docs/**'
+      - "**.md"
+      - "docs/**"
   workflow_dispatch:
 
 # `NEXT_PUBLIC_*` bị INLINE vào bundle lúc `next build`, không đọc lúc chạy — nên
@@ -26,7 +26,56 @@ env:
   NEXT_PUBLIC_APP_URL: https://noalhub.duckdns.org
 
 jobs:
+  # Không có cách nào đặt `paths` cho riêng từng job, nên việc lọc phải làm bằng
+  # một job đi trước rồi gắn `if:` cho các job sau. Không lọc thì mỗi lần sửa
+  # Storybook cũng build lại cả web lẫn admin từ đầu: cả ba Dockerfile đều có
+  # `COPY . .` trước bước build, nên một file đổi ở bất kỳ đâu cũng làm hỏng
+  # cache layer của cả ba image.
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+      admin: ${{ steps.filter.outputs.admin }}
+      storybook: ${{ steps.filter.outputs.storybook }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            # `shared` cố ý VƠ CẢ `packages/**` cho cả ba, chứ không map từng
+            # package sang từng app. Lọc quá hẹp ở đây cho ra đúng lỗi tệ nhất
+            # có thể: workflow xanh, deploy xanh, mà image vẫn là bản cũ vì job
+            # build bị skip nhầm — không có tín hiệu nào để mà nghi ngờ. Build
+            # thừa thì chỉ tốn vài phút CI.
+            shared: &shared
+              - 'packages/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+              - '.dockerignore'
+              - '.github/workflows/publish.yml'
+            web:
+              - *shared
+              - 'apps/web/**'
+            admin:
+              - *shared
+              - 'apps/admin/**'
+            storybook:
+              - *shared
+              - 'apps/storybook/**'
+
   build:
+    needs: changes
+    # `workflow_dispatch` không có diff để so, nên bấm tay = build tất. Đó cũng
+    # đúng thứ người ta cần khi phải bấm tay: dựng lại một bản sạch.
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || needs.changes.outputs.web == 'true'
+      || needs.changes.outputs.admin == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -83,8 +132,55 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.app }}
           cache-to: type=gha,mode=max,scope=${{ matrix.app }}
 
+  # Storybook tách khỏi matrix ở trên: nó không nhận build-arg `NEXT_PUBLIC_*`
+  # nào (build ra web tĩnh, không có gì để inline), và nó không phải điều kiện
+  # để deploy web/admin — job `deploy` cố tình KHÔNG `needs` job này, hỏng
+  # Storybook thì không được phép chặn bản production của hai app kia.
+  storybook:
+    needs: changes
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || needs.changes.outputs.storybook == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}-storybook
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/storybook/Dockerfile
+          target: runtime
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=storybook
+          cache-to: type=gha,mode=max,scope=storybook
+
   # CD: cả hai image build xong mới deploy. `needs` vừa xếp thứ tự, vừa hủy deploy
   # nếu bất kỳ app nào build đỏ — không bao giờ deploy nửa vời một app.
+  #
+  # Job bị SKIP cũng kéo theo `needs` skip, và ở đây đó đúng là điều mong muốn:
+  # push chỉ đụng `apps/storybook` thì `build` không chạy, không có image mới cho
+  # web/admin, nên cũng không có gì để deploy.
   deploy:
     needs: build
     runs-on: ubuntu-latest
