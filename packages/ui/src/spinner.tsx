@@ -1,4 +1,11 @@
+import { keysOf } from "./variants";
+
 const SIZES = { sm: "size-4", md: "size-5" } as const;
+
+export type SpinnerSize = keyof typeof SIZES;
+
+/** Derived from the table above — see `variants.ts`. */
+export const SPINNER_SIZES = keysOf(SIZES);
 
 /**
  * A loading spinner. `aria-hidden` by default — the loading state must be
@@ -8,7 +15,7 @@ export function Spinner({
   size = "sm",
   className = "",
 }: {
-  size?: keyof typeof SIZES;
+  size?: SpinnerSize;
   className?: string;
 }) {
   return (

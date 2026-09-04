@@ -1,0 +1,36 @@
+{
+  "name": "@noalhub/storybook",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "storybook dev -p 6006",
+    "storybook": "storybook dev -p 6006",
+    "build": "storybook build",
+    "build-storybook": "storybook build"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.4.2",
+    "@noalhub/config": "workspace:*",
+    "@noalhub/api": "workspace:*",
+    "@noalhub/i18n": "workspace:*",
+    "@noalhub/ui": "workspace:*",
+    "next": "16.2.11",
+    "next-intl": "^4.14.2",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-hook-form": "^7.83.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@storybook/addon-a11y": "^10.6.0",
+    "@storybook/addon-themes": "^10.6.0",
+    "@storybook/nextjs": "^10.6.0",
+    "@tailwindcss/postcss": "^4",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "storybook": "^10.6.0",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "webpack": "^5"
+  }
+}

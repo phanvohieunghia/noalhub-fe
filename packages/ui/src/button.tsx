@@ -3,6 +3,8 @@
 import { forwardRef } from "react";
 import { Slot } from "radix-ui";
 
+import { keysOf } from "./variants";
+
 const VARIANTS = {
   primary: "bg-primary text-primary-foreground hover:bg-primary-hover",
   outline: "border border-border hover:bg-muted",
@@ -22,16 +24,25 @@ const SIZES = {
   "icon-sm": "size-7",
 } as const;
 
+export type ButtonVariant = keyof typeof VARIANTS;
+export type ButtonSize = keyof typeof SIZES;
+export type ButtonShape = keyof typeof SHAPES;
+
+/** The lists, derived from the tables above — see `variants.ts`. */
+export const BUTTON_VARIANTS = keysOf(VARIANTS);
+export const BUTTON_SIZES = keysOf(SIZES);
+export const BUTTON_SHAPES = keysOf(SHAPES);
+
 type ButtonProps = React.ComponentPropsWithoutRef<"button"> & {
-  variant?: keyof typeof VARIANTS;
-  size?: keyof typeof SIZES;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   /**
    * Corner rounding. A prop rather than a class passed through `className`: the
    * base's `rounded-md` and an overriding `rounded-full` have the same
    * specificity, so the order in the class string does not decide the winner —
    * the corners come out square at random.
    */
-  shape?: keyof typeof SHAPES;
+  shape?: ButtonShape;
   /**
    * Render onto the child element instead of emitting a `<button>`. Needed when
    * Button acts as a Radix `Trigger` / `Close` — both sides want to be that

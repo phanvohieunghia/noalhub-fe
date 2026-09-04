@@ -11,7 +11,8 @@
       ],
       "outputs": [
         ".next/**",
-        "!.next/cache/**"
+        "!.next/cache/**",
+        "storybook-static/**"
       ],
       "env": [
         "NEXT_PUBLIC_*"
@@ -30,6 +31,18 @@
         "^typecheck"
       ]
     },
-    "check-messages": {}
+    "check-messages": {},
+    "build-storybook": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "storybook-static/**"
+      ]
+    },
+    "storybook": {
+      "cache": false,
+      "persistent": true
+    }
   }
 }

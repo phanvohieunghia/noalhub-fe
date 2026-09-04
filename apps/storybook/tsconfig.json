@@ -1,0 +1,22 @@
+{
+  "extends": "@noalhub/config/tsconfig.base.json",
+  "include": [
+    "types/**/*.d.ts",
+    ".storybook/**/*.ts",
+    ".storybook/**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "storybook-static"
+  ],
+  "compilerOptions": {
+    // Storybook loads `.storybook/main.ts` as ESM, where an extensionless
+    // relative import does not resolve — the config then loads WITHOUT
+    // `webpackFinal`, so `__THEME_TOKENS__` never gets injected and the
+    // Foundations page throws at render. The import has to spell out `.ts`,
+    // which TypeScript only permits with this flag.
+    "allowImportingTsExtensions": true
+  }
+}

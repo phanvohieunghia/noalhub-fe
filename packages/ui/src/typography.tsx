@@ -1,26 +1,13 @@
-type Variant =
-  | "h1"
-  | "h2"
-  | "h3"
-  | "h4"
-  | "h5"
-  | "h6"
-  | "title-1"
-  | "title-2"
-  | "title-3"
-  | "title-4"
-  | "body-1"
-  | "body-2"
-  | "body-3"
-  | "body-4"
-  | "caption";
+import { keysOf } from "./variants";
 
 /**
  * Three weights only. Open Sans is a variable font so 300–800 technically
  * exist, but exposing all of them means everyone picks a different number and
  * the interface stops being consistent.
  */
-type Weight = 400 | 500 | 600;
+export const TYPOGRAPHY_WEIGHTS = [400, 500, 600] as const;
+
+export type Weight = (typeof TYPOGRAPHY_WEIGHTS)[number];
 
 /**
  * ⚠️ This must be a lookup object with class names written out IN FULL.
@@ -31,7 +18,7 @@ type Weight = 400 | 500 | 600;
  * `caption` carries `italic` right here in the table: the slant is part of its
  * DEFINITION, not decoration applied at the call site.
  */
-const VARIANTS: Record<Variant, string> = {
+const VARIANTS = {
   h1: "text-h1",
   h2: "text-h2",
   h3: "text-h3",
@@ -47,7 +34,17 @@ const VARIANTS: Record<Variant, string> = {
   "body-3": "text-body-3",
   "body-4": "text-body-4",
   caption: "text-caption italic",
-};
+} as const;
+
+export type Variant = keyof typeof VARIANTS;
+
+/**
+ * The variants in scale order, derived from the table above — see
+ * `variants.ts`. `DEFAULT_WEIGHT` and `DEFAULT_TAG` below are typed against
+ * `Variant`, so a step added to the table stops compiling until it is given a
+ * weight and a tag as well.
+ */
+export const TYPOGRAPHY_VARIANTS = keysOf(VARIANTS);
 
 const WEIGHTS: Record<Weight, string> = {
   400: "font-normal",

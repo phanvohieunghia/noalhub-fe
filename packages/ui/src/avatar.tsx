@@ -3,16 +3,23 @@
 import { useTranslations } from "next-intl";
 import { Avatar as RadixAvatar } from "radix-ui";
 
+import { keysOf } from "./variants";
+
 const SIZES = {
   sm: "size-8 text-body-4",
   md: "size-10 text-body-3",
   lg: "size-12 text-body-2",
 } as const;
 
+export type AvatarSize = keyof typeof SIZES;
+
+/** Derived from the table above — see `variants.ts`. */
+export const AVATAR_SIZES = keysOf(SIZES);
+
 type AvatarProps = {
   name?: string | null;
   src?: string | null;
-  size?: keyof typeof SIZES;
+  size?: AvatarSize;
   className?: string;
 };
 
