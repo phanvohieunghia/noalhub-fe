@@ -50,6 +50,7 @@
   "composer": {
     "label": "Message body",
     "placeholder": "Type a message…",
+    "send": "Send",
     "placeholderOffline": "You are offline…",
     "tooLong": "Messages are limited to {max} characters (currently {length})."
   },

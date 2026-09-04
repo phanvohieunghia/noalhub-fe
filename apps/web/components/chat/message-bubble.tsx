@@ -3,6 +3,7 @@
 import { useMessage } from "@noalhub/i18n/use-message";
 import { useTranslations } from "next-intl";
 
+import { Button } from "@noalhub/ui/button";
 import { Spinner } from "@noalhub/ui/spinner";
 import { MessageBody } from "./message-body";
 import { ReadReceipt } from "./read-receipt";
@@ -54,13 +55,9 @@ export function MessageBubble({
           </span>
           {/* A resend uses the SAME `id` — the backend is idempotent on id, so a
               retry never creates a second message. */}
-          <button
-            type="button"
-            onClick={() => onRetry(message)}
-            className="text-[11px] font-medium underline underline-offset-2"
-          >
+          <Button variant="link" size="inline" onClick={() => onRetry(message)}>
             {t("resend")}
-          </button>
+          </Button>
         </div>
       ) : null}
     </div>

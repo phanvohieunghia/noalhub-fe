@@ -5,6 +5,13 @@ import { readThemeTokens } from "./theme-tokens.ts";
 
 const config: StorybookConfig = {
   stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
+  /**
+   * Serves `public/` at the root, which is also how Storybook picks up our
+   * favicon: the `favicon` preset looks for a `favicon.svg` at the root of a
+   * static dir before falling back to its own. `public/favicon.svg` is a copy of
+   * the apps' `app/icon.svg` — the mark with fixed brand colors.
+   */
+  staticDirs: ["../public"],
   addons: ["@storybook/addon-a11y", "@storybook/addon-themes"],
   framework: {
     name: "@storybook/nextjs",

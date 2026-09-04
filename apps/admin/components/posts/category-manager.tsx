@@ -39,7 +39,7 @@ import { slugify } from "@noalhub/core/blog/slugify";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
-import { FormError } from "@noalhub/ui/form-error";
+import { ToastError } from "@noalhub/ui/toast";
 import { Input } from "@noalhub/ui/input";
 import { Skeleton } from "@noalhub/ui/skeleton";
 import {
@@ -251,9 +251,10 @@ function CategoryDialog({
 
         <div className="flex flex-col gap-1.5">
           <Input label={t("columns.slug")} {...register("slug")} error={m(errors.slug?.message)} />
-          <button
-            type="button"
-            className="w-fit text-body-4 underline underline-offset-2 opacity-70 hover:opacity-100"
+          <Button
+            variant="link"
+            size="inline"
+            className="w-fit"
             onClick={() =>
               // `getValues` rather than `useWatch`: read once on click; the
               // component need not re-render as the Name field changes.
@@ -261,7 +262,7 @@ function CategoryDialog({
             }
           >
             {t("slugFromName")}
-          </button>
+          </Button>
         </div>
 
         {/*
@@ -302,7 +303,7 @@ function CategoryDialog({
           error={m(errors.order?.message)}
         />
 
-        <FormError message={m(formError)} />
+        <ToastError message={m(formError)} />
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
@@ -343,7 +344,7 @@ function DeleteCategoryDialog({
           {t("deleteBody")}
         </Typography>
 
-        <FormError message={m(error)} />
+        <ToastError message={m(error)} />
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
@@ -407,16 +408,17 @@ function CategoryRow({
       }`}
     >
       <TableCell className="w-8">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon-sm"
           ref={setActivatorNodeRef}
           {...attributes}
           {...listeners}
           aria-label={t("dragRow", { name: category.name })}
-          className="cursor-grab rounded px-1 text-body-2 leading-none opacity-40 hover:opacity-80 focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:outline-none active:cursor-grabbing dark:focus-visible:ring-white/40"
+          className="cursor-grab text-body-2 leading-none active:cursor-grabbing"
         >
           ⠿
-        </button>
+        </Button>
       </TableCell>
       <TableCell className="font-medium">{category.name}</TableCell>
       <TableCell className="opacity-70">/{category.slug}</TableCell>

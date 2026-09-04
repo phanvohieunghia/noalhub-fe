@@ -5,6 +5,7 @@ import {
   BUTTON_SIZES,
   BUTTON_VARIANTS,
 } from "@noalhub/ui/button";
+import { Icon, ICONS } from "@noalhub/ui/icons";
 
 const meta: Meta<typeof Button> = {
   title: "UI/Elements/Button",
@@ -63,7 +64,7 @@ export const AllVariants: Story = {
           <code className="w-20 text-body-4 text-muted-foreground">{variant}</code>
           {BUTTON_SIZES.map((size) => (
             <Button key={size} variant={variant} size={size} aria-label={size}>
-              {size.startsWith("icon") ? "★" : size}
+              {size.startsWith("icon") ? <Icon icon={ICONS.add} /> : size}
             </Button>
           ))}
         </div>
@@ -94,12 +95,17 @@ export const Disabled: Story = {
   },
 };
 
+/** Nút chỉ có icon: luôn kèm `aria-label` vì không còn chữ nào để đọc. */
 export const IconButton: Story = {
   args: {
     variant: "outline",
     size: "icon",
     shape: "circle",
-    children: "🔍",
-    "aria-label": "Search",
+    "aria-label": "Tìm kiếm",
   },
+  render: (args) => (
+    <Button {...args}>
+      <Icon icon={ICONS.search} />
+    </Button>
+  ),
 };

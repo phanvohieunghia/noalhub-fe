@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef } from "react";
 
-import { FormError } from "@noalhub/ui/form-error";
+import { ToastError } from "@noalhub/ui/toast";
 import { useOAuthExchange } from "@noalhub/api/auth";
 import { takeOAuthNext } from "@noalhub/core/auth/redirect";
 import { ApiError } from "@noalhub/api/errors";
@@ -66,7 +66,7 @@ export function OAuthCallback() {
   if (error) {
     return (
       <div className="flex w-full max-w-sm flex-col gap-4">
-        <FormError message={m(error)} />
+        <ToastError message={m(error)} />
         <Link href="/login" className="text-body-3 underline underline-offset-4">
           {t("backToLogin")}
         </Link>

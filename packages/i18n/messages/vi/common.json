@@ -79,5 +79,47 @@
   "avatar": {
     "fallback": "Người dùng"
   },
-  "tocHeading": "Trong bài này"
+  "tocHeading": "Trong bài này",
+  "editor": {
+    "bold": "Đậm",
+    "italic": "Nghiêng",
+    "strike": "Gạch ngang",
+    "code": "Mã inline",
+    "h2": "Tiêu đề mức 2",
+    "h3": "Tiêu đề mức 3",
+    "bulletList": "Danh sách chấm",
+    "orderedList": "Danh sách số",
+    "quote": "Trích dẫn",
+    "codeBlock": "Khối mã",
+    "hr": "Đường kẻ ngang",
+    "link": "Chèn liên kết",
+    "image": "Chèn ảnh",
+    "codeLanguage": "Ngôn ngữ của khối mã",
+    "uploadFailed": "Không tải được ảnh lên.",
+    "linkDialogTitle": "Liên kết",
+    "linkInvalid": "Chỉ nhận http, https, mailto hoặc đường dẫn nội bộ bắt đầu bằng /.",
+    "imageDialogTitle": "Chèn ảnh",
+    "imagePick": "Chọn ảnh từ máy",
+    "imageUrl": "URL ảnh",
+    "imageUrlPlaceholder": "Tải lên ở trên, hoặc dán https://images.unsplash.com/…",
+    "imageAlt": "Mô tả ảnh (alt)",
+    "imageAltPlaceholder": "Để trống nếu ảnh chỉ để trang trí",
+    "imageHostInvalid": "Ảnh phải dùng https và nằm trong danh sách host được phép. Host ngoài danh sách sẽ chết ở production vì next/image chặn.",
+    "imageMeasureFailed": "Không đo được kích thước ảnh (ảnh không tải được hoặc bị chặn CORS). Vẫn chèn được, nhưng ảnh sẽ hiển thị trong khung 16:9 thay vì kích thước thật.",
+    "measuring": "Đang đo ảnh…",
+    "insert": "Chèn",
+    "codeLanguageNone": "Không rõ",
+    "apply": "Áp dụng",
+    "close": "Đóng",
+    "linkHint": "Để trống rồi bấm Áp dụng để gỡ liên kết. Link ra ngoài tự động mang <code>rel=\"nofollow noopener\"</code> khi hiển thị.",
+    "linkUrl": "URL",
+    "uploading": "Đang tải ảnh lên… {percent}%"
+  },
+  "upload": {
+    "label": "Tải ảnh lên",
+    "uploading": "Đang tải lên… {percent}%",
+    "contentMismatch": "Nội dung file không khớp với định dạng của nó. File có thể đã hỏng, hoặc chỉ được đổi đuôi.",
+    "notUploaded": "Máy chủ không tìm thấy file vừa tải lên. Thử lại từ đầu.",
+    "failed": "Không tải được ảnh lên."
+  }
 }

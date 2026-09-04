@@ -79,5 +79,47 @@
   "avatar": {
     "fallback": "User"
   },
-  "tocHeading": "In this post"
+  "tocHeading": "In this post",
+  "editor": {
+    "bold": "Bold",
+    "italic": "Italic",
+    "strike": "Strikethrough",
+    "code": "Inline code",
+    "h2": "Heading level 2",
+    "h3": "Heading level 3",
+    "bulletList": "Bulleted list",
+    "orderedList": "Numbered list",
+    "quote": "Quote",
+    "codeBlock": "Code block",
+    "hr": "Horizontal rule",
+    "link": "Insert a link",
+    "image": "Insert an image",
+    "codeLanguage": "Code block language",
+    "uploadFailed": "Could not upload the image.",
+    "linkDialogTitle": "Link",
+    "linkInvalid": "Only http, https, mailto, or an internal path starting with / is accepted.",
+    "imageDialogTitle": "Insert an image",
+    "imagePick": "Pick an image from your computer",
+    "imageUrl": "Image URL",
+    "imageUrlPlaceholder": "Upload above, or paste https://images.unsplash.com/…",
+    "imageAlt": "Image description (alt)",
+    "imageAltPlaceholder": "Leave empty if the image is decorative",
+    "imageHostInvalid": "Images must use https and come from an allowed host. Hosts outside the list break in production because next/image blocks them.",
+    "imageMeasureFailed": "Could not measure the image (it failed to load, or CORS blocked it). You can still insert it, but it renders in a 16:9 frame instead of its real size.",
+    "measuring": "Measuring…",
+    "insert": "Insert",
+    "codeLanguageNone": "Unknown",
+    "apply": "Apply",
+    "close": "Close",
+    "linkHint": "Clear the field and press Apply to remove the link. Outbound links automatically carry <code>rel=\"nofollow noopener\"</code> when rendered.",
+    "linkUrl": "URL",
+    "uploading": "Uploading the image… {percent}%"
+  },
+  "upload": {
+    "label": "Upload an image",
+    "uploading": "Uploading… {percent}%",
+    "contentMismatch": "The file's content does not match its format. It may be corrupt, or just renamed.",
+    "notUploaded": "The server could not find the file you just uploaded. Start over.",
+    "failed": "Could not upload the image."
+  }
 }

@@ -8,7 +8,8 @@ import type { Message } from "@noalhub/api/message";
 import { useMessage } from "@noalhub/i18n/use-message";
 import { useTranslations } from "next-intl";
 import { slugify } from "@noalhub/core/blog/slugify";
-import { FormError } from "@noalhub/ui/form-error";
+import { ToastError } from "@noalhub/ui/toast";
+import { Button } from "@noalhub/ui/button";
 import { Input } from "@noalhub/ui/input";
 
 const MAX_SUGGESTIONS = 8;
@@ -91,15 +92,16 @@ export function TagMultiselect({
         <ul className="flex flex-wrap gap-1.5">
           {value.map((slug) => (
             <li key={slug}>
-              <button
-                type="button"
+              <Button
+                variant="soft"
+                size="xs"
+                shape="circle"
                 onClick={() => onChange(value.filter((item) => item !== slug))}
-                className="flex items-center gap-1.5 rounded-full bg-black/8 px-2.5 py-1 text-body-4 transition-opacity hover:opacity-70 dark:bg-white/12"
               >
                 <span>#{bySlug.get(slug)?.name ?? slug}</span>
                 <span aria-hidden>×</span>
                 <span className="sr-only">{t("tags.remove")}</span>
-              </button>
+              </Button>
             </li>
           ))}
         </ul>
@@ -108,31 +110,33 @@ export function TagMultiselect({
       {search.trim() ? (
         <div className="flex flex-wrap gap-1.5">
           {suggestions.map((tag) => (
-            <button
+            <Button
               key={tag.slug}
-              type="button"
+              variant="outline"
+              size="xs"
+              shape="circle"
               onClick={() => add(tag.slug)}
-              className="rounded-full border border-black/15 px-2.5 py-1 text-body-4 transition-colors hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
             >
               #{tag.name}
-            </button>
+            </Button>
           ))}
           {canCreate ? (
-            <button
-              type="button"
+            <Button
+              variant="dashed"
+              size="xs"
+              shape="circle"
               onClick={() => void create()}
               disabled={createTag.isPending}
-              className="rounded-full border border-dashed border-black/25 px-2.5 py-1 text-body-4 disabled:opacity-50 dark:border-white/30"
             >
               {createTag.isPending
                 ? t("tags.creating")
                 : t("tags.create", { name: search.trim(), slug: slugify(search) })}
-            </button>
+            </Button>
           ) : null}
         </div>
       ) : null}
 
-      <FormError message={m(error)} />
+      <ToastError message={m(error)} />
     </div>
   );
 }

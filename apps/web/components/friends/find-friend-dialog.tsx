@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import { Avatar } from "@noalhub/ui/avatar";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
-import { FormError, FormSuccess } from "@noalhub/ui/form-error";
+import { ToastError, ToastSuccess } from "@noalhub/ui/toast";
 import { Input } from "@noalhub/ui/input";
 import { Spinner } from "@noalhub/ui/spinner";
 import { useAuthStore } from "@noalhub/api/auth";
@@ -89,9 +89,9 @@ export function FindFriendDialog({ open, onClose }: { open: boolean; onClose: ()
           {t("search.submitting")}
         </Typography>
       ) : notFound ? (
-        <FormError message={t("search.notFound", { username: submitted ?? "" })} />
+        <ToastError message={t("search.notFound", { username: submitted ?? "" })} />
       ) : error ? (
-        <FormError message={t("search.failed")} />
+        <ToastError message={t("search.failed")} />
       ) : data ? (
         <SearchResult user={data} state={state} />
       ) : null}
@@ -147,11 +147,11 @@ function SearchResult({ user, state }: { user: PublicProfile; state: FriendState
       </div>
 
       {sendRequest.isError ? (
-        <FormError message={m(sendErrorText(sendRequest.error))} />
+        <ToastError message={m(sendErrorText(sendRequest.error))} />
       ) : sendRequest.isSuccess ? (
         // When both sides send a request the backend connects them immediately —
         // read the response's `state` rather than assuming "pending".
-        <FormSuccess
+        <ToastSuccess
           message={
             sendRequest.data.state === "friends" ? t("request.nowFriends") : t("request.sent")
           }

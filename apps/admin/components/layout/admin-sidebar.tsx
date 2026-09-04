@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useMemo, useSyncExternalStore } from "react";
 
 import { FLAT_NAV_ITEMS, NAV_ITEMS, type NavItem } from "./nav-items";
+import { Button } from "@noalhub/ui/button";
 import { Icon, ICONS } from "@noalhub/ui/icons";
 import { Logo } from "@noalhub/ui/logo";
 import { Typography } from "@noalhub/ui/typography";
@@ -195,8 +196,9 @@ function NavEntry({
          * row that both navigates and expands does neither predictably.
          */}
         <div className="min-w-0 flex-1">{link}</div>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={() => onToggle(item.href)}
           aria-expanded={isOpen}
           aria-controls={groupId}
@@ -204,13 +206,13 @@ function NavEntry({
             section: ta(item.labelKey),
           })}
           disabled={holdsCurrentPage}
-          className="rounded-md p-1 opacity-60 transition-colors hover:bg-black/5 hover:opacity-100 disabled:pointer-events-none disabled:opacity-25 dark:hover:bg-white/8"
+          className="shrink-0 disabled:pointer-events-none"
         >
           <Icon
             icon={isOpen ? ICONS.chevronDown : ICONS.chevronRight}
             className="size-4"
           />
-        </button>
+        </Button>
       </div>
 
       {/*

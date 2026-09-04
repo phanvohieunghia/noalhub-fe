@@ -16,7 +16,7 @@ import { useDateFormat } from "@noalhub/i18n/use-date-format";
 import { useMessage } from "@noalhub/i18n/use-message";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
-import { FormError } from "@noalhub/ui/form-error";
+import { ToastError } from "@noalhub/ui/toast";
 import { Input } from "@noalhub/ui/input";
 import { Pagination } from "@noalhub/ui/pagination";
 import { Skeleton } from "@noalhub/ui/skeleton";
@@ -295,7 +295,7 @@ function EditSlugDialog({
             onChange={(event) => setConfirmValue(event.target.value)}
           />
 
-          <FormError message={m(error)} />
+          <ToastError message={m(error)} />
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setPhase("edit")}>
@@ -352,7 +352,7 @@ function DeleteSlugDialog({
           {t("delete.postStaysReachable", { url: `/blogs/${row.post.slug}` })}
         </Typography>
 
-        <FormError message={m(error)} />
+        <ToastError message={m(error)} />
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>

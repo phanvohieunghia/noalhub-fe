@@ -25,12 +25,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         ref={ref}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
-        className={`rounded-md border px-3 py-2 text-body-3 outline-none transition-colors
-          border-black/15 dark:border-white/20
-          bg-transparent
-          focus:border-foreground/60
-          disabled:opacity-50
-          aria-[invalid=true]:border-red-500
+        className={`h-10 rounded-md border px-3 text-body-3 outline-none transition-colors
+          bg-surface text-surface-foreground border-border
+          placeholder:text-muted-foreground
+          hover:border-muted-foreground
+          focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/40
+          disabled:cursor-not-allowed disabled:opacity-50
+          aria-[invalid=true]:border-danger aria-[invalid=true]:focus-visible:ring-danger/30
           ${className}`}
       />
       {error ? (
@@ -38,7 +39,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           variant="body-3"
           id={errorId}
           role="alert"
-          className="text-red-600 dark:text-red-400"
+          className="text-danger"
         >
           {error}
         </Typography>

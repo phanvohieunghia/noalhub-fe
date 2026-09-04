@@ -1,14 +1,24 @@
 "use client";
 
-import { Icon as IconifyIcon, addIcon, type IconProps } from "@iconify/react";
+import {
+  Icon as IconifyIcon,
+  addCollection,
+  addIcon,
+  type IconProps,
+} from "@iconify/react/offline";
+import { ICON_COLLECTIONS } from "./icon-data.generated";
+import { LUCIDE } from "./icon-names.generated";
 
 // The project's default icon set: lucide (stroke-based, a good fit for
-// Tailwind). Name syntax: "lucide:trash-2". Iconify fetches icon data from
-// api.iconify.design and caches it in localStorage — the first render can be
-// blank for a beat.
+// Tailwind). Name syntax: "lucide:trash-2".
 //
-// Icons that must appear immediately (above the fold, brand logos) are
-// registered offline with addIcon() below and render synchronously, no network.
+// The whole set is bundled offline via @iconify/react/offline, a build with the
+// API client stripped out: an unknown icon name renders nothing instead of
+// silently going to the network. Both generated files come from
+// `pnpm --filter @noalhub/ui gen:icons`, which reads the installed
+// @iconify-json/lucide package; re-run it after bumping that dependency.
+
+for (const collection of ICON_COLLECTIONS) addCollection(collection);
 
 export type { IconProps };
 
@@ -40,61 +50,70 @@ addIcon("brand:github", {
  * Aliases for frequently used icons — switching icon sets later is one edit here.
  * ------------------------------------------------------------------------- */
 
+/**
+ * Every lucide icon, by camelCase name — `LUCIDE.bellRing`. Reach for this when
+ * ICONS has no entry for what you need; prefer ICONS when it does, since a
+ * semantic alias survives swapping the underlying icon.
+ */
+export { LUCIDE };
+
 export const ICONS = {
   // actions
-  add: "lucide:plus",
-  edit: "lucide:pencil",
-  delete: "lucide:trash-2",
-  save: "lucide:check",
-  close: "lucide:x",
-  search: "lucide:search",
-  filter: "lucide:list-filter",
-  more: "lucide:ellipsis",
-  menu: "lucide:menu",
-  copy: "lucide:copy",
-  drag: "lucide:grip-vertical",
-
+  add: LUCIDE.plus,
+  edit: LUCIDE.pencil,
+  delete: LUCIDE.trash2,
+  save: LUCIDE.check,
+  close: LUCIDE.x,
+  search: LUCIDE.search,
+  filter: LUCIDE.listFilter,
+  more: LUCIDE.ellipsis,
+  menu: LUCIDE.menu,
+  copy: LUCIDE.copy,
+  drag: LUCIDE.gripVertical,
+  binoculars: LUCIDE.binoculars,
   // navigation
-  chevronDown: "lucide:chevron-down",
-  chevronRight: "lucide:chevron-right",
-  chevronLeft: "lucide:chevron-left",
-  arrowLeft: "lucide:arrow-left",
-  sortNone: "lucide:chevrons-up-down",
-  sortAsc: "lucide:arrow-up-narrow-wide",
-  sortDesc: "lucide:arrow-down-wide-narrow",
-  externalLink: "lucide:external-link",
+  chevronDown: LUCIDE.chevronDown,
+  chevronRight: LUCIDE.chevronRight,
+  chevronLeft: LUCIDE.chevronLeft,
+  arrowLeft: LUCIDE.arrowLeft,
+  sortNone: LUCIDE.chevronsUpDown,
+  sortAsc: LUCIDE.arrowUpNarrowWide,
+  sortDesc: LUCIDE.arrowDownWideNarrow,
+  externalLink: LUCIDE.externalLink,
 
   // status
-  loading: "lucide:loader-circle",
-  success: "lucide:circle-check",
-  error: "lucide:circle-alert",
-  info: "lucide:info",
-  warning: "lucide:triangle-alert",
+  loading: LUCIDE.loaderCircle,
+  success: LUCIDE.circleCheck,
+  error: LUCIDE.circleAlert,
+  info: LUCIDE.info,
+  warning: LUCIDE.triangleAlert,
 
   // domain
-  user: "lucide:user",
-  users: "lucide:users",
-  post: "lucide:file-text",
-  category: "lucide:folder",
-  tag: "lucide:tag",
-  rss: "lucide:rss",
-  map: "lucide:map",
-  image: "lucide:image",
-  eye: "lucide:eye",
-  eyeOff: "lucide:eye-off",
-  calendar: "lucide:calendar",
-  chat: "lucide:message-circle",
-  logout: "lucide:log-out",
-  settings: "lucide:settings",
-  sun: "lucide:sun",
-  moon: "lucide:moon",
-  monitor: "lucide:monitor",
-  palette: "lucide:palette",
-  check: "lucide:check",
+  user: LUCIDE.user,
+  users: LUCIDE.users,
+  post: LUCIDE.fileText,
+  category: LUCIDE.folder,
+  tag: LUCIDE.tag,
+  rss: LUCIDE.rss,
+  map: LUCIDE.map,
+  image: LUCIDE.image,
+  eye: LUCIDE.eye,
+  eyeOff: LUCIDE.eyeOff,
+  calendar: LUCIDE.calendar,
+  chat: LUCIDE.messageCircle,
+  logout: LUCIDE.logOut,
+  settings: LUCIDE.settings,
+  sun: LUCIDE.sun,
+  moon: LUCIDE.moon,
+  monitor: LUCIDE.monitor,
+  palette: LUCIDE.palette,
+  check: LUCIDE.check,
 
   // brands (offline)
   google: "brand:google",
   github: "brand:github",
 } as const;
 
-export type IconName = (typeof ICONS)[keyof typeof ICONS];
+export type IconName =
+  | (typeof ICONS)[keyof typeof ICONS]
+  | (typeof LUCIDE)[keyof typeof LUCIDE];

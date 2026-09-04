@@ -5,7 +5,7 @@ import { useState } from "react";
 import { z } from "zod";
 
 import { Button } from "@noalhub/ui/button";
-import { FormError, FormSuccess } from "@noalhub/ui/form-error";
+import { ToastError, ToastSuccess } from "@noalhub/ui/toast";
 import { Input } from "@noalhub/ui/input";
 import { Typography } from "@noalhub/ui/typography";
 import { useMessage } from "@noalhub/i18n/use-message";
@@ -53,8 +53,8 @@ function DemoForm({ serverError }: { serverError?: string }) {
         Đăng ký
       </Typography>
 
-      <FormError message={serverError} />
-      {submitted ? <FormSuccess message="Gửi biểu mẫu thành công!" /> : null}
+      <ToastError message={serverError} />
+      {submitted ? <ToastSuccess message="Gửi biểu mẫu thành công!" /> : null}
 
       <Input
         label="Email"

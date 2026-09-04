@@ -1,6 +1,8 @@
 import { Link } from "@noalhub/i18n/navigation";
 import { useTranslations } from "next-intl";
 
+import { Icon, ICONS } from "./icons";
+
 /**
  * Pagination made of **real `<a href>`s**, for public pages.
  *
@@ -55,13 +57,17 @@ export function PaginationLinks({
         rel="prev"
         disabled={page <= 1}
       >
-        ← {t("previous")}
+        <Icon icon={ICONS.chevronLeft} />
+        {t("previous")}
       </PageLink>
 
-      <span className="tabular-nums opacity-60">{t("current", { page, total: pageCount })}</span>
+      <span className="text-muted-foreground tabular-nums">
+        {t("current", { page, total: pageCount })}
+      </span>
 
       <PageLink href={hrefFor(page + 1)} rel="next" disabled={page >= pageCount}>
-        {t("next")} →
+        {t("next")}
+        <Icon icon={ICONS.chevronRight} />
       </PageLink>
     </nav>
   );
@@ -89,14 +95,18 @@ function PageLink({
     // surface — unreadable, and axe fails the story over it. The muted token is
     // what "present but inactive" is supposed to look like here, and it holds
     // 5.8:1.
-    return <span className="text-muted-foreground">{children}</span>;
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-muted-foreground">
+        {children}
+      </span>
+    );
   }
 
   return (
     <Link
       href={href}
       rel={rel}
-      className="rounded-md border border-border px-3 py-1.5 transition-colors hover:bg-muted"
+      className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 transition-colors hover:bg-muted"
     >
       {children}
     </Link>

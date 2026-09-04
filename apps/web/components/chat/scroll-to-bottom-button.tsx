@@ -2,6 +2,8 @@
 
 import { useTranslations } from "next-intl";
 
+import { Button } from "@noalhub/ui/button";
+
 export function ScrollToBottomButton({
   newCount,
   onClick,
@@ -12,13 +14,15 @@ export function ScrollToBottomButton({
   const t = useTranslations("web.chat.messages");
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="outline"
+      size="xs"
+      shape="circle"
       onClick={onClick}
-      className="absolute right-4 bottom-4 z-10 flex items-center gap-1.5 rounded-full border border-black/10 bg-background px-3 py-1.5 text-body-4 font-medium shadow-lg dark:border-white/15"
+      className="absolute right-4 bottom-4 z-10 gap-1.5 bg-background shadow-lg"
     >
       <span aria-hidden>↓</span>
       {newCount > 0 ? t("newMessages", { count: newCount }) : t("toBottom")}
-    </button>
+    </Button>
   );
 }

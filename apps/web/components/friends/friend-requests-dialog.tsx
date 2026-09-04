@@ -3,7 +3,7 @@
 import { Avatar } from "@noalhub/ui/avatar";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
-import { FormError } from "@noalhub/ui/form-error";
+import { ToastError } from "@noalhub/ui/toast";
 import { Spinner } from "@noalhub/ui/spinner";
 import { useDateFormat } from "@noalhub/i18n/use-date-format";
 import { useTranslations } from "next-intl";
@@ -42,7 +42,7 @@ export function FriendRequestsDialog({ open, onClose }: { open: boolean; onClose
           {t("loading")}
         </Typography>
       ) : error ? (
-        <FormError message={t("loadFailed")} />
+        <ToastError message={t("loadFailed")} />
       ) : empty ? (
         <Typography variant="body-3" className="py-4 opacity-70">
           {t("empty")}

@@ -9,6 +9,17 @@ const VARIANTS = {
   primary: "bg-primary text-primary-foreground hover:bg-primary-hover",
   outline: "border border-border hover:bg-muted",
   ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",
+  /** A filled but quiet button — used for chips and other in-content controls. */
+  soft: "bg-muted text-foreground hover:bg-muted/60",
+  /** "Add something that does not exist yet": the dashed border is the affordance. */
+  dashed: "border border-dashed border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+  /**
+   * Reads as a link, behaves as a button. For in-form shortcuts ("fill the slug
+   * from the title") that navigate nowhere — a real `<a>` there would lie to
+   * the screen reader and to middle-click. Pair it with `size="inline"`; a box
+   * size would put a 40px-tall link in the middle of a paragraph.
+   */
+  link: "text-muted-foreground underline underline-offset-2 hover:text-foreground",
 } as const;
 
 const SHAPES = {
@@ -16,12 +27,20 @@ const SHAPES = {
   circle: "rounded-full",
 } as const;
 
+/**
+ * Size carries the text size too. It cannot live in the base: `text-body-3`
+ * there and `text-body-4` here have equal specificity, so which one wins is
+ * decided by the stylesheet order, not by the order in the class string.
+ */
 const SIZES = {
-  md: "h-10 px-4",
-  sm: "h-8 px-3",
+  md: "h-10 px-4 text-body-3",
+  sm: "h-8 px-3 text-body-3",
+  xs: "h-7 px-2.5 text-body-4",
   /** Square, icon only — always pair it with an `aria-label`. */
   icon: "size-10",
   "icon-sm": "size-7",
+  /** No box at all: for `variant="link"` sitting inside a line of text. */
+  inline: "h-auto p-0 text-body-4",
 } as const;
 
 export type ButtonVariant = keyof typeof VARIANTS;
@@ -64,7 +83,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   ref,
 ) {
   const base =
-    "inline-flex items-center justify-center gap-2 text-body-3 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed";
+    "inline-flex items-center justify-center gap-2 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed";
 
   const classes = `${base} ${VARIANTS[variant]} ${SIZES[size]} ${SHAPES[shape]} ${className}`;
 

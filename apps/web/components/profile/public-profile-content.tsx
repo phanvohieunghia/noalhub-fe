@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 import { Avatar } from "@noalhub/ui/avatar";
 import { Button } from "@noalhub/ui/button";
-import { FormError } from "@noalhub/ui/form-error";
+import { ToastError } from "@noalhub/ui/toast";
 import { Spinner } from "@noalhub/ui/spinner";
 import { useDateFormat } from "@noalhub/i18n/use-date-format";
 import { useMessage } from "@noalhub/i18n/use-message";
@@ -47,7 +47,7 @@ export function PublicProfileContent({ username }: { username: string }) {
     const notFound = error instanceof ApiError && error.code === ERROR_CODES.userNotFound;
     return (
       <main className="mx-auto w-full max-w-3xl p-8">
-        <FormError
+        <ToastError
           message={notFound ? t("public.notFound", { username }) : t("loadFailed")}
         />
       </main>

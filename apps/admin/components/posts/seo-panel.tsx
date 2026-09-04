@@ -10,10 +10,11 @@ import Link from "next/link";
 import { useMessage } from "@noalhub/i18n/use-message";
 import { useTranslations } from "next-intl";
 import { appUrl, SEO_LIMITS, truncateForSeo } from "@noalhub/core/blog/seo";
+import { Button } from "@noalhub/ui/button";
 import { Input } from "@noalhub/ui/input";
 import { Textarea } from "@noalhub/ui/textarea";
 
-import { ImageUploadButton } from "../media/image-upload-button";
+import { ImageUploadButton } from "@noalhub/ui/media/image-upload-button";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
@@ -70,9 +71,10 @@ export function SeoPanel({
 
       <div className="flex flex-col gap-1.5">
         <Input label={t("slugLabel")} {...register("slug")} error={m(formState.errors.slug?.message)} />
-        <button
-          type="button"
-          className="w-fit text-body-4 underline underline-offset-2 opacity-70 hover:opacity-100"
+        <Button
+          variant="link"
+          size="inline"
+          className="w-fit"
           onClick={() =>
             setValue("slug", slugify(watch("title")), {
               shouldValidate: true,
@@ -81,7 +83,7 @@ export function SeoPanel({
           }
         >
           {t("slugFromTitle")}
-        </button>
+        </Button>
 
         {/*
           Changing the slug of an ALREADY published post: warn right here, do not

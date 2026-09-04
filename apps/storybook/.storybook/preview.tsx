@@ -33,37 +33,53 @@ import enWebProfile from "../../../packages/i18n/messages/en/web.profile.json";
 
 import "./tailwind.css";
 
-/** Every namespace of both locales, so any story can pick either language. */
+/**
+ * Every namespace of both locales, so any story can pick either language.
+ *
+ * The dot in `web.auth` is a PATH, not a key: next-intl refuses a literal key
+ * containing "." (`INVALID_KEY`), and the apps never hand it one — `assign()`
+ * in `packages/i18n/src/messages.ts` nests each namespace before it reaches the
+ * provider. Storybook has to nest it too, or every story that reads a message
+ * throws at render.
+ */
 const messages = {
   vi: {
-  "admin.login": viAdminLogin,
-  "admin.overview": viAdminOverview,
-  "admin.posts": viAdminPosts,
-  "admin.users": viAdminUsers,
-  "common": viCommon,
-  "nav": viNav,
-  "validation": viValidation,
-  "web.auth": viWebAuth,
-  "web.blog": viWebBlog,
-  "web.chat": viWebChat,
-  "web.dashboard": viWebDashboard,
-  "web.friends": viWebFriends,
-  "web.profile": viWebProfile,
+    common: viCommon,
+    nav: viNav,
+    validation: viValidation,
+    admin: {
+      login: viAdminLogin,
+      overview: viAdminOverview,
+      posts: viAdminPosts,
+      users: viAdminUsers,
+    },
+    web: {
+      auth: viWebAuth,
+      blog: viWebBlog,
+      chat: viWebChat,
+      dashboard: viWebDashboard,
+      friends: viWebFriends,
+      profile: viWebProfile,
+    },
   },
   en: {
-  "admin.login": enAdminLogin,
-  "admin.overview": enAdminOverview,
-  "admin.posts": enAdminPosts,
-  "admin.users": enAdminUsers,
-  "common": enCommon,
-  "nav": enNav,
-  "validation": enValidation,
-  "web.auth": enWebAuth,
-  "web.blog": enWebBlog,
-  "web.chat": enWebChat,
-  "web.dashboard": enWebDashboard,
-  "web.friends": enWebFriends,
-  "web.profile": enWebProfile,
+    common: enCommon,
+    nav: enNav,
+    validation: enValidation,
+    admin: {
+      login: enAdminLogin,
+      overview: enAdminOverview,
+      posts: enAdminPosts,
+      users: enAdminUsers,
+    },
+    web: {
+      auth: enWebAuth,
+      blog: enWebBlog,
+      chat: enWebChat,
+      dashboard: enWebDashboard,
+      friends: enWebFriends,
+      profile: enWebProfile,
+    },
   },
 } as const;
 

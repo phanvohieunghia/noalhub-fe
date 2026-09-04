@@ -94,7 +94,11 @@ function Block({
 
     case "codeBlock":
       return (
-        <pre>
+        // `tabIndex` because the block scrolls sideways (`post-content.css`):
+        // a scrollable region a keyboard cannot reach hides the end of every
+        // long line from anyone not using a mouse (axe
+        // `scrollable-region-focusable`).
+        <pre tabIndex={0}>
           <code
             className={node.attrs.language ? `language-${node.attrs.language}` : undefined}
           >

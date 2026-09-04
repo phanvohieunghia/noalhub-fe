@@ -16,13 +16,20 @@ import { MEDIA_IMAGE_MIMES, useUploadMedia, type MediaAsset } from "@noalhub/api
 import { messageOf, type Message } from "@noalhub/api/message";
 import { useMessage } from "@noalhub/i18n/use-message";
 import { useTranslations } from "next-intl";
-import { Button } from "@noalhub/ui/button";
-import { Dialog } from "@noalhub/ui/dialog";
-import { FormError } from "@noalhub/ui/form-error";
-import { Input } from "@noalhub/ui/input";
+import { Button } from "../button";
+import { Dialog } from "../dialog";
+import { Toast, ToastError } from "../toast";
+import { Icon, ICONS, LUCIDE, type IconName } from "../icons";
+import { Input } from "../input";
+import { Tooltip } from "../tooltip";
 
 import { ImageUploadButton } from "../media/image-upload-button";
-import { Typography } from "@noalhub/ui/typography";
+import { Typography } from "../typography";
+
+// The editor writes into a `.blog-content` element, so it needs the very same
+// stylesheet the renderer uses — otherwise what is typed and what is published
+// look different.
+import "./post-content.css";
 
 /**
  * The `image` node carries `width`/`height` **from day one**.
@@ -63,6 +70,7 @@ export function TiptapEditor({
   value: BlogDoc;
   onChange: (doc: BlogDoc) => void;
 }) {
+  const t = useTranslations("common.editor");
   const [linkOpen, setLinkOpen] = useState(false);
   const [imageOpen, setImageOpen] = useState(false);
   const m = useMessage();
@@ -185,11 +193,14 @@ export function TiptapEditor({
 
       {dropUpload.isPending ? (
         <Typography variant="body-4" role="status" className="opacity-70">
-          Đang tải ảnh lên…{" "}
-          {dropUpload.progress ? `${Math.round(dropUpload.progress.ratio * 100)}%` : ""}
+          {t("uploading", {
+            percent: dropUpload.progress
+              ? Math.round(dropUpload.progress.ratio * 100)
+              : 0,
+          })}
         </Typography>
       ) : null}
-      <FormError message={m(dropError)} />
+      <ToastError message={m(dropError)} />
 
       {linkOpen ? <LinkDialog editor={editor} onClose={() => setLinkOpen(false)} /> : null}
       {imageOpen ? <ImageDialog editor={editor} onClose={() => setImageOpen(false)} /> : null}
@@ -206,7 +217,7 @@ function Toolbar({
   onLink: () => void;
   onImage: () => void;
 }) {
-  const t = useTranslations("admin.posts.editorToolbar");
+  const t = useTranslations("common.editor");
   const inCodeBlock = editor.isActive("codeBlock");
 
   return (
@@ -215,30 +226,26 @@ function Toolbar({
         label={t("bold")}
         active={editor.isActive("bold")}
         onClick={() => editor.chain().focus().toggleBold().run()}
-      >
-        <strong>B</strong>
-      </ToolbarButton>
+        icon={LUCIDE.bold}
+      />
       <ToolbarButton
         label={t("italic")}
         active={editor.isActive("italic")}
         onClick={() => editor.chain().focus().toggleItalic().run()}
-      >
-        <em>I</em>
-      </ToolbarButton>
+        icon={LUCIDE.italic}
+      />
       <ToolbarButton
         label={t("strike")}
         active={editor.isActive("strike")}
         onClick={() => editor.chain().focus().toggleStrike().run()}
-      >
-        <s>S</s>
-      </ToolbarButton>
+        icon={LUCIDE.strikethrough}
+      />
       <ToolbarButton
         label={t("code")}
         active={editor.isActive("code")}
         onClick={() => editor.chain().focus().toggleCode().run()}
-      >
-        <code>{"</>"}</code>
-      </ToolbarButton>
+        icon={LUCIDE.code}
+      />
 
       <Divider />
 
@@ -246,16 +253,14 @@ function Toolbar({
         label={t("h2")}
         active={editor.isActive("heading", { level: 2 })}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-      >
-        H2
-      </ToolbarButton>
+        icon={LUCIDE.heading2}
+      />
       <ToolbarButton
         label={t("h3")}
         active={editor.isActive("heading", { level: 3 })}
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-      >
-        H3
-      </ToolbarButton>
+        icon={LUCIDE.heading3}
+      />
 
       <Divider />
 
@@ -263,46 +268,47 @@ function Toolbar({
         label={t("bulletList")}
         active={editor.isActive("bulletList")}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
-      >
-        •
-      </ToolbarButton>
+        icon={LUCIDE.list}
+      />
       <ToolbarButton
         label={t("orderedList")}
         active={editor.isActive("orderedList")}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
-      >
-        1.
-      </ToolbarButton>
+        icon={LUCIDE.listOrdered}
+      />
       <ToolbarButton
         label={t("quote")}
         active={editor.isActive("blockquote")}
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
-      >
-        ❞
-      </ToolbarButton>
+        icon={LUCIDE.textQuote}
+      />
       <ToolbarButton
         label={t("codeBlock")}
         active={inCodeBlock}
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-      >
-        {"{ }"}
-      </ToolbarButton>
+        icon={LUCIDE.codeXml}
+      />
       <ToolbarButton
         label={t("hr")}
         active={false}
         onClick={() => editor.chain().focus().setHorizontalRule().run()}
-      >
-        —
-      </ToolbarButton>
+        icon={LUCIDE.minus}
+      />
 
       <Divider />
 
-      <ToolbarButton label={t("link")} active={editor.isActive("link")} onClick={onLink}>
-        {t("linkText")}
-      </ToolbarButton>
-      <ToolbarButton label={t("image")} active={false} onClick={onImage}>
-        {t("imageText")}
-      </ToolbarButton>
+      <ToolbarButton
+        label={t("link")}
+        active={editor.isActive("link")}
+        onClick={onLink}
+        icon={LUCIDE.link}
+      />
+      <ToolbarButton
+        label={t("image")}
+        active={false}
+        onClick={onImage}
+        icon={ICONS.image}
+      />
 
       {/* Shown only while the cursor is inside a code block — a select that is
           always visible but almost always inert invites misclicks. */}
@@ -337,26 +343,33 @@ function ToolbarButton({
   label,
   active,
   onClick,
-  children,
+  icon,
 }: {
   label: string;
   active: boolean;
   onClick: () => void;
-  children: React.ReactNode;
+  icon: IconName;
 }) {
   return (
-    <button
-      type="button"
-      title={label}
-      aria-label={label}
-      aria-pressed={active}
-      onClick={onClick}
-      className={`h-8 min-w-8 rounded px-2 text-body-3 transition-colors ${
-        active ? "bg-foreground text-background" : "hover:bg-black/8 dark:hover:bg-white/12"
-      }`}
-    >
-      {children}
-    </button>
+    // A Tooltip rather than `title`: these buttons are icon-only, so the label
+    // IS the affordance — it must show up fast and on keyboard focus too, which
+    // the native tooltip does neither of.
+    <Tooltip label={label}>
+      {/*
+        Pressed state as a VARIANT rather than an override: a `bg-*` passed
+        through `className` collides with the variant's own background at equal
+        specificity, so which one paints is up to the stylesheet order.
+      */}
+      <Button
+        variant={active ? "primary" : "ghost"}
+        size="icon-sm"
+        aria-label={label}
+        aria-pressed={active}
+        onClick={onClick}
+      >
+        <Icon icon={icon} className="size-4" />
+      </Button>
+    </Tooltip>
   );
 }
 
@@ -369,7 +382,7 @@ function Divider() {
  * styled, and is close to unusable on mobile.
  */
 function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }) {
-  const t = useTranslations("admin.posts.editorToolbar");
+  const t = useTranslations("common.editor");
   const tc = useTranslations("common");
   const [href, setHref] = useState((editor.getAttributes("link").href as string) ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -404,7 +417,7 @@ function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }
         <Typography variant="body-4" className="-mt-2 opacity-60">
           {t.rich("linkHint", { code: (chunks) => <code className="mx-1">{chunks}</code> })}
         </Typography>
-        <FormError message={error} />
+        <ToastError message={error} />
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
             {tc("actions.cancel")}
@@ -432,7 +445,7 @@ function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }
  * goes live.
  */
 function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void }) {
-  const t = useTranslations("admin.posts.editorToolbar");
+  const t = useTranslations("common.editor");
   const [src, setSrc] = useState("");
   const [alt, setAlt] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -506,16 +519,8 @@ function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void 
           onChange={(event) => setAlt(event.target.value)}
           placeholder={t("imageAltPlaceholder")}
         />
-        <FormError message={error} />
-        {notice ? (
-          <Typography
-            variant="body-3"
-            role="status"
-            className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300"
-          >
-            {notice}
-          </Typography>
-        ) : null}
+        <ToastError message={error} />
+        <Toast tone="warning" message={notice} />
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
             {t("close")}

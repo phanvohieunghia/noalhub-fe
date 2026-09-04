@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { Avatar } from "@noalhub/ui/avatar";
 import { Drawer } from "@noalhub/ui/drawer";
-import { FormError } from "@noalhub/ui/form-error";
+import { ToastError } from "@noalhub/ui/toast";
 import { Spinner } from "@noalhub/ui/spinner";
 import { useDateFormat } from "@noalhub/i18n/use-date-format";
 
@@ -74,7 +74,7 @@ export function MemberProfileDrawer({
           </div>
 
           {error ? (
-            <FormError
+            <ToastError
               message={
                 error instanceof ApiError && error.code === ERROR_CODES.userNotFound
                   ? t("profile.gone")

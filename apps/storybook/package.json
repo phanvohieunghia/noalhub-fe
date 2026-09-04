@@ -29,6 +29,7 @@
     "@storybook/nextjs": "^10.6.0",
     "@storybook/test-runner": "^0.24.5",
     "@tailwindcss/postcss": "^4",
+    "@tanstack/react-virtual": "^3.14.10",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "concurrently": "^10.0.5",

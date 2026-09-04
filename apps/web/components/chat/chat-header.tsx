@@ -4,6 +4,7 @@ import { Link } from "@noalhub/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { Button } from "@noalhub/ui/button";
 import { Avatar } from "@noalhub/ui/avatar";
 import { MemberProfileDrawer } from "./member-profile-drawer";
 import { PresenceDot, PresenceLabel } from "./presence-dot";
@@ -35,17 +36,18 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
 
       {/* The avatar opens the profile; a group has no single "other person", so it is just an image. */}
       {peer ? (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          shape="circle"
           onClick={() => setProfileOpen(true)}
           aria-label={t("viewProfile", { name })}
-          className="relative shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-foreground/60"
+          className="relative size-auto shrink-0 p-0 hover:bg-transparent"
         >
           <Avatar name={name} src={peer.avatarUrl} size="sm" />
           {isDirect ? (
             <PresenceDot userId={peer.userId} className="absolute -right-0.5 -bottom-0.5" />
           ) : null}
-        </button>
+        </Button>
       ) : (
         <span className="relative shrink-0">
           <Avatar name={name} src={null} size="sm" />

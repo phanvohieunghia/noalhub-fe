@@ -12,8 +12,8 @@ import {
   useUploadMedia,
   type MediaAsset,
 } from "@noalhub/api/media";
-import { Button } from "@noalhub/ui/button";
-import { FormError } from "@noalhub/ui/form-error";
+import { Button } from "../button";
+import { ToastError } from "../toast";
 
 /**
  * The "Upload image" button — wrapping `useUploadMedia`'s whole three-step flow
@@ -38,7 +38,7 @@ export function ImageUploadButton({
   label?: string;
   disabled?: boolean;
 }) {
-  const t = useTranslations("admin.posts.upload");
+  const t = useTranslations("common.upload");
   const tc = useTranslations("common.actions");
   const m = useMessage();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -103,7 +103,7 @@ export function ImageUploadButton({
         </div>
       ) : null}
 
-      <FormError message={m(error)} />
+      <ToastError message={m(error)} />
     </div>
   );
 }
@@ -125,15 +125,15 @@ function uploadErrorText(error: unknown): Message | string {
   if (error instanceof ApiError) {
     switch (error.code) {
       case ERROR_CODES.mediaContentMismatch:
-        return { key: "admin.posts.upload.contentMismatch" };
+        return { key: "common.upload.contentMismatch" };
       case ERROR_CODES.mediaNotUploaded:
-        return { key: "admin.posts.upload.notUploaded" };
+        return { key: "common.upload.notUploaded" };
       case ERROR_CODES.mediaTooLarge:
       case ERROR_CODES.mediaMimeNotAllowed:
         // The backend returns the allowlist and the real numbers in `message`.
         return error.message;
       default:
-        return error.message || { key: "admin.posts.upload.failed" };
+        return error.message || { key: "common.upload.failed" };
     }
   }
 

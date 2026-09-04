@@ -30,19 +30,20 @@ import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { PostContent } from "@noalhub/ui/blog/post-content";
 import { TableOfContents } from "@noalhub/ui/blog/table-of-contents";
 import { Button } from "@noalhub/ui/button";
-import { FormError } from "@noalhub/ui/form-error";
+import { ToastError } from "@noalhub/ui/toast";
+import { Icon, ICONS, LUCIDE, type IconName } from "@noalhub/ui/icons";
 import { Input } from "@noalhub/ui/input";
 import { Skeleton } from "@noalhub/ui/skeleton";
 import { Textarea } from "@noalhub/ui/textarea";
 
 import { AdminErrorState } from "../admin-error-state";
-import { ImageUploadButton } from "../media/image-upload-button";
+import { ImageUploadButton } from "@noalhub/ui/media/image-upload-button";
 import { CategorySelect } from "./category-select";
 import { PostStatusBadge } from "./post-status-badge";
 import { PublishDialog } from "./publish-dialog";
 import { SeoPanel } from "./seo-panel";
 import { TagMultiselect } from "./tag-multiselect";
-import { TiptapEditor } from "./tiptap-editor";
+import { TiptapEditor } from "@noalhub/ui/blog/tiptap-editor";
 import { useUnsavedChanges } from "./use-unsaved-changes";
 import { Typography } from "@noalhub/ui/typography";
 
@@ -224,6 +225,10 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
           <div className="flex flex-wrap items-center gap-2">
             <SaveState isDirty={formState.isDirty} savedAt={savedAt} />
             <Button type="submit" disabled={busy || !formState.isDirty}>
+              <Icon
+                icon={update.isPending ? ICONS.loading : ICONS.save}
+                className={update.isPending ? "size-4 animate-spin" : "size-4"}
+              />
               {update.isPending ? tc("states.saving") : tc("actions.save")}
             </Button>
             {post.status === "published" ? (
@@ -239,10 +244,12 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
                   }
                 }}
               >
+                <Icon icon={ICONS.eyeOff} className="size-4" />
                 {t("editor.unpublish")}
               </Button>
             ) : (
               <Button variant="outline" disabled={busy} onClick={() => setPublishOpen(true)}>
+                <Icon icon={ICONS.eye} className="size-4" />
                 {t("editor.publish")}
               </Button>
             )}
@@ -260,14 +267,18 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
             role="alert"
             className="text-body-3 flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300"
           >
-            <span>{t("editor.conflict")}</span>
+            <span className="flex items-center gap-2">
+              <Icon icon={ICONS.warning} className="size-4 shrink-0" />
+              {t("editor.conflict")}
+            </span>
             <Button variant="outline" onClick={async () => applyFresh(await onReloadPost())}>
+              <Icon icon={LUCIDE.refreshCw} className="size-4" />
               {t("editor.reload")}
             </Button>
           </div>
         ) : null}
 
-        <FormError message={m(formError)} />
+        <ToastError message={m(formError)} />
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="flex flex-col gap-4">
@@ -303,10 +314,18 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
             />
 
             <div className="flex items-center gap-1 border-b border-black/10 dark:border-white/15">
-              <TabButton active={tab === "edit"} onClick={() => setTab("edit")}>
+              <TabButton
+                active={tab === "edit"}
+                icon={ICONS.edit}
+                onClick={() => setTab("edit")}
+              >
                 {t("editor.tabWrite")}
               </TabButton>
-              <TabButton active={tab === "preview"} onClick={() => setTab("preview")}>
+              <TabButton
+                active={tab === "preview"}
+                icon={ICONS.eye}
+                onClick={() => setTab("preview")}
+              >
                 {t("editor.tabPreview")}
               </TabButton>
             </div>
@@ -410,7 +429,8 @@ function CoverImageField({
 
   return (
     <div className="flex flex-col gap-2">
-      <Typography variant="title-4" as="span">
+      <Typography variant="title-4" as="span" className="flex items-center gap-2">
+        <Icon icon={ICONS.image} className="size-4 opacity-70" />
         {t("editor.coverLabel")}
       </Typography>
 
@@ -436,6 +456,7 @@ function CoverImageField({
               onUploaded={(asset) => onChange(asset.url)}
             />
             <Button variant="outline" onClick={() => onChange("")}>
+              <Icon icon={ICONS.delete} className="size-4" />
               {t("editor.removeCover")}
             </Button>
           </div>
@@ -455,7 +476,7 @@ function CoverImageField({
         </div>
       )}
 
-      <FormError message={error} />
+      <ToastError message={error} />
     </div>
   );
 }
@@ -482,14 +503,24 @@ function SaveState({ isDirty, savedAt }: { isDirty: boolean; savedAt: Date | nul
 
   if (isDirty) {
     return (
-      <Typography variant="body-3" as="span" className="text-amber-700 dark:text-amber-300">
+      <Typography
+        variant="body-3"
+        as="span"
+        className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300"
+      >
+        <Icon icon={ICONS.warning} className="size-4" />
         {t("editor.unsaved")}
       </Typography>
     );
   }
   if (savedAt) {
     return (
-      <Typography variant="body-3" as="span" className="opacity-60">
+      <Typography
+        variant="body-3"
+        as="span"
+        className="flex items-center gap-1.5 opacity-60"
+      >
+        <Icon icon={ICONS.success} className="size-4" />
         {t("editor.savedAt", { time: timeFormat.format(savedAt) })}
       </Typography>
     );
@@ -503,10 +534,12 @@ function SaveState({ isDirty, savedAt }: { isDirty: boolean; savedAt: Date | nul
 
 function TabButton({
   active,
+  icon,
   onClick,
   children,
 }: {
   active: boolean;
+  icon: IconName;
   onClick: () => void;
   children: React.ReactNode;
 }) {
@@ -515,10 +548,11 @@ function TabButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`-mb-px border-b-2 px-3 py-2 text-body-3 transition-colors ${
+      className={`-mb-px inline-flex items-center gap-2 border-b-2 px-3 py-2 text-body-3 transition-colors ${
         active ? "border-foreground font-medium" : "border-transparent opacity-60"
       }`}
     >
+      <Icon icon={icon} className="size-4" />
       {children}
     </button>
   );
@@ -548,6 +582,7 @@ function ArchiveButton({
   if (!confirming) {
     return (
       <Button variant="outline" disabled={disabled} onClick={() => setConfirming(true)}>
+        <Icon icon={ICONS.delete} className="size-4" />
         {isDraft ? t("editor.archiveDraftTitle") : t("editor.archiveTitle")}
       </Button>
     );
@@ -562,9 +597,11 @@ function ArchiveButton({
       </Typography>
       <div className="flex gap-2">
         <Button variant="outline" onClick={() => setConfirming(false)}>
+          <Icon icon={ICONS.close} className="size-4" />
           {tc("actions.cancel")}
         </Button>
         <Button disabled={disabled} onClick={() => void onArchive()}>
+          <Icon icon={ICONS.delete} className="size-4" />
           {isDraft ? t("editor.archiveDraftAction") : t("editor.archiveAction")}
         </Button>
       </div>

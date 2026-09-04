@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAdminBlogPosts, type BlogPost } from "@noalhub/api/blog";
 import { useDateFormat } from "@noalhub/i18n/use-date-format";
 import { useTranslations } from "next-intl";
+import { Button } from "@noalhub/ui/button";
 import { Input } from "@noalhub/ui/input";
 import { Pagination } from "@noalhub/ui/pagination";
 import { Select } from "@noalhub/ui/select";
@@ -45,18 +46,13 @@ export function PostTable() {
           {t("title")}
         </Typography>
         <div className="flex items-center gap-2">
-          <Link
-            href="/posts/categories"
-            className="inline-flex h-10 items-center rounded-md border border-black/15 px-4 text-body-3 font-medium transition-colors hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
-          >
-            {t("table.categories")}
-          </Link>
-          <Link
-            href="/posts/new"
-            className="inline-flex h-10 items-center rounded-md bg-foreground px-4 text-body-3 font-medium text-background transition-opacity hover:opacity-90"
-          >
-            {t("table.new")}
-          </Link>
+          {/* `asChild`: the Link IS the button, rather than a button wrapping a link. */}
+          <Button variant="outline" asChild>
+            <Link href="/posts/categories">{t("table.categories")}</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/posts/new">{t("table.new")}</Link>
+          </Button>
         </div>
       </div>
 

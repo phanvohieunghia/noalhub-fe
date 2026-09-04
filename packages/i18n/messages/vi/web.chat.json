@@ -50,6 +50,7 @@
   "composer": {
     "label": "Nội dung tin nhắn",
     "placeholder": "Nhập tin nhắn…",
+    "send": "Gửi",
     "placeholderOffline": "Đang mất kết nối…",
     "tooLong": "Tin nhắn tối đa {max} ký tự (đang {length})."
   },

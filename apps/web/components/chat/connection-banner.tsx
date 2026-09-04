@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
+import { Button } from "@noalhub/ui/button";
 import { Spinner } from "@noalhub/ui/spinner";
 import { useChatRealtime } from "./chat-realtime-provider";
 
@@ -28,13 +29,16 @@ export function ConnectionBanner() {
         {connecting ? t("reconnecting") : t("offline")}
       </span>
       {connecting ? null : (
-        <button
-          type="button"
+        // `border-current` on purpose: the banner is amber, and a
+        // `border-border` button inside it reads as a foreign element.
+        <Button
+          variant="outline"
+          size="xs"
           onClick={reconnect}
-          className="rounded-md border border-current/30 px-2 py-0.5 text-body-4 font-medium hover:bg-current/10"
+          className="border-current/30 hover:bg-current/10"
         >
           {tc("actions.retry")}
-        </button>
+        </Button>
       )}
     </div>
   );

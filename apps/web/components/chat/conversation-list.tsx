@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 
+import { Button } from "@noalhub/ui/button";
 import { Spinner } from "@noalhub/ui/spinner";
 import { ConversationListEmpty } from "./conversation-list-empty";
 import { ConversationListItem } from "./conversation-list-item";
@@ -57,13 +58,9 @@ export function ConversationList() {
         <Typography variant="body-3" role="alert" className="text-red-600 dark:text-red-400">
           {m(errorText(error))}
         </Typography>
-        <button
-          type="button"
-          onClick={() => void refetch()}
-          className="rounded-md border border-black/15 px-2 py-1 text-body-4 dark:border-white/20"
-        >
+        <Button variant="outline" size="xs" onClick={() => void refetch()}>
           {tc("actions.retry")}
-        </button>
+        </Button>
       </div>
     );
   }
