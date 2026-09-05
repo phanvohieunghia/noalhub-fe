@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import {
   TableRoot,
@@ -26,28 +27,35 @@ export default meta;
 type Story = StoryObj<typeof TableRoot>;
 
 const sampleUsers = [
-  { id: 1, name: "Nguyễn Văn A", email: "a@gmail.com", role: "admin", status: "active" },
-  { id: 2, name: "Trần Thị B", email: "b@gmail.com", role: "editor", status: "active" },
-  { id: 3, name: "Lê Văn C", email: "c@gmail.com", role: "viewer", status: "suspended" },
+  { id: 1, nameKey: "personA", email: "a@gmail.com", role: "admin", status: "active" },
+  { id: 2, nameKey: "personB", email: "b@gmail.com", role: "editor", status: "active" },
+  { id: 3, nameKey: "personC", email: "c@gmail.com", role: "viewer", status: "suspended" },
 ];
 
+/*
+ * Tên người và tiêu đề cột lấy từ `sb.table`; `email`/`role`/`status` giữ
+ * nguyên vì chúng là DỮ LIỆU từ server, không phải chữ của giao diện.
+ */
 export const Default: Story = {
-  render: () => (
-    <TableRoot caption="Danh sách người dùng">
+  render: function DefaultStory() {
+    const t = useTranslations("sb.table");
+
+    return (
+    <TableRoot caption={t("caption")}>
       <TableHead>
         <TableRow>
-          <TableHeaderCell>ID</TableHeaderCell>
-          <TableHeaderCell>Họ và tên</TableHeaderCell>
-          <TableHeaderCell>Email</TableHeaderCell>
-          <TableHeaderCell>Vai trò</TableHeaderCell>
-          <TableHeaderCell>Trạng thái</TableHeaderCell>
+          <TableHeaderCell>{t("id")}</TableHeaderCell>
+          <TableHeaderCell>{t("columns.name")}</TableHeaderCell>
+          <TableHeaderCell>{t("columns.email")}</TableHeaderCell>
+          <TableHeaderCell>{t("columns.role")}</TableHeaderCell>
+          <TableHeaderCell>{t("columns.status")}</TableHeaderCell>
         </TableRow>
       </TableHead>
       <TableBody>
         {sampleUsers.map((user) => (
           <TableRow key={user.id}>
             <TableCell>{user.id}</TableCell>
-            <TableCell className="font-medium">{user.name}</TableCell>
+            <TableCell className="font-medium">{t(user.nameKey)}</TableCell>
             <TableCell>{user.email}</TableCell>
             <TableCell>{user.role}</TableCell>
             <TableCell>
@@ -59,7 +67,8 @@ export const Default: Story = {
         ))}
       </TableBody>
     </TableRoot>
-  ),
+    );
+  },
 };
 
 /*
@@ -92,10 +101,10 @@ function useServerSort() {
 }
 
 const sortableRows = [
-  { id: 1, name: "Nguyễn Văn A", createdAt: "2026-01-12" },
-  { id: 2, name: "Trần Thị B", createdAt: "2025-11-03" },
-  { id: 3, name: "Lê Văn C", createdAt: "2026-03-28" },
-  { id: 4, name: "Phạm Thị D", createdAt: "2025-08-19" },
+  { id: 1, nameKey: "personA", createdAt: "2026-01-12" },
+  { id: 2, nameKey: "personB", createdAt: "2025-11-03" },
+  { id: 3, nameKey: "personC", createdAt: "2026-03-28" },
+  { id: 4, nameKey: "personD", createdAt: "2025-08-19" },
 ];
 
 /**
@@ -109,36 +118,43 @@ const sortableRows = [
  */
 export const Sortable: Story = {
   render: function SortableTable() {
+    const t = useTranslations("sb.table");
     const { sort, order, toggle, directionOf } = useServerSort();
 
+    /*
+     * Dịch TRƯỚC rồi mới sắp xếp: `localeCompare` phải chạy trên chữ người dùng
+     * thấy, không phải trên khoá i18n — nếu không thì đổi ngôn ngữ mà thứ tự
+     * vẫn theo tiếng Việt.
+     */
     const rows = useMemo(() => {
-      if (!sort) return sortableRows;
-      const sorted = [...sortableRows].sort((a, b) => a[sort].localeCompare(b[sort]));
+      const named = sortableRows.map((row) => ({ ...row, name: t(row.nameKey) }));
+      if (!sort) return named;
+      const sorted = [...named].sort((a, b) => a[sort].localeCompare(b[sort]));
       return order === "asc" ? sorted : sorted.reverse();
-    }, [sort, order]);
+    }, [sort, order, t]);
 
     return (
       <div className="flex flex-col gap-3">
         <code className="text-body-4 text-muted-foreground">
           GET /api/…?sort={sort ?? "—"}&order={sort ? order : "—"}
         </code>
-        <TableRoot caption="Danh sách có thể sắp xếp">
+        <TableRoot caption={t("sortable")}>
           <TableHead>
             <TableRow>
               <TableSortHeaderCell
                 direction={directionOf("name")}
                 onToggle={() => toggle("name")}
-                sortHint="Sắp xếp theo Họ và tên"
+                sortHint={t("sortHint", { column: t("columns.name") })}
               >
-                Họ và tên
+                {t("columns.name")}
               </TableSortHeaderCell>
-              <TableHeaderCell>Email</TableHeaderCell>
+              <TableHeaderCell>{t("columns.email")}</TableHeaderCell>
               <TableSortHeaderCell
                 direction={directionOf("createdAt")}
                 onToggle={() => toggle("createdAt")}
-                sortHint="Sắp xếp theo Ngày tạo"
+                sortHint={t("sortHint", { column: t("columns.createdAt") })}
               >
-                Ngày tạo
+                {t("columns.createdAt")}
               </TableSortHeaderCell>
             </TableRow>
           </TableHead>
@@ -163,30 +179,34 @@ export const Sortable: Story = {
  * sort moves to another column.
  */
 export const SortStates: Story = {
-  render: () => (
-    <TableRoot caption="Ba trạng thái sắp xếp">
-      <TableHead>
-        <TableRow>
-          <TableSortHeaderCell direction={false} onToggle={() => {}} sortHint="Chưa sắp xếp">
-            Không sắp xếp
-          </TableSortHeaderCell>
-          <TableSortHeaderCell direction="asc" onToggle={() => {}} sortHint="Tăng dần">
-            Tăng dần
-          </TableSortHeaderCell>
-          <TableSortHeaderCell direction="desc" onToggle={() => {}} sortHint="Giảm dần">
-            Giảm dần
-          </TableSortHeaderCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        <TableRow>
-          <TableCell>aria-sort=&quot;none&quot;</TableCell>
-          <TableCell>aria-sort=&quot;ascending&quot;</TableCell>
-          <TableCell>aria-sort=&quot;descending&quot;</TableCell>
-        </TableRow>
-      </TableBody>
-    </TableRoot>
-  ),
+  render: function SortStatesStory() {
+    const t = useTranslations("sb.table");
+
+    return (
+      <TableRoot caption={t("threeStates")}>
+        <TableHead>
+          <TableRow>
+            <TableSortHeaderCell direction={false} onToggle={() => {}} sortHint={t("unsorted")}>
+              {t("unsortedShort")}
+            </TableSortHeaderCell>
+            <TableSortHeaderCell direction="asc" onToggle={() => {}} sortHint={t("asc")}>
+              {t("asc")}
+            </TableSortHeaderCell>
+            <TableSortHeaderCell direction="desc" onToggle={() => {}} sortHint={t("desc")}>
+              {t("desc")}
+            </TableSortHeaderCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          <TableRow>
+            <TableCell>aria-sort=&quot;none&quot;</TableCell>
+            <TableCell>aria-sort=&quot;ascending&quot;</TableCell>
+            <TableCell>aria-sort=&quot;descending&quot;</TableCell>
+          </TableRow>
+        </TableBody>
+      </TableRoot>
+    );
+  },
 };
 
 /**
@@ -195,79 +215,99 @@ export const SortStates: Story = {
  * far columns are reachable with the keyboard alone.
  */
 export const Scrollable: Story = {
-  render: () => (
-    <div className="max-w-lg">
-      <TableRoot caption="Bảng rộng hơn khung">
-        <TableHead>
-          <TableRow>
-            {["ID", "Họ và tên", "Email", "Vai trò", "Trạng thái", "Ngày tạo", "Ghi chú"].map(
-              (column) => (
-                <TableHeaderCell key={column}>{column}</TableHeaderCell>
-              ),
-            )}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {sampleUsers.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>{user.id}</TableCell>
-              <TableCell className="font-medium whitespace-nowrap">{user.name}</TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>{user.role}</TableCell>
-              <TableCell>
-                <Badge tone={user.status === "active" ? "success" : "warning"}>
-                  {user.status}
-                </Badge>
-              </TableCell>
-              <TableCell className="whitespace-nowrap">2026-01-12</TableCell>
-              <TableCell className="whitespace-nowrap">Không có</TableCell>
+  render: function ScrollableStory() {
+    const t = useTranslations("sb.table");
+
+    return (
+      <div className="max-w-lg">
+        <TableRoot caption={t("wide")}>
+          <TableHead>
+            <TableRow>
+              {[
+                t("id"),
+                t("columns.name"),
+                t("columns.email"),
+                t("columns.role"),
+                t("columns.status"),
+                t("columns.createdAt"),
+                t("note"),
+              ].map(
+                (column) => (
+                  <TableHeaderCell key={column}>{column}</TableHeaderCell>
+                ),
+              )}
             </TableRow>
-          ))}
-        </TableBody>
-      </TableRoot>
-    </div>
-  ),
+          </TableHead>
+          <TableBody>
+            {sampleUsers.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>{user.id}</TableCell>
+                <TableCell className="font-medium whitespace-nowrap">{t(user.nameKey)}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.role}</TableCell>
+                <TableCell>
+                  <Badge tone={user.status === "active" ? "success" : "warning"}>
+                    {user.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="whitespace-nowrap">2026-01-12</TableCell>
+                <TableCell className="whitespace-nowrap">{t("none")}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </TableRoot>
+      </div>
+    );
+  },
 };
 
 /** What the admin screens render while the first page is in flight. */
 export const Loading: Story = {
-  render: () => (
-    <TableRoot caption="Đang tải">
-      <TableHead>
-        <TableRow>
-          <TableHeaderCell>ID</TableHeaderCell>
-          <TableHeaderCell>Họ và tên</TableHeaderCell>
-          <TableHeaderCell>Email</TableHeaderCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {Array.from({ length: 4 }).map((_, row) => (
-          <TableRow key={row}>
-            {Array.from({ length: 3 }).map((__, cell) => (
-              <TableCell key={cell}>
-                <Skeleton className="h-4 w-full" />
-              </TableCell>
-            ))}
+  render: function LoadingStory() {
+    const t = useTranslations("sb.table");
+
+    return (
+      <TableRoot caption={t("loading")}>
+        <TableHead>
+          <TableRow>
+            <TableHeaderCell>ID</TableHeaderCell>
+            <TableHeaderCell>{t("columns.name")}</TableHeaderCell>
+            <TableHeaderCell>Email</TableHeaderCell>
           </TableRow>
-        ))}
-      </TableBody>
-    </TableRoot>
-  ),
+        </TableHead>
+        <TableBody>
+          {Array.from({ length: 4 }).map((_, row) => (
+            <TableRow key={row}>
+              {Array.from({ length: 3 }).map((__, cell) => (
+                <TableCell key={cell}>
+                  <Skeleton className="h-4 w-full" />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </TableRoot>
+    );
+  },
 };
 
 export const EmptyState: Story = {
-  render: () => (
-    <TableRoot caption="Danh sách rỗng">
-      <TableHead>
-        <TableRow>
-          <TableHeaderCell>ID</TableHeaderCell>
-          <TableHeaderCell>Họ và tên</TableHeaderCell>
-          <TableHeaderCell>Email</TableHeaderCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        <TableEmptyRow colSpan={3}>Không tìm thấy dữ liệu nào phù hợp.</TableEmptyRow>
-      </TableBody>
-    </TableRoot>
-  ),
+  render: function EmptyStateStory() {
+    const t = useTranslations("sb.table");
+
+    return (
+      <TableRoot caption={t("empty")}>
+        <TableHead>
+          <TableRow>
+            <TableHeaderCell>ID</TableHeaderCell>
+            <TableHeaderCell>{t("columns.name")}</TableHeaderCell>
+            <TableHeaderCell>Email</TableHeaderCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          <TableEmptyRow colSpan={3}>{t("noResults")}</TableEmptyRow>
+        </TableBody>
+      </TableRoot>
+    );
+  },
 };

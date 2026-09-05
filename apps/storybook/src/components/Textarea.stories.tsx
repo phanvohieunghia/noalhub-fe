@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Textarea, TEXTAREA_RESIZE } from "@noalhub/ui/textarea";
 
@@ -36,39 +37,54 @@ const meta: Meta<typeof Textarea> = {
 export default meta;
 type Story = StoryObj<typeof Textarea>;
 
+/*
+ * Chữ mẫu lấy từ `sb.textarea`; `args.x ||` giữ ô Controls gõ đè được.
+ */
 export const Default: Story = {
-  args: {
-    label: "Mô tả nội dung",
-    placeholder: "Nhập mô tả chi tiết tại đây...",
-    rows: 4,
+  args: { rows: 4 },
+  render: function DefaultStory(args) {
+    const t = useTranslations("sb.textarea");
+
+    return (
+      <Textarea
+        {...args}
+        label={args.label || t("desc")}
+        placeholder={args.placeholder || t("descPlaceholder")}
+      />
+    );
   },
 };
 
 /** Mặc định `vertical`: kéo được mép dưới để nới cao. */
 export const Resizable: Story = {
-  args: {
-    label: "Kéo mép dưới để nới ra",
-    resize: "vertical",
-    rows: 3,
-    hint: "Góc phải dưới có tay cầm để kéo.",
+  args: { resize: "vertical", rows: 3 },
+  render: function ResizableStory(args) {
+    const t = useTranslations("sb.textarea");
+
+    return (
+      <Textarea
+        {...args}
+        label={args.label || t("resizeLabel")}
+        hint={args.hint || t("resizeHint")}
+      />
+    );
   },
 };
 
 /** `resize="auto"`: gõ tới đâu cao tới đó, chạm `maxRows` thì chuyển sang cuộn. */
 export const AutoGrow: Story = {
   render: function AutoGrowStory() {
-    const [value, setValue] = useState(
-      "Gõ thêm vài dòng để thấy ô tự cao lên.\nĐến khi chạm trần thì nó dừng và cuộn bên trong.",
-    );
+    const t = useTranslations("sb.textarea");
+    const [value, setValue] = useState(t("autoGrowValue"));
     return (
       <Textarea
-        label="Tự giãn theo nội dung"
+        label={t("autoGrow")}
         resize="auto"
         maxRows={8}
         rows={2}
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        hint="Trần ở đây là 8 dòng."
+        hint={t("autoGrowHint")}
       />
     );
   },
@@ -77,47 +93,58 @@ export const AutoGrow: Story = {
 /** Đếm ký tự, và đổi sang màu danger khi vượt `maxLength`. */
 export const WithCounter: Story = {
   render: function CounterStory() {
-    const [value, setValue] = useState("Tóm tắt ngắn cho bài viết.");
+    const t = useTranslations("sb.textarea");
+    const [value, setValue] = useState(t("summaryValue"));
     return (
       <Textarea
-        label="Tóm tắt"
+        label={t("summary")}
         showCount
         maxLength={160}
         resize="auto"
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        hint="Google thường cắt phần vượt quá ~160 ký tự."
+        hint={t("summaryHint")}
       />
     );
   },
 };
 
 export const WithHint: Story = {
-  args: {
-    label: "Ghi chú nội bộ",
-    hint: "Chỉ quản trị viên nhìn thấy, không hiển thị ra ngoài trang công khai.",
-    rows: 3,
+  args: { rows: 3 },
+  render: function WithHintStory(args) {
+    const t = useTranslations("sb.textarea");
+
+    return (
+      <Textarea {...args} label={args.label || t("note")} hint={args.hint || t("notePlaceholder")} />
+    );
   },
 };
 
 export const WithError: Story = {
-  args: {
-    label: "Lý do từ chối",
-    placeholder: "Nhập lý do...",
-    hint: "Chú thích này bị ẩn khi có lỗi.",
-    error: "Lý do không được để trống khi từ chối.",
-    showCount: true,
-    maxLength: 200,
-    rows: 3,
+  args: { showCount: true, maxLength: 200, rows: 3 },
+  render: function WithErrorStory(args) {
+    const t = useTranslations("sb.textarea");
+
+    return (
+      <Textarea
+        {...args}
+        label={args.label || t("rejectLabel")}
+        placeholder={args.placeholder || t("rejectPlaceholder")}
+        hint={args.hint || t("hiddenHint")}
+        error={args.error || t("rejectError")}
+      />
+    );
   },
 };
 
 export const Disabled: Story = {
-  args: {
-    label: "Nội dung chỉ đọc",
-    value: "Nội dung này không thể chỉnh sửa.",
-    disabled: true,
-    rows: 3,
+  args: { disabled: true, rows: 3 },
+  render: function DisabledStory(args) {
+    const t = useTranslations("sb.textarea");
+
+    return (
+      <Textarea {...args} label={args.label || t("readonlyLabel")} value={args.value || t("readonlyValue")} />
+    );
   },
 };
 
@@ -126,25 +153,32 @@ export const Disabled: Story = {
  * là mức sàn — ô vẫn cao lên theo nội dung.
  */
 export const Rows: Story = {
-  render: () => (
-    <div className="flex flex-col gap-5">
-      {[1, 3, 6, 10].map((rows) => (
-        <Textarea
-          key={rows}
-          label={`rows={${rows}}`}
-          rows={rows}
-          resize="none"
-          placeholder={`Ô cao ${rows} dòng`}
-        />
-      ))}
-    </div>
-  ),
+  render: function RowsStory() {
+    const t = useTranslations("sb.textarea");
+
+    return (
+      <div className="flex flex-col gap-5">
+        {[1, 3, 6, 10].map((rows) => (
+          <Textarea
+            key={rows}
+            label={`rows={${rows}}`}
+            rows={rows}
+            resize="none"
+            placeholder={t("rowsPlaceholder", { rows })}
+          />
+        ))}
+      </div>
+    );
+  },
 };
 
 /** Ba kiểu resize cạnh nhau. */
 export const AllResizeModes: Story = {
-  render: () => (
-    <div className="flex flex-col gap-5">
+  render: function AllResizeModesStory() {
+    const t = useTranslations("sb.textarea");
+
+    return (
+      <div className="flex flex-col gap-5">
       {TEXTAREA_RESIZE.map((mode) => (
         <Textarea
           key={mode}
@@ -153,13 +187,14 @@ export const AllResizeModes: Story = {
           rows={2}
           defaultValue={
             mode === "auto"
-              ? "Ô này tự cao lên khi nội dung dài ra."
+              ? t("hintAuto")
               : mode === "vertical"
-                ? "Ô này kéo tay được."
-                : "Ô này cố định chiều cao."
+                ? t("hintResize")
+                : t("hintFixed")
           }
         />
       ))}
-    </div>
-  ),
+      </div>
+    );
+  },
 };

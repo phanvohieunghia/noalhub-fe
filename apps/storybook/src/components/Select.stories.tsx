@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
+import { useTranslations } from "next-intl";
 import { Select } from "@noalhub/ui/select";
 
 const meta: Meta<typeof Select> = {
@@ -30,34 +31,62 @@ const meta: Meta<typeof Select> = {
 export default meta;
 type Story = StoryObj<typeof Select>;
 
-const sampleOptions = [
-  { value: "admin", label: "Quản trị viên (Admin)" },
-  { value: "editor", label: "Biên tập viên (Editor)" },
-  { value: "viewer", label: "Người xem (Viewer)" },
-];
+/*
+ * `value` là mã gửi lên server nên giữ nguyên; chỉ `label` đi qua i18n. Đây đúng
+ * hình dạng của một select thật: option đến từ API bằng mã, phần chữ do client
+ * dịch.
+ */
+function useSampleOptions() {
+  const t = useTranslations("sb.select");
+
+  return [
+    { value: "admin", label: t("admin") },
+    { value: "editor", label: t("editor") },
+    { value: "viewer", label: t("viewer") },
+  ];
+}
 
 export const Default: Story = {
-  args: {
-    label: "Vai trò",
-    placeholder: "-- Chọn một vai trò --",
-    options: sampleOptions,
+  args: {},
+  render: function DefaultStory(args) {
+    const t = useTranslations("sb.select");
+    const options = useSampleOptions();
+
+    return (
+      <Select
+        {...args}
+        label={args.label || t("role")}
+        placeholder={args.placeholder || t("rolePlaceholder")}
+        options={options}
+      />
+    );
   },
 };
 
 export const WithError: Story = {
-  args: {
-    label: "Vai trò",
-    placeholder: "-- Chọn một vai trò --",
-    options: sampleOptions,
-    error: "Vui lòng chọn vai trò hợp lệ.",
+  args: {},
+  render: function WithErrorStory(args) {
+    const t = useTranslations("sb.select");
+    const options = useSampleOptions();
+
+    return (
+      <Select
+        {...args}
+        label={args.label || t("role")}
+        placeholder={args.placeholder || t("rolePlaceholder")}
+        error={args.error || t("error")}
+        options={options}
+      />
+    );
   },
 };
 
 export const Disabled: Story = {
-  args: {
-    label: "Vai trò",
-    options: sampleOptions,
-    defaultValue: "admin",
-    disabled: true,
+  args: { defaultValue: "admin", disabled: true },
+  render: function DisabledStory(args) {
+    const t = useTranslations("sb.select");
+    const options = useSampleOptions();
+
+    return <Select {...args} label={args.label || t("role")} options={options} />;
   },
 };

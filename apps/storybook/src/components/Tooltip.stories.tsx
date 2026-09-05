@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
 import { Button } from "@noalhub/ui/button";
+import { useTranslations } from "next-intl";
 import { Tooltip } from "@noalhub/ui/tooltip";
 
 const meta: Meta<typeof Tooltip> = {
@@ -21,25 +22,33 @@ const meta: Meta<typeof Tooltip> = {
 export default meta;
 type Story = StoryObj<typeof Tooltip>;
 
+/*
+ * `label` để trống trong `args` rồi lấy câu mẫu đã dịch khi không có giá trị:
+ * gõ vào ô Controls vẫn đè được, mà đổi ngôn ngữ trên toolbar cũng ăn.
+ */
 export const Default: Story = {
-  args: { label: "Nhấn để sao chép tên icon", side: "top", delayMs: 200 },
-  render: (args) => (
-    <Tooltip {...args}>
-      <Button variant="outline">Di chuột vào đây</Button>
-    </Tooltip>
-  ),
+  args: { side: "top", delayMs: 200 },
+  render: function DefaultStory(args) {
+    const t = useTranslations("sb.tooltip");
+
+    return (
+      <Tooltip {...args} label={args.label || t("copyIcon")}>
+        <Button variant="outline">{t("hover")}</Button>
+      </Tooltip>
+    );
+  },
 };
 
 /** Chữ dài tự xuống dòng, tối đa 16rem. */
 export const LongText: Story = {
-  args: {
-    label:
-      "Tên đầy đủ của icon rất dài nên trong lưới bị cắt bằng dấu ba chấm — tooltip là chỗ đọc trọn vẹn.",
-    side: "bottom",
+  args: { side: "bottom" },
+  render: function LongTextStory(args) {
+    const t = useTranslations("sb.tooltip");
+
+    return (
+      <Tooltip {...args} label={args.label || t("iconName")}>
+        <Button variant="outline">{t("long")}</Button>
+      </Tooltip>
+    );
   },
-  render: (args) => (
-    <Tooltip {...args}>
-      <Button variant="outline">Chữ dài</Button>
-    </Tooltip>
-  ),
 };

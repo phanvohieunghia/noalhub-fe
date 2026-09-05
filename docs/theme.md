@@ -228,6 +228,13 @@ Primary vẫn là một **token**: đổi ý thì sửa hai dòng trong `theme.c
 | `--ring` | `brand-400` | `brand-400` |
 | `--highlight` / `-foreground` | `blush-100` / `blush-600` | `blush-900` / `blush-100` |
 
+⚠️ **Chữ trên một lớp wash của chính màu brand thì dùng `--accent`, không dùng
+`--primary`.** Tỉ lệ 5.1:1 ghi ở `--primary` là đo trên **nút** (chữ trắng trên
+nền brand-600 đặc). Đặt chính brand-600 làm CHỮ trên `bg-primary/10` thì chỉ còn
+**4.24:1**, dưới ngưỡng AA — đúng lỗi đã làm đỏ story `Toast/InfoAlert`.
+`--accent` sinh ra cho chữ nhấn: 6.1:1 ở light, 7.4:1 ở dark trên cùng lớp wash
+đó.
+
 ### 5.5 Ba màu trạng thái
 
 **Không** lấy từ thang brand, và `success` phải là xanh **lá** rõ rệt, đừng ngả teal — thang

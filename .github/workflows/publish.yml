@@ -146,6 +146,20 @@ jobs:
       contents: read
       packages: write
 
+    # HAI bản từ cùng một Dockerfile: `public` không chứa code của
+    # `src/internal/**` (`.storybook/main.ts` bỏ hẳn glob đó khỏi index), còn
+    # `internal` chứa tất và được nginx chặn bằng basic auth. Phải là hai image
+    # chứ không phải một image lọc lúc chạy: Storybook là web tĩnh, story nào có
+    # trong bundle thì người xem đọc được, dù sidebar có hiện nó hay không.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - audience: public
+            suffix: storybook
+          - audience: internal
+            suffix: storybook-internal
+
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -159,7 +173,7 @@ jobs:
       - id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}-storybook
+          images: ghcr.io/${{ github.repository }}-${{ matrix.suffix }}
           tags: |
             type=raw,value=latest
             type=sha,format=long
@@ -172,8 +186,13 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=storybook
-          cache-to: type=gha,mode=max,scope=storybook
+          build-args: |
+            SB_AUDIENCE=${{ matrix.audience }}
+          # Scope tách theo audience. Chung scope thì hai job song song ghi đè
+          # nhau, và tệ hơn là có thể trả về layer `storybook-static` của bản
+          # kia — đúng cái làm bản public lọt story nội bộ.
+          cache-from: type=gha,scope=storybook-${{ matrix.audience }}
+          cache-to: type=gha,mode=max,scope=storybook-${{ matrix.audience }}
 
   # CD: cả hai image build xong mới deploy. `needs` vừa xếp thứ tự, vừa hủy deploy
   # nếu bất kỳ app nào build đỏ — không bao giờ deploy nửa vời một app.

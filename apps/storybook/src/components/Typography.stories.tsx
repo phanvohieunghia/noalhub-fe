@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
+import { useTranslations } from "next-intl";
 import React from "react";
 import {
   Typography,
@@ -38,40 +39,51 @@ const meta: Meta<typeof Typography> = {
 export default meta;
 type Story = StoryObj<typeof Typography>;
 
+/*
+ * `children` lấy từ `sb.typography` khi ô Controls để trống — gõ vào vẫn đè
+ * được, mà đổi ngôn ngữ thì câu mẫu cũng đổi.
+ */
 export const Playground: Story = {
-  args: {
-    variant: "body-2",
-    children: "Đây là đoạn văn bản mặc định (Body 2).",
+  args: { variant: "body-2" },
+  render: function PlaygroundStory(args) {
+    const t = useTranslations("sb.typography");
+    return <Typography {...args}>{args.children || t("children")}</Typography>;
   },
 };
 
 /** Every variant at its default weight — the list follows the component. */
 export const AllVariants: Story = {
-  render: () => (
-    <div className="flex flex-col gap-4">
+  render: function AllVariantsStory() {
+    const t = useTranslations("sb.typography");
+
+    return (
+      <div className="flex flex-col gap-4">
       {TYPOGRAPHY_VARIANTS.map((variant) => (
         <div key={variant} className="flex flex-col gap-0.5">
           <code className="text-body-4 text-muted-foreground">{variant}</code>
-          <Typography variant={variant}>
-            Chuyển giao tri thức — the quick brown fox
-          </Typography>
+          <Typography variant={variant}>{t("sample")}</Typography>
         </div>
       ))}
-    </div>
-  ),
+      </div>
+    );
+  },
 };
 
 /** The three weights on one size, to compare them directly. */
 export const Weights: Story = {
-  render: () => (
-    <div className="flex flex-col gap-3">
-      {TYPOGRAPHY_WEIGHTS.map((weight) => (
-        <Typography key={weight} variant="body-1" weight={weight}>
-          {weight} — Chuyển giao tri thức
-        </Typography>
-      ))}
-    </div>
-  ),
+  render: function WeightsStory() {
+    const t = useTranslations("sb.typography");
+
+    return (
+      <div className="flex flex-col gap-3">
+        {TYPOGRAPHY_WEIGHTS.map((weight) => (
+          <Typography key={weight} variant="body-1" weight={weight}>
+            {t("weightSample", { weight })}
+          </Typography>
+        ))}
+      </div>
+    );
+  },
 };
 
 /**
@@ -80,9 +92,13 @@ export const Weights: Story = {
  * `variant="h4" as="h2"`, not a changed variant.
  */
 export const TagVsSize: Story = {
-  render: () => (
-    <Typography variant="h4" as="h2">
-      Rendered as &lt;h2&gt;, sized as h4
-    </Typography>
-  ),
+  render: function TagVsSizeStory() {
+    const t = useTranslations("sb.typography");
+
+    return (
+      <Typography variant="h4" as="h2">
+        {t("renderedAs")}
+      </Typography>
+    );
+  },
 };

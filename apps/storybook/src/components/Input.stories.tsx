@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
+import { useTranslations } from "next-intl";
 import { Input } from "@noalhub/ui/input";
 
 const meta: Meta<typeof Input> = {
@@ -30,26 +31,44 @@ const meta: Meta<typeof Input> = {
 export default meta;
 type Story = StoryObj<typeof Input>;
 
+/*
+ * Nhãn/placeholder lấy từ `sb.input` khi ô Controls để trống — gõ vào vẫn đè
+ * được, mà đổi ngôn ngữ thì mặc định cũng đổi theo.
+ */
 export const Default: Story = {
-  args: {
-    label: "Tên đăng nhập",
-    placeholder: "Nhập tên của bạn...",
+  args: {},
+  render: function DefaultStory(args) {
+    const t = useTranslations("sb.input");
+
+    return (
+      <Input
+        {...args}
+        label={args.label || t("username")}
+        placeholder={args.placeholder || t("namePlaceholder")}
+      />
+    );
   },
 };
 
 export const WithError: Story = {
-  args: {
-    label: "Email",
-    placeholder: "example@gmail.com",
-    error: "Định dạng email không hợp lệ.",
-    defaultValue: "example@",
+  args: { label: "Email", placeholder: "example@gmail.com", defaultValue: "example@" },
+  render: function WithErrorStory(args) {
+    const t = useTranslations("sb.input");
+    return <Input {...args} error={args.error || t("emailError")} />;
   },
 };
 
 export const Disabled: Story = {
-  args: {
-    label: "Mã giảm giá",
-    placeholder: "Nhập mã...",
-    disabled: true,
+  args: { disabled: true },
+  render: function DisabledStory(args) {
+    const t = useTranslations("sb.input");
+
+    return (
+      <Input
+        {...args}
+        label={args.label || t("coupon")}
+        placeholder={args.placeholder || t("couponPlaceholder")}
+      />
+    );
   },
 };

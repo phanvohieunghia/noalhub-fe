@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
+import { useTranslations } from "next-intl";
 import {
   Button,
   BUTTON_SHAPES,
@@ -43,11 +44,15 @@ const meta: Meta<typeof Button> = {
 export default meta;
 type Story = StoryObj<typeof Button>;
 
+/*
+ * `children` bỏ khỏi `args` và lấy từ `sb.button` khi trống: ô Controls vẫn gõ
+ * đè được, còn mặc định thì đổi theo toolbar ngôn ngữ.
+ */
 export const Playground: Story = {
-  args: {
-    variant: "primary",
-    size: "md",
-    children: "Nút Mặc Định",
+  args: { variant: "primary", size: "md" },
+  render: function PlaygroundStory(args) {
+    const t = useTranslations("sb.button");
+    return <Button {...args}>{args.children || t("default")}</Button>;
   },
 };
 
@@ -87,11 +92,10 @@ export const Shapes: Story = {
 };
 
 export const Disabled: Story = {
-  args: {
-    variant: "primary",
-    size: "md",
-    disabled: true,
-    children: "Không Thể Bấm",
+  args: { variant: "primary", size: "md", disabled: true },
+  render: function DisabledStory(args) {
+    const t = useTranslations("sb.button");
+    return <Button {...args}>{args.children || t("disabled")}</Button>;
   },
 };
 
@@ -101,11 +105,14 @@ export const IconButton: Story = {
     variant: "outline",
     size: "icon",
     shape: "circle",
-    "aria-label": "Tìm kiếm",
   },
-  render: (args) => (
-    <Button {...args}>
-      <Icon icon={ICONS.search} />
-    </Button>
-  ),
+  render: function IconButtonStory(args) {
+    const t = useTranslations("sb.button");
+
+    return (
+      <Button {...args} aria-label={args["aria-label"] || t("search")}>
+        <Icon icon={ICONS.search} />
+      </Button>
+    );
+  },
 };

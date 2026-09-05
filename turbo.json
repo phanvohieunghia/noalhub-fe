@@ -38,6 +38,9 @@
       ],
       "outputs": [
         "storybook-static/**"
+      ],
+      "env": [
+        "SB_AUDIENCE"
       ]
     },
     "storybook": {

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
 import { useState } from "react";
 import { Button } from "@noalhub/ui/button";
+import { useTranslations } from "next-intl";
 import {
   Toast,
   TOAST_TONES,
@@ -33,17 +34,28 @@ const meta: Meta<typeof Toast> = {
 export default meta;
 type Story = StoryObj<typeof Toast>;
 
-const SAMPLE: Record<ToastTone, string> = {
-  error: "Đã xảy ra lỗi hệ thống hoặc bạn đã nhập sai mật khẩu.",
-  success: "Cập nhật thông tin thành công!",
-  info: "Bản nháp được lưu trên máy bạn cho tới khi bấm Lưu.",
-  warning: "Bài viết chưa có ảnh bìa — mạng xã hội sẽ hiển thị link trống.",
-};
+/**
+ * Câu mẫu cho từng sắc thái, lấy theo ngôn ngữ đang chọn trên toolbar.
+ *
+ * `message` vẫn nằm trong `args` như một control: `args.message ?? sample(tone)`
+ * nghĩa là gõ vào ô Controls thì đè được, còn để trống thì lấy câu mẫu đã dịch.
+ * Bỏ hẳn `args.message` thì control trở nên vô dụng; hardcode câu mẫu thì đổi
+ * ngôn ngữ không ăn. Cách này giữ được cả hai.
+ */
+function useSample() {
+  const t = useTranslations("sb.toast");
+  return (tone: ToastTone) => t(tone);
+}
 
-export const ErrorAlert: Story = { args: { tone: "error", message: SAMPLE.error } };
-export const SuccessAlert: Story = { args: { tone: "success", message: SAMPLE.success } };
-export const InfoAlert: Story = { args: { tone: "info", message: SAMPLE.info } };
-export const WarningAlert: Story = { args: { tone: "warning", message: SAMPLE.warning } };
+function ToneStory({ tone, message, ...rest }: Partial<React.ComponentProps<typeof Toast>> & { tone: ToastTone }) {
+  const sample = useSample();
+  return <Toast tone={tone} message={message ?? sample(tone)} {...rest} />;
+}
+
+export const ErrorAlert: Story = { args: { tone: "error" }, render: (args) => <ToneStory {...args} tone="error" /> };
+export const SuccessAlert: Story = { args: { tone: "success" }, render: (args) => <ToneStory {...args} tone="success" /> };
+export const InfoAlert: Story = { args: { tone: "info" }, render: (args) => <ToneStory {...args} tone="info" /> };
+export const WarningAlert: Story = { args: { tone: "warning" }, render: (args) => <ToneStory {...args} tone="warning" /> };
 
 /**
  * Có `onDismiss` thì hiện nút đóng; thêm `autoDismissMs` thì tự tắt sau đó.
@@ -51,18 +63,20 @@ export const WarningAlert: Story = { args: { tone: "warning", message: SAMPLE.wa
  */
 export const Dismissible: Story = {
   render: function DismissibleStory() {
+    const t = useTranslations("sb.toast");
+    const sample = useSample();
     const [tone, setTone] = useState<ToastTone | null>("info");
     return (
       <div className="flex flex-col items-start gap-3">
         <Toast
           tone={tone ?? "info"}
-          message={tone ? SAMPLE[tone] : null}
+          message={tone ? sample(tone) : null}
           onDismiss={() => setTone(null)}
           autoDismissMs={4000}
         />
         {tone ? null : (
           <Button variant="outline" onClick={() => setTone("info")}>
-            Hiện lại
+            {t("showAgain")}
           </Button>
         )}
       </div>
@@ -72,11 +86,15 @@ export const Dismissible: Story = {
 
 /** Cả bốn sắc thái cạnh nhau để so màu. */
 export const AllTones: Story = {
-  render: () => (
+  render: function AllTonesStory() {
+    const sample = useSample();
+
+    return (
     <div className="flex flex-col gap-3">
       {TOAST_TONES.map((tone) => (
-        <Toast key={tone} tone={tone} message={SAMPLE[tone]} />
+        <Toast key={tone} tone={tone} message={sample(tone)} />
       ))}
     </div>
-  ),
+    );
+  },
 };

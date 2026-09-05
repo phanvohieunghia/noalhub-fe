@@ -9,6 +9,7 @@ import { ToastError, ToastSuccess } from "@noalhub/ui/toast";
 import { Input } from "@noalhub/ui/input";
 import { Typography } from "@noalhub/ui/typography";
 import { useMessage } from "@noalhub/i18n/use-message";
+import { useTranslations } from "next-intl";
 
 /*
  * The schema mirrors the app convention: zod messages are translation KEYS, not
@@ -31,6 +32,13 @@ type FormValues = z.infer<typeof schema>;
 
 /** A realistic form: `react-hook-form` + `zod`, wired to the UI primitives. */
 function DemoForm({ serverError }: { serverError?: string }) {
+  /*
+   * Nhãn lấy từ `web.auth.register` chứ không viết thẳng: story này đã dịch
+   * phần LỖI (zod trả key, `m()` dịch lúc render), nên để nhãn đứng yên tiếng
+   * Việt là kiểu hỏng khó chịu nhất — đổi toolbar sang `en` thì nửa biểu mẫu
+   * đổi, nửa kia không.
+   */
+  const t = useTranslations("web.auth.register");
   const m = useMessage();
   const [submitted, setSubmitted] = useState(false);
   const {
@@ -50,28 +58,28 @@ function DemoForm({ serverError }: { serverError?: string }) {
       noValidate
     >
       <Typography variant="h4" as="h2">
-        Đăng ký
+        {t("title")}
       </Typography>
 
       <ToastError message={serverError} />
-      {submitted ? <ToastSuccess message="Gửi biểu mẫu thành công!" /> : null}
+      {submitted ? <ToastSuccess message={m("web.profile.saved")} /> : null}
 
       <Input
-        label="Email"
+        label={t("email")}
         type="email"
         autoComplete="email"
         error={m(errors.email?.message)}
         {...register("email")}
       />
       <Input
-        label="Mật khẩu"
+        label={t("password")}
         type="password"
         autoComplete="new-password"
         error={m(errors.password?.message)}
         {...register("password")}
       />
       <Input
-        label="Nhập lại mật khẩu"
+        label={t("confirmPassword")}
         type="password"
         autoComplete="new-password"
         error={m(errors.confirmPassword?.message)}
@@ -79,7 +87,7 @@ function DemoForm({ serverError }: { serverError?: string }) {
       />
 
       <Button type="submit" disabled={isSubmitting}>
-        Gửi
+        {isSubmitting ? t("submitting") : t("submit")}
       </Button>
     </form>
   );

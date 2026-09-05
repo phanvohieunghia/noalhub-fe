@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
+import { useTranslations } from "next-intl";
 import { StatCard } from "@noalhub/ui/stat-card";
 
 const meta: Meta<typeof StatCard> = {
@@ -31,27 +32,39 @@ export default meta;
 type Story = StoryObj<typeof StatCard>;
 
 export const Default: Story = {
-  args: {
-    label: "Tổng người dùng",
-    value: 12450,
-    hint: "+12% so với tháng trước",
-    isLoading: false,
+  args: { value: 12450, isLoading: false },
+  render: function DefaultStory(args) {
+    const t = useTranslations("sb.statCard");
+
+    return (
+      <StatCard
+        {...args}
+        label={args.label || t("users")}
+        hint={args.hint || t("visitsHint")}
+      />
+    );
   },
 };
 
 export const TextValue: Story = {
-  args: {
-    label: "Doanh thu",
-    value: "150.000.000 ₫",
-    hint: "Tính từ đầu năm",
-    isLoading: false,
+  args: { value: "150.000.000 ₫", isLoading: false },
+  render: function TextValueStory(args) {
+    const t = useTranslations("sb.statCard");
+
+    return (
+      <StatCard
+        {...args}
+        label={args.label || t("revenue")}
+        hint={args.hint || t("usersHint")}
+      />
+    );
   },
 };
 
 export const Loading: Story = {
-  args: {
-    label: "Lượt truy cập",
-    value: 0,
-    isLoading: true,
+  args: { value: 0, isLoading: true },
+  render: function LoadingStory(args) {
+    const t = useTranslations("sb.statCard");
+    return <StatCard {...args} label={args.label || t("visits")} />;
   },
 };

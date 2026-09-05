@@ -134,38 +134,145 @@ có gì để inline vào bundle.
 
 * `apps/storybook/Dockerfile` — build context là **gốc repo** (pnpm workspace
   cần lockfile + toàn bộ `packages/*`).
-* `apps/storybook/nginx.conf` — nginx **bên trong** container. Đừng nhầm với
-  reverse proxy ở repo backend.
-* Job `storybook` trong `.github/workflows/publish.yml` đẩy image lên
-  `ghcr.io/<owner>/noalhub-fe-storybook`. Job `deploy` **cố tình không**
+* `apps/storybook/nginx.conf` — nginx **bên trong** container, dùng chung cho
+  cả hai bản. Đừng nhầm với reverse proxy ở repo backend.
+* Job `storybook` trong `.github/workflows/publish.yml` đẩy **hai** image:
+  `ghcr.io/<owner>/noalhub-fe-storybook` và `-storybook-internal`. Job `deploy` **cố tình không**
   `needs` nó: Storybook hỏng thì không được phép chặn bản production của
   web/admin.
 
+### Hai bản: công khai và nội bộ
+
+Từ 2026-09-05 image được build **hai lần** từ cùng `Dockerfile`, khác nhau ở
+build-arg `SB_AUDIENCE`:
+
+| `SB_AUDIENCE` | Image | Story được index | Truy cập |
+|---|---|---|---|
+| `public` (mặc định của Dockerfile) | `…-storybook` | `src/components/**`, `src/foundations/**` | mở |
+| `internal` (mặc định của `pnpm dev`) | `…-storybook-internal` | thêm `src/internal/**` | đăng nhập Google (oauth2-proxy) |
+
+Vì sao phải là hai image chứ không phải một image rồi lọc theo người xem:
+Storybook là **web tĩnh**. Story nào có trong bundle thì ai mở được trang cũng
+đọc được nó qua `index.json` hoặc source map, dù sidebar có hiện hay không. Tag
+và bộ lọc sidebar chỉ dọn danh sách cho gọn, không giấu được gì. Muốn thật sự
+không cho xem thì phải **không build nó vào bản đó**.
+
+Biến này được khai trong `turbo.json` (`build-storybook.env`). Thiếu dòng đó
+thì hai lần build có cùng hash, và bản thứ hai ăn lại `storybook-static` của
+bản thứ nhất — bản công khai lọt nguyên story nội bộ mà CI vẫn xanh.
+
 ### Phần còn lại nằm ở repo backend
 
-Compose và nginx reverse proxy thuộc repo khác, nên hai mảnh dưới đây phải thêm
-tay ở đó trước khi VPS phục vụ được Storybook.
+Compose và nginx reverse proxy thuộc repo `noalhub-be`, và phần đó **đã thêm
+sẵn**:
 
-`docker-compose.prod.yml`:
+* `docker-compose.prod.yml` — service `storybook-internal` (không `ports:`, trỏ
+  thẳng vào là đi vòng qua lớp đăng nhập) và `oauth2-proxy`.
+* `nginx/conf.d/storybook-tls.conf.disabled` — một domain, hai đường dẫn:
+  `/` là bản công khai, `/internal/` là bản nội bộ và có `auth_request`.
+* `.env.example` — ba biến OAuth (client id/secret + cookie secret).
+* `scripts/sync-storybook-emails.sh` — sinh danh sách email được vào từ DB (mọi
+  `users` có `role = 'admin'`), chạy bằng cron. Không có file danh sách nào
+  trong git: nó luôn được sinh ra.
 
-```yaml
-storybook:
-  image: ghcr.io/<owner>/noalhub-fe-storybook:${FE_IMAGE_TAG:-latest}
-  restart: unless-stopped
-  networks: [web]
+Quy trình bật, cách thêm/bớt người, và bảng triệu chứng ↔ nguyên nhân khi hỏng:
+`noalhub-be/docs/deployment.md` § "Storybook nội bộ". Không chép lại ở đây —
+hai bản mô tả cùng một hạ tầng thì kiểu gì cũng lệch nhau.
+
+Tóm tắt đủ để hình dung:
+
+| URL | Ai vào được | Thấy gì |
+|---|---|---|
+| `storybook-noalhub.duckdns.org/` | mở | 119 entries — UI + Foundations |
+| `storybook-noalhub.duckdns.org/internal/` | tài khoản `role = 'admin'` trong DB | 131 entries — thêm `Flows/Auth` |
+
+Đăng nhập bằng tài khoản Google, do `oauth2-proxy` đứng trước nginx xử lý; ai
+được vào thì lấy từ DB. Storybook **không** tham gia gì vào việc này: nó là web
+tĩnh, không có khái niệm người dùng.
+
+Vì sao không để nginx hỏi thẳng backend "user này có quyền không": token của app
+nằm trong `localStorage` và đi bằng header `Authorization`, mà trình duyệt điều
+hướng tới `/internal/` thì chỉ gửi cookie — không có gì để backend tra. Nên phần
+"bạn là ai" giao cho Google, phần "ai được vào" đồng bộ từ DB ra file.
+
+Hai điều cần nhớ khi viết story nội bộ:
+
+* **Cổng là nhị phân.** Qua được là thấy trọn bản `internal`. Không có cách nào
+  cho nhóm A thấy story này còn nhóm B thấy story kia — muốn thế phải thêm một
+  bản build nữa. Số story mỗi bản chứa do `SB_AUDIENCE` quyết định lúc build,
+  DB không liên quan.
+* **Story vẫn chạy trong CI.** `test-storybook` build bản mặc định (`internal`)
+  nên story trong `src/internal/` vẫn bị kiểm a11y và smoke test như mọi story
+  khác. Nội bộ không có nghĩa là được miễn.
+
+### Đổi audience khi chạy máy mình
+
+`apps/storybook/.env` (copy từ `.env.example`, không vào git):
+
+```
+SB_AUDIENCE=public
 ```
 
-vhost nginx cho `storybook-noalhub.duckdns.org` — trỏ `proxy_pass` vào
-`http://storybook:80`.
+Dùng khi cần xem đúng thứ người ngoài thấy — sidebar không còn nhóm `Flows`.
+Biến đặt trên dòng lệnh vẫn thắng file: `SB_AUDIENCE=internal pnpm dev`.
 
-> ⚠️ Đọc lại comment dài trong `publish.yml` ở bước reload nginx: nginx phân
-> giải tên upstream **một lần** lúc nạp config rồi cache IP vĩnh viễn, nên mỗi
-> lần recreate container là phải `nginx -s reload`. Thêm `storybook` vào danh
-> sách `up -d` mà quên nó thì đúng lỗi cũ: hai domain đổi chỗ cho nhau mà cả
-> hai vẫn trả 200.
+File được nạp bằng `process.loadEnvFile` ngay đầu `main.ts`, không qua `dotenv`
+(Node làm sẵn) và không dựa vào cơ chế `.env` của Storybook — cơ chế đó dành cho
+biến đi vào bundle preview, còn `main.ts` chạy sớm hơn thế.
 
-Xong hai mảnh đó thì sửa job `deploy`: thêm `storybook` vào `docker compose
-pull` và `up -d`, và thêm nó vào vòng lặp kiểm tra tag đang chạy.
+### Nút vào bản nội bộ
+
+Bản công khai có một nút **🔒 Nội bộ** trên thanh công cụ, trỏ tới `/internal/`.
+Nó chỉ ẩn khi đang ở trong `/internal/` — link sẽ thành `/internal/internal/`.
+
+Điều kiện đọc từ URL lúc chạy chứ không phải từ `SB_AUDIENCE`: webpack chỉ dựng
+phần preview, còn manager được bundle riêng nên `DefinePlugin` trong `main.ts`
+không với tới đó. Code ở `.storybook/manager.tsx`.
+
+**Trên localhost nút vẫn hiện và bấm vào sẽ 404** — dev server không phục vụ
+đường dẫn đó. Cố ý để vậy: bản trước ẩn nó trên localhost, và hệ quả là nút biến
+mất đúng lúc người ta đang dựng hoặc đi xem lại nó. Tooltip nói rõ "chỉ có trên
+bản đã deploy".
+
+Bấm vào lúc chưa đăng nhập thì rơi vào trang đăng nhập Google của oauth2-proxy —
+nút chỉ là đường dẫn, nó không quyết định quyền gì cả.
+
+Nhãn nút đổi theo toolbar ngôn ngữ ("Nội bộ" / "Internal"). Manager không dùng
+được `next-intl` (nó nằm ngoài preview iframe, không có provider, và bundle của
+nó không nạp `packages/i18n`) — thứ đi xuyên qua ranh giới đó là **globals** của
+Storybook, đọc bằng `useGlobals()`. Bốn chuỗi để bảng ngay trong `manager.tsx`
+thay vì thêm khoá vào `packages/i18n/messages/`: chỗ đó dành cho chữ của sản
+phẩm, còn đây là chữ của công cụ, và mỗi khoá thêm vào là một khoá
+`pnpm check-messages` bắt cả hai locale phải nuôi.
+
+### Chữ trong story: namespace `sb`
+
+Mọi chữ hiển thị trong story — nhãn nút mẫu, tên người mẫu, bài viết mẫu — nằm ở
+`apps/storybook/messages/{vi,en}.json` dưới namespace `sb`, nạp vào chính
+`NextIntlClientProvider` mà story dùng. Đổi toolbar ngôn ngữ là đổi cả phần này.
+
+**Không** để trong `packages/i18n/messages/`: chỗ đó dành cho chữ của SẢN PHẨM.
+Trộn chữ demo vào đó thì `pnpm check-messages` bắt cả hai locale phải nuôi mãi
+những câu không bao giờ xuất hiện trong app. Đổi lại, hai file `sb` phải tự giữ
+đồng bộ khoá — không có kiểm tra tự động.
+
+Với story dùng `args` (để ô Controls còn gõ được), mẫu là
+`label={args.label || t("...")}`: gõ vào Controls thì đè, để trống thì lấy câu
+mẫu theo ngôn ngữ.
+
+Ba thứ **không** dịch, và đó là chủ ý:
+
+* `description` trong `argTypes` — nó là metadata của trang Docs, đọc một lần
+  lúc nạp module, nằm ngoài React nên không có locale nào để mà tra.
+* Dữ liệu giả lập của server: `email`, `role`, `status`, ngày tháng. Trong app
+  thật chúng đến từ API, không phải chữ của giao diện.
+* Mã: lệnh `pnpm …`, tên token (`primary`, `danger`), tên nút `B`/`I`.
+
+### Viết story nội bộ
+
+Đặt file vào `apps/storybook/src/internal/`. Không cần tag, không cần khai báo
+gì thêm — chỉ vị trí thư mục quyết định. `pnpm dev` luôn thấy hết, nên lúc phát
+triển không có gì khác biệt; chỉ bản build `public` là bỏ chúng ra.
 
 ## 7. Vì sao chưa dùng Chromatic
 

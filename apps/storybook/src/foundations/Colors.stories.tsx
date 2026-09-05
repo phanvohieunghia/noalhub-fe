@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
+import { useTranslations } from "next-intl";
 import React from "react";
 
 import { useTokens } from "./use-token";
@@ -141,23 +142,25 @@ function Section({
 }
 
 function Palette() {
+  const t = useTranslations("sb.foundations");
   const values = useTokens(ALL_TOKENS);
 
   return (
     <div className="flex flex-col gap-10 bg-background p-8 text-foreground">
       <div className="flex flex-col gap-2">
-        <h1 className="text-h3">Color tokens</h1>
+        <h1 className="text-h3">{t("colorsTitle")}</h1>
         <p className="max-w-2xl text-body-3 text-muted-foreground">
-          Names come from <code>packages/config/theme.css</code>, values from the
-          live document. Switch the theme in the toolbar to compare light and
-          dark.
+          {/* `t.rich` + cú pháp tag `<file>…</file>` trong message: đó là cách
+              next-intl chèn một thẻ React vào giữa câu mà vẫn giữ nguyên trật tự
+              từ của từng ngôn ngữ. */}
+          {t.rich("colorsNote", { file: (chunks) => <code>{chunks}</code> })}
         </p>
       </div>
 
       <div>
-        <h2 className="text-title-1">Semantic tokens — use these</h2>
+        <h2 className="text-title-1">{t("colorsSemantic")}</h2>
         <p className="text-body-4 text-muted-foreground">
-          The only layer a component should name.
+          {t("colorsSemanticHint")}
         </p>
       </div>
       {GROUPED.map((group) => (

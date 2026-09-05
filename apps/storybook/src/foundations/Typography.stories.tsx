@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
+import { useTranslations } from "next-intl";
 import React from "react";
 import { Typography, TYPOGRAPHY_VARIANTS } from "@noalhub/ui/typography";
 import type { Variant } from "@noalhub/ui/typography";
@@ -71,9 +72,8 @@ const TOKENS = TYPOGRAPHY_VARIANTS.flatMap((variant) => [
   `--text-${variant}--letter-spacing`,
 ]);
 
-const SAMPLE = "Chuyển giao tri thức — the quick brown fox";
-
 function Step({ variant, values }: { variant: Variant; values: Record<string, string> }) {
+  const t = useTranslations("sb.typography");
   return (
     <div className="flex flex-col gap-1 border-b border-border py-4 last:border-0">
       <div className="flex flex-wrap items-baseline gap-x-3 text-body-4 text-muted-foreground">
@@ -82,22 +82,21 @@ function Step({ variant, values }: { variant: Variant; values: Record<string, st
         <span>line-height {values[`--text-${variant}--line-height`] || "1"}</span>
         <span>tracking {values[`--text-${variant}--letter-spacing`] || "0"}</span>
       </div>
-      <Typography variant={variant}>{SAMPLE}</Typography>
+      <Typography variant={variant}>{t("sample")}</Typography>
     </div>
   );
 }
 
 function Scale() {
+  const t = useTranslations("sb.foundations");
   const values = useTokens(TOKENS);
 
   return (
     <div className="flex flex-col gap-10 bg-background p-8 text-foreground">
       <div className="flex flex-col gap-2">
-        <h1 className="text-h3">Type scale</h1>
+        <h1 className="text-h3">{t("typeScale")}</h1>
         <p className="max-w-2xl text-body-3 text-muted-foreground">
-          Every step carries its own line-height and letter-spacing, so one
-          utility is the whole decision. The sample carries Vietnamese diacritics
-          on purpose — they are what a too-tight line-height breaks first.
+          {t("typeScaleNote")}
         </p>
       </div>
 

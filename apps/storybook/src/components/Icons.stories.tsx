@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { Button } from "@noalhub/ui/button";
 import { Icon, ICONS, LUCIDE } from "@noalhub/ui/icons";
 import { Input } from "@noalhub/ui/input";
 import { Tooltip } from "@noalhub/ui/tooltip";
@@ -17,9 +19,53 @@ const meta: Meta<typeof Icon> = {
 export default meta;
 type Story = StoryObj<typeof Icon>;
 
-const TILE_MIN_WIDTH = 128;
-/** Ô luôn cao đúng bằng đây: nhãn chỉ một dòng nên nội dung không đẩy ô cao ra. */
-const ROW_HEIGHT = 96;
+/**
+ * Các mức zoom: ô càng hẹp thì một hàng chứa càng nhiều icon. `row` luôn cao
+ * đúng bằng ô — nhãn chỉ một dòng nên nội dung không đẩy ô cao ra.
+ */
+const ZOOM_STEPS = [
+  { tile: 72, row: 64, icon: "size-4", label: "text-[10px]", box: "gap-1 py-1.5" },
+  { tile: 96, row: 80, icon: "size-5", label: "text-[11px]", box: "gap-1.5 py-2" },
+  { tile: 128, row: 96, icon: "size-6", label: "text-body-4", box: "gap-2 py-3" },
+  { tile: 176, row: 120, icon: "size-8", label: "text-body-3", box: "gap-2 py-4" },
+  { tile: 240, row: 152, icon: "size-10", label: "text-body-2", box: "gap-3 py-5" },
+] as const;
+const DEFAULT_ZOOM = 2;
+
+type Zoom = (typeof ZOOM_STEPS)[number];
+
+/** Mức zoom + hai nút chỉnh, dùng chung cho cả hai bảng. */
+function useZoom() {
+  const [index, setIndex] = useState(DEFAULT_ZOOM);
+  const zoom = ZOOM_STEPS[index]!;
+  const tIcons = useTranslations("sb.icons");
+
+  const controls = (
+    <div className="flex items-center gap-1">
+      <Button
+        variant="outline"
+        size="icon-sm"
+        aria-label={tIcons("zoomOut")}
+        disabled={index === 0}
+        onClick={() => setIndex((current) => Math.max(0, current - 1))}
+      >
+        <Icon icon={LUCIDE.zoomOut} className="size-4" />
+      </Button>
+      <Button
+        variant="outline"
+        size="icon-sm"
+        aria-label={tIcons("zoomIn")}
+        disabled={index === ZOOM_STEPS.length - 1}
+        onClick={() =>
+          setIndex((current) => Math.min(ZOOM_STEPS.length - 1, current + 1))
+        }
+      >
+        <Icon icon={LUCIDE.zoomIn} className="size-4" />
+      </Button>
+    </div>
+  );
+  return { zoom, controls };
+}
 
 /** Copy-to-clipboard state shared by both grids. */
 function useCopyName() {
@@ -49,21 +95,25 @@ function IconTile({
   name,
   iconName,
   isCopied,
+  zoom,
   onCopy,
 }: {
   name: string;
   iconName: string;
   isCopied: boolean;
+  zoom: Zoom;
   onCopy: (name: string) => void;
 }) {
+  const t = useTranslations("sb.icons");
+
   return (
     // Tên bị cắt bằng "…" nên phải có chỗ xem đủ: Tooltip thay cho `title` —
     // hiện nhanh, đọc được bằng bàn phím và theo đúng màu của theme.
-    <Tooltip label={`Nhấn để sao chép "${name}"`}>
+    <Tooltip label={t("copyHint", { name })}>
       <button
         type="button"
         onClick={() => onCopy(name)}
-        className={`flex h-full w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border py-4 px-1 text-center transition-colors ${
+        className={`flex h-full w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border px-1 text-center transition-colors ${zoom.box} ${
           isCopied
             ? "border-primary bg-primary/10"
             : "border-border hover:bg-muted"
@@ -71,12 +121,12 @@ function IconTile({
       >
         <Icon
           icon={isCopied ? ICONS.success : iconName}
-          className={`size-6 ${isCopied ? "text-primary" : "text-foreground"}`}
+          className={`shrink-0 ${zoom.icon} ${isCopied ? "text-primary" : "text-foreground"}`}
         />
         <span
-          className={`w-full truncate text-body-4 ${isCopied ? "text-primary" : "opacity-70"}`}
+          className={`w-full truncate ${zoom.label} ${isCopied ? "text-primary" : "opacity-70"}`}
         >
-          {isCopied ? "Đã chép!" : name}
+          {isCopied ? t("copied") : name}
         </span>
       </button>
     </Tooltip>
@@ -84,11 +134,12 @@ function IconTile({
 }
 
 function ClipboardWarning({ failed }: { failed: boolean }) {
+  const t = useTranslations("sb.icons");
+
   if (!failed) return null;
   return (
     <Typography variant="body-4" role="alert" className="text-danger">
-      Trình duyệt chặn clipboard (trang không chạy trên HTTPS hoặc localhost) —
-      hãy chép tên thủ công.
+      {t("clipboardBlocked")}
     </Typography>
   );
 }
@@ -101,16 +152,26 @@ function ClipboardWarning({ failed }: { failed: boolean }) {
 export const InUse: Story = {
   render: function InUseStory() {
     const { copied, failed, copy } = useCopyName();
+    const { zoom, controls } = useZoom();
     return (
       <div className="flex flex-col gap-3">
-        <ClipboardWarning failed={failed} />
-        <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
+        <div className="flex items-center justify-between gap-4">
+          <ClipboardWarning failed={failed} />
+          <div className="ml-auto">{controls}</div>
+        </div>
+        <div
+          className="grid gap-4"
+          style={{
+            gridTemplateColumns: `repeat(auto-fill, minmax(${zoom.tile}px, 1fr))`,
+          }}
+        >
           {Object.entries(ICONS).map(([name, iconName]) => (
-            <div key={name} className="h-24">
+            <div key={name} style={{ height: zoom.row }}>
               <IconTile
                 name={name}
                 iconName={iconName}
                 isCopied={copied === name}
+                zoom={zoom}
                 onCopy={copy}
               />
             </div>
@@ -130,8 +191,10 @@ export const AllLucide: Story = {
   // "padded" layout would add is applied on the wrapper below instead.
   parameters: { layout: "fullscreen" },
   render: function AllLucideStory() {
+    const t = useTranslations("sb.icons");
     const [query, setQuery] = useState("");
     const { copied, failed, copy } = useCopyName();
+    const { zoom, controls } = useZoom();
 
     const all = useMemo(() => Object.entries(LUCIDE) as [string, string][], []);
     const matches = useMemo(() => {
@@ -146,39 +209,46 @@ export const AllLucide: Story = {
     // Column count comes from the real width — the virtualizer needs a row count,
     // so responsive breakpoints in CSS alone would not be enough.
     const scrollRef = useRef<HTMLDivElement>(null);
-    const [columns, setColumns] = useState(6);
+    const [width, setWidth] = useState(0);
     useEffect(() => {
       const element = scrollRef.current;
       if (!element) return;
       const observer = new ResizeObserver(([entry]) => {
-        setColumns(
-          Math.max(1, Math.floor(entry.contentRect.width / TILE_MIN_WIDTH)),
-        );
+        setWidth(entry.contentRect.width);
       });
       observer.observe(element);
       return () => observer.disconnect();
     }, []);
+    const columns = Math.max(1, Math.floor(width / zoom.tile) || 1);
 
     const rowCount = Math.ceil(matches.length / columns);
     const virtualizer = useVirtualizer({
       count: rowCount,
       getScrollElement: () => scrollRef.current,
-      estimateSize: () => ROW_HEIGHT,
+      estimateSize: () => zoom.row,
       overscan: 4,
     });
+    // Số hàng và chiều cao hàng đổi theo mức zoom — phải đo lại, nếu không lưới
+    // vẫn giữ nguyên tổng chiều cao của mức zoom trước.
+    useEffect(() => {
+      virtualizer.measure();
+    }, [virtualizer, zoom, columns]);
 
     return (
       <div className="flex h-screen flex-col gap-4 p-4">
         <Input
-          label="Tìm icon"
-          placeholder="ví dụ: bell, arrow, user…"
+          label={t("search")}
+          placeholder={t("searchPlaceholder")}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
-        <Typography variant="body-4" className="text-muted-foreground">
-          {matches.length} / {all.length} icon. Nhấn vào một icon để sao chép
-          tên dùng với <code>LUCIDE.</code>
-        </Typography>
+        <div className="flex items-center justify-between gap-4">
+          <Typography variant="body-4" className="text-muted-foreground">
+            {t("count", { matched: matches.length, total: all.length })}{" "}
+            <code>LUCIDE.</code>
+          </Typography>
+          {controls}
+        </div>
         <ClipboardWarning failed={failed} />
         <div
           ref={scrollRef}
@@ -206,6 +276,7 @@ export const AllLucide: Story = {
                       name={name}
                       iconName={iconName}
                       isCopied={copied === name}
+                      zoom={zoom}
                       onCopy={copy}
                     />
                   ))}

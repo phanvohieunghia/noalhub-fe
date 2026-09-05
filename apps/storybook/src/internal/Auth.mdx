@@ -1,0 +1,160 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Flows/Auth Overview" />
+
+{/*
+  The map of the customer auth flow. Every box links to the story that renders
+  that screen (`Auth.stories.tsx`) — the link is the story id, so renaming an
+  export there breaks it here.
+
+  Drawn as inline SVG rather than pulled from a diagram library: it is one
+  picture, and a dependency that ships a parser and a layout engine to draw nine
+  boxes is not worth it. The colors are theme tokens, so the diagram follows the
+  light/dark toolbar exactly like the components do.
+
+  `target="_top"` on each link: this page renders inside the preview iframe, and
+  without it the whole Storybook shell would load inside itself.
+*/}
+
+# Luồng xác thực (apps/web)
+
+Bấm vào ô bất kỳ để mở màn hình tương ứng.
+
+<svg
+  viewBox="0 0 780 512"
+  className="w-full"
+  role="img"
+  aria-label="Sơ đồ luồng xác thực"
+  fontFamily="inherit"
+>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--muted-foreground)" />
+    </marker>
+    <filter id="cardShadow" x="-20%" y="-40%" width="140%" height="200%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor="#000" floodOpacity="0.10" />
+    </filter>
+  </defs>
+
+  <style>{`
+    .flow-node rect { transition: stroke .15s, filter .15s; }
+    .flow-node:hover rect { stroke: var(--primary); stroke-width: 2; }
+    .flow-node { cursor: pointer; }
+  `}</style>
+
+  {/* Khung nhóm: nhánh quên mật khẩu (trái) và nhánh OAuth (phải). */}
+  <g fill="none" stroke="var(--border)" strokeWidth="1" strokeDasharray="4 4">
+    <rect x="22" y="142" width="226" height="298" rx="14" />
+    <rect x="532" y="72" width="226" height="158" rx="14" />
+  </g>
+  <g fontSize="11" fill="var(--muted-foreground)" letterSpacing="0.06em">
+    <text x="24" y="458">KHÔI PHỤC MẬT KHẨU</text>
+    <text x="534" y="64">ĐĂNG NHẬP MẠNG XÃ HỘI</text>
+  </g>
+
+  {/* Mũi tên. Mọi góc đều bo tròn để đường đi dễ theo bằng mắt. */}
+  <g stroke="var(--muted-foreground)" strokeWidth="1.25" fill="none" markerEnd="url(#arrow)">
+    <path d="M390 72 V90" />
+    <path d="M485 116 H550" />
+    <path d="M645 142 V160" />
+    <path d="M645 212 V456 Q645 466 635 466 H485" />
+    <path d="M295 116 H155 Q135 116 135 136 V160" />
+    <path d="M135 212 V230" />
+    <path d="M135 282 V300" />
+    <path d="M135 352 V370" />
+    <path d="M430 142 V440" />
+    <path d="M230 396 H252 Q272 396 272 376 V172 Q272 152 292 152 H335 Q345 152 345 142" />
+  </g>
+
+  <g fontSize="10.5" fill="var(--muted-foreground)">
+    <text x="517" y="108" textAnchor="middle">OAuth</text>
+    <text x="290" y="108" textAnchor="end">quên mật khẩu</text>
+    <text x="145" y="226" textAnchor="start">gửi email đặt lại</text>
+    <text x="145" y="296" textAnchor="start">link trong email</text>
+    <text x="654" y="155" textAnchor="start">đổi code lấy token</text>
+    <text x="422" y="291" textAnchor="middle" transform="rotate(-90 422 291)">đăng nhập thành công</text>
+    <text x="264" y="280" textAnchor="middle" transform="rotate(-90 264 280)">đổi xong → /login</text>
+  </g>
+
+  {[
+    { href: "flows-auth--register", x: 295, y: 20, label: "Đăng ký", note: "/register" },
+    { href: "flows-auth--login", x: 295, y: 90, label: "Đăng nhập", note: "/login", primary: true },
+    { href: "flows-auth--o-auth-finishing", x: 550, y: 90, label: "Google / GitHub", note: "chuyển sang provider" },
+    { href: "flows-auth--o-auth-finishing", x: 550, y: 160, label: "/auth/callback", note: "?code= dùng một lần" },
+    { href: "flows-auth--forgot-password", x: 40, y: 160, label: "Quên mật khẩu", note: "/forgot-password" },
+    { href: "flows-auth--forgot-password-sent", x: 40, y: 230, label: "Đã gửi email", note: "câu trả lời luôn giống nhau" },
+    { href: "flows-auth--reset-password", x: 40, y: 300, label: "Đặt lại mật khẩu", note: "/reset-password?token=" },
+    { href: "flows-auth--reset-password-done", x: 40, y: 370, label: "Đổi mật khẩu xong", note: "quay lại đăng nhập" },
+    // No story: the flow ENDS here, and what is behind the door is another feature.
+    { href: null, x: 295, y: 440, label: "Vào app (protected)", note: "hết luồng auth", end: true },
+  ].map(({ href, x, y, label, note, primary, end }) => {
+    const Node = href ? "a" : "g";
+
+    return (
+      <Node
+        key={label + x + y}
+        className={href ? "flow-node" : undefined}
+        style={{ textDecoration: "none" }}
+        {...(href
+        ? // `./` là bắt buộc: trang này render TRONG `iframe.html`, nên một
+          // href trần (`?path=…`) resolve thành `iframe.html?path=…` và mở story
+          // trần trụi, mất cả sidebar. `./` trỏ về thư mục chứa — đúng chỗ của
+          // manager, kể cả khi Storybook được phục vụ dưới một tiền tố như
+          // `/internal/`.
+          { href: `./?path=/story/${href}`, target: "_top" }
+        : {})}
+      >
+        <rect
+          x={x}
+          y={y}
+          width={190}
+          height={52}
+          rx={10}
+          fill={primary ? "var(--primary)" : "var(--surface)"}
+          stroke={end ? "var(--primary)" : "var(--border)"}
+          strokeWidth={end ? 2 : 1}
+          filter="url(#cardShadow)"
+        />
+        <text
+          x={x + 95}
+          y={y + 23}
+          textAnchor="middle"
+          fontSize="13.5"
+          fontWeight="500"
+          fill={primary ? "var(--primary-foreground)" : "var(--foreground)"}
+        >
+          {label}
+        </text>
+        <text
+          x={x + 95}
+          y={y + 39}
+          textAnchor="middle"
+          fontSize="10.5"
+          fill={primary ? "var(--primary-foreground)" : "var(--muted-foreground)"}
+          opacity={primary ? 0.85 : 1}
+        >
+          {note}
+        </text>
+      </Node>
+    );
+  })}
+</svg>
+
+## Những chỗ dễ sai
+
+- **Không tiết lộ email có tồn tại hay không.** Màn "Đã gửi email" luôn hiện cùng
+  một câu, kể cả khi email không có trong hệ thống — nói thẳng là để lộ danh sách
+  tài khoản.
+- **`?code=` của OAuth dùng một lần và sống 60 giây.** Nó được đổi lấy token ngay
+  khi callback mở, rồi `router.replace` để mã rời khỏi history. Effect chạy hai
+  lần (StrictMode) sẽ làm lần thứ hai nhận `INVALID_TOKEN` — thật sự đã xảy ra,
+  nên `oauth-callback.tsx` chốt bằng một `useRef`.
+- **Lỗi từ backend là KEY, không phải câu chữ.** Đổi ngôn ngữ trên toolbar sẽ đổi
+  cả câu báo lỗi; nếu một câu đứng yên thì chỗ đó đang hardcode.
+
+## Ba màn hình này không có trong app
+
+`Auth.stories.tsx` dựng lại layout bằng primitive của `@noalhub/ui` chứ không
+import `apps/web/components/auth/*`: hai app build và deploy độc lập, không được
+import chéo, và các form thật gọi hook `@noalhub/api` nên cần backend mới render
+nổi. Sửa form thật mà quên sửa story ở đây thì sơ đồ sẽ lệch.

@@ -26,7 +26,14 @@ const TONES = {
   },
   info: {
     icon: ICONS.info,
-    className: "border-primary/30 bg-primary/10 text-primary",
+    /* `text-accent`, not `text-primary`: on its own /10 tint the brand-600 of
+       `--primary` measures 4.24:1, below the 4.5 AA floor — `--primary` is sized
+       for white-on-button, not for text on a pale wash of itself. `--accent` is
+       the token meant for emphasized TEXT (brand-700 light, brand-300 dark) and
+       gives 6.1:1 / 7.4:1 on the same tint. The other three tones already use a
+       status color picked against its own tint, which is why only `info` was
+       failing the a11y gate. */
+    className: "border-primary/30 bg-primary/10 text-accent",
     role: "status",
   },
   warning: {

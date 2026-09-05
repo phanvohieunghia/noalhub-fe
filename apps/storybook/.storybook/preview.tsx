@@ -31,6 +31,15 @@ import enWebDashboard from "../../../packages/i18n/messages/en/web.dashboard.jso
 import enWebFriends from "../../../packages/i18n/messages/en/web.friends.json";
 import enWebProfile from "../../../packages/i18n/messages/en/web.profile.json";
 
+/**
+ * Chữ demo của chính story (nhãn nút mẫu, tên người mẫu, nội dung bài mẫu).
+ * Không nằm trong `packages/i18n` vì đó là chỗ cho chữ của SẢN PHẨM — chi tiết
+ * ở `messages/README.md`. Nạp chung vào provider nên toolbar ngôn ngữ đổi luôn
+ * cả phần này.
+ */
+import sbVi from "../messages/vi.json";
+import sbEn from "../messages/en.json";
+
 import "./tailwind.css";
 
 /**
@@ -44,6 +53,7 @@ import "./tailwind.css";
  */
 const messages = {
   vi: {
+    sb: sbVi,
     common: viCommon,
     nav: viNav,
     validation: viValidation,
@@ -63,6 +73,7 @@ const messages = {
     },
   },
   en: {
+    sb: sbEn,
     common: enCommon,
     nav: enNav,
     validation: enValidation,
@@ -131,7 +142,7 @@ const preview: Preview = {
     },
   },
   initialGlobals: {
-    locale: "vi",
+    locale: "en",
   },
   decorators: [
     withI18n,

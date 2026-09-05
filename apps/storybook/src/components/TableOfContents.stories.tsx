@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
+import { useTranslations } from "next-intl";
 import { TableOfContents } from "@noalhub/ui/blog/table-of-contents";
 import type { BlogDoc } from "@noalhub/api/blog";
 
@@ -13,43 +14,35 @@ const meta: Meta<typeof TableOfContents> = {
 export default meta;
 type Story = StoryObj<typeof TableOfContents>;
 
-const sampleBlogDocWithHeadings: BlogDoc = {
-  type: "doc",
-  content: [
-    {
-      type: "heading",
-      attrs: { level: 2 },
-      content: [{ type: "text", text: "1. Giới thiệu tổng quan" }],
-    },
-    {
-      type: "paragraph",
-      content: [{ type: "text", text: "Nội dung giới thiệu..." }],
-    },
-    {
-      type: "heading",
-      attrs: { level: 2 },
-      content: [{ type: "text", text: "2. Hướng dẫn cài đặt" }],
-    },
-    {
-      type: "heading",
-      attrs: { level: 3 },
-      content: [{ type: "text", text: "2.1. Cài đặt dependencies" }],
-    },
-    {
-      type: "heading",
-      attrs: { level: 3 },
-      content: [{ type: "text", text: "2.2. Cấu hình Storybook" }],
-    },
-    {
-      type: "heading",
-      attrs: { level: 2 },
-      content: [{ type: "text", text: "3. Kết luận" }],
-    },
-  ],
-};
+/**
+ * Tài liệu mẫu dựng trong một hook chứ không phải hằng số ở module scope: chữ
+ * lấy từ `sb.toc` nên nó phụ thuộc ngôn ngữ đang chọn, mà module scope thì chưa
+ * có locale nào cả.
+ */
+function useSampleDoc(): BlogDoc {
+  const t = useTranslations("sb.toc");
+  const heading = (level: 2 | 3, key: string) => ({
+    type: "heading" as const,
+    attrs: { level },
+    content: [{ type: "text" as const, text: t(key) }],
+  });
+
+  return {
+    type: "doc",
+    content: [
+      heading(2, "intro"),
+      { type: "paragraph", content: [{ type: "text", text: t("introBody") }] },
+      heading(2, "install"),
+      heading(3, "deps"),
+      heading(3, "config"),
+      heading(2, "conclusion"),
+    ],
+  };
+}
 
 export const Default: Story = {
-  args: {
-    doc: sampleBlogDocWithHeadings,
+  render: function DefaultStory(args) {
+    const doc = useSampleDoc();
+    return <TableOfContents {...args} doc={doc} />;
   },
 };

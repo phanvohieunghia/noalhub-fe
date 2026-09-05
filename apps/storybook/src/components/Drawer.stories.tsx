@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Drawer, DRAWER_SIDES, type DrawerSide } from "@noalhub/ui/drawer";
 import { Button } from "@noalhub/ui/button";
 import { Typography } from "@noalhub/ui/typography";
+import { useTranslations } from "next-intl";
 
 const meta: Meta<typeof Drawer> = {
   title: "UI/Overlays/Drawer",
@@ -17,21 +18,24 @@ type Story = StoryObj<typeof Drawer>;
 
 export const Interactive: Story = {
   render: function InteractiveStory() {
+    const t = useTranslations("sb.drawer");
     const [open, setOpen] = useState(false);
 
     return (
       <div>
-        <Button onClick={() => setOpen(true)}>Mở Panel Cạnh Phải (Open Drawer)</Button>
-        <Drawer open={open} onClose={() => setOpen(false)} title="Thông tin chi tiết">
+        <Button onClick={() => setOpen(true)}>
+          {t("open", { side: t("sides.right") })}
+        </Button>
+        <Drawer open={open} onClose={() => setOpen(false)} title={t("title")}>
           <div className="flex flex-col gap-3">
-            <Typography variant="title-4">Thông tin cá nhân</Typography>
+            <Typography variant="title-4">{t("section")}</Typography>
             <Typography variant="body-3" className="opacity-80">
-              Đây là nội dung được trượt ra từ góc phải màn hình, thích hợp cho việc xem nhanh thông tin hoặc biểu mẫu chỉnh sửa gọn gàng.
+              {t("body")}
             </Typography>
           </div>
           <div className="mt-auto flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Đóng
+              {t("close")}
             </Button>
           </div>
         </Drawer>
@@ -43,13 +47,14 @@ export const Interactive: Story = {
 /** Cùng một Drawer, mở từ cả bốn cạnh màn hình. */
 export const AllSides: Story = {
   render: function AllSidesStory() {
+    const t = useTranslations("sb.drawer");
     const [side, setSide] = useState<DrawerSide | null>(null);
 
     return (
       <div className="flex flex-wrap gap-2">
         {DRAWER_SIDES.map((each) => (
           <Button key={each} variant="outline" onClick={() => setSide(each)}>
-            Mở từ {LABELS[each]}
+            {t("openFrom", { side: t(`sides.${each}`) })}
           </Button>
         ))}
 
@@ -57,26 +62,18 @@ export const AllSides: Story = {
           open={side !== null}
           side={side ?? "right"}
           onClose={() => setSide(null)}
-          title={`Trượt vào từ ${LABELS[side ?? "right"]}`}
+          title={t("slideFrom", { side: t(`sides.${side ?? "right"}`) })}
         >
           <Typography variant="body-3" className="text-muted-foreground">
-            Panel dùng chung một component, chỉ khác prop `side`. Cạnh trái/phải
-            cao hết màn hình, cạnh trên/dưới cao theo nội dung (tối đa 85vh).
+            {t("note")}
           </Typography>
           <div className="mt-auto flex justify-end pt-4">
             <Button variant="outline" onClick={() => setSide(null)}>
-              Đóng
+              {t("close")}
             </Button>
           </div>
         </Drawer>
       </div>
     );
   },
-};
-
-const LABELS: Record<DrawerSide, string> = {
-  right: "phải",
-  left: "trái",
-  top: "trên",
-  bottom: "dưới",
 };

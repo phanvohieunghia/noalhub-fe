@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
+import { useTranslations } from "next-intl";
 import { PostContent } from "@noalhub/ui/blog/post-content";
 import type {
   BlogBlockNode,
@@ -59,27 +60,28 @@ const PHOTO =
  * asking "what does a real post look like?".
  */
 export const Default: Story = {
-  args: {
-    doc: doc(
-      h(2, "Hướng dẫn cài đặt và sử dụng Storybook"),
+  render: function DefaultStory() {
+    const t = useTranslations("sb.post");
+
+    return <PostContent doc={doc(
+      h(2, t("introTitle")),
       p(
-        text("Storybook là một môi trường phát triển UI "),
-        text("độc lập", { type: "bold" }),
-        text(
-          ", giúp bạn xây dựng, kiểm thử và tài liệu hóa các component một cách trực quan mà không cần khởi động toàn bộ ứng dụng.",
+        text(t("introLead1")),
+        text(t("introLeadBold"), { type: "bold" }),
+        text(t("introLead2"),
         ),
       ),
       { type: "horizontalRule" },
-      h(2, "1. Lợi ích khi sử dụng"),
+      h(2, t("benefitsTitle")),
       {
         type: "bulletList",
         content: [
-          li(p(text("Phát triển độc lập (Isolated Development)"))),
-          li(p(text("Kiểm thử trực quan (Visual Regression Testing)"))),
-          li(p(text("Tài liệu sống, luôn khớp với code"))),
+          li(p(text(t("benefit1")))),
+          li(p(text(t("benefit2")))),
+          li(p(text(t("benefit3")))),
         ],
       },
-      h(3, "1.1. Cài đặt"),
+      h(3, t("installTitle")),
       {
         type: "codeBlock",
         attrs: { language: "bash" },
@@ -89,9 +91,9 @@ export const Default: Story = {
         type: "blockquote",
         content: [
           p(
-            text("Lưu ý: "),
-            text("Storybook chạy trên cổng 6006", { type: "code" }),
-            text(" theo mặc định."),
+            text(t("noteLabel")),
+            text(t("noteCode"), { type: "code" }),
+            text(t("noteTail")),
           ),
         ],
       },
@@ -99,19 +101,19 @@ export const Default: Story = {
         type: "image",
         attrs: {
           src: PHOTO,
-          alt: "Bàn làm việc của lập trình viên",
+          alt: t("photoAlt"),
           width: 1200,
           height: 800,
         },
       },
       p(
-        text("Đọc thêm tại "),
-        text("trang chủ Storybook", { type: "link", attrs: { href: "https://storybook.js.org" } }),
-        text(" hoặc xem "),
-        text("bài viết khác", { type: "link", attrs: { href: "/blog" } }),
-        text(" trên blog này."),
+        text(t("readMore")),
+        text(t("readMoreLink"), { type: "link", attrs: { href: "https://storybook.js.org" } }),
+        text(t("readMoreOr")),
+        text(t("readMoreOther"), { type: "link", attrs: { href: "/blog" } }),
+        text(t("readMoreTail")),
       ),
-    ),
+    )} />;
   },
 };
 
@@ -123,17 +125,19 @@ export const Default: Story = {
  * "Cài đặt" headings.
  */
 export const Headings: Story = {
-  args: {
-    doc: doc(
-      h(2, "Tiêu đề cấp 2"),
-      p(text("Đoạn văn dưới tiêu đề cấp 2.")),
-      h(3, "Tiêu đề cấp 3"),
-      p(text("Đoạn văn dưới tiêu đề cấp 3.")),
-      h(3, "Cài đặt"),
-      p(text("Hai tiêu đề trùng tên — id thứ hai phải khác id thứ nhất.")),
-      h(3, "Cài đặt"),
-      p(text("Đoạn văn cuối.")),
-    ),
+  render: function HeadingsStory() {
+    const t = useTranslations("sb.post");
+
+    return <PostContent doc={doc(
+      h(2, t("h2")),
+      p(text(t("h2Body"))),
+      h(3, t("h3")),
+      p(text(t("h3Body"))),
+      h(3, t("install")),
+      p(text(t("dupHeading"))),
+      h(3, t("install")),
+      p(text(t("lastPara"))),
+    )} />;
   },
 };
 
@@ -143,32 +147,34 @@ export const Headings: Story = {
  * `<a><strong><em>…</em></strong></a>`.
  */
 export const TextMarks: Story = {
-  args: {
-    doc: doc(
-      h(2, "Các kiểu định dạng chữ"),
-      p(text("Chữ thường, "), text("in đậm", { type: "bold" }), text(".")),
-      p(text("Chữ thường, "), text("in nghiêng", { type: "italic" }), text(".")),
-      p(text("Chữ thường, "), text("gạch ngang", { type: "strike" }), text(".")),
-      p(text("Chữ thường, "), text("mã nội dòng", { type: "code" }), text(".")),
+  render: function TextMarksStory() {
+    const t = useTranslations("sb.post");
+
+    return <PostContent doc={doc(
+      h(2, t("marksTitle")),
+      p(text(t("plain")), text(t("bold"), { type: "bold" }), text(t("dot"))),
+      p(text(t("plain")), text(t("italic"), { type: "italic" }), text(t("dot"))),
+      p(text(t("plain")), text(t("strike"), { type: "strike" }), text(t("dot"))),
+      p(text(t("plain")), text(t("code"), { type: "code" }), text(t("dot"))),
       p(
-        text("Liên kết ngoài "),
-        text("mở tab mới", { type: "link", attrs: { href: "https://storybook.js.org" } }),
-        text(" — renderer tự gắn target=\"_blank\" rel=\"nofollow noopener\"."),
+        text(t("extLink")),
+        text(t("extLinkText"), { type: "link", attrs: { href: "https://storybook.js.org" } }),
+        text(t("extLinkTail")),
       ),
       p(
-        text("Liên kết nội bộ "),
-        text("giữ nguyên tab", { type: "link", attrs: { href: "/blog/bai-viet" } }),
-        text(" vì href bắt đầu bằng /."),
+        text(t("intLink")),
+        text(t("intLinkText"), { type: "link", attrs: { href: "/blog/bai-viet" } }),
+        text(t("intLinkTail")),
       ),
       p(
-        text("Chồng nhiều mark: "),
-        text("đậm + nghiêng + link", { type: "bold" }, { type: "italic" }, {
+        text(t("stacked")),
+        text(t("stackedText"), { type: "bold" }, { type: "italic" }, {
           type: "link",
           attrs: { href: "https://storybook.js.org" },
         }),
-        text("."),
+        text(t("dot")),
       ),
-    ),
+    )} />;
   },
 };
 
@@ -177,67 +183,71 @@ export const TextMarks: Story = {
  * nested list — the case that breaks renderers written for flat lists.
  */
 export const Lists: Story = {
-  args: {
-    doc: doc(
-      h(2, "Danh sách không thứ tự"),
+  render: function ListsStory() {
+    const t = useTranslations("sb.post");
+
+    return <PostContent doc={doc(
+      h(2, t("bulletTitle")),
       {
         type: "bulletList",
         content: [
-          li(p(text("Mục thứ nhất"))),
+          li(p(text(t("item1")))),
           li(
-            p(text("Mục thứ hai, có danh sách con:")),
+            p(text(t("item2"))),
             {
               type: "bulletList",
-              content: [li(p(text("Mục con A"))), li(p(text("Mục con B")))],
+              content: [li(p(text(t("subA")))), li(p(text(t("subB"))))],
             },
           ),
           li(
-            p(text("Mục thứ ba, gồm hai đoạn văn.")),
-            p(text("Đoạn văn thứ hai nằm trong cùng một mục.")),
+            p(text(t("item3"))),
+            p(text(t("item3b"))),
           ),
         ],
       },
-      h(2, "Danh sách có thứ tự"),
+      h(2, t("orderedTitle")),
       {
         type: "orderedList",
         content: [
-          li(p(text("Bước một"))),
+          li(p(text(t("step1")))),
           li(
-            p(text("Bước hai, có các bước nhỏ:")),
+            p(text(t("step2"))),
             {
               type: "orderedList",
-              content: [li(p(text("Bước 2.1"))), li(p(text("Bước 2.2")))],
+              content: [li(p(text(t("step21")))), li(p(text(t("step22"))))],
             },
           ),
-          li(p(text("Bước ba, kèm "), text("chữ in đậm", { type: "bold" }))),
+          li(p(text(t("step3")), text(t("boldText"), { type: "bold" }))),
         ],
       },
-    ),
+    )} />;
   },
 };
 
 /** A blockquote also holds blocks — headings, lists and rules included. */
 export const Blockquote: Story = {
-  args: {
-    doc: doc(
-      h(2, "Trích dẫn"),
+  render: function BlockquoteStory() {
+    const t = useTranslations("sb.post");
+
+    return <PostContent doc={doc(
+      h(2, t("quoteTitle")),
       {
         type: "blockquote",
-        content: [p(text("Một trích dẫn ngắn, chỉ có một đoạn văn."))],
+        content: [p(text(t("quoteShort")))],
       },
       {
         type: "blockquote",
         content: [
-          h(3, "Trích dẫn có tiêu đề"),
-          p(text("Đoạn văn thứ nhất trong trích dẫn.")),
+          h(3, t("quoteTitled")),
+          p(text(t("quoteP1"))),
           {
             type: "bulletList",
-            content: [li(p(text("Kèm cả danh sách"))), li(p(text("Nhiều mục")))],
+            content: [li(p(text(t("quoteList")))), li(p(text(t("quoteListItem"))))],
           },
-          p(text("Đoạn kết, có "), text("mã nội dòng", { type: "code" }), text(".")),
+          p(text(t("quoteEnd")), text(t("code"), { type: "code" }), text(t("dot"))),
         ],
       },
-    ),
+    )} />;
   },
 };
 
@@ -246,10 +256,12 @@ export const Blockquote: Story = {
  * The `null` case is a block pasted without a language chosen.
  */
 export const CodeBlocks: Story = {
-  args: {
-    doc: doc(
-      h(2, "Khối mã"),
-      p(text("Có khai báo ngôn ngữ:")),
+  render: function CodeBlocksStory() {
+    const t = useTranslations("sb.post");
+
+    return <PostContent doc={doc(
+      h(2, t("codeTitle")),
+      p(text(t("codeWithLang"))),
       {
         type: "codeBlock",
         attrs: { language: "typescript" },
@@ -259,15 +271,15 @@ export const CodeBlocks: Story = {
           ),
         ],
       },
-      p(text("Không khai báo ngôn ngữ:")),
+      p(text(t("codeNoLang"))),
       {
         type: "codeBlock",
         attrs: { language: null },
         content: [text("$ pnpm install\n$ pnpm dev")],
       },
-      p(text("Khối mã rỗng:")),
+      p(text(t("codeEmpty"))),
       { type: "codeBlock", attrs: { language: null } },
-      p(text("Dòng rất dài, để kiểm tra thanh cuộn ngang:")),
+      p(text(t("codeLong"))),
       {
         type: "codeBlock",
         attrs: { language: "json" },
@@ -277,7 +289,7 @@ export const CodeBlocks: Story = {
           ),
         ],
       },
-    ),
+    )} />;
   },
 };
 
@@ -288,23 +300,25 @@ export const CodeBlocks: Story = {
  * either way.
  */
 export const Images: Story = {
-  args: {
-    doc: doc(
-      h(2, "Ảnh có kích thước thật"),
+  render: function ImagesStory() {
+    const t = useTranslations("sb.post");
+
+    return <PostContent doc={doc(
+      h(2, t("imgSized")),
       {
         type: "image",
-        attrs: { src: PHOTO, alt: "Bàn làm việc của lập trình viên", width: 1200, height: 800 },
+        attrs: { src: PHOTO, alt: t("photoAlt"), width: 1200, height: 800 },
       },
-      h(2, "Ảnh không đo được kích thước"),
-      p(text("Khung aspect-video + object-contain, ảnh không bị méo.")),
+      h(2, t("imgUnsized")),
+      p(text(t("imgUnsizedNote"))),
       {
         type: "image",
-        attrs: { src: PHOTO, alt: "Cùng tấm ảnh, không có width/height", width: null, height: null },
+        attrs: { src: PHOTO, alt: t("imgSame"), width: null, height: null },
       },
-      h(2, "Ảnh trang trí"),
-      p(text("alt rỗng là hợp lệ — trình đọc màn hình bỏ qua ảnh này.")),
+      h(2, t("imgDecor")),
+      p(text(t("imgDecorNote"))),
       { type: "image", attrs: { src: PHOTO, alt: "", width: 1200, height: 800 } },
-    ),
+    )} />;
   },
 };
 
@@ -315,21 +329,23 @@ export const Images: Story = {
  * the block away.
  */
 export const BreaksAndSpacing: Story = {
-  args: {
-    doc: doc(
-      h(2, "Xuống dòng và khoảng trắng"),
+  render: function BreaksAndSpacingStory() {
+    const t = useTranslations("sb.post");
+
+    return <PostContent doc={doc(
+      h(2, t("breaksTitle")),
       p(
-        text("Dòng thứ nhất"),
+        text(t("line1")),
         { type: "hardBreak" },
-        text("Dòng thứ hai, cùng một đoạn văn"),
+        text(t("line2")),
         { type: "hardBreak" },
-        text("Dòng thứ ba"),
+        text(t("line3")),
       ),
       { type: "paragraph" },
-      p(text("Phía trên là một đoạn văn rỗng — nó vẫn chiếm chỗ.")),
+      p(text(t("emptyPara"))),
       { type: "horizontalRule" },
-      p(text("Phía trên là horizontalRule.")),
-    ),
+      p(text(t("afterRule"))),
+    )} />;
   },
 };
 
@@ -344,46 +360,48 @@ export const BreaksAndSpacing: Story = {
  * from editor state that skipped it.
  */
 export const Degradation: Story = {
-  args: {
-    doc: {
+  render: function DegradationStory() {
+    const t = useTranslations("sb.post");
+
+    return <PostContent doc={{
       type: "doc",
       content: [
-        { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "Nội dung hỏng" }] },
+        { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: t("brokenTitle") }] },
         {
           type: "paragraph",
           content: [
-            { type: "text", text: "Link nguy hiểm " },
+            { type: "text", text: t("dangerLink") },
             {
               type: "text",
-              text: "vẫn giữ được chữ",
+              text: t("dangerLinkText"),
               marks: [{ type: "link", attrs: { href: "javascript:alert(1)" } }],
             },
-            { type: "text", text: " nhưng không sinh ra thẻ <a>." },
+            { type: "text", text: t("dangerLinkTail") },
           ],
         },
         {
           type: "paragraph",
-          content: [{ type: "text", text: "Ảnh dưới đây có host ngoài allowlist nên bị bỏ hẳn:" }],
+          content: [{ type: "text", text: t("imgBlocked") }],
         },
         {
           type: "image",
-          attrs: { src: "https://evil.example.com/x.png", alt: "Không bao giờ hiển thị", width: 800, height: 600 },
+          attrs: { src: "https://evil.example.com/x.png", alt: t("neverShown"), width: 800, height: 600 },
         },
         // An unknown block: dropped in silence, and the paragraphs around it survive.
         { type: "customEmbed", attrs: { id: "42" } },
         {
           type: "paragraph",
-          content: [{ type: "text", text: "Đoạn văn này vẫn hiển thị bình thường." }],
+          content: [{ type: "text", text: t("stillFine") }],
         },
         // An unknown MARK on a valid text node: the mark is ignored, the text stays.
         {
           type: "paragraph",
           content: [
-            { type: "text", text: "Chữ này mang một mark lạ", marks: [{ type: "highlight" }] },
+            { type: "text", text: t("unknownMark"), marks: [{ type: "highlight" }] },
           ],
         },
       ],
-    } as unknown as BlogDoc,
+    } as unknown as BlogDoc} />;
   },
 };
 

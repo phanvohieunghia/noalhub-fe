@@ -11,6 +11,13 @@
 # runtime ở đây là nginx phục vụ file, không phải node — và cũng vì thế không có
 # build-arg `NEXT_PUBLIC_*` nào: không có gì để inline vào bundle.
 
+# Bản này dựng cho ai. `public` bỏ hẳn `src/internal/**` ra khỏi index (xem
+# `.storybook/main.ts`), `internal` build tất và chỉ được phục vụ sau một lớp
+# đăng nhập ở reverse proxy.
+# Mặc định `public`: quên truyền build-arg thì ra bản ÍT thứ hơn, không phải bản
+# nhiều hơn — hỏng theo hướng an toàn.
+ARG SB_AUDIENCE=public
+
 # --- Stage build ------------------------------------------------------------
 FROM node:24-bookworm-slim AS build
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
@@ -37,6 +44,10 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
+# `ARG` ở đầu file nằm ngoài mọi stage, nên phải khai lại trong stage này mới
+# đọc được — khai thiếu thì biến rỗng và Storybook lặng lẽ build ra bản `internal`.
+ARG SB_AUDIENCE
+ENV SB_AUDIENCE=$SB_AUDIENCE
 # `...` (ba chấm) = storybook + các package nó phụ thuộc. web/admin không được
 # build, nên image này không chứa code của hai app kia.
 RUN pnpm turbo run build-storybook --filter=@noalhub/storybook...
@@ -45,6 +56,10 @@ RUN pnpm turbo run build-storybook --filter=@noalhub/storybook...
 # Chỉ có file tĩnh, nên image runtime không cần node: nginx:alpine ~50MB thay vì
 # ~200MB của node:24-bookworm-slim.
 FROM nginx:alpine AS runtime
+# Một config duy nhất cho cả hai bản. Lớp đăng nhập của bản nội bộ nằm ở
+# reverse proxy phía trước (oauth2-proxy, xem `docs/storybook.md` §6), không
+# nằm trong image — nên hai image chỉ khác nhau ở CHỖ CHỨA gì, không khác cách
+# phục vụ.
 COPY apps/storybook/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /repo/apps/storybook/storybook-static /usr/share/nginx/html
 EXPOSE 80
