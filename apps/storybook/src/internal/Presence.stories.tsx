@@ -67,25 +67,25 @@ export const Overview: Story = {
     const rs = useFlowText("sb.flows.presence.redisSteps");
     const redisNotes = useFlowText("sb.flows.presence.redisNotes");
 
+    /*
+     * TWO boxes, not three. `offline` is also the ENTRY point: the store holds
+     * no entry for most people, and the view renders that absence as offline
+     * rather than as a third dot (`presence-dot.tsx`).
+     */
     const nodes: FlowNode[] = [
-      { href: "flows-presence--states", x: 40, y: 130, label: n("unknown"), note: n("unknownNote"), end: true },
-      { href: "flows-presence--labels", x: 460, y: 60, label: n("online"), note: n("onlineNote") },
-      { href: "flows-presence--going-offline", x: 460, y: 236, label: n("offline"), note: n("offlineNote") },
+      { href: "flows-presence--going-offline", x: 60, y: 120, label: n("offline"), note: n("offlineNote"), primary: true },
+      { href: "flows-presence--labels", x: 440, y: 120, label: n("online"), note: n("onlineNote") },
     ];
 
     const edges: FlowEdge[] = [
-      // The elbows turn late, on purpose: the two-line label needs the whole run
-      // between the boxes to itself, and an early turn used to cross it.
-      { d: "M230 140 H428 Q440 140 440 128 V98 Q440 86 452 86 H460", label: e("toOnlineA"), label2: e("toOnlineB"), labelX: 240, labelY: 118 },
-      { d: "M230 172 H428 Q440 172 440 184 V234 Q440 246 452 246 H460", label: e("toOfflineA"), label2: e("toOfflineB"), labelX: 240, labelY: 196 },
-      { d: "M535 112 V236", label: e("closeTab"), labelX: 521, labelY: 174, anchor: "middle", rotate: true },
-      { d: "M575 236 V112", label: e("reopen"), labelX: 589, labelY: 174, anchor: "middle", rotate: true },
-      // `status: null` is a transition that goes nowhere — drawn as a self-loop
-      // so it cannot be mistaken for "no data means offline".
-      { d: "M110 130 Q110 100 135 100 Q160 100 160 128", label: e("stay"), labelX: 135, labelY: 92, anchor: "middle" },
-      // Comes back into the BOTTOM CENTRE of "unknown" — the old route arrived
-      // at the box's corner, which read like it was pointing past it.
-      { d: "M650 262 H726 Q740 262 740 276 V292 Q740 306 726 306 H149 Q135 306 135 292 V188", label: e("clear"), labelX: 400, labelY: 326, anchor: "middle" },
+      // Two separate runs rather than one double-ended arrow: they are different
+      // transports. Going online arrives either in the REST seed or as an event;
+      // going offline is only ever an event.
+      { d: "M250 132 H432", label: e("toOnlineA"), label2: e("toOnlineB"), labelX: 341, labelY: 100, anchor: "middle" },
+      { d: "M440 160 H258", label: e("toOffline"), labelX: 341, labelY: 190, anchor: "middle" },
+      // The absence of data is not a transition — it is the offline box itself,
+      // drawn as a self-loop so it cannot be read as a third state.
+      { d: "M120 172 Q120 208 155 208 Q190 208 190 178", label: e("noData"), labelX: 155, labelY: 230, anchor: "middle" },
     ];
 
     const lanes: Lane[] = [
@@ -153,7 +153,7 @@ export const Overview: Story = {
             width={780}
           >
             <FlowMap
-              viewBox="0 0 780 350"
+              viewBox="0 0 780 258"
               title={t("title")}
               nodes={nodes}
               edges={edges}
@@ -248,25 +248,26 @@ export const Overview: Story = {
 };
 
 /**
- * Ba trạng thái của chấm presence. Cái thứ ba mới là cái dễ quên: store được
- * seed từ `members[].status` của REST rồi cập nhật bằng `presence:changed`, nên
- * "không rõ" là khi BE **không tính** presence cho member đó (`status: null` —
- * danh sách hội thoại chỉ tính cho DM) hoặc userId chưa xuất hiện ở đâu cả. Nó
- * KHÔNG phải offline, và `useSeedPresence` cố tình không ghi đè `null` thành
- * offline.
+ * The two states of the presence dot.
+ *
+ * There is no third: the store can hold nothing at all for a user — presence is
+ * only broadcast to people who share a conversation, and the conversation list
+ * only carries `status` for DMs — and the view renders that absence as offline.
+ * The trade is that someone genuinely online reads as offline until the first
+ * fact about them arrives, which is exactly what the REST seed is for.
  */
 export const States: Story = {
   render: function StatesScreen() {
     const t = useTranslations("web.chat.presence");
+    const ts = useTranslations("sb.flows.presence.states");
 
     const rows: { state: PresenceState; label: string; note: string }[] = [
-      { state: "online", label: t("online"), note: "seed từ members[].status, rồi presence:changed" },
+      { state: "online", label: t("online"), note: ts("onlineNote") },
       {
         state: "offline",
         label: t("hoursAgo", { hours: 3 }),
-        note: "status: offline + lastSeenAt",
+        note: ts("offlineNote"),
       },
-      { state: "unknown", label: t("unknown"), note: "status = null, hoặc chưa gặp userId này" },
     ];
 
     return (
@@ -301,8 +302,9 @@ export const States: Story = {
 };
 
 /**
- * Cùng một nguồn dữ liệu, hai chỗ hiển thị: chấm trên avatar ở sidebar và câu
- * chữ ở header. `lastSeenAt` chỉ có khi offline → "Hoạt động 3 giờ trước".
+ * One data source, two places it shows up: the dot on the sidebar avatar and the
+ * sentence in the header. `lastSeenAt` only exists when offline → "Active 3 hours
+ * ago".
  */
 export const Labels: Story = {
   render: function LabelsScreen() {
@@ -315,7 +317,6 @@ export const Labels: Story = {
       t("hoursAgo", { hours: 3 }),
       t("daysAgo", { days: 2 }),
       t("onDate", { date: "3 Th7" }),
-      t("unknown"),
     ];
 
     return (
@@ -329,9 +330,9 @@ export const Labels: Story = {
 };
 
 /**
- * Người kia vừa offline. Chấm chuyển xám và header đổi sang `lastSeenAt` — có
- * thể trễ tới 60 giây nếu một instance BE chết đột ngột (`staleAfter = 60s`),
- * đó là thiết kế của BE chứ không phải bug của FE.
+ * The other person just went offline. The dot turns gray and the header switches to
+ * `lastSeenAt` — which can lag by up to 60 seconds if a backend instance dies
+ * abruptly (`staleAfter = 60s`); that is the backend's design, not an FE bug.
  */
 export const GoingOffline: Story = {
   render: function GoingOfflineScreen() {

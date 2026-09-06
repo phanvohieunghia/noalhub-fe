@@ -391,8 +391,11 @@ Giai đoạn 1 giữ outbox **trong memory** (F5 là mất, `MessageBubble` fail
 
 - **Typing TTL 5s phía client** (BE chốt: `typing` không persist, được phép rơi, client tự tắt). Mỗi `userId` một timeout, clear khi unmount — không thì "đang nhập…" treo vĩnh viễn.
 - **Emit `typing:start` throttle**, và `typing:stop` khi blur hoặc gửi xong. Đừng emit mỗi keystroke.
-- **Presence chỉ có cho người chung hội thoại** (BE giới hạn để không rò rỉ + không scale). → `usePresence(userId)` phải chịu được "không có dữ liệu" = hiện `PresenceDot` xám, **không** hiện "offline" chắc chắn.
-- `lastSeenAt` chỉ có khi offline → "Hoạt động 3 giờ trước".
+- **Presence chỉ có cho người chung hội thoại** (BE giới hạn để không rò rỉ + không scale) → `usePresence(userId)` trả `undefined` cho mọi người khác.
+- **UI chỉ có HAI trạng thái: online và offline.** "Không có dữ liệu" được vẽ thành **offline**, không có chấm thứ ba: người đọc không hành xử khác nhau giữa "đang vắng" và "không rõ".
+  - Cái giá phải trả, ghi ra để sau này không ai tưởng là bug: một người **thật sự đang online sẽ hiện offline** cho tới khi có thông tin đầu tiên về họ. Vì thế `useSeedPresence()` (đọc `members[].status` từ response REST của `useConversations`/`useConversation`) là thứ **chịu lực**, không phải một tối ưu — `presence:changed` chỉ bắn khi có **thay đổi**, nó không bao giờ thông báo trạng thái hiện tại.
+  - `status: null` (BE không tính presence — theo spec, danh sách hội thoại chỉ tính cho DM) vẫn bị seed **bỏ qua**: store không ghi giá trị mà BE chưa từng gửi. Việc gộp về offline nằm ở **view** (`apps/web/components/chat/presence-dot.tsx`), nên quyết định này chỉ ở một chỗ và đảo lại được nếu sau này muốn ba trạng thái.
+- `lastSeenAt` chỉ có khi offline → "Hoạt động 3 giờ trước"; không có thì rơi về nhãn "Không hoạt động".
 - **Offline có thể trễ tới 60 giây** khi một instance BE chết đột ngột (`staleAfter = 60s`). Đường thoát bình thường (đóng tab, mất mạng) vẫn ~1 giây. → **Không** dựng UI phụ thuộc presence chính xác tức thời, và đừng coi đó là bug của FE.
 
 ### 5.8 Đánh dấu đã đọc

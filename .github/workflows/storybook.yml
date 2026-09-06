@@ -1,7 +1,8 @@
 name: Storybook
 
-# Chỉ chạy khi thứ Storybook render thực sự đổi. Sửa apps/web hay apps/admin
-# không thể làm đỏ job này, nên không cần bắt cả repo phải chờ nó.
+# Only runs when what Storybook renders actually changes. Editing apps/web or
+# apps/admin cannot turn this job red, so there is no reason to make the whole
+# repo wait on it.
 on:
   pull_request:
     paths:
@@ -22,8 +23,8 @@ on:
       - '.github/workflows/storybook.yml'
   workflow_dispatch:
 
-# Push liên tiếp vào cùng một PR thì chỉ giữ run mới nhất — run cũ không còn
-# nói lên điều gì về code hiện tại.
+# Back-to-back pushes to the same PR keep only the latest run — an older run no
+# longer says anything about the current code.
 concurrency:
   group: storybook-${{ github.ref }}
   cancel-in-progress: true
@@ -41,25 +42,25 @@ jobs:
           node-version: 24
           cache: pnpm
 
-      # Cài cả workspace: stories import @noalhub/ui, mà package đó lại kéo theo
-      # @noalhub/config và @noalhub/i18n. `--filter` ở đây chỉ tổ thiếu.
+      # Install the whole workspace: stories import @noalhub/ui, which in turn pulls
+      # in @noalhub/config and @noalhub/i18n. A `--filter` here would only miss things.
       - run: pnpm install --frozen-lockfile
 
-      # Chỉ Chromium. test-runner mặc định chạy trên đúng một browser, tải thêm
-      # firefox/webkit là hai phút CI không dùng vào việc gì. `--with-deps` cài
-      # thư viện hệ thống mà runner ubuntu không có sẵn.
-      - name: Cài Chromium cho Playwright
+      # Chromium only. The test-runner defaults to exactly one browser, so downloading
+      # firefox/webkit is two minutes of CI spent on nothing. `--with-deps` installs the
+      # system libraries the ubuntu runner does not ship with.
+      - name: Install Chromium for Playwright
         run: pnpm --filter @noalhub/storybook exec playwright install chromium --with-deps
 
-      # `build-storybook` là dependency của task này trong turbo.json, nên bản
-      # tĩnh được dựng trước rồi test-runner mới bắn vào nó. Chạy trên bản build
-      # chứ không phải dev server: đó đúng là thứ sẽ được deploy, và nó không
-      # phải biên dịch lại từng story lúc test.
-      - name: Chạy stories + kiểm tra a11y
+      # `build-storybook` is a dependency of this task in turbo.json, so the static
+      # build is produced first and only then does the test-runner hit it. Run against
+      # the build rather than the dev server: that is exactly what gets deployed, and it
+      # does not have to recompile every story during the test.
+      - name: Run stories + a11y checks
         run: pnpm turbo run test-storybook:ci --filter=@noalhub/storybook
 
-      # Bản tĩnh vẫn giữ lại kể cả khi test đỏ — mở nó ra xem thường nhanh hơn
-      # đọc log axe.
+      # Keep the static build even when the tests are red — opening it is usually
+      # faster than reading the axe log.
       - uses: actions/upload-artifact@v4
         if: always()
         with:

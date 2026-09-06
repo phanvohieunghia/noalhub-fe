@@ -23,8 +23,9 @@ export default meta;
 type Story = StoryObj<typeof Tooltip>;
 
 /*
- * `label` để trống trong `args` rồi lấy câu mẫu đã dịch khi không có giá trị:
- * gõ vào ô Controls vẫn đè được, mà đổi ngôn ngữ trên toolbar cũng ăn.
+ * `label` is left empty in `args` and falls back to the translated sample when it
+ * has no value: the Controls field still overrides it, and the toolbar's language
+ * switch still applies.
  */
 export const Default: Story = {
   args: { side: "top", delayMs: 200 },
@@ -39,7 +40,7 @@ export const Default: Story = {
   },
 };
 
-/** Chữ dài tự xuống dòng, tối đa 16rem. */
+/** Long text wraps on its own, capped at 16rem. */
 export const LongText: Story = {
   args: { side: "bottom" },
   render: function LongTextStory(args) {

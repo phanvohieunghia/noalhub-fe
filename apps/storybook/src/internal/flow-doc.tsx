@@ -774,17 +774,31 @@ export function SequenceDiagram({
   );
 }
 
-/** The closing note both pages carry: these screens are rebuilt, not imported. */
-export function SourceNote() {
+/**
+ * The closing note every flow page carries: what this page is, and what it is
+ * not.
+ *
+ * The default says "these screens are rebuilt, not imported" — true for Chat and
+ * Presence, which redraw the layout from primitives. Blog links to the real
+ * `UI/Blog` components instead, so it passes its own pair of keys rather than
+ * carrying a caveat that does not apply to it.
+ */
+export function SourceNote({
+  sectionKey = "sourceSection",
+  textKey = "source",
+}: {
+  sectionKey?: string;
+  textKey?: string;
+} = {}) {
   const t = useTranslations("sb.flows.common");
 
   return (
     <section className="border-border text-muted-foreground flex flex-col gap-2 rounded-lg border border-dashed p-4">
       <span className="text-body-4 font-medium tracking-[0.14em] uppercase">
-        {t("sourceSection")}
+        {t(sectionKey)}
       </span>
       <Typography variant="body-4" className="text-muted-foreground">
-        <RichText>{t("source")}</RichText>
+        <RichText>{t(textKey)}</RichText>
       </Typography>
     </section>
   );

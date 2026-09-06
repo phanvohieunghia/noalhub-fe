@@ -289,7 +289,11 @@
       "zoomIn": "Phóng to",
       "zoomOut": "Thu nhỏ",
       "zoomReset": "Về mức mặc định",
-      "redisSection": "Redis — trạng thái thật sự nằm ở đâu"
+      "redisSection": "Redis — trạng thái thật sự nằm ở đâu",
+      "cacheSection": "Cache tag — tag nào xoá cái gì",
+      "slugSection": "Sơ đồ tuần tự — slug cũ",
+      "docsSection": "Luật thật sự nằm ở đâu",
+      "blogSource": "Trang này ghi lại `packages/api/src/blog/server.ts`, `apps/web/app/api/revalidate/route.ts` và `apps/admin/components/posts/post-editor.tsx` — nó không dựng lại chúng. Các ô trong sơ đồ luồng trỏ sang story `UI/Blog`, và đó là component thật của `@noalhub/ui`. Luật đầy đủ, kể cả phần thuộc backend, nằm ở `docs/blog.md`."
     },
     "chat": {
       "title": "Luồng chat",
@@ -372,25 +376,19 @@
     "presence": {
       "title": "Luồng presence — online / offline",
       "lead": "Presence **không có endpoint riêng**. Nó vào app bằng hai đường: một ảnh chụp đi kèm response REST của luồng chat (`members[].status`), rồi sau đó là các sự kiện `presence:changed` trên socket. Cả hai đổ vào một store zustand — không qua React Query, không có ack.",
-      "flowCaption": "**Không rõ** là trạng thái khởi đầu và không có đường quay lại: một khi đã biết, store giữ giá trị cuối cùng cho tới lần `clear()` — kể cả khi giá trị đó đã cũ.",
-      "seqCaption": "Cùng ba trạng thái đó, nhìn theo đường đi của dữ liệu: lúc nào là REST, lúc nào là sự kiện socket.",
+      "flowCaption": "**Hai trạng thái, và offline là chỗ bắt đầu.** Store có thể không có gì cho một user, và UI vẽ chỗ trống đó thành offline — nên chấm không bao giờ trống và cũng không có màu thứ ba. Seed là thứ làm nó xanh trước khi có bất kỳ sự kiện nào.",
+      "seqCaption": "Cùng hai trạng thái đó, nhìn theo đường đi của dữ liệu: lúc nào là REST, lúc nào là sự kiện socket.",
       "nodes": {
-        "unknown": "Không rõ",
-        "unknownNote": "chấm mờ — chưa có dữ liệu",
-        "online": "Online",
-        "onlineNote": "“Đang hoạt động”, không có mốc giờ",
         "offline": "Offline",
-        "offlineNote": "lastSeenAt → “3 giờ trước”"
+        "offlineNote": "chấm xám · có lastSeenAt thì hiện",
+        "online": "Online",
+        "onlineNote": "“Đang hoạt động”, không có mốc giờ"
       },
       "edges": {
-        "toOnlineA": "seed status=online",
+        "toOnlineA": "seed status=online, hoặc",
         "toOnlineB": "presence:changed online",
-        "toOfflineA": "seed status=offline",
-        "toOfflineB": "presence:changed offline",
-        "closeTab": "đóng tab (~1s)",
-        "reopen": "mở lại app",
-        "stay": "status = null → đứng yên",
-        "clear": "logout · clear() → quên hết, quay về không rõ"
+        "toOffline": "presence:changed offline + lastSeenAt",
+        "noData": "không có dữ liệu → vẫn là offline"
       },
       "lanes": {
         "ui": "UI + hooks",
@@ -409,10 +407,10 @@
       "steps": {
         "1": "useConversations() / useConversation() — REST của luồng chat, không phải API presence",
         "2": "members[].status + lastSeenAt — ảnh chụp presence tại thời điểm trả về",
-        "3": "useSeedPresence(): setPresence cho mọi member có status",
+        "3": "useSeedPresence(): setPresence cho mọi member CÓ status",
         "4": "chấm xanh / xám ngay lần render đầu, không cần chờ sự kiện nào",
         "5": "member.status === null (list chỉ tính cho DM) hoặc userId chưa từng xuất hiện",
-        "6": "usePresence → undefined = KHÔNG RÕ (chấm mờ), KHÔNG phải offline",
+        "6": "usePresence → undefined, và view vẽ nó thành OFFLINE",
         "7": "người kia mở app · handshake /socket.io/",
         "8": "presence:changed { userId, status: online } — chỉ phát cho người chung hội thoại",
         "9": "setPresence — zustand, ngoài React Query",
@@ -423,15 +421,15 @@
         "14": "reconnect → invalidate conversations → refetch → seed lại (bước 1–3)"
       },
       "notes": {
-        "1": "**Ba trạng thái, không phải hai.** Presence chỉ được phát cho người chung hội thoại, nên “chưa có dữ liệu” là **không rõ** — vẽ nó thành offline là nói dối người dùng về một thứ mình không biết.",
-        "2": "**Bước 1–4: presence có seed từ REST, không phải chỉ từ socket.** `useSeedPresence()` đọc `members[].status` của `useConversations` / `useConversation` và bơm thẳng vào store. Thiếu bước này thì mở hội thoại với một người đang online vẫn ra “không rõ”, vì `presence:changed` chỉ bắn khi có **thay đổi**.",
-        "3": "**Bước 5–6 mới là chỗ “không rõ” thật sự xảy ra:** `member.status === null` (theo spec, danh sách hội thoại chỉ tính presence cho DM), hoặc `userId` chưa xuất hiện trong bất kỳ response nào. `null` **không** phải offline — seed cố tình bỏ qua nó thay vì ghi đè.",
-        "4": "**Bước 13: offline có thể trễ tới 60 giây** khi một instance BE chết đột ngột (`staleAfter = 60s`). Đường thoát bình thường — đóng tab, mất mạng — vẫn ~1 giây. Đừng dựng UI phụ thuộc presence chính xác tức thời.",
-        "5": "**Bước 14: reconnect tự chữa presence.** Không có API presence để refetch, nhưng lệnh invalidate bắt buộc sau reconnect kéo `conversations` về, và ảnh chụp trong response đó chạy lại seed.",
-        "6": "**`docs/chat.md` §5.7 chưa ghi đường seed từ REST** — code đi trước doc. Sửa doc thì sửa cả sơ đồ này.",
-        "7": "**Màu một mình không truyền đạt gì.** Chấm luôn đi kèm `title` + chữ `sr-only`; ba trạng thái phân biệt được bằng chữ, không chỉ bằng sắc độ."
+        "1": "**Hai trạng thái, và “chưa nghe được gì” được vẽ thành offline.** Presence chỉ phát cho người chung hội thoại, nên với mọi người khác store rỗng. Sản phẩm quyết định người đọc không làm gì khác nhau giữa “đang vắng” và “không rõ”, nên không có chấm thứ ba.",
+        "2": "**Cái giá phải trả, ghi ra để sau này không ai tưởng là bug:** một người thật sự đang online sẽ hiện offline cho tới khi có thông tin đầu tiên về họ. Chính điều đó khiến bước 3 là thứ chịu lực, không phải một tối ưu.",
+        "3": "**Bước 1–4: presence có seed từ REST, không phải chỉ từ socket.** `useSeedPresence()` đọc `members[].status` của `useConversations` / `useConversation` và bơm thẳng vào store. Thiếu nó thì người đang online vẫn xám, vì `presence:changed` chỉ bắn khi có **thay đổi** — nó không bao giờ thông báo trạng thái hiện tại.",
+        "4": "**`status: null` vẫn bị seed bỏ qua** (bước 5–6). Nó nghĩa là endpoint không tính presence, chứ không phải người đó đang vắng, nên store không ghi gì thay vì ghi một giá trị backend chưa từng gửi. Việc gộp về offline xảy ra ở **view** — đó là thứ giữ quyết định này nằm gọn trong một file.",
+        "5": "**Bước 13: offline có thể trễ tới 60 giây** khi một instance BE chết đột ngột (`staleAfter = 60s`). Đường thoát bình thường — đóng tab, mất mạng — vẫn ~1 giây. Đừng dựng UI phụ thuộc presence chính xác tức thời.",
+        "6": "**Bước 14: reconnect tự chữa presence.** Không có API presence để refetch, nhưng lệnh invalidate bắt buộc sau reconnect kéo `conversations` về, và ảnh chụp trong response đó chạy lại seed.",
+        "7": "**Màu một mình không truyền đạt gì.** Chấm luôn đi kèm `title` + chữ `sr-only`, nên hai trạng thái phân biệt được bằng chữ chứ không chỉ bằng sắc độ."
       },
-      "redisCaption": "Cùng ba trạng thái, nhưng nhìn từ phía BE: online/offline **không** nằm trong Postgres mà là **hai sorted set trong Redis**. Postgres chỉ giữ `users.last_seen_at`, và chỉ được ghi đúng lúc chuyển sang offline.",
+      "redisCaption": "Cùng hai trạng thái, nhưng nhìn từ phía BE: online/offline **không** nằm trong Postgres mà là **hai sorted set trong Redis**. Postgres chỉ giữ `users.last_seen_at`, và chỉ được ghi đúng lúc chuyển sang offline.",
       "redisKeys": {
         "userName": "presence:{userId}",
         "userShape": "ZSET — member = `socketId`, score = mốc heartbeat cuối",
@@ -481,7 +479,157 @@
         "4": "**Offline chỉ được phát từ vòng dọn (bước 11–15), không từ `disconnect`.** Một đường ra duy nhất nên chỉ có một chỗ có thể phát sai — và chống trùng bằng kết quả `ZREM` chứ không bằng khoá, vì khoá hỏng thì cùng lắm dọn hai lần.",
         "5": "**Nhịp dọn (5s) tách khỏi nhịp gia hạn (20s) là có chủ ý.** Gộp chung thì ân hạn 8 giây vẫn phải chờ tới nhịp 20 giây kế tiếp — đóng tab thật sẽ chậm tới 28 giây.",
         "6": "**Chạy nhiều instance BE mà thiếu Redis là hỏng câm.** `PresenceStore` có bản in-memory cho môi trường một instance; từ instance thứ hai trở đi bắt buộc `RedisPresenceStore` **cùng lúc với** `@socket.io/redis-adapter`. Triệu chứng ở FE là presence và tin nhắn “chỉ đúng khi may mắn” — đó không phải bug FE.",
-        "7": "**Cả sơ đồ này là BE.** FE không đọc Redis, không có endpoint presence, và không chữa được độ trễ ở đây. Nó nằm trong Storybook vì mọi con số mà UI phải chịu đựng — 60 giây, 8 giây, “không rõ” — đều sinh ra từ đúng các bước trên."
+        "7": "**Cả sơ đồ này là BE.** FE không đọc Redis, không có endpoint presence, và không chữa được độ trễ ở đây. Nó nằm trong Storybook vì mọi con số mà UI phải chịu đựng — 60 giây, 8 giây — đều sinh ra từ đúng các bước trên."
+      },
+      "states": {
+        "onlineNote": "seed từ members[].status, rồi presence:changed",
+        "offlineNote": "status: offline + lastSeenAt — hoặc store không có gì cả"
+      }
+    },
+    "blog": {
+      "title": "Luồng blog — từ bản nháp tới trang công khai",
+      "lead": "Blog là feature **duy nhất** đọc qua một tầng thứ tư: `server.ts`, chạy trong Server Component của `apps/web` và hoàn toàn không có token. Bài công khai không cần auth, mà với SEO thì fetch ở server không phải \"tốt hơn\" mà là **bắt buộc** — render ở client thì HTML đầu tiên rỗng. Cái giá phải trả là một lớp cache, và toàn bộ luồng dưới đây nói về chuyện ai xoá nó, xoá lúc nào.",
+      "flowCaption": "Một bài có **bốn** trạng thái, và chỉ một trong số đó công khai nhìn thấy. Hai ngõ cụt là cố ý: **lưu trữ** là xoá mềm, còn **slug cũ** thì không bao giờ biến mất — nó vẫn trả lời, bằng một cú redirect.",
+      "nodes": {
+        "draft": "Nháp",
+        "draftNote": "`status: draft` · công khai nhận 404",
+        "published": "Đã đăng",
+        "publishedNote": "có trong danh sách, sitemap và RSS",
+        "public": "Trang công khai",
+        "publicNote": "`/blogs/<slug>` · ISR 300s",
+        "unpublished": "Gỡ đăng",
+        "unpublishedNote": "về `draft` · biến khỏi site",
+        "archived": "Lưu trữ",
+        "archivedNote": "xoá mềm — bản ghi vẫn còn",
+        "oldSlug": "Slug cũ",
+        "oldSlugNote": "nằm trong lịch sử slug"
+      },
+      "edges": {
+        "publish": "Publish",
+        "webhook": "backend gọi webhook",
+        "unpublish": "Gỡ đăng",
+        "republish": "Đăng lại",
+        "archive": "Lưu trữ",
+        "archiveDirect": "Lưu trữ (thẳng)",
+        "renameA": "Đổi slug —",
+        "renameB": "revalidate cả hai slug",
+        "redirect": "308 sang slug mới"
+      },
+      "seqCaption": "Bấm Publish và nhìn thấy bài là **hai** chuỗi tách rời, chỗ duy nhất nối chúng lại là bước 4. Bỏ webhook đi thì không có gì hỏng — trang chỉ cũ thêm tối đa 60 giây (`revalidate` là lưới an toàn, không phải cơ chế chính).",
+      "lanes": {
+        "editor": "Editor",
+        "editorNote": "apps/admin",
+        "reader": "Người đọc",
+        "readerNote": "trình duyệt",
+        "web": "web",
+        "webNote": "apps/web · RSC",
+        "isr": "ISR cache",
+        "isrNote": "nằm trong container",
+        "api": "API",
+        "apiNote": "backend",
+        "db": "DB",
+        "dbNote": "postgres"
+      },
+      "steps": {
+        "1": "`PATCH /blog/posts/{id}` + `version` (khoá lạc quan)",
+        "2": "`status = published`, rồi COMMIT",
+        "3": "200 + `version` mới — form đồng bộ lại",
+        "4": "`POST /api/revalidate` + `x-revalidate-secret` — SAU khi commit",
+        "5": "`revalidateTag(…, { expire: 0 })` cho mọi tag liên quan",
+        "6": "200 `{ revalidated: true }` — lỗi ở đây bị nuốt và ghi log",
+        "7": "`GET /blogs/<slug>`",
+        "8": "tra cache → trượt, tag vừa bị hết hạn",
+        "9": "`fetch(…, { next: { revalidate: 300, tags: [...] } })`",
+        "10": "`SELECT` bài đã publish",
+        "11": "`BlogPostDto` → `schema.parse` ở phía web",
+        "12": "lưu response lại theo đúng các tag của nó",
+        "13": "HTML dựng sẵn ở server — có đủ chữ ngay response đầu"
+      },
+      "slugCaption": "Đổi slug không dời bài đi đâu cả — nó **thêm** một dòng vào lịch sử slug. URL cũ sống mãi, và đó chính là lý do backend phải revalidate cả hai slug: slug cũ vẫn đang được cache dưới tag của riêng nó.",
+      "slugLanes": {
+        "reader": "Người đọc",
+        "readerNote": "trình duyệt",
+        "web": "web",
+        "webNote": "`/blogs/[slug]`",
+        "api": "API",
+        "apiNote": "backend",
+        "db": "DB",
+        "dbNote": "posts + lịch sử slug"
+      },
+      "slugSteps": {
+        "1": "`GET /blogs/<slug-cũ>`",
+        "2": "`GET /blog/posts/<slug-cũ>` · tag `blog-post:<slug-cũ>`",
+        "3": "trượt ở `slug`, trúng ở bảng lịch sử slug",
+        "4": "200 `BlogPostDto` — body mang slug **mới**",
+        "5": "`post.slug !== slug` → `permanentRedirect` → **308**",
+        "6": "`GET /blogs/<slug-mới>`",
+        "7": "bài viết, lần này không còn redirect"
+      },
+      "cacheCaption": "Mọi `fetch` trong `server.ts` đều mang tag, và `POST /api/revalidate` **tự dựng tên tag** từ danh sách slug nhận được — body không bao giờ chở tên tag hay đường dẫn. Nếu không thì endpoint đó thành công cụ ép render lại bất kỳ route nào của app.",
+      "tags": {
+        "listName": "blog-list",
+        "listShape": "`GET /blog/posts` — mọi trang",
+        "listPurpose": "Xoá khi publish, gỡ đăng/lưu trữ, và khi sửa một bài đã published. Một tag phủ cả `?page=1`, `?page=2`, … — đúng lý do không dùng được `revalidatePath`.",
+        "postName": "blog-post:<slug>",
+        "postShape": "`GET /blog/posts/{slug}`",
+        "postPurpose": "Mỗi slug một tag. Đổi slug thì gửi **cả** cũ lẫn mới — slug cũ vẫn nằm trong cache dưới tag riêng và vẫn đang phục vụ.",
+        "categoryName": "blog-category:<slug>",
+        "categoryShape": "`GET /blog/posts?category=…`",
+        "categoryPurpose": "Dời bài sang mục khác thì gửi **cả hai** mục. Chỉ gửi mục mới thì trang mục cũ còn liệt kê bài đó thêm 300 giây.",
+        "tagName": "blog-tag:<tag>",
+        "tagShape": "`GET /blog/posts?tag=…`",
+        "tagPurpose": "Cùng một luật: **cả** bộ thẻ cũ lẫn mới. Gỡ một thẻ mà không revalidate thẻ cũ thì `/blogs/tag/<cũ>` vẫn liệt kê bài không còn mang thẻ đó.",
+        "categoriesName": "blog-categories",
+        "categoriesShape": "`GET /blog/categories`",
+        "categoriesPurpose": "`postCount` công khai đổi khi publish/gỡ đăng/dời mục — và CRUD chuyên mục cũng vậy, vì đổi tên một mục là đổi tiêu đề đang được cache của `/blogs/category/<slug>`.",
+        "tagsName": "blog-tags",
+        "tagsShape": "`GET /blog/tags`",
+        "tagsPurpose": "Xoá khi bài đầu tiên mang một thẻ mới, hoặc bài cuối cùng bỏ thẻ đó — đó mới là lúc chỉ mục thẻ đổi, chứ không phải chỉ một trang liệt kê.",
+        "sitemapName": "blog-sitemap",
+        "sitemapShape": "`GET /blog/sitemap-entries`",
+        "sitemapPurpose": "Mọi thay đổi trạng thái published. Nó nuôi `sitemap.xml`, `rss.xml` và `generateStaticParams`; bỏ sót thì Google cứ bị chỉ tới một bài đã gỡ."
+      },
+      "notes": {
+        "1": "**Người gọi phải là backend, không bao giờ là `apps/admin`.** Admin là code chạy trong trình duyệt: nhét secret vào đó là công khai secret, còn gọi không secret là dựng sẵn một cần gạt DoS — mỗi request ép `web` xoá cache, render lại và gọi ngược backend. Backend gọi ngay tại chỗ nó ghi `status` thì mọi đường làm bài published — nút bấm, script seed, đồng bộ sau này — đều kéo theo revalidate, không sót đường nào.",
+        "2": "**`{ expire: 0 }`, không phải `\"max\"`.** `\"max\"` là stale-while-revalidate, nên lần F5 đầu tiên sau khi Publish vẫn ra bản cũ — đúng thứ duy nhất mà cả chuỗi này sinh ra để ngăn. `updateTag` có đúng ngữ nghĩa cần nhưng chỉ chạy trong Server Action, không chạy trong Route Handler.",
+        "3": "**Webhook là đường nhanh, không phải đường duy nhất.** `revalidate` là 60s cho danh sách, 300s cho một bài, 3600s cho các trang phân loại. Webhook mất thì site vẫn tự đúng lại; kiểu hỏng ở đây là chậm, không bao giờ là sai dữ liệu. Đó cũng là lý do backend nuốt lỗi webhook thay vì làm hỏng luôn cú publish.",
+        "4": "**ISR cache nằm trong từng container.** Hiện chỉ có một container `web` nên không sao. Ngày nào lên 2 replica thì một cú webhook chỉ làm mới đúng một cái, cái kia vẫn phục vụ bản cũ cho tới khi hết `revalidate` — lúc đó cần shared cache handler.",
+        "5": "**404 và \"API vừa trục trặc\" không được phép nhập làm một.** `server.ts` trả `null` khi 404 để route gọi `notFound()`, và **ném lỗi** với mọi trường hợp còn lại cho `error.tsx`. Đảo hai thứ đó thì hoặc Google loại bài thật ra khỏi index vì API nấc một cái, hoặc nó cứ thử lại mãi một URL không tồn tại.",
+        "6": "**`generateStaticParams` không được phép làm đỏ build.** CI build image trên GitHub runner, nơi `API_INTERNAL_URL` không tồn tại, nên `server.ts` rơi về URL công khai và `next build` gọi thẳng API production. Vì thế nó được bọc `try/catch` trả `[]` — `dynamicParams` là `true` nên bài vẫn render on-demand. Mỗi lần deploy là cache rỗng, nên pre-render lúc build vốn cũng chỉ tiết kiệm được lượt truy cập đầu tiên.",
+        "7": "**`/blogs` là dynamic, và đó không phải cấu hình sai.** Đụng vào `searchParams.page` là Next bỏ tĩnh hoá, nên `export const revalidate` ở page không còn tác dụng. Chỗ cache có ý nghĩa nằm thấp hơn một tầng: ở `fetch` bên trong `server.ts`.",
+        "8": "**Phân trang phải là `<a href>` thật.** Googlebot có chạy JS nhưng không bấm nút, nên phân trang kiểu `onPageChange` không để lại đường bò nào qua trang 1. Bài vẫn vào index nhờ sitemap; cái mất là toàn bộ internal linking, mà URL chỉ-có-trong-sitemap thì bị xếp ưu tiên thấp hơn.",
+        "9": "**Ba slug bị cấm:** `category`, `tag`, `rss.xml`. Chúng là segment tĩnh cùng cấp với `/blogs/[slug]`, mà Next luôn cho segment tĩnh thắng — một bài đặt trúng slug đó sẽ vĩnh viễn không mở được. Backend chặn ngay lúc validate.",
+        "10": "**Editor chỉ lưu khi bấm nút — không autosave, kể cả với bản nháp.** Một bản nội dung duy nhất, sửa trực tiếp, nghĩa là sửa bài đã đăng là sửa đúng thứ công khai đang đọc, và mất điện là mất bài. Đổi lại: không bao giờ có bản dở dang tự trôi ra ngoài. `version` + 409 là thứ ngăn hai tab ghi đè nhau."
+      },
+      "sample": {
+        "author": "Noah Phạm",
+        "categoryName": "Kỹ thuật",
+        "categorySlug": "ky-thuat",
+        "p1Title": "Vì sao blog đọc qua một tầng thứ tư",
+        "p1Excerpt": "Bài công khai không cần token nên fetch được ở server — và với SEO thì đó không phải tối ưu, mà là bắt buộc.",
+        "p2Title": "Bấm Publish là bài đã nằm sẵn ở đó",
+        "p2Excerpt": "Backend rung chuông sau khi commit. Sáu mươi giây ISR nằm bên dưới làm lưới an toàn, không phải cơ chế chính.",
+        "p3Title": "Một tag ăn đứt một path",
+        "p3Excerpt": "Hai path, một tag — đúng lý do revalidatePath không bao giờ vào được feature này.",
+        "p4Title": "Slug cũ không bao giờ chết",
+        "p4Excerpt": "Đổi tên không dời bài đi đâu. Nó tách một dòng sang lịch sử slug, và URL cũ trả lời bằng 308 mãi mãi.",
+        "p5Title": "Hai trục, không phải một bảng phân loại",
+        "p5Excerpt": "Chuyên mục là điều hướng và được index; thẻ là liên kết chéo và không. Gộp lại làm một là hỏng cả hai việc.",
+        "p6Title": "Trình soạn thảo từ chối autosave",
+        "p6Excerpt": "Một bản nội dung duy nhất, lưu khi bấm. Giá phải trả là mất điện; đổi lại không đoạn viết dở nào tự đi ra ngoài.",
+        "tag1": "next-js",
+        "tag2": "isr",
+        "tag3": "seo",
+        "tag4": "cache",
+        "tagCount": "{count} bài",
+        "docTitle": "Cache tag, từ đầu tới cuối",
+        "docIntro": "Một bài không phải một thứ được cache, mà là nhiều: trang danh sách nhắc tới nó, trang của chính nó, chuyên mục, từng thẻ, và sitemap trỏ vào nó.",
+        "docH2A": "Webhook thật ra xoá những gì",
+        "docBodyA": "Route handler tự dựng mọi tên tag từ danh sách slug trong body. Không có gì trong request gọi tên một tag hay một đường dẫn.",
+        "docH3A": "Vì sao phải cả hai slug",
+        "docBodyB": "Slug cũ vẫn nằm trong cache dưới tag riêng, và vẫn đang phục vụ. Chỉ revalidate slug mới thì URL cũ trả về bản của hôm qua.",
+        "docH2B": "Con số sáu mươi giây đến từ đâu",
+        "docBodyC": "`revalidate` là mức sàn, không phải kế hoạch. Webhook mất thì site vẫn tự đúng lại; kiểu hỏng ở đây là chậm, không bao giờ là sai dữ liệu."
       }
     }
   }

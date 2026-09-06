@@ -54,10 +54,14 @@ export const chatKeys = {
  * Seeds `presenceByUser` from the REST snapshot.
  *
  * Without this the store stays empty until someone CHANGES state — opening a
- * conversation with someone who is online still shows "unknown", because
- * `presence:changed` only fires on a change. `status: null` means the endpoint
- * did not compute presence (per spec, the conversation list only does so for
- * DMs) → skip it, do not overwrite with "offline".
+ * conversation with someone who is online would still show them as offline,
+ * because `presence:changed` only fires on a change. This seed is therefore the
+ * ONLY thing that makes an online peer look online on first paint.
+ *
+ * `status: null` means the endpoint did not compute presence (per spec, the
+ * conversation list only does so for DMs) → skip it rather than writing a value
+ * the backend never sent. The UI renders an absent entry as offline
+ * (`presence-dot.tsx`); that decision belongs to the view, not to this store.
  */
 function useSeedPresence(members: ConversationMember[] | undefined) {
   const setPresence = useEphemeralStore((state) => state.setPresence);
@@ -302,8 +306,9 @@ export function useTyping(conversationId: string) {
 const EMPTY_IDS: string[] = [];
 
 /**
- * Presence exists only for people you share a conversation with. Absent means
- * UNKNOWN, not offline — `PresenceDot` has to cope with that.
+ * Presence exists only for people you share a conversation with, so this returns
+ * `undefined` for everyone else. The UI collapses that absence into **offline**
+ * (`presence-dot.tsx`) — the store itself stays honest about not knowing.
  */
 export function usePresence(userId: string | null | undefined) {
   return useEphemeralStore((state) =>

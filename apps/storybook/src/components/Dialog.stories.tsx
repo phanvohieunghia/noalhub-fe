@@ -17,10 +17,10 @@ export default meta;
 type Story = StoryObj<typeof Dialog>;
 
 /*
- * Chữ demo lấy từ namespace `sb` (`messages/{vi,en}.json`) chứ không viết thẳng,
- * để toolbar ngôn ngữ đổi được cả phần này. `render` phải là một COMPONENT có
- * tên — hook chỉ hợp lệ trong component, arrow function vô danh gọi như hàm
- * thường sẽ vỡ quy tắc hook.
+ * Demo copy comes from the `sb` namespace (`messages/{vi,en}.json`) rather than
+ * being inlined, so the language toolbar switches this too. `render` has to be a
+ * NAMED COMPONENT — hooks are only valid inside a component, and an anonymous
+ * arrow function called like a plain function breaks the rules of hooks.
  */
 export const Interactive: Story = {
   render: function DialogStory() {

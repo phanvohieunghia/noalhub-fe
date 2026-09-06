@@ -32,9 +32,9 @@ export default meta;
 type Story = StoryObj<typeof Select>;
 
 /*
- * `value` là mã gửi lên server nên giữ nguyên; chỉ `label` đi qua i18n. Đây đúng
- * hình dạng của một select thật: option đến từ API bằng mã, phần chữ do client
- * dịch.
+ * `value` is the code sent to the server, so it stays as is; only `label` goes
+ * through i18n. That is the shape of a real select: options arrive from the API as
+ * codes, and the client translates the text.
  */
 function useSampleOptions() {
   const t = useTranslations("sb.select");

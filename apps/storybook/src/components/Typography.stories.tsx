@@ -40,8 +40,8 @@ export default meta;
 type Story = StoryObj<typeof Typography>;
 
 /*
- * `children` lấy từ `sb.typography` khi ô Controls để trống — gõ vào vẫn đè
- * được, mà đổi ngôn ngữ thì câu mẫu cũng đổi.
+ * `children` falls back to `sb.typography` when the Controls field is empty —
+ * typing still overrides it, and switching language moves the sample too.
  */
 export const Playground: Story = {
   args: { variant: "body-2" },

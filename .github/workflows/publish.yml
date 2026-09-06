@@ -3,34 +3,36 @@ name: Publish & deploy
 on:
   push:
     branches: [main]
-    # Bỏ qua file không đi vào image — sửa README không cần build lại.
+    # Ignore files that never reach the image — editing the README needs no rebuild.
     paths-ignore:
       - "**.md"
       - "docs/**"
   workflow_dispatch:
 
-# `NEXT_PUBLIC_*` bị INLINE vào bundle lúc `next build`, không đọc lúc chạy — nên
-# chúng phải có mặt Ở ĐÂY, lúc build, chứ không phải trong `.env` trên VPS. Sửa
-# giá trị dưới đây là phải build lại image; restart container không có tác dụng gì.
+# `NEXT_PUBLIC_*` is INLINED into the bundle at `next build` time, not read at
+# runtime — so these have to be HERE, at build time, not in `.env` on the VPS.
+# Changing a value below means rebuilding the image; restarting the container does
+# nothing.
 #
-# Chúng là URL công khai, ai mở devtools cũng thấy — để literal thay vì secret là
-# cố ý, vì secret sẽ bị Actions che thành `***` trong log và làm mất khả năng đọc
-# log build khi domain sai.
+# They are public URLs anyone can see in devtools — keeping them as literals instead
+# of secrets is deliberate, because Actions masks secrets as `***` in the logs and
+# that makes the build log unreadable when a domain is wrong.
 env:
   NEXT_PUBLIC_API_BASE_URL: https://api-noalhub.duckdns.org
   NEXT_PUBLIC_WS_URL: https://ws-noalhub.duckdns.org
-  # Origin công khai của apps/web. Cần từ khi có blog: `metadataBase`, canonical,
-  # OG, sitemap và JSON-LD đều dựng URL tuyệt đối từ nó (docs/blog.md §6.1).
-  # Thiếu biến này thì build VẪN XANH nhưng mọi URL tuyệt đối ra `undefined/...`.
-  # Admin không đọc tới nó, nhưng truyền cho cả hai để hai job không lệch cấu hình.
+  # Public origin of apps/web. Required since the blog landed: `metadataBase`,
+  # canonical, OG, sitemap and JSON-LD all build absolute URLs from it
+  # (docs/blog.md §6.1). Without it the build STAYS GREEN but every absolute URL
+  # comes out as `undefined/...`. Admin never reads it, but both jobs get it so the
+  # two configurations do not drift.
   NEXT_PUBLIC_APP_URL: https://noalhub.duckdns.org
 
 jobs:
-  # Không có cách nào đặt `paths` cho riêng từng job, nên việc lọc phải làm bằng
-  # một job đi trước rồi gắn `if:` cho các job sau. Không lọc thì mỗi lần sửa
-  # Storybook cũng build lại cả web lẫn admin từ đầu: cả ba Dockerfile đều có
-  # `COPY . .` trước bước build, nên một file đổi ở bất kỳ đâu cũng làm hỏng
-  # cache layer của cả ba image.
+  # There is no way to set `paths` per job, so the filtering has to be done by a
+  # leading job plus an `if:` on the jobs after it. Without it, every Storybook edit
+  # rebuilds web and admin from scratch: all three Dockerfiles do `COPY . .` before
+  # the build step, so a file changed anywhere busts the layer cache of all three
+  # images.
   changes:
     runs-on: ubuntu-latest
     permissions:
@@ -45,11 +47,12 @@ jobs:
         id: filter
         with:
           filters: |
-            # `shared` cố ý VƠ CẢ `packages/**` cho cả ba, chứ không map từng
-            # package sang từng app. Lọc quá hẹp ở đây cho ra đúng lỗi tệ nhất
-            # có thể: workflow xanh, deploy xanh, mà image vẫn là bản cũ vì job
-            # build bị skip nhầm — không có tín hiệu nào để mà nghi ngờ. Build
-            # thừa thì chỉ tốn vài phút CI.
+            # `shared` deliberately SWEEPS IN all of `packages/**` for all three
+            # rather than mapping each package to each app. Filtering too narrowly
+            # here produces the worst possible failure: green workflow, green deploy,
+            # and a stale image because a build job was wrongly skipped — with no
+            # signal to be suspicious about. An extra build only costs a few CI
+            # minutes.
             shared: &shared
               - 'packages/**'
               - 'package.json'
@@ -70,8 +73,8 @@ jobs:
 
   build:
     needs: changes
-    # `workflow_dispatch` không có diff để so, nên bấm tay = build tất. Đó cũng
-    # đúng thứ người ta cần khi phải bấm tay: dựng lại một bản sạch.
+    # `workflow_dispatch` has no diff to compare, so a manual run builds everything.
+    # That is also what you want when you resort to clicking the button: a clean rebuild.
     if: >-
       github.event_name == 'workflow_dispatch'
       || needs.changes.outputs.web == 'true'
@@ -79,11 +82,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      # Bắt buộc: GITHUB_TOKEN mặc định không có quyền ghi vào GitHub Packages.
+      # Required: the default GITHUB_TOKEN cannot write to GitHub Packages.
       packages: write
 
-    # Hai app độc lập nhau nên build song song. `fail-fast: false` để một app hỏng
-    # không giết build của app kia — biết cả hai cùng lúc thì sửa một lượt.
+    # The two apps are independent, so build them in parallel. `fail-fast: false` keeps
+    # one broken app from killing the other's build — seeing both at once means fixing
+    # them in one pass.
     strategy:
       fail-fast: false
       matrix:
@@ -92,22 +96,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # buildx cần cho cache GHA ở bước build bên dưới.
+      # buildx is needed for the GHA cache in the build step below.
       - uses: docker/setup-buildx-action@v3
 
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          # Token do Actions tự cấp cho từng run, không phải PAT tự tạo.
+          # Token minted by Actions per run, not a hand-created PAT.
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - id: meta
         uses: docker/metadata-action@v5
         with:
-          # `github.repository` = `<owner>/noalhub-fe`, nên chuỗi này ra đúng
-          # `ghcr.io/<owner>/noalhub-fe-web` và `-admin` như compose bên BE chờ.
-          # Tên package phải viết thường — ghcr.io từ chối tag có chữ hoa.
+          # `github.repository` = `<owner>/noalhub-fe`, so this string resolves to
+          # `ghcr.io/<owner>/noalhub-fe-web` and `-admin`, exactly what the BE-side
+          # compose expects. Package names must be lowercase — ghcr.io rejects tags
+          # with uppercase letters.
           images: ghcr.io/${{ github.repository }}-${{ matrix.app }}
           tags: |
             type=raw,value=latest
@@ -115,8 +120,8 @@ jobs:
 
       - uses: docker/build-push-action@v6
         with:
-          # Context là GỐC REPO cho cả hai app: pnpm workspace cần lockfile ở gốc
-          # + toàn bộ `packages/*` để resolve `workspace:*`.
+          # The context is the REPO ROOT for both apps: the pnpm workspace needs the
+          # root lockfile plus all of `packages/*` to resolve `workspace:*`.
           context: .
           file: apps/${{ matrix.app }}/Dockerfile
           target: runtime
@@ -127,15 +132,15 @@ jobs:
             NEXT_PUBLIC_API_BASE_URL=${{ env.NEXT_PUBLIC_API_BASE_URL }}
             NEXT_PUBLIC_WS_URL=${{ env.NEXT_PUBLIC_WS_URL }}
             NEXT_PUBLIC_APP_URL=${{ env.NEXT_PUBLIC_APP_URL }}
-          # Cache tách theo app: chung scope thì hai job song song ghi đè nhau và
-          # cache gần như luôn miss.
+          # Cache scoped per app: sharing a scope makes the two parallel jobs overwrite
+          # each other and the cache misses almost every time.
           cache-from: type=gha,scope=${{ matrix.app }}
           cache-to: type=gha,mode=max,scope=${{ matrix.app }}
 
-  # Storybook tách khỏi matrix ở trên: nó không nhận build-arg `NEXT_PUBLIC_*`
-  # nào (build ra web tĩnh, không có gì để inline), và nó không phải điều kiện
-  # để deploy web/admin — job `deploy` cố tình KHÔNG `needs` job này, hỏng
-  # Storybook thì không được phép chặn bản production của hai app kia.
+  # Storybook is kept out of the matrix above: it takes no `NEXT_PUBLIC_*` build args
+  # (it builds a static site, nothing to inline), and it is not a precondition for
+  # deploying web/admin — the `deploy` job deliberately does NOT `needs` this one; a
+  # broken Storybook must never block the other two apps' production release.
   storybook:
     needs: changes
     if: >-
@@ -146,11 +151,12 @@ jobs:
       contents: read
       packages: write
 
-    # HAI bản từ cùng một Dockerfile: `public` không chứa code của
-    # `src/internal/**` (`.storybook/main.ts` bỏ hẳn glob đó khỏi index), còn
-    # `internal` chứa tất và được nginx chặn bằng basic auth. Phải là hai image
-    # chứ không phải một image lọc lúc chạy: Storybook là web tĩnh, story nào có
-    # trong bundle thì người xem đọc được, dù sidebar có hiện nó hay không.
+    # TWO builds from the same Dockerfile: `public` contains none of the
+    # `src/internal/**` code (`.storybook/main.ts` drops that glob from the index),
+    # while `internal` contains everything and is gated by nginx basic auth. It has to
+    # be two images rather than one that filters at runtime: Storybook is a static
+    # site, and any story in the bundle is readable by a viewer whether or not the
+    # sidebar shows it.
     strategy:
       fail-fast: false
       matrix:
@@ -188,32 +194,32 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             SB_AUDIENCE=${{ matrix.audience }}
-          # Scope tách theo audience. Chung scope thì hai job song song ghi đè
-          # nhau, và tệ hơn là có thể trả về layer `storybook-static` của bản
-          # kia — đúng cái làm bản public lọt story nội bộ.
+          # Scoped per audience. A shared scope makes the two parallel jobs overwrite
+          # each other and, worse, can hand back the other build's `storybook-static`
+          # layer — precisely what leaks internal stories into the public build.
           cache-from: type=gha,scope=storybook-${{ matrix.audience }}
           cache-to: type=gha,mode=max,scope=storybook-${{ matrix.audience }}
 
-  # CD: cả hai image build xong mới deploy. `needs` vừa xếp thứ tự, vừa hủy deploy
-  # nếu bất kỳ app nào build đỏ — không bao giờ deploy nửa vời một app.
+  # CD: deploy only once both images are built. `needs` both orders the jobs and
+  # cancels the deploy if either app's build is red — never deploy half of the pair.
   #
-  # Job bị SKIP cũng kéo theo `needs` skip, và ở đây đó đúng là điều mong muốn:
-  # push chỉ đụng `apps/storybook` thì `build` không chạy, không có image mới cho
-  # web/admin, nên cũng không có gì để deploy.
+  # A SKIPPED job also skips its dependents, and here that is exactly what we want: a
+  # push touching only `apps/storybook` does not run `build`, so there is no new image
+  # for web/admin and nothing to deploy.
   deploy:
     needs: build
     runs-on: ubuntu-latest
     permissions:
-      # Chỉ để `docker login` trên VPS kéo được image private.
+      # Only so `docker login` on the VPS can pull the private images.
       packages: read
-    # Bấm tay từ tab Actions cũng deploy được, nhưng chỉ từ main.
+    # A manual run from the Actions tab can deploy too, but only from main.
     if: github.ref == 'refs/heads/main'
     concurrency:
       group: deploy-production-fe
       cancel-in-progress: false
 
     steps:
-      - name: Pull & up trên VPS
+      - name: Pull & up on the VPS
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.DEPLOY_HOST }}
@@ -221,131 +227,136 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT || 22 }}
           script: |
-            # BẮT BUỘC. Không có nó, ssh-action nuốt exit code: `cd` sai đường dẫn
-            # thì các lệnh sau vẫn chạy tiếp trong $HOME, compose không thấy file
-            # nên không deploy gì, mà job vẫn xanh vì lệnh CUỐI cùng thoát 0 —
-            # đúng kịch bản đã làm bản FE đứng im nhiều ngày.
+            # REQUIRED. Without it ssh-action swallows the exit code: if `cd` hits a
+            # wrong path the following commands keep running in $HOME, compose never
+            # finds the file so nothing is deployed, and the job stays green because the
+            # LAST command exited 0 — exactly the scenario that left the FE frozen for
+            # days.
             #
-            # Dùng `set -e` chứ KHÔNG dùng input `script_stop` của ssh-action:
-            # `script_stop` chèn một đoạn kiểm tra `$?` vào sau TỪNG DÒNG, nên nó
-            # cắt đôi mọi khối nhiều dòng (`if`, `for`, `case`) ở dưới và bash chết
-            # ngay lúc parse: syntax error near unexpected token `;'.
+            # Use `set -e` and NOT ssh-action's `script_stop` input: `script_stop`
+            # injects a `$?` check after EVERY LINE, which cuts every multi-line block
+            # (`if`, `for`, `case`) below in half and bash dies at parse time:
+            # syntax error near unexpected token `;'.
             set -e
 
             cd ${{ secrets.DEPLOY_PATH }}
-            # Chốt chặn thứ hai: `cd` có thể thành công vào một thư mục đúng tên
-            # nhưng rỗng (VPS cài lại, mount chưa gắn).
+            # Second guard: `cd` can succeed into a correctly named but empty directory
+            # (reinstalled VPS, mount not attached yet).
             test -f docker-compose.prod.yml
 
-            # Ghim đúng commit vừa build. Tag này khớp `type=sha,format=long`.
+            # Pin the exact commit just built. This tag matches `type=sha,format=long`.
             TAG=sha-${{ github.sha }}
 
-            # Ghi vào `.env` chứ không `export`: compose đọc `FE_IMAGE_TAG` từ đó,
-            # nên deploy của BE sau này (`up -d`) giữ nguyên bản FE đang chạy thay
-            # vì tráo về `latest`.
+            # Write into `.env` rather than `export`: compose reads `FE_IMAGE_TAG` from
+            # there, so a later BE deploy (`up -d`) keeps the running FE build instead of
+            # swapping it back to `latest`.
             if grep -q '^FE_IMAGE_TAG=' .env; then
               sed -i "s|^FE_IMAGE_TAG=.*|FE_IMAGE_TAG=$TAG|" .env
             else
               echo "FE_IMAGE_TAG=$TAG" >> .env
             fi
 
-            # Package trên ghcr là private nên `pull` cần đăng nhập. Token của run
-            # này hết hạn khi job kết thúc.
+            # The ghcr package is private, so `pull` needs a login. This run's token
+            # expires when the job ends.
             echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             docker compose -f docker-compose.prod.yml pull web admin
-            # Chỉ `up -d web admin`: app/db/redis/nginx thuộc repo khác, deploy FE
-            # không được phép recreate chúng.
+            # `up -d web admin` only: app/db/redis/nginx belong to another repo, and an
+            # FE deploy must not recreate them.
             docker compose -f docker-compose.prod.yml up -d web admin
 
             docker logout ghcr.io
 
-            # BẮT BUỘC, và đây là lý do web/admin từng đổi chỗ cho nhau sau mỗi lần
-            # deploy: `proxy_pass http://web:3000` viết thẳng tên, không qua biến và
-            # không khai `resolver`, nên nginx phân giải tên đó MỘT LẦN lúc nạp config
-            # rồi cache IP vĩnh viễn. `up -d web admin` recreate hai container đó và
-            # Docker cấp IP mới, tái sử dụng luôn IP vừa được giải phóng — nhưng nginx
-            # không nằm trong danh sách recreate nên vẫn gửi request theo IP cũ đã đổi
-            # chủ. Kết quả: noalhub.duckdns.org trả ra app admin và ngược lại, trong
-            # khi file config hoàn toàn đúng.
+            # REQUIRED, and this is why web/admin used to swap places after every
+            # deploy: `proxy_pass http://web:3000` names the host inline, with no
+            # variable and no `resolver`, so nginx resolves that name ONCE at config load
+            # and caches the IP forever. `up -d web admin` recreates those two containers
+            # and Docker hands out new IPs, reusing the ones just freed — but nginx is
+            # not in the recreate list, so it keeps sending requests to an old IP that
+            # now belongs to someone else. Result: noalhub.duckdns.org serves the admin
+            # app and vice versa, while the config file is perfectly correct.
             #
-            # `reload` nạp lại config nên phân giải lại toàn bộ tên upstream. Vòng lặp
-            # `nginx -s reload` mỗi 6 giờ trong compose cũng tự chữa được, nhưng nó chỉ
-            # che lỗi sau vài tiếng chứ không sửa.
+            # `reload` re-reads the config and therefore re-resolves every upstream name.
+            # The 6-hourly `nginx -s reload` loop in compose also self-heals, but it only
+            # papers over the bug hours later instead of fixing it.
             #
-            # `-T` vì phiên ssh này không có TTY. `nginx -t` trước để một config hỏng
-            # (do repo BE sửa) bị bắt ngay ở đây thay vì làm chết nginx lúc reload.
+            # `-T` because this ssh session has no TTY. `nginx -t` first so a broken
+            # config (edited by the BE repo) is caught right here instead of killing
+            # nginx on reload.
             docker compose -f docker-compose.prod.yml exec -T nginx nginx -t
             docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload
 
-            # Xác nhận container ĐANG chạy đúng tag vừa build. Health check ở
-            # bước sau chỉ gọi domain, mà container cũ còn sống thì vẫn trả 200 —
-            # nó không phân biệt được "deploy xong" với "deploy không làm gì".
+            # Confirm the RUNNING containers are on the tag just built. The health check
+            # in the next step only hits the domains, and a surviving old container still
+            # answers 200 — it cannot tell "deployed" from "deploy did nothing".
             for svc in web admin; do
               cid=$(docker compose -f docker-compose.prod.yml ps -q "$svc")
-              [ -n "$cid" ] || { echo "$svc không có container nào đang chạy"; exit 1; }
+              [ -n "$cid" ] || { echo "$svc has no running container"; exit 1; }
               img=$(docker inspect -f '{{.Config.Image}}' "$cid")
               case "$img" in
                 *:"$TAG") echo "$svc → $img OK" ;;
-                *) echo "$svc đang chạy $img, mong đợi tag $TAG"; exit 1 ;;
+                *) echo "$svc is running $img, expected tag $TAG"; exit 1 ;;
               esac
             done
 
-            # Image cũ tích lại mỗi lần deploy và VPS nhỏ hết đĩa rất nhanh. `-f`
-            # chỉ xóa image không container nào tham chiếu.
+            # Old images pile up on every deploy and a small VPS runs out of disk fast.
+            # `-f` only removes images no container references.
             docker image prune -f
 
-      - name: Kiểm tra health sau deploy
-        # Gọi từ ngoài internet, đi qua đúng đường nginx/TLS mà client thật dùng —
-        # bắt được cả lỗi cert lẫn lỗi app, thứ mà healthcheck nội bộ không thấy.
+      - name: Post-deploy health check
+        # Called from the public internet, through the same nginx/TLS path real clients
+        # use — it catches cert failures as well as app failures, which an internal
+        # healthcheck never sees.
         run: |
-          # Chờ tới khi URL trả về đúng mã mong đợi.
+          # Wait until the URL returns the expected status code.
           #
-          # `-L` là BẮT BUỘC từ khi có i18n: mọi route của web redirect một nhịp
-          # để gắn tiền tố locale (`/` → `/vi`, `/dashboard` → `/vi/dashboard`) —
-          # `apps/web/proxy.ts` làm việc đó. Client thật đi theo redirect, nên
-          # check phải đi theo; đo mã của chính cú redirect là đo sai thứ, và đó
-          # đúng là cách bước này từng đỏ với `307 (mong đợi 200)`.
+          # `-L` is REQUIRED since i18n landed: every web route redirects once to add the
+          # locale prefix (`/` → `/vi`, `/dashboard` → `/vi/dashboard`) — that is
+          # `apps/web/proxy.ts`. Real clients follow the redirect, so the check must too;
+          # measuring the redirect's own status measures the wrong thing, and that is
+          # exactly how this step used to fail with `307 (expected 200)`.
           #
-          # `--max-redirs 3`: đủ cho một nhịp gắn locale, mà vòng lặp redirect
-          # thì vẫn hỏng (curl trả 000) thay vì treo tới hết 60s.
+          # `--max-redirs 3`: enough for one locale hop, while a redirect loop still
+          # fails (curl returns 000) instead of hanging for the full 60s.
           expect() {
             url="$1"; want="$2"
             for i in $(seq 1 10); do
               code=$(curl -sSL --max-redirs 3 -o /dev/null -w '%{http_code}' "$url" || true)
               [ "$code" = "$want" ] && echo "$url → $code OK" && return 0
-              echo "lần $i: $url → $code (mong đợi $want), thử lại sau 6s"
+              echo "attempt $i: $url → $code (expected $want), retrying in 6s"
               sleep 6
             done
-            echo "$url không trả $want sau 60s — kiểm tra logs trên VPS"
+            echo "$url did not return $want within 60s — check the logs on the VPS"
             return 1
           }
 
-          # Route sống được ngay:
+          # Routes that must be up immediately:
           expect https://noalhub.duckdns.org/ 200
           expect https://admin-noalhub.duckdns.org/login 200
 
-          # Và ĐÚNG app đứng sau mỗi domain. Chỉ kiểm tra 200 là không đủ: khi nginx
-          # cache IP upstream cũ, hai domain đổi chỗ cho nhau mà CẢ HAI vẫn trả 200 —
-          # deploy xanh trong khi khách vào trang chủ thì thấy trang quản trị. Hai
-          # route dưới đây chỉ tồn tại ở đúng một app, nên cặp 200/404 khoá chặt danh
-          # tính. Sửa cấu trúc route thì phải sửa cả bốn dòng này.
+          # And that the RIGHT app sits behind each domain. Checking for 200 alone is not
+          # enough: when nginx caches a stale upstream IP the two domains swap places and
+          # BOTH still return 200 — a green deploy while visitors to the home page land on
+          # the admin app. The two routes below exist in exactly one app each, so the
+          # 200/404 pairs pin the identity down. Changing the route structure means
+          # changing all four lines.
           #
-          # Đường dẫn giữ nguyên KHÔNG tiền tố locale: `-L` lo phần đó, và viết
-          # `/vi/dashboard` ở đây thì lần đổi `localePrefix` nào cũng phải sửa lại.
-          expect https://noalhub.duckdns.org/dashboard 200        # chỉ có ở apps/web
-          expect https://noalhub.duckdns.org/overview 404         # chỉ có ở apps/admin
+          # Paths are written WITHOUT the locale prefix: `-L` takes care of that, and
+          # writing `/vi/dashboard` here would mean editing this on every `localePrefix`
+          # change.
+          expect https://noalhub.duckdns.org/dashboard 200        # apps/web only
+          expect https://noalhub.duckdns.org/overview 404         # apps/admin only
           expect https://admin-noalhub.duckdns.org/overview 200
           expect https://admin-noalhub.duckdns.org/dashboard 404
 
-          # Cuối cùng: redirect locale phải hạ cánh ĐÚNG CHỖ, không chỉ "kết thúc
-          # bằng 200". `proxy.ts` không được bundle vào image là một hỏng hóc có
-          # thật, và khi đó `/` trả thẳng 200 của một trang không có locale —
-          # `-L` ở trên sẽ nuốt gọn. Dòng này là chốt chặn cho đúng ca đó
+          # Finally: the locale redirect must LAND IN THE RIGHT PLACE, not merely "end in
+          # a 200". `proxy.ts` failing to make it into the image is a real failure mode,
+          # and when it happens `/` returns a straight 200 for a page with no locale —
+          # which the `-L` above would swallow. This line is the guard for that exact case
           # (`docs/i18n.md` §3.1: `localePrefix: "always"`).
           landed=$(curl -sSL --max-redirs 3 -o /dev/null -w '%{url_effective}' https://noalhub.duckdns.org/)
           if [ "$landed" != "https://noalhub.duckdns.org/vi" ]; then
-            echo "/ hạ cánh ở $landed, mong đợi https://noalhub.duckdns.org/vi — proxy locale không chạy?"
+            echo "/ landed on $landed, expected https://noalhub.duckdns.org/vi — locale proxy not running?"
             exit 1
           fi
           echo "/ → $landed OK"

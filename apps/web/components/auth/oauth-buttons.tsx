@@ -24,9 +24,9 @@ export function OAuthButtons({ next }: { next?: string }) {
 
   return (
     <div className="flex flex-col gap-3">
-      {/* `text-muted-foreground` chứ không phải `opacity-50`: opacity trên chữ
-          nhỏ cho tương phản 3.94:1, dưới ngưỡng WCAG AA 4.5:1. Token muted có
-          sẵn cho đúng việc này và tự đổi theo light/dark. */}
+      {/* `text-muted-foreground` rather than `opacity-50`: opacity on small text
+          gives a 3.94:1 contrast ratio, below the WCAG AA threshold of 4.5:1. The
+          muted token exists for exactly this and switches with light/dark. */}
       <div className="text-body-4 text-muted-foreground flex items-center gap-3 uppercase tracking-wide">
         <span className="h-px flex-1 bg-current" />
         {t("divider")}

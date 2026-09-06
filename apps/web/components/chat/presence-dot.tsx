@@ -8,9 +8,18 @@ import { Typography } from "@noalhub/ui/typography";
 import { useChatFormat } from "./use-chat-format";
 
 /**
- * The status dot. Three states, not two: the backend only broadcasts presence to
- * people who share a conversation, so "no data yet" means UNKNOWN — it must not
- * be rendered as a confident offline.
+ * The status dot. TWO states, online and offline.
+ *
+ * The store can hold no entry for a user at all — presence is only broadcast to
+ * people who share a conversation, and the conversation list only carries
+ * `status` for DMs. That absence is rendered as **offline**: the product decides
+ * that "we have not heard from them" and "they are away" are the same thing to a
+ * reader, so there is no third dot.
+ *
+ * The cost, written down so it is not rediscovered as a bug: someone who is
+ * genuinely online reads as offline until the first `presence:changed` arrives
+ * (`presence:changed` fires on a CHANGE, so the REST seed in `useSeedPresence`
+ * is what normally fills this in).
  *
  * Color alone communicates nothing → always paired with `title` + `sr-only`.
  */
@@ -25,18 +34,13 @@ export function PresenceDot({
   const cf = useChatFormat();
   const presence = usePresence(userId);
 
-  const label = !presence
-    ? t("unknown")
-    : presence.status === "online"
-      ? t("online")
-      : (cf.lastSeenLabel(presence.lastSeenAt) ?? t("offline"));
+  const online = presence?.status === "online";
 
-  const color =
-    presence?.status === "online"
-      ? "bg-green-500"
-      : presence
-        ? "bg-black/25 dark:bg-white/30"
-        : "bg-black/10 dark:bg-white/15";
+  const label = online
+    ? t("online")
+    : (cf.lastSeenLabel(presence?.lastSeenAt ?? null) ?? t("offline"));
+
+  const color = online ? "bg-green-500" : "bg-black/25 dark:bg-white/30";
 
   return (
     <span className={`inline-flex items-center ${className}`}>
@@ -46,16 +50,24 @@ export function PresenceDot({
   );
 }
 
-/** The status text for `ChatHeader` — the same data source as the dot. */
+/**
+ * The status text for `ChatHeader` — the same data source, and the same two
+ * states, as the dot.
+ *
+ * No `null` return for "no data": that used to leave the header with a missing
+ * second line, so the title jumped a few pixels the moment presence arrived.
+ * With two states there is always a label.
+ */
 export function PresenceLabel({ userId }: { userId: string | null | undefined }) {
   const t = useTranslations("web.chat.presence");
   const cf = useChatFormat();
   const presence = usePresence(userId);
-  if (!presence) return null;
 
-  const label = presence.status === "online" ? t("online") : cf.lastSeenLabel(presence.lastSeenAt);
+  const label =
+    presence?.status === "online"
+      ? t("online")
+      : (cf.lastSeenLabel(presence?.lastSeenAt ?? null) ?? t("offline"));
 
-  if (!label) return null;
   return (
     <Typography variant="body-4" as="span" className="opacity-60">
       {label}

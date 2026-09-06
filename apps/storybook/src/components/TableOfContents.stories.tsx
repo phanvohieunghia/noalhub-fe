@@ -15,9 +15,9 @@ export default meta;
 type Story = StoryObj<typeof TableOfContents>;
 
 /**
- * Tài liệu mẫu dựng trong một hook chứ không phải hằng số ở module scope: chữ
- * lấy từ `sb.toc` nên nó phụ thuộc ngôn ngữ đang chọn, mà module scope thì chưa
- * có locale nào cả.
+ * The sample document is built inside a hook rather than as a module-scope
+ * constant: its text comes from `sb.toc` and therefore depends on the selected
+ * language, and at module scope there is no locale yet.
  */
 function useSampleDoc(): BlogDoc {
   const t = useTranslations("sb.toc");

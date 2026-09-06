@@ -60,7 +60,6 @@
     "many": "{first} and {count} others are typing…"
   },
   "presence": {
-    "unknown": "Status unknown",
     "online": "Active now",
     "offline": "Not active",
     "justNow": "Active just now",

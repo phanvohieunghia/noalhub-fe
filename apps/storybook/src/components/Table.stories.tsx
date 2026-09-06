@@ -33,8 +33,8 @@ const sampleUsers = [
 ];
 
 /*
- * Tên người và tiêu đề cột lấy từ `sb.table`; `email`/`role`/`status` giữ
- * nguyên vì chúng là DỮ LIỆU từ server, không phải chữ của giao diện.
+ * Person names and column headers come from `sb.table`; `email`/`role`/`status`
+ * stay as they are because they are DATA from the server, not interface copy.
  */
 export const Default: Story = {
   render: function DefaultStory() {
@@ -122,9 +122,9 @@ export const Sortable: Story = {
     const { sort, order, toggle, directionOf } = useServerSort();
 
     /*
-     * Dịch TRƯỚC rồi mới sắp xếp: `localeCompare` phải chạy trên chữ người dùng
-     * thấy, không phải trên khoá i18n — nếu không thì đổi ngôn ngữ mà thứ tự
-     * vẫn theo tiếng Việt.
+     * Translate FIRST, then sort: `localeCompare` has to run on the text the user
+     * sees, not on the i18n key — otherwise switching language leaves the order
+     * following Vietnamese.
      */
     const rows = useMemo(() => {
       const named = sortableRows.map((row) => ({ ...row, name: t(row.nameKey) }));

@@ -44,7 +44,7 @@ export const Interactive: Story = {
   },
 };
 
-/** Cùng một Drawer, mở từ cả bốn cạnh màn hình. */
+/** The same Drawer, opened from all four edges of the screen. */
 export const AllSides: Story = {
   render: function AllSidesStory() {
     const t = useTranslations("sb.drawer");

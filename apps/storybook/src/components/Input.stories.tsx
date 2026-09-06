@@ -32,8 +32,8 @@ export default meta;
 type Story = StoryObj<typeof Input>;
 
 /*
- * Nhãn/placeholder lấy từ `sb.input` khi ô Controls để trống — gõ vào vẫn đè
- * được, mà đổi ngôn ngữ thì mặc định cũng đổi theo.
+ * Label/placeholder fall back to `sb.input` when the Controls field is empty —
+ * typing still overrides them, and switching language moves the defaults too.
  */
 export const Default: Story = {
   args: {},

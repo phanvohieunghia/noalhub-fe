@@ -6,15 +6,17 @@ import type { StorybookConfig } from "@storybook/nextjs-vite";
 import { readThemeTokens } from "./theme-tokens.ts";
 
 /**
- * `apps/storybook/.env` (không vào git — `.env*` bị ignore ở gốc repo).
+ * `apps/storybook/.env` (not in git — `.env*` is ignored at the repo root).
  *
- * `process.loadEnvFile` là của Node, không cần `dotenv`: nó **không ghi đè**
- * biến đã có sẵn, nên `SB_AUDIENCE=public pnpm dev` vẫn thắng file. Đó cũng là
- * lý do phải nạp ở đây thay vì tin vào cơ chế `.env` của Storybook: cơ chế đó
- * dành cho biến đi vào bundle preview, còn file này chạy sớm hơn thế.
+ * `process.loadEnvFile` is Node's own, so no `dotenv` is needed: it does **not
+ * overwrite** variables that are already set, which is why `SB_AUDIENCE=public
+ * pnpm dev` still beats the file. It is also why the file has to be loaded here
+ * instead of relying on Storybook's `.env` handling: that mechanism is for
+ * variables that end up in the preview bundle, and this file runs earlier than
+ * that.
  *
- * `process.cwd()` là thư mục package: cả `pnpm dev` lẫn `turbo run
- * build-storybook` đều chạy task với cwd đặt ở đó.
+ * `process.cwd()` is the package directory: both `pnpm dev` and `turbo run
+ * build-storybook` run the task with cwd set there.
  */
 const envFile = resolve(process.cwd(), ".env");
 if (existsSync(envFile)) process.loadEnvFile(envFile);

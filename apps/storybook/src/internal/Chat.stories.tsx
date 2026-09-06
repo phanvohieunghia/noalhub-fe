@@ -4,7 +4,6 @@ import { useTranslations } from "next-intl";
 import { useMessage } from "@noalhub/i18n/use-message";
 
 import { Button } from "@noalhub/ui/button";
-import { Icon, ICONS } from "@noalhub/ui/icons";
 import { Spinner } from "@noalhub/ui/spinner";
 import { Typography } from "@noalhub/ui/typography";
 
@@ -27,9 +26,12 @@ import {
   Bubble,
   ChatScreen,
   Composer,
+  ConnectionBanner,
   ConversationHeader,
   ConversationList,
   DateSeparator,
+  MessageGroup,
+  MessageList,
   PEERS,
   ReadReceipt,
 } from "./chat-parts";
@@ -190,7 +192,7 @@ export const Overview: Story = {
   },
 };
 
-/** `/chat` với danh sách đã tải nhưng chưa chọn hội thoại nào. */
+/** `/chat` with the list loaded but no conversation selected yet. */
 export const ConversationsEmptyPane: Story = {
   render: function ConversationsEmptyPaneScreen() {
     const t = useTranslations("web.chat.conversation");
@@ -198,19 +200,12 @@ export const ConversationsEmptyPane: Story = {
     return (
       <ChatScreen>
         <ConversationList activeIndex={-1} />
+        {/* No icon: `ChatEmptyState` is two lines of text and nothing else. */}
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
-          <Icon
-            icon={ICONS.chat}
-            className="text-muted-foreground size-8"
-            aria-hidden
-          />
-          <Typography variant="title-3" as="h2">
+          <Typography variant="title-2" weight={500}>
             {t("emptyTitle")}
           </Typography>
-          <Typography
-            variant="body-3"
-            className="text-muted-foreground max-w-xs"
-          >
+          <Typography variant="body-3" className="max-w-sm opacity-60">
             {t("emptyState")}
           </Typography>
         </div>
@@ -219,18 +214,18 @@ export const ConversationsEmptyPane: Story = {
   },
 };
 
-/** Chưa từng chat với ai: danh sách rỗng, không phải lỗi. */
+/** Never chatted with anyone: an empty list, not an error. */
 export const ConversationsEmptyList: Story = {
   render: function ConversationsEmptyListScreen() {
     const t = useTranslations("web.chat.sidebar");
 
     return (
-      <ChatScreen className="w-[min(26rem,90vw)] h-[24rem]">
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
-          <Typography variant="title-3" as="h2">
-            {t("empty")}
-          </Typography>
-          <Typography variant="body-3" className="text-muted-foreground">
+      <ChatScreen className="h-[24rem] w-[min(26rem,90vw)]">
+        {/* Top-aligned, not centred: the empty list replaces the rows, and the
+            search box above it stays where it is. */}
+        <div className="flex flex-1 flex-col items-center gap-2 p-8 text-center">
+          <Typography variant="title-4">{t("empty")}</Typography>
+          <Typography variant="body-4" className="opacity-60">
             {t("emptyHint")}
           </Typography>
         </div>
@@ -240,13 +235,13 @@ export const ConversationsEmptyList: Story = {
 };
 
 /**
- * Trạng thái thường gặp nhất: hội thoại đang mở, lịch sử đã tải, người kia đang
- * nhập. `✓✓` là suy ra từ con trỏ `lastReadMessageId` của người kia (id là UUID
- * v7 nên so sánh được theo thời gian), không phải cờ "đã đọc" của từng tin.
+ * The most common state: a conversation open, history loaded, the other person
+ * typing. `✓✓` is derived from the other person's `lastReadMessageId` cursor (ids
+ * are UUID v7, so they compare chronologically), not from a per-message "read"
+ * flag.
  */
 export const Conversation: Story = {
   render: function ConversationScreen() {
-    const t = useTranslations("web.chat.messages");
     const td = useTranslations("web.chat.day");
     const tt = useTranslations("web.chat.typing");
     const tp = useTranslations("web.chat.presence");
@@ -256,27 +251,26 @@ export const Conversation: Story = {
         <ConversationList />
         <div className="flex min-w-0 flex-1 flex-col">
           <ConversationHeader statusLabel={tp("online")} />
-          <div
-            className="flex flex-1 flex-col gap-2 overflow-y-auto p-4"
-            aria-label={t("label")}
-            // A scrollable region has to be reachable by keyboard, or the
-            // history is unreadable without a mouse.
-            tabIndex={0}
-          >
+          <MessageList>
             <DateSeparator label={td("yesterday")} />
-            <Bubble time="09:38">Mai họp lúc mấy giờ thế?</Bubble>
-            <Bubble
-              mine
-              time="09:40"
-              meta={<ReadReceipt read />}
-            >
-              9h30 nhé, mình gửi link trong invite rồi.
-            </Bubble>
+            {/* Consecutive messages from one person are ONE group: the avatar and
+                the name appear once, at the top of the run. */}
+            <MessageGroup peer={PEERS[0]}>
+              <Bubble time="09:37">Chào bạn, mai họp không?</Bubble>
+              <Bubble time="09:38">Mai họp lúc mấy giờ thế?</Bubble>
+            </MessageGroup>
+            <MessageGroup mine>
+              <Bubble mine time="09:40" meta={<ReadReceipt read />}>
+                9h30 nhé, mình gửi link trong invite rồi.
+              </Bubble>
+            </MessageGroup>
             <DateSeparator label={td("today")} />
-            <Bubble time="09:41">Ok mình xem rồi nhé</Bubble>
-          </div>
+            <MessageGroup peer={PEERS[0]}>
+              <Bubble time="09:41">Ok mình xem rồi nhé</Bubble>
+            </MessageGroup>
+          </MessageList>
           <div
-            className="text-body-4 text-muted-foreground h-5 shrink-0 px-4"
+            className="text-body-4 h-5 shrink-0 px-4 opacity-60"
             aria-live="polite"
           >
             {tt("one", { name: PEERS[0]!.name })}
@@ -288,7 +282,7 @@ export const Conversation: Story = {
   },
 };
 
-/** Hội thoại mới toanh: chưa có tin nào, composer vẫn dùng được. */
+/** A brand-new conversation: no messages yet, and the composer still works. */
 export const ConversationEmpty: Story = {
   render: function ConversationEmptyScreen() {
     const t = useTranslations("web.chat.conversation");
@@ -312,27 +306,26 @@ export const ConversationEmpty: Story = {
 };
 
 /**
- * Tin đang bay: bubble mờ + spinner. `id` do FE sinh (UUID v7) chính là khoá
- * idempotency của BE, nên trạng thái này luôn an toàn để retry.
+ * A message in flight: dimmed bubble plus spinner. The FE-generated `id` (UUID v7)
+ * is the backend's idempotency key, so this state is always safe to retry.
  */
 export const MessageSending: Story = {
   render: function MessageSendingScreen() {
-    const t = useTranslations("web.chat.messages");
 
     return (
       <ChatScreen className="h-[18rem] w-[min(30rem,90vw)]">
         <div className="flex min-w-0 flex-1 flex-col">
-          <div
-            className="flex flex-1 flex-col gap-2 p-4"
-            aria-label={t("label")}
-          >
-            <Bubble mine time="09:41" meta={<ReadReceipt read={false} />}>
-              Mình gửi bản cuối nhé.
-            </Bubble>
-            <Bubble mine pending time="09:42" meta={<Spinner className="size-3" />}>
-              Đang gửi cái này…
-            </Bubble>
-          </div>
+          <MessageList>
+            <MessageGroup mine>
+              <Bubble mine time="09:41" meta={<ReadReceipt read={false} />}>
+                Mình gửi bản cuối nhé.
+              </Bubble>
+              {/* No read receipt while `status === "sending"` — only a spinner. */}
+              <Bubble mine pending time="09:42" meta={<Spinner className="size-3" />}>
+                Đang gửi cái này…
+              </Bubble>
+            </MessageGroup>
+          </MessageList>
           <Composer pending />
         </div>
       </ChatScreen>
@@ -341,8 +334,9 @@ export const MessageSending: Story = {
 };
 
 /**
- * Ack trả về `ok: false`: bubble viền đỏ, câu lỗi là KEY được dịch lúc render
- * (đổi ngôn ngữ trên toolbar là đổi câu lỗi), và nút gửi lại dùng ĐÚNG `id` cũ.
+ * The ack came back `ok: false`: red-bordered bubble, an error message that is a
+ * KEY translated at render time (switching language in the toolbar switches the
+ * message), and a retry button that reuses THE SAME `id`.
  */
 export const MessageFailed: Story = {
   render: function MessageFailedScreen() {
@@ -352,22 +346,29 @@ export const MessageFailed: Story = {
     return (
       <ChatScreen className="h-[18rem] w-[min(30rem,90vw)]">
         <div className="flex min-w-0 flex-1 flex-col">
-          <div
-            className="flex flex-1 flex-col gap-2 p-4"
-            aria-label={t("label")}
-          >
-            <Bubble mine danger time="09:42">
-              Đang gửi cái này…
-            </Bubble>
-            <div className="flex items-center justify-end gap-2 px-1">
-              <span role="alert" className="text-danger text-[11px]">
-                {m("common.errors.generic")}
-              </span>
-              <Button variant="link" size="inline">
-                {t("resend")}
-              </Button>
-            </div>
-          </div>
+          <MessageList>
+            <MessageGroup mine>
+              {/* The error row belongs to the bubble, not beside it: a failed
+                  message keeps its timestamp and gains a row underneath. */}
+              <Bubble
+                mine
+                danger
+                time="09:42"
+                error={
+                  <>
+                    <span role="alert" className="text-danger text-[11px]">
+                      {m("common.errors.generic")}
+                    </span>
+                    <Button variant="link" size="inline">
+                      {t("resend")}
+                    </Button>
+                  </>
+                }
+              >
+                Đang gửi cái này…
+              </Bubble>
+            </MessageGroup>
+          </MessageList>
           <Composer />
         </div>
       </ChatScreen>
@@ -376,31 +377,22 @@ export const MessageFailed: Story = {
 };
 
 /**
- * Socket rụng. Gửi tin đi qua socket (không có REST để ghi), nên mất kết nối là
- * mất khả năng gửi — phải nói ra, không để người dùng đoán.
+ * The socket dropped. Sending goes through the socket (there is no REST write
+ * path), so losing the connection means losing the ability to send — say so
+ * rather than leaving the user to guess.
  */
 export const Offline: Story = {
   render: function OfflineScreen() {
-    const t = useTranslations("web.chat.connection");
-    const tc = useTranslations("common");
-    const tm = useTranslations("web.chat.messages");
-
     return (
-      <ChatScreen className="h-[20rem] w-[min(30rem,90vw)]">
+      // The banner is the top strip of the WHOLE shell, above the sidebar as
+      // well as the pane — not a per-pane element.
+      <ChatScreen className="h-[20rem] w-[min(30rem,90vw)]" banner={<ConnectionBanner />}>
         <div className="flex min-w-0 flex-1 flex-col">
-          <div
-            role="status"
-            className="text-body-3 border-border bg-warning/15 text-warning flex shrink-0 items-center justify-center gap-3 border-b px-4 py-2"
-          >
-            <Icon icon={ICONS.warning} aria-hidden />
-            <span>{t("offline")}</span>
-            <Button variant="outline" size="xs">
-              {tc("actions.retry")}
-            </Button>
-          </div>
-          <div className="flex flex-1 flex-col gap-2 p-4" aria-label={tm("label")}>
-            <Bubble time="09:41">Ok mình xem rồi nhé</Bubble>
-          </div>
+          <MessageList>
+            <MessageGroup peer={PEERS[0]}>
+              <Bubble time="09:41">Ok mình xem rồi nhé</Bubble>
+            </MessageGroup>
+          </MessageList>
           <Composer offline />
         </div>
       </ChatScreen>
@@ -409,27 +401,35 @@ export const Offline: Story = {
 };
 
 /**
- * Đang kết nối lại. Không có nút thử lại ở trạng thái này — chỉ chờ.
+ * Reconnecting. There is no retry button in this state — only waiting.
  */
 export const Reconnecting: Story = {
   render: function ReconnectingScreen() {
-    const t = useTranslations("web.chat.connection");
-
     return (
-      <div
-        role="status"
-        className="text-body-3 border-border bg-warning/15 text-warning flex w-[min(30rem,90vw)] items-center justify-center gap-3 rounded-lg border px-4 py-2"
+      // The same banner as `Offline`, one component with two states: a spinner
+      // instead of the `⚠`, and NO retry button — there is nothing to retry
+      // while a retry is already in flight.
+      <ChatScreen
+        className="h-[20rem] w-[min(30rem,90vw)]"
+        banner={<ConnectionBanner connecting />}
       >
-        <Spinner />
-        <span>{t("reconnecting")}</span>
-      </div>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <MessageList>
+            <MessageGroup peer={PEERS[0]}>
+              <Bubble time="09:41">Ok mình xem rồi nhé</Bubble>
+            </MessageGroup>
+          </MessageList>
+          <Composer offline />
+        </div>
+      </ChatScreen>
     );
   },
 };
 
 /**
- * Ngõ cụt: BE trả **404** cho cả "không tồn tại" lẫn "không phải thành viên" —
- * cố tình không tiết lộ hội thoại có thật hay không. Không có nhánh 403.
+ * A dead end: the backend returns **404** for both "does not exist" and "not a
+ * member" — deliberately not revealing whether the conversation is real. There is
+ * no 403 branch.
  */
 export const ConversationNotFound: Story = {
   render: function ConversationNotFoundScreen() {
@@ -438,10 +438,10 @@ export const ConversationNotFound: Story = {
     return (
       <ChatScreen className="h-[16rem] w-[min(30rem,90vw)]">
         <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-          <Typography variant="body-3">{t("notFound")}</Typography>
-          <a href="#" className="text-body-3 underline underline-offset-4">
+          <Typography variant="title-4">{t("notFound")}</Typography>
+          <span className="text-body-3 underline underline-offset-2">
             {t("backToList")}
-          </a>
+          </span>
         </div>
       </ChatScreen>
     );

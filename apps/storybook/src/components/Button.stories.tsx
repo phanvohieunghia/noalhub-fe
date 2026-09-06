@@ -45,8 +45,9 @@ export default meta;
 type Story = StoryObj<typeof Button>;
 
 /*
- * `children` bỏ khỏi `args` và lấy từ `sb.button` khi trống: ô Controls vẫn gõ
- * đè được, còn mặc định thì đổi theo toolbar ngôn ngữ.
+ * `children` is left out of `args` and falls back to `sb.button` when empty: the
+ * Controls field still overrides it, while the default follows the language
+ * toolbar.
  */
 export const Playground: Story = {
   args: { variant: "primary", size: "md" },
@@ -99,7 +100,7 @@ export const Disabled: Story = {
   },
 };
 
-/** Nút chỉ có icon: luôn kèm `aria-label` vì không còn chữ nào để đọc. */
+/** Icon-only button: always carries an `aria-label`, since there is no text left to read. */
 export const IconButton: Story = {
   args: {
     variant: "outline",

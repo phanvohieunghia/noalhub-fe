@@ -45,11 +45,12 @@ export function MemberProfileDrawer({
   const presence = usePresence(member?.userId);
   const { data, isPending, error } = usePublicProfile(open ? member?.username : undefined);
 
-  const statusLabel = !presence
-    ? t("presence.unknown")
-    : presence.status === "online"
+  // Two states, like the dot: no entry in the store reads as offline rather than
+  // as a third "unknown" (`presence-dot.tsx`).
+  const statusLabel =
+    presence?.status === "online"
       ? t("presence.online")
-      : (cf.lastSeenLabel(presence.lastSeenAt) ?? t("presence.offline"));
+      : (cf.lastSeenLabel(presence?.lastSeenAt ?? null) ?? t("presence.offline"));
 
   // Before the response arrives, use the member data already in the chat cache —
   // the drawer opens with content and fills in the rest afterwards.

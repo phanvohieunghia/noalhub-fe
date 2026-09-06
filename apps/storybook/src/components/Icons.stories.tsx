@@ -20,8 +20,9 @@ export default meta;
 type Story = StoryObj<typeof Icon>;
 
 /**
- * Các mức zoom: ô càng hẹp thì một hàng chứa càng nhiều icon. `row` luôn cao
- * đúng bằng ô — nhãn chỉ một dòng nên nội dung không đẩy ô cao ra.
+ * Zoom levels: the narrower the cell, the more icons fit in a row. `row` is always
+ * exactly as tall as a cell — labels are single-line, so content never pushes the
+ * cell taller.
  */
 const ZOOM_STEPS = [
   { tile: 72, row: 64, icon: "size-4", label: "text-[10px]", box: "gap-1 py-1.5" },
@@ -34,7 +35,7 @@ const DEFAULT_ZOOM = 2;
 
 type Zoom = (typeof ZOOM_STEPS)[number];
 
-/** Mức zoom + hai nút chỉnh, dùng chung cho cả hai bảng. */
+/** The zoom level plus its two buttons, shared by both grids. */
 function useZoom() {
   const [index, setIndex] = useState(DEFAULT_ZOOM);
   const zoom = ZOOM_STEPS[index]!;
@@ -107,8 +108,9 @@ function IconTile({
   const t = useTranslations("sb.icons");
 
   return (
-    // Tên bị cắt bằng "…" nên phải có chỗ xem đủ: Tooltip thay cho `title` —
-    // hiện nhanh, đọc được bằng bàn phím và theo đúng màu của theme.
+    // Names are truncated with "…", so there has to be somewhere to read them in
+    // full: a Tooltip instead of `title` — it appears instantly, is reachable by
+    // keyboard, and follows the theme colors.
     <Tooltip label={t("copyHint", { name })}>
       <button
         type="button"
@@ -145,9 +147,9 @@ function ClipboardWarning({ failed }: { failed: boolean }) {
 }
 
 /**
- * Những icon dự án đang thật sự dùng: các alias trong `ICONS`, đặt tên theo
- * công dụng (`delete`, `sortAsc`) chứ không theo hình vẽ. Đây là bảng nên tra
- * trước; chỉ sang "All Lucide" khi không có alias nào hợp.
+ * The icons the project actually uses: the aliases in `ICONS`, named after their
+ * purpose (`delete`, `sortAsc`) rather than their drawing. Look here first; only
+ * go to "All Lucide" when no alias fits.
  */
 export const InUse: Story = {
   render: function InUseStory() {
@@ -183,8 +185,9 @@ export const InUse: Story = {
 };
 
 /**
- * Toàn bộ bộ lucide đã đóng gói sẵn (kể cả alias). Lưới ảo hoá theo hàng nên chỉ
- * những ô lọt trong khung nhìn mới được dựng — không giới hạn số kết quả.
+ * The entire bundled lucide set (aliases included). The grid is virtualized by
+ * row, so only the cells inside the viewport are rendered — there is no cap on
+ * the number of results.
  */
 export const AllLucide: Story = {
   // Fullscreen so the grid can own the viewport height; the padding the meta's
@@ -228,8 +231,8 @@ export const AllLucide: Story = {
       estimateSize: () => zoom.row,
       overscan: 4,
     });
-    // Số hàng và chiều cao hàng đổi theo mức zoom — phải đo lại, nếu không lưới
-    // vẫn giữ nguyên tổng chiều cao của mức zoom trước.
+    // Row count and row height both change with the zoom level — they have to be
+    // remeasured, otherwise the grid keeps the previous level's total height.
     useEffect(() => {
       virtualizer.measure();
     }, [virtualizer, zoom, columns]);

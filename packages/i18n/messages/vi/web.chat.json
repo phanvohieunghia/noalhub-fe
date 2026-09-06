@@ -60,7 +60,6 @@
     "many": "{first} và {count} người khác đang nhập…"
   },
   "presence": {
-    "unknown": "Không rõ trạng thái",
     "online": "Đang hoạt động",
     "offline": "Không hoạt động",
     "justNow": "Vừa mới đây",

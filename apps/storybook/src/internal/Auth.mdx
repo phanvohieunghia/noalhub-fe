@@ -42,7 +42,7 @@ Bấm vào ô bất kỳ để mở màn hình tương ứng.
     .flow-node { cursor: pointer; }
   `}</style>
 
-  {/* Khung nhóm: nhánh quên mật khẩu (trái) và nhánh OAuth (phải). */}
+  {/* Group frames: the forgot-password branch (left) and the OAuth branch (right). */}
   <g fill="none" stroke="var(--border)" strokeWidth="1" strokeDasharray="4 4">
     <rect x="22" y="142" width="226" height="298" rx="14" />
     <rect x="532" y="72" width="226" height="158" rx="14" />
@@ -52,7 +52,7 @@ Bấm vào ô bất kỳ để mở màn hình tương ứng.
     <text x="534" y="64">ĐĂNG NHẬP MẠNG XÃ HỘI</text>
   </g>
 
-  {/* Mũi tên. Mọi góc đều bo tròn để đường đi dễ theo bằng mắt. */}
+  {/* Arrows. Every corner is rounded so the eye can follow a run. */}
   <g stroke="var(--muted-foreground)" strokeWidth="1.25" fill="none" markerEnd="url(#arrow)">
     <path d="M390 72 V90" />
     <path d="M485 116 H550" />
@@ -96,11 +96,11 @@ Bấm vào ô bất kỳ để mở màn hình tương ứng.
         className={href ? "flow-node" : undefined}
         style={{ textDecoration: "none" }}
         {...(href
-        ? // `./` là bắt buộc: trang này render TRONG `iframe.html`, nên một
-          // href trần (`?path=…`) resolve thành `iframe.html?path=…` và mở story
-          // trần trụi, mất cả sidebar. `./` trỏ về thư mục chứa — đúng chỗ của
-          // manager, kể cả khi Storybook được phục vụ dưới một tiền tố như
-          // `/internal/`.
+        ? // `./` is required: this page renders INSIDE `iframe.html`, so a bare
+          // href (`?path=…`) resolves to `iframe.html?path=…` and opens the story
+          // stripped of its sidebar. `./` points at the containing directory —
+          // where the manager lives — even when Storybook is served under a
+          // prefix such as `/internal/`.
           { href: `./?path=/story/${href}`, target: "_top" }
         : {})}
       >

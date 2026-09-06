@@ -91,7 +91,7 @@ const meta: Meta = {
 export default meta;
 type Story = StoryObj;
 
-/** Điểm vào của flow. Có 3 lối ra: đăng ký, quên mật khẩu, và OAuth. */
+/** The entry point of the flow. Three ways out: register, forgot password, and OAuth. */
 export const Login: Story = {
   render: function LoginScreen() {
     const t = useTranslations("web.auth.login");
@@ -126,13 +126,13 @@ export const Login: Story = {
 };
 
 /**
- * Đăng nhập bị từ chối: một lỗi ở cấp form và một lỗi ở cấp field.
+ * Sign-in rejected: one form-level error and one field-level error.
  *
- * Cả hai đều là KEY được dịch lúc render, không phải câu chữ viết sẵn — nên đổi
- * ngôn ngữ trên toolbar là đổi luôn câu báo lỗi. Đó đúng cách app làm: zod và
- * backend trả về key, `useMessage()` dịch (`docs/i18n.md` §7.3). Viết thẳng câu
- * tiếng Việt vào đây thì story trông vẫn đúng ở `vi` và sai ngay khi chuyển
- * sang `en`.
+ * Both are KEYS translated at render time, not pre-written sentences — so
+ * switching language in the toolbar switches the error copy too. That is exactly
+ * what the app does: zod and the backend return keys, `useMessage()` translates
+ * them (`docs/i18n.md` §7.3). Inlining Vietnamese sentences here would leave the
+ * story looking correct in `vi` and wrong the moment it is switched to `en`.
  */
 export const LoginRejected: Story = {
   render: function LoginRejectedScreen() {
@@ -161,7 +161,7 @@ export const LoginRejected: Story = {
   },
 };
 
-/** Nhánh "chưa có tài khoản". Thành công thì vào thẳng app, không cần xác minh email. */
+/** The "no account yet" branch. On success it lands straight in the app, with no email verification. */
 export const Register: Story = {
   render: function RegisterScreen() {
     const t = useTranslations("web.auth.register");
@@ -196,7 +196,7 @@ export const Register: Story = {
   },
 };
 
-/** Bước 1 của nhánh quên mật khẩu: nhập email. */
+/** Step 1 of the forgot-password branch: enter the email. */
 export const ForgotPassword: Story = {
   render: function ForgotPasswordScreen() {
     const t = useTranslations("web.auth.forgotPassword");
@@ -219,8 +219,8 @@ export const ForgotPassword: Story = {
 };
 
 /**
- * Bước 2: đã gửi. Câu thông báo cố tình mơ hồ ("nếu email tồn tại") — nói thẳng
- * email có hay không là để lộ danh sách tài khoản.
+ * Step 2: sent. The message is deliberately vague ("if the email exists") — saying
+ * outright whether it does would leak the account list.
  */
 export const ForgotPasswordSent: Story = {
   render: function ForgotPasswordSentScreen() {
@@ -240,7 +240,7 @@ export const ForgotPasswordSent: Story = {
   },
 };
 
-/** Bước 3: người dùng bấm link trong email, `?token=` hợp lệ. */
+/** Step 3: the user clicks the link in the email, with a valid `?token=`. */
 export const ResetPassword: Story = {
   render: function ResetPasswordScreen() {
     const t = useTranslations("web.auth.resetPassword");
@@ -266,7 +266,7 @@ export const ResetPassword: Story = {
   },
 };
 
-/** Link thiếu `?token=` hoặc bị mail client cắt: ngõ cụt, chỉ còn lối xin link mới. */
+/** The link is missing `?token=` or was truncated by a mail client: a dead end, with only the request-a-new-link way out. */
 export const ResetPasswordInvalidLink: Story = {
   render: function ResetPasswordInvalidLinkScreen() {
     const t = useTranslations("web.auth.resetPassword");
@@ -285,7 +285,7 @@ export const ResetPasswordInvalidLink: Story = {
   },
 };
 
-/** Đổi mật khẩu xong: hiện thông báo rồi tự chuyển về đăng nhập sau 1.5s. */
+/** Password changed: shows a confirmation, then returns to sign-in after 1.5s. */
 export const ResetPasswordDone: Story = {
   render: function ResetPasswordDoneScreen() {
     const t = useTranslations("web.auth.resetPassword");
@@ -300,8 +300,9 @@ export const ResetPasswordDone: Story = {
 };
 
 /**
- * Nhánh OAuth quay về `/auth/callback?code=`. Mã này dùng MỘT lần, sống 60 giây,
- * và được đổi lấy token ngay — token không bao giờ đi qua URL.
+ * The OAuth branch returns to `/auth/callback?code=`. That code is single-use,
+ * lives 60 seconds, and is exchanged for tokens immediately — tokens never travel
+ * through the URL.
  */
 export const OAuthFinishing: Story = {
   render: function OAuthFinishingScreen() {
@@ -317,7 +318,7 @@ export const OAuthFinishing: Story = {
   },
 };
 
-/** Callback hỏng: provider trả lỗi, thiếu `code`, hoặc mã đã hết hạn. */
+/** A broken callback: the provider returned an error, `code` is missing, or the code has expired. */
 export const OAuthFailed: Story = {
   render: function OAuthFailedScreen() {
     const t = useTranslations("web.auth.oauth");

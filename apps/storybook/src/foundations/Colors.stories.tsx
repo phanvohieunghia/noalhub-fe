@@ -150,9 +150,9 @@ function Palette() {
       <div className="flex flex-col gap-2">
         <h1 className="text-h3">{t("colorsTitle")}</h1>
         <p className="max-w-2xl text-body-3 text-muted-foreground">
-          {/* `t.rich` + cú pháp tag `<file>…</file>` trong message: đó là cách
-              next-intl chèn một thẻ React vào giữa câu mà vẫn giữ nguyên trật tự
-              từ của từng ngôn ngữ. */}
+          {/* `t.rich` plus the `<file>…</file>` tag syntax inside the message: that
+              is how next-intl injects a React element into the middle of a sentence
+              while preserving each language's own word order. */}
           {t.rich("colorsNote", { file: (chunks) => <code>{chunks}</code> })}
         </p>
       </div>

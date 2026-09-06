@@ -38,7 +38,8 @@ export default meta;
 type Story = StoryObj<typeof Textarea>;
 
 /*
- * Chữ mẫu lấy từ `sb.textarea`; `args.x ||` giữ ô Controls gõ đè được.
+ * Sample copy comes from `sb.textarea`; `args.x ||` keeps the Controls field
+ * overridable.
  */
 export const Default: Story = {
   args: { rows: 4 },
@@ -55,7 +56,7 @@ export const Default: Story = {
   },
 };
 
-/** Mặc định `vertical`: kéo được mép dưới để nới cao. */
+/** `vertical` by default: drag the bottom edge to make it taller. */
 export const Resizable: Story = {
   args: { resize: "vertical", rows: 3 },
   render: function ResizableStory(args) {
@@ -71,7 +72,7 @@ export const Resizable: Story = {
   },
 };
 
-/** `resize="auto"`: gõ tới đâu cao tới đó, chạm `maxRows` thì chuyển sang cuộn. */
+/** `resize="auto"`: grows as you type, and switches to scrolling once it hits `maxRows`. */
 export const AutoGrow: Story = {
   render: function AutoGrowStory() {
     const t = useTranslations("sb.textarea");
@@ -90,7 +91,7 @@ export const AutoGrow: Story = {
   },
 };
 
-/** Đếm ký tự, và đổi sang màu danger khi vượt `maxLength`. */
+/** Character counter, turning the danger color once `maxLength` is exceeded. */
 export const WithCounter: Story = {
   render: function CounterStory() {
     const t = useTranslations("sb.textarea");
@@ -149,8 +150,8 @@ export const Disabled: Story = {
 };
 
 /**
- * `rows` quyết định chiều cao ban đầu (mặc định 3). Với `resize="auto"` nó chỉ
- * là mức sàn — ô vẫn cao lên theo nội dung.
+ * `rows` sets the initial height (3 by default). With `resize="auto"` it is only a
+ * floor — the field still grows with its content.
  */
 export const Rows: Story = {
   render: function RowsStory() {
@@ -172,7 +173,7 @@ export const Rows: Story = {
   },
 };
 
-/** Ba kiểu resize cạnh nhau. */
+/** The three resize modes side by side. */
 export const AllResizeModes: Story = {
   render: function AllResizeModesStory() {
     const t = useTranslations("sb.textarea");

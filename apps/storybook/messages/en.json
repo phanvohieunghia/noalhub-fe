@@ -289,7 +289,11 @@
       "zoomIn": "Zoom in",
       "zoomOut": "Zoom out",
       "zoomReset": "Reset zoom",
-      "redisSection": "Redis — where the state actually lives"
+      "redisSection": "Redis — where the state actually lives",
+      "cacheSection": "Cache tags — what clears what",
+      "slugSection": "Sequence — an old slug",
+      "docsSection": "Where the rules actually live",
+      "blogSource": "This page documents `packages/api/src/blog/server.ts`, `apps/web/app/api/revalidate/route.ts` and `apps/admin/components/posts/post-editor.tsx` — it does not rebuild them. The boxes in the flow map link to the `UI/Blog` component stories, which are the real components from `@noalhub/ui`. The full rules, including the parts the backend owns, live in `docs/blog.md`."
     },
     "chat": {
       "title": "The chat flow",
@@ -372,25 +376,19 @@
     "presence": {
       "title": "Presence — online / offline",
       "lead": "Presence has **no endpoint of its own**. It reaches the app two ways: a snapshot riding along on the chat REST responses (`members[].status`), and after that `presence:changed` events on the socket. Both land in one zustand store — no React Query, no ack.",
-      "flowCaption": "**Unknown** is the starting state and has no way back: once a value is known the store keeps the last one until `clear()` — even when that value has gone stale.",
-      "seqCaption": "The same three states seen along the data path: which hop is REST and which is a socket event.",
+      "flowCaption": "**Two states, and offline is the one you start in.** The store can hold nothing at all for a user, and the UI renders that absence as offline — so the dot is never blank and never a third colour. The seed is what turns it green before any event arrives.",
+      "seqCaption": "The same two states seen along the data path: which hop is REST and which is a socket event.",
       "nodes": {
-        "unknown": "Unknown",
-        "unknownNote": "faint dot — no data yet",
-        "online": "Online",
-        "onlineNote": "“Active now”, no timestamp",
         "offline": "Offline",
-        "offlineNote": "lastSeenAt → “3 hours ago”"
+        "offlineNote": "grey dot · lastSeenAt when known",
+        "online": "Online",
+        "onlineNote": "“Active now”, no timestamp"
       },
       "edges": {
-        "toOnlineA": "seed status=online",
+        "toOnlineA": "seed status=online, or",
         "toOnlineB": "presence:changed online",
-        "toOfflineA": "seed status=offline",
-        "toOfflineB": "presence:changed offline",
-        "closeTab": "tab closed (~1s)",
-        "reopen": "opens the app again",
-        "stay": "status = null → stays put",
-        "clear": "logout · clear() → forgets everything"
+        "toOffline": "presence:changed offline + lastSeenAt",
+        "noData": "no entry at all → still offline"
       },
       "lanes": {
         "ui": "UI + hooks",
@@ -409,10 +407,10 @@
       "steps": {
         "1": "useConversations() / useConversation() — the chat flow's REST, not a presence API",
         "2": "members[].status + lastSeenAt — a presence snapshot as of the response",
-        "3": "useSeedPresence(): setPresence for every member that has a status",
+        "3": "useSeedPresence(): setPresence for every member that HAS a status",
         "4": "green / grey dot on the very first render, no event needed",
         "5": "member.status === null (the list only computes it for DMs) or an unseen userId",
-        "6": "usePresence → undefined = UNKNOWN (faint dot), NOT offline",
+        "6": "usePresence → undefined, and the view renders that as OFFLINE",
         "7": "the other person opens the app · handshake /socket.io/",
         "8": "presence:changed { userId, status: online } — only to people who share a conversation",
         "9": "setPresence — zustand, outside React Query",
@@ -423,15 +421,15 @@
         "14": "reconnect → invalidate conversations → refetch → seeded again (steps 1–3)"
       },
       "notes": {
-        "1": "**Three states, not two.** Presence is only broadcast to people who share a conversation, so “no data” means **unknown** — drawing it as offline lies to the user about something you do not know.",
-        "2": "**Steps 1–4: presence is seeded from REST, not only from the socket.** `useSeedPresence()` reads `members[].status` off `useConversations` / `useConversation` and writes it straight into the store. Without it, opening a conversation with someone who is online still shows “unknown”, because `presence:changed` only fires on a **change**.",
-        "3": "**Steps 5–6 are where “unknown” actually happens:** `member.status === null` (per spec the conversation list only computes presence for DMs), or a `userId` that has not appeared in any response. `null` is **not** offline — the seed deliberately skips it rather than overwriting.",
-        "4": "**Step 13: offline can lag by up to 60 seconds** when a backend instance dies abruptly (`staleAfter = 60s`). The normal exits — closing the tab, losing the network — stay around 1 second. Do not build UI that depends on instant presence.",
-        "5": "**Step 14: a reconnect heals presence by itself.** There is no presence API to refetch, but the invalidate required after every reconnect pulls `conversations` back and the snapshot in that response re-runs the seed.",
-        "6": "**`docs/chat.md` §5.7 does not yet document the REST seed** — the code went ahead of the doc. Fixing the doc means fixing this page too.",
-        "7": "**Colour alone communicates nothing.** The dot always ships a `title` plus `sr-only` text; the three states are told apart by words, not only by shade."
+        "1": "**Two states, and “we have not heard” is drawn as offline.** Presence is only broadcast to people who share a conversation, so the store is empty for everyone else. The product decides a reader cannot act on the difference between “away” and “unknown”, so there is no third dot.",
+        "2": "**The cost of that, so it is not rediscovered as a bug:** someone who is genuinely online reads as offline until the first fact about them arrives. Which makes step 3 load-bearing rather than an optimisation.",
+        "3": "**Steps 1–4: presence is seeded from REST, not only from the socket.** `useSeedPresence()` reads `members[].status` off `useConversations` / `useConversation` and writes it straight into the store. Without it an online peer stays grey, because `presence:changed` only fires on a **change** — it never announces the current state.",
+        "4": "**`status: null` is still skipped by the seed** (steps 5–6). It means the endpoint did not compute presence, not that the person is away, so the store keeps no entry rather than writing a value the backend never sent. The collapse to offline happens in the **view**, which is what keeps that decision in one file.",
+        "5": "**Step 13: offline can lag by up to 60 seconds** when a backend instance dies abruptly (`staleAfter = 60s`). The normal exits — closing the tab, losing the network — stay around 1 second. Do not build UI that depends on instant presence.",
+        "6": "**Step 14: a reconnect heals presence by itself.** There is no presence API to refetch, but the invalidate required after every reconnect pulls `conversations` back and the snapshot in that response re-runs the seed.",
+        "7": "**Colour alone communicates nothing.** The dot always ships a `title` plus `sr-only` text, so the two states are told apart by words and not only by shade."
       },
-      "redisCaption": "The same three states seen from the backend: online/offline is **not** a Postgres column but **two sorted sets in Redis**. Postgres only keeps `users.last_seen_at`, written at the moment a user goes offline and never otherwise.",
+      "redisCaption": "The same two states seen from the backend: online/offline is **not** a Postgres column but **two sorted sets in Redis**. Postgres only keeps `users.last_seen_at`, written at the moment a user goes offline and never otherwise.",
       "redisKeys": {
         "userName": "presence:{userId}",
         "userShape": "ZSET — member = `socketId`, score = last heartbeat",
@@ -481,7 +479,157 @@
         "4": "**Offline is published only by the reaper (steps 11–15), never by `disconnect`.** One exit means one place that can get it wrong — and duplicates are ruled out by the `ZREM` result rather than by the lock, since a broken lock only costs a double sweep.",
         "5": "**The 5s reap tick is deliberately separate from the 20s refresh tick.** Fold them together and the 8-second grace still has to wait for the next 20-second tick — a closed tab would take up to 28 seconds to read offline.",
         "6": "**Running more than one BE instance without Redis fails silently.** `PresenceStore` has an in-memory implementation for single-instance setups; from the second instance on, `RedisPresenceStore` is required **together with** `@socket.io/redis-adapter`. On the FE it shows up as presence and messages “only working when you get lucky” — that is not an FE bug.",
-        "7": "**This whole diagram is backend.** The FE reads no Redis, has no presence endpoint, and can fix none of this latency. It is in Storybook because every number the UI has to live with — 60 seconds, 8 seconds, “unknown” — is produced by exactly these steps."
+        "7": "**This whole diagram is backend.** The FE reads no Redis, has no presence endpoint, and can fix none of this latency. It is in Storybook because every number the UI has to live with — 60 seconds, 8 seconds — is produced by exactly these steps."
+      },
+      "states": {
+        "onlineNote": "seeded from members[].status, then presence:changed",
+        "offlineNote": "status: offline + lastSeenAt — or no entry in the store at all"
+      }
+    },
+    "blog": {
+      "title": "Blog flow — from a draft to a public page",
+      "lead": "The blog is the **only** feature that reads through a fourth layer: `server.ts`, running in `apps/web`'s Server Components with no token at all. Public posts need no auth, and for SEO fetching on the server is not \"nicer\" but **required** — client rendering leaves the first HTML empty. The price is a cache, and the whole flow below is about who clears it and when.",
+      "flowCaption": "A post has **four** states, and only one of them is visible to the public. The two dead ends are deliberate: **archived** is a soft delete, and an **old slug** never disappears — it keeps answering, with a redirect.",
+      "nodes": {
+        "draft": "Draft",
+        "draftNote": "`status: draft` · 404 to the public",
+        "published": "Published",
+        "publishedNote": "in the list, sitemap and RSS",
+        "public": "Public page",
+        "publicNote": "`/blogs/<slug>` · ISR 300s",
+        "unpublished": "Unpublished",
+        "unpublishedNote": "back to `draft` · gone from the site",
+        "archived": "Archived",
+        "archivedNote": "soft delete — the row stays",
+        "oldSlug": "Old slug",
+        "oldSlugNote": "kept in the slug history"
+      },
+      "edges": {
+        "publish": "Publish",
+        "webhook": "backend calls the webhook",
+        "unpublish": "Unpublish",
+        "republish": "Publish again",
+        "archive": "Archive",
+        "archiveDirect": "Archive (directly)",
+        "renameA": "Slug changed —",
+        "renameB": "both slugs revalidated",
+        "redirect": "308 to the new slug"
+      },
+      "seqCaption": "Pressing Publish and seeing the post are **two** chains, and the only thing joining them is step 4. Drop that webhook and nothing breaks — the page just stays stale for up to 60 seconds (`revalidate` is the safety net, not the mechanism).",
+      "lanes": {
+        "editor": "Editor",
+        "editorNote": "apps/admin",
+        "reader": "Reader",
+        "readerNote": "browser",
+        "web": "web",
+        "webNote": "apps/web · RSC",
+        "isr": "ISR cache",
+        "isrNote": "inside the container",
+        "api": "API",
+        "apiNote": "backend",
+        "db": "DB",
+        "dbNote": "postgres"
+      },
+      "steps": {
+        "1": "`PATCH /blog/posts/{id}` + `version` (optimistic lock)",
+        "2": "`status = published`, then COMMIT",
+        "3": "200 + the new `version` — the form resyncs",
+        "4": "`POST /api/revalidate` + `x-revalidate-secret` — after the commit",
+        "5": "`revalidateTag(…, { expire: 0 })` for every tag involved",
+        "6": "200 `{ revalidated: true }` — a failure here is swallowed and logged",
+        "7": "`GET /blogs/<slug>`",
+        "8": "cache lookup → miss, the tag was just expired",
+        "9": "`fetch(…, { next: { revalidate: 300, tags: [...] } })`",
+        "10": "`SELECT` the published post",
+        "11": "`BlogPostDto` → `schema.parse` on the web side",
+        "12": "store the response under its tags",
+        "13": "HTML rendered on the server — full text in the first response"
+      },
+      "slugCaption": "Renaming a slug does not move the post — it **adds** a row to the slug history. The old URL keeps working forever, which is why the backend has to revalidate both slugs: the old one is still cached under its own tag.",
+      "slugLanes": {
+        "reader": "Reader",
+        "readerNote": "browser",
+        "web": "web",
+        "webNote": "`/blogs/[slug]`",
+        "api": "API",
+        "apiNote": "backend",
+        "db": "DB",
+        "dbNote": "posts + slug history"
+      },
+      "slugSteps": {
+        "1": "`GET /blogs/<old-slug>`",
+        "2": "`GET /blog/posts/<old-slug>` · tag `blog-post:<old-slug>`",
+        "3": "miss on `slug`, hit on the slug-history table",
+        "4": "200 `BlogPostDto` — the body carries the **new** slug",
+        "5": "`post.slug !== slug` → `permanentRedirect` → **308**",
+        "6": "`GET /blogs/<new-slug>`",
+        "7": "the post, this time with no redirect"
+      },
+      "cacheCaption": "Every `fetch` in `server.ts` carries a tag, and `POST /api/revalidate` **builds the tag names itself** from the slugs it is handed — the body never carries a tag name or a path. Otherwise the endpoint becomes a tool for re-rendering any route in the app.",
+      "tags": {
+        "listName": "blog-list",
+        "listShape": "`GET /blog/posts` — every page",
+        "listPurpose": "Cleared on publish, unpublish/archive, and on editing an already-published post. One tag covers `?page=1`, `?page=2`, … which is exactly why `revalidatePath` is unusable.",
+        "postName": "blog-post:<slug>",
+        "postShape": "`GET /blog/posts/{slug}`",
+        "postPurpose": "One tag per slug. A rename sends **both** the old and the new — the old slug is still cached under its own tag and still serving.",
+        "categoryName": "blog-category:<slug>",
+        "categoryShape": "`GET /blog/posts?category=…`",
+        "categoryPurpose": "Moving a post to another category sends **both** categories. Send only the new one and the old category page keeps listing the post for another 300 seconds.",
+        "tagName": "blog-tag:<tag>",
+        "tagShape": "`GET /blog/posts?tag=…`",
+        "tagPurpose": "Same rule: **both** the old and the new set of tags. Removing a tag without revalidating it leaves `/blogs/tag/<old>` listing a post that no longer carries it.",
+        "categoriesName": "blog-categories",
+        "categoriesShape": "`GET /blog/categories`",
+        "categoriesPurpose": "The public `postCount` changes on publish/unpublish/move — and so does any category CRUD, because renaming a category changes the cached title of `/blogs/category/<slug>`.",
+        "tagsName": "blog-tags",
+        "tagsShape": "`GET /blog/tags`",
+        "tagsPurpose": "Cleared when the first post takes a new tag, or the last post drops one — that is when the tag index itself changes, not just a listing.",
+        "sitemapName": "blog-sitemap",
+        "sitemapShape": "`GET /blog/sitemap-entries`",
+        "sitemapPurpose": "Every change of published state. It feeds `sitemap.xml`, `rss.xml` and `generateStaticParams`; miss it and Google keeps being pointed at a post that is gone."
+      },
+      "notes": {
+        "1": "**The caller must be the backend, never `apps/admin`.** Admin is code in a browser: putting the secret there publishes it, and calling without one hands anyone a DoS lever — each request forces `web` to drop its cache, re-render and call back into the backend. With the backend calling at the exact point it writes `status`, every path that publishes a post — button, seed script, a future sync job — revalidates, with none missed.",
+        "2": "**`{ expire: 0 }`, not `\"max\"`.** `\"max\"` is stale-while-revalidate, so the first F5 after Publish would still show the old version — which is the one thing this whole chain exists to prevent. `updateTag` has the right semantics but only works inside a Server Action, never a Route Handler.",
+        "3": "**The webhook is the fast path, not the only one.** `revalidate` is 60s for the list, 300s for a post, 3600s for the taxonomy pages. If the webhook is lost the site still corrects itself; the failure mode is a delay, never wrong data. That is also why the backend swallows a webhook error instead of failing the publish.",
+        "4": "**The ISR cache lives inside each container.** One `web` container today, so this is fine. The day it becomes two replicas, one webhook refreshes exactly one of them and the other keeps serving the old page until its `revalidate` expires — at which point a shared cache handler is needed.",
+        "5": "**404 and \"the API blipped\" must never merge.** `server.ts` returns `null` on 404 so the route can call `notFound()`, and **throws** on everything else for `error.tsx`. Swap the two and either Google drops real posts because the API hiccuped once, or it keeps retrying a URL that does not exist.",
+        "6": "**`generateStaticParams` must never redden the build.** CI builds the image on a GitHub runner where `API_INTERNAL_URL` does not exist, so `server.ts` falls back to the public URL and `next build` calls the production API. It is wrapped in a `try/catch` returning `[]` — `dynamicParams` is `true`, so posts still render on demand. Every deploy starts with an empty cache anyway, so prerendering only ever saved the first visit.",
+        "7": "**`/blogs` is dynamic and that is not a misconfiguration.** Reading `searchParams.page` opts the route out of static rendering, so `export const revalidate` on the page does nothing. The caching that matters happens one level down, on the `fetch` inside `server.ts`.",
+        "8": "**Pagination has to be real `<a href>`.** Googlebot runs JS but does not click buttons, so a `onPageChange` pagination leaves no crawl path past page 1. Posts still get indexed via the sitemap; what is lost is the internal linking, and sitemap-only URLs rank lower.",
+        "9": "**Three slugs are forbidden:** `category`, `tag`, `rss.xml`. They are static segments beside `/blogs/[slug]`, and Next always lets a static segment win — a post given one of those slugs would be permanently unreachable. The backend rejects them at validation time.",
+        "10": "**The editor saves only on click — there is no autosave, not even for drafts.** One copy of the content, edited live, which means editing a published post edits what the public is reading right now, and a power cut loses the work. In exchange no half-finished version ever reaches the public on its own. `version` + a 409 is what stops two tabs from overwriting each other."
+      },
+      "sample": {
+        "author": "Noah Pham",
+        "categoryName": "Engineering",
+        "categorySlug": "engineering",
+        "p1Title": "Why the blog reads through a fourth layer",
+        "p1Excerpt": "Public posts need no token, so they can be fetched on the server — and for SEO that is not an optimisation but a requirement.",
+        "p2Title": "Publish, and the page is already there",
+        "p2Excerpt": "The backend rings the bell after it commits. Sixty seconds of ISR is the safety net underneath, not the mechanism.",
+        "p3Title": "One tag beats one path",
+        "p3Excerpt": "Two paths, one tag — which is the whole reason revalidatePath never made it into this feature.",
+        "p4Title": "An old slug never dies",
+        "p4Excerpt": "Renaming does not move a post. It forks a row into the slug history, and the old URL keeps answering with a 308 forever.",
+        "p5Title": "Two axes, not one taxonomy",
+        "p5Excerpt": "Categories are navigation and get indexed; tags are cross-links and do not. Collapsing them into one list loses both jobs.",
+        "p6Title": "The editor that refuses to autosave",
+        "p6Excerpt": "One copy of the content, saved on click. The cost is a power cut; the prize is that no half-written paragraph ever ships itself.",
+        "tag1": "next-js",
+        "tag2": "isr",
+        "tag3": "seo",
+        "tag4": "cache",
+        "tagCount": "{count} posts",
+        "docTitle": "Cache tags, end to end",
+        "docIntro": "A post is not one cached thing but several: the listing that mentions it, its own page, its category, each of its tags, and the sitemap that points at it.",
+        "docH2A": "What the webhook actually clears",
+        "docBodyA": "The route handler builds every tag name itself, from the slugs in the body. Nothing in the request names a tag or a path.",
+        "docH3A": "Why both slugs",
+        "docBodyB": "The old slug is still cached under a tag of its own, and it is still serving. Revalidate only the new one and the old URL answers from yesterday.",
+        "docH2B": "Where the sixty seconds comes from",
+        "docBodyC": "`revalidate` is the floor, not the plan. If the webhook is lost the site still corrects itself; the failure mode is delay, never wrong data."
       }
     }
   }

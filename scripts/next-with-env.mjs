@@ -1,15 +1,15 @@
-// Chạy Next CLI với `.env`/`.env.local` của app ĐÃ nạp sẵn vào process.env.
+// Run the Next CLI with the app's `.env`/`.env.local` ALREADY loaded into process.env.
 //
-// Vì sao cần: Next bind HTTP server trước khi nó load env file, nên `PORT` đặt
-// trong `.env` bị nó bỏ qua (docs `next.md` §Changing the default port). Muốn
-// mỗi app tự khai port trong env file của mình thì phải nạp file TRƯỚC khi gọi
-// Next — đó là việc duy nhất của script này.
+// Why it is needed: Next binds the HTTP server before it loads env files, so a
+// `PORT` set in `.env` is ignored (docs `next.md` §Changing the default port).
+// Letting each app declare its own port in its own env file means the file has
+// to be loaded BEFORE Next is invoked — that is this script's only job.
 //
-// Không dùng `node --env-file-if-exists=... next dev`: Next dev spawn worker và
-// truyền execArgv của process cha qua NODE_OPTIONS, mà `--env-file*` không được
-// phép nằm trong NODE_OPTIONS → worker chết ngay với exit code 9.
+// Not `node --env-file-if-exists=... next dev`: Next dev spawns workers and
+// forwards the parent's execArgv through NODE_OPTIONS, and `--env-file*` is not
+// allowed in NODE_OPTIONS → the worker dies immediately with exit code 9.
 //
-// Thứ tự ưu tiên: biến của shell > .env.local > .env (giống Next).
+// Precedence: shell variables > .env.local > .env (same as Next).
 import { createRequire } from "node:module";
 import { existsSync, readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
@@ -24,10 +24,10 @@ for (const file of [".env", ".env.local"]) {
   }
 }
 
-// Resolve `next` theo THƯ MỤC APP chứ không theo vị trí script: script nằm ở gốc
-// repo, mà gốc repo không có `next` trong dependency (pnpm không hoist).
+// Resolve `next` from the APP DIRECTORY, not from the script's location: the
+// script lives at the repo root, which has no `next` dependency (pnpm does not hoist).
 const require = createRequire(pathToFileURL(`${process.cwd()}/package.json`));
 
-// import động: next bin tự đọc process.argv.slice(2), tức `dev`/`start` truyền
-// vào script này rơi đúng chỗ. Chạy in-process nên NODE_OPTIONS vẫn sạch.
+// Dynamic import: the next bin reads process.argv.slice(2) itself, so `dev`/`start`
+// passed to this script land where they should. Running in-process keeps NODE_OPTIONS clean.
 await import(pathToFileURL(require.resolve("next/dist/bin/next")));

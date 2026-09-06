@@ -70,6 +70,7 @@ export const ICONS = {
   menu: LUCIDE.menu,
   copy: LUCIDE.copy,
   drag: LUCIDE.gripVertical,
+  send: LUCIDE.send,
   binoculars: LUCIDE.binoculars,
   // navigation
   chevronDown: LUCIDE.chevronDown,

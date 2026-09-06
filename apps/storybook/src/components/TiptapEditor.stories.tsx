@@ -7,9 +7,9 @@ import { QueryProvider } from "@noalhub/ui/query-provider";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Trình soạn thảo bài viết (Tiptap), cấu hình đúng danh sách node được phép của
- * blog. Upload ảnh đi qua `useUploadMedia`, nên trong Storybook (không có
- * backend) nút "Ảnh" sẽ báo lỗi tải lên — phần soạn thảo vẫn dùng bình thường.
+ * The post editor (Tiptap), configured with the blog's allowed node list. Image
+ * upload goes through `useUploadMedia`, so in Storybook (no backend) the image
+ * button reports an upload error — the editing itself still works normally.
  */
 const meta: Meta<typeof TiptapEditor> = {
   title: "UI/Blog/TiptapEditor",
@@ -17,7 +17,7 @@ const meta: Meta<typeof TiptapEditor> = {
   parameters: {
     layout: "padded",
   },
-  // `useUploadMedia` là một mutation của React Query, phải có provider.
+  // `useUploadMedia` is a React Query mutation, so a provider is required.
   decorators: [
     (Story) => (
       <QueryProvider>
@@ -33,9 +33,10 @@ type Story = StoryObj<typeof TiptapEditor>;
 const EMPTY: BlogDoc = { type: "doc", content: [{ type: "paragraph" }] };
 
 /**
- * Tài liệu mẫu dựng trong hook chứ không phải hằng số module scope: chữ lấy từ
- * `sb.tiptap` nên phụ thuộc ngôn ngữ, mà module scope chưa có locale.
- * Lệnh `pnpm …` và hai ký tự B/I giữ nguyên — chúng là mã và tên nút, không dịch.
+ * The sample document is built inside a hook rather than as a module-scope
+ * constant: its text comes from `sb.tiptap` and therefore depends on the language,
+ * and at module scope there is no locale yet. The `pnpm …` command and the B/I
+ * characters stay as they are — they are code and button names, not copy.
  */
 function useSampleDoc(): BlogDoc {
   const t = useTranslations("sb.tiptap");
@@ -80,7 +81,7 @@ function useSampleDoc(): BlogDoc {
   };
 }
 
-/** Bắt đầu từ một tài liệu rỗng. */
+/** Starting from an empty document. */
 export const Empty: Story = {
   render: function EmptyStory() {
     const [doc, setDoc] = useState<BlogDoc>(EMPTY);
@@ -88,7 +89,7 @@ export const Empty: Story = {
   },
 };
 
-/** Có sẵn nội dung mẫu để thử các nút trên thanh công cụ. */
+/** Pre-filled with sample content so the toolbar buttons can be tried out. */
 export const WithContent: Story = {
   render: function WithContentStory() {
     const sample = useSampleDoc();
@@ -98,8 +99,8 @@ export const WithContent: Story = {
 };
 
 /**
- * `onChange` trả về JSON đã được `sanitizeBlogDoc` lọc — đúng thứ sẽ được lưu
- * xuống backend.
+ * `onChange` returns JSON already filtered by `sanitizeBlogDoc` — exactly what
+ * gets persisted to the backend.
  */
 export const WithJsonOutput: Story = {
   render: function JsonStory() {

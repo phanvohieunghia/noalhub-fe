@@ -33,10 +33,11 @@ type FormValues = z.infer<typeof schema>;
 /** A realistic form: `react-hook-form` + `zod`, wired to the UI primitives. */
 function DemoForm({ serverError }: { serverError?: string }) {
   /*
-   * Nhãn lấy từ `web.auth.register` chứ không viết thẳng: story này đã dịch
-   * phần LỖI (zod trả key, `m()` dịch lúc render), nên để nhãn đứng yên tiếng
-   * Việt là kiểu hỏng khó chịu nhất — đổi toolbar sang `en` thì nửa biểu mẫu
-   * đổi, nửa kia không.
+   * Labels come from `web.auth.register` rather than being inlined: this story
+   * already translates the ERRORS (zod returns keys, `m()` translates at render),
+   * so leaving the labels frozen in Vietnamese would be the most irritating kind
+   * of breakage — switch the toolbar to `en` and half the form changes while the
+   * other half does not.
    */
   const t = useTranslations("web.auth.register");
   const m = useMessage();
@@ -110,10 +111,10 @@ const meta: Meta<typeof DemoForm> = {
 export default meta;
 type Story = StoryObj<typeof DemoForm>;
 
-/** Trạng thái mặc định — bấm "Gửi" khi để trống để xem lỗi validation. */
+/** Default state — submit while empty to see the validation errors. */
 export const Default: Story = {};
 
-/** Biểu mẫu kèm lỗi cấp form trả về từ backend. */
+/** The form with a form-level error returned by the backend. */
 export const WithServerError: Story = {
   args: {
     serverError: "Email này đã được sử dụng.",

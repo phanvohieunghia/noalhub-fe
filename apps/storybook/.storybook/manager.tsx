@@ -65,18 +65,18 @@ addons.setConfig({
 const INTERNAL_PATH = "/internal/";
 
 /**
- * Nhãn của nút, theo đúng toolbar ngôn ngữ.
+ * Button labels, following the language toolbar.
  *
- * Không dùng được `next-intl` ở đây: manager nằm NGOÀI preview iframe, nên nó
- * không có `NextIntlClientProvider`, và bundle của nó cũng không nạp
- * `packages/i18n`. Thứ duy nhất đi xuyên qua ranh giới đó là **globals** của
- * Storybook — `useGlobals()` đọc đúng giá trị mà toolbar đang chọn
- * (`preview.tsx` khai `globalTypes.locale`).
+ * `next-intl` is unusable here: the manager lives OUTSIDE the preview iframe, so
+ * it has no `NextIntlClientProvider`, and its bundle does not load
+ * `packages/i18n` either. The only thing that crosses that boundary is
+ * Storybook's **globals** — `useGlobals()` reads exactly the value the toolbar
+ * has selected (`preview.tsx` declares `globalTypes.locale`).
  *
- * Bốn chuỗi nên để bảng ngay tại chỗ thay vì thêm khoá vào
- * `packages/i18n/messages/`: đó là chỗ cho chữ của SẢN PHẨM, còn đây là chữ của
- * công cụ nội bộ, và mỗi khoá thêm vào đó là một khoá `pnpm check-messages`
- * bắt cả hai locale phải nuôi.
+ * For four strings a local table beats adding keys to
+ * `packages/i18n/messages/`: that is the place for PRODUCT copy, this is copy for
+ * an internal tool, and every key added there is one more key
+ * `pnpm check-messages` forces both locales to carry.
  */
 const LABELS = {
   vi: {
@@ -99,27 +99,28 @@ const isLocal = () =>
   window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 
 /**
- * Component riêng chứ không phải JSX thẳng trong `render`: `useGlobals` là hook,
- * nó cần một component thật để React đăng ký được — nhét hook vào một arrow
- * function được gọi như hàm thường là vỡ quy tắc hook.
+ * A real component rather than JSX inlined in `render`: `useGlobals` is a hook and
+ * needs an actual component for React to register it — putting a hook inside an
+ * arrow function that is merely called breaks the rules of hooks.
  */
 function InternalLink() {
   const [globals] = useGlobals();
   const t = globals.locale === "en" ? LABELS.en : LABELS.vi;
 
   return (
-    // `asChild`: IconButton dựng ra <button>, mà đây là điều hướng sang một
-    // document khác chứ không phải một hành động — phải là <a> thật để còn mở
-    // tab mới, copy link, và để trình đọc màn hình đọc đúng là liên kết.
+    // `asChild`: IconButton renders a <button>, but this is navigation to a
+    // different document rather than an action — it has to be a real <a> so it can
+    // be opened in a new tab, have its link copied, and be announced as a link by
+    // screen readers.
     <IconButton
       asChild
       ariaLabel={t.aria}
       tooltip={isLocal() ? t.tooltipLocal : t.tooltipRemote}
     >
       <a href={INTERNAL_PATH}>
-        {/* SVG dán thẳng thay vì `@storybook/icons`: gói đó là dependency gián
-            tiếp của `storybook`, thêm nó vào package.json chỉ để lấy một cái
-            khoá là ghim thêm một phiên bản phải trông chừng. */}
+        {/* Inlined SVG instead of `@storybook/icons`: that package is a transitive
+            dependency of `storybook`, and adding it to package.json just for one
+            padlock pins another version to keep an eye on. */}
         <svg width={13} height={13} viewBox="0 0 14 14" fill="currentColor" aria-hidden>
           <path d="M4 6V4.5a3 3 0 1 1 6 0V6h.5A1.5 1.5 0 0 1 12 7.5v4A1.5 1.5 0 0 1 10.5 13h-7A1.5 1.5 0 0 1 2 11.5v-4A1.5 1.5 0 0 1 3.5 6H4Zm1.5 0h3V4.5a1.5 1.5 0 1 0-3 0V6Z" />
         </svg>
@@ -131,11 +132,11 @@ function InternalLink() {
 
 addons.add("noalhub/internal-link", {
   type: types.TOOL,
-  // Chỉ là nhãn trong danh sách addon của Storybook, không hiện ra UI — nên nó
-  // tĩnh, không theo toolbar được.
+  // Only a label in Storybook's addon list, never rendered in the UI — so it is
+  // static and cannot follow the toolbar.
   title: LABELS.vi.title,
-  // `match` chạy lại mỗi lần đổi story; điều kiện của mình không đổi theo story
-  // nên chỉ cần đọc URL một lần ở đây.
+  // `match` re-runs on every story change; our condition does not vary per story,
+  // so reading the URL once here is enough.
   match: () => !window.location.pathname.startsWith(INTERNAL_PATH),
   render: () => <InternalLink />,
 });

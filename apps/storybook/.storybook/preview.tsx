@@ -32,10 +32,10 @@ import enWebFriends from "../../../packages/i18n/messages/en/web.friends.json";
 import enWebProfile from "../../../packages/i18n/messages/en/web.profile.json";
 
 /**
- * Chữ demo của chính story (nhãn nút mẫu, tên người mẫu, nội dung bài mẫu).
- * Không nằm trong `packages/i18n` vì đó là chỗ cho chữ của SẢN PHẨM — chi tiết
- * ở `messages/README.md`. Nạp chung vào provider nên toolbar ngôn ngữ đổi luôn
- * cả phần này.
+ * Demo copy belonging to the stories themselves (sample button labels, sample
+ * person names, sample post bodies). It does not live in `packages/i18n` because
+ * that is the place for PRODUCT copy — details in `messages/README.md`. Loaded
+ * into the same provider, so the language toolbar switches this too.
  */
 import sbVi from "../messages/vi.json";
 import sbEn from "../messages/en.json";

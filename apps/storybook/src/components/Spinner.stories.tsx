@@ -31,7 +31,7 @@ export const Playground: Story = {
   },
 };
 
-/** Mọi kiểu × mọi kích thước, lặp từ hai danh sách được export. */
+/** Every variant × every size, looped from the two exported lists. */
 export const AllVariants: Story = {
   render: () => (
     <div className="flex flex-col gap-5">
@@ -50,7 +50,7 @@ export const AllVariants: Story = {
   ),
 };
 
-/** Spinner ăn theo `currentColor`, nên nó tự hợp màu với chỗ đặt vào. */
+/** The spinner inherits `currentColor`, so it matches wherever it is placed. */
 export const InheritsColor: Story = {
   render: () => (
     <div className="flex items-center gap-6">

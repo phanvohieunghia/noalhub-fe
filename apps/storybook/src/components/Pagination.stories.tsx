@@ -30,7 +30,7 @@ export const Interactive: Story = {
   },
 };
 
-/** Nhiều trang: cửa sổ số trang rút gọn bằng dấu "…" ở hai đầu. */
+/** Many pages: the page-number window is elided with "…" at both ends. */
 export const ManyPages: Story = {
   render: function ManyPagesStory() {
     const [page, setPage] = useState(8);
@@ -43,7 +43,7 @@ export const ManyPages: Story = {
   },
 };
 
-/** Đang tải trang mới: mọi nút khoá lại để click không dồn. */
+/** Loading a new page: every button locks so clicks cannot pile up. */
 export const Loading: Story = {
   render: () => (
     <div className="w-full max-w-xl">

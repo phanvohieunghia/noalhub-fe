@@ -29,9 +29,11 @@ export default meta;
 type Story = StoryObj<typeof Avatar>;
 
 /*
- * Tên mẫu lấy từ namespace `sb`: `args.name ||` giữ nguyên ô Controls (gõ vào là
- * đè), để trống thì lấy tên đã dịch theo toolbar. Bản `en` dùng tên tiếng Anh —
- * initials sinh ra khác nhau, và đó chính là thứ đáng nhìn ở component này.
+ * Sample names come from the `sb` namespace: `args.name ||` keeps the Controls
+ * field usable (typing overrides it), and leaving it empty falls back to the name
+ * translated for the toolbar locale. The `en` set uses English names — the
+ * initials come out different, and that is exactly what is worth looking at in
+ * this component.
  */
 export const WithImage: Story = {
   args: {

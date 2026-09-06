@@ -35,12 +35,13 @@ export default meta;
 type Story = StoryObj<typeof Toast>;
 
 /**
- * Câu mẫu cho từng sắc thái, lấy theo ngôn ngữ đang chọn trên toolbar.
+ * A sample sentence per tone, taken from the language selected in the toolbar.
  *
- * `message` vẫn nằm trong `args` như một control: `args.message ?? sample(tone)`
- * nghĩa là gõ vào ô Controls thì đè được, còn để trống thì lấy câu mẫu đã dịch.
- * Bỏ hẳn `args.message` thì control trở nên vô dụng; hardcode câu mẫu thì đổi
- * ngôn ngữ không ăn. Cách này giữ được cả hai.
+ * `message` stays in `args` as a control: `args.message ?? sample(tone)` means
+ * typing into the Controls field overrides it, while leaving it empty falls back
+ * to the translated sample. Dropping `args.message` entirely would make the
+ * control useless; hardcoding the sample would make the language switch a no-op.
+ * This keeps both.
  */
 function useSample() {
   const t = useTranslations("sb.toast");
@@ -58,8 +59,9 @@ export const InfoAlert: Story = { args: { tone: "info" }, render: (args) => <Ton
 export const WarningAlert: Story = { args: { tone: "warning" }, render: (args) => <ToneStory {...args} tone="warning" /> };
 
 /**
- * Có `onDismiss` thì hiện nút đóng; thêm `autoDismissMs` thì tự tắt sau đó.
- * Việc đóng là đổi state của phía gọi — Toast chỉ báo ra.
+ * With `onDismiss` a close button appears; add `autoDismissMs` and it closes on
+ * its own after that delay. Dismissal is a state change on the caller's side —
+ * Toast only reports it.
  */
 export const Dismissible: Story = {
   render: function DismissibleStory() {
@@ -84,7 +86,7 @@ export const Dismissible: Story = {
   },
 };
 
-/** Cả bốn sắc thái cạnh nhau để so màu. */
+/** All four tones side by side to compare their colors. */
 export const AllTones: Story = {
   render: function AllTonesStory() {
     const sample = useSample();
