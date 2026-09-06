@@ -149,7 +149,7 @@ build-arg `SB_AUDIENCE`:
 | `SB_AUDIENCE` | Image | Story được index | Truy cập |
 |---|---|---|---|
 | `public` (mặc định của Dockerfile) | `…-storybook` | `src/components/**`, `src/foundations/**` | mở |
-| `internal` (mặc định của `pnpm dev`) | `…-storybook-internal` | thêm `src/internal/**` | đăng nhập Google (oauth2-proxy) |
+| `internal` (mặc định của `pnpm dev`) | `…-storybook-internal` | thêm `src/internal/**` | đăng nhập Google (backend `app`) |
 
 Vì sao phải là hai image chứ không phải một image rồi lọc theo người xem:
 Storybook là **web tĩnh**. Story nào có trong bundle thì ai mở được trang cũng
@@ -167,13 +167,13 @@ Compose và nginx reverse proxy thuộc repo `noalhub-be`, và phần đó **đ�
 sẵn**:
 
 * `docker-compose.prod.yml` — service `storybook-internal` (không `ports:`, trỏ
-  thẳng vào là đi vòng qua lớp đăng nhập) và `oauth2-proxy`.
+  thẳng vào là đi vòng qua lớp đăng nhập).
 * `nginx/conf.d/storybook-tls.conf.disabled` — một domain, hai đường dẫn:
-  `/` là bản công khai, `/internal/` là bản nội bộ và có `auth_request`.
-* `.env.example` — ba biến OAuth (client id/secret + cookie secret).
-* `scripts/sync-storybook-emails.sh` — sinh danh sách email được vào từ DB (mọi
-  `users` có `role = 'admin'`), chạy bằng cron. Không có file danh sách nào
-  trong git: nó luôn được sinh ra.
+  `/` là bản công khai, `/internal/` là bản nội bộ và có `auth_request` trỏ về
+  service `app`.
+* `src/storybook/` trong backend — luồng đăng nhập Google và endpoint
+  `verify` mà nginx gọi ở mỗi request.
+* `.env.example` — `STORYBOOK_BASE_URL` (dùng lại `AUTH_GOOGLE_*` sẵn có).
 
 Quy trình bật, cách thêm/bớt người, và bảng triệu chứng ↔ nguyên nhân khi hỏng:
 `noalhub-be/docs/deployment.md` § "Storybook nội bộ". Không chép lại ở đây —
@@ -184,16 +184,21 @@ Tóm tắt đủ để hình dung:
 | URL | Ai vào được | Thấy gì |
 |---|---|---|
 | `storybook-noalhub.duckdns.org/` | mở | 119 entries — UI + Foundations |
-| `storybook-noalhub.duckdns.org/internal/` | tài khoản `role = 'admin'` trong DB | 131 entries — thêm `Flows/Auth` |
+| `storybook-noalhub.duckdns.org/internal/` | email trong bảng `storybook_access`, hoặc `role = 'admin'` | 131 entries — thêm `Flows/Auth` |
 
-Đăng nhập bằng tài khoản Google, do `oauth2-proxy` đứng trước nginx xử lý; ai
-được vào thì lấy từ DB. Storybook **không** tham gia gì vào việc này: nó là web
-tĩnh, không có khái niệm người dùng.
+Đăng nhập bằng tài khoản Google, do **backend** xử lý (nginx `auth_request` →
+`app`); danh sách ai được vào nằm trong DB và quản lý ở màn hình
+**`/storybook`** của `apps/admin`. Storybook **không** tham gia gì vào việc này:
+nó là web tĩnh, không có khái niệm người dùng.
 
-Vì sao không để nginx hỏi thẳng backend "user này có quyền không": token của app
-nằm trong `localStorage` và đi bằng header `Authorization`, mà trình duyệt điều
-hướng tới `/internal/` thì chỉ gửi cookie — không có gì để backend tra. Nên phần
-"bạn là ai" giao cho Google, phần "ai được vào" đồng bộ từ DB ra file.
+Bản đầu dùng `oauth2-proxy` + một file email do cron đổ ra từ DB, và lý do đổi
+là hai giới hạn của cách đó: cấp/thu quyền trễ tới 10 phút, và "được vào" chỉ là
+hệ quả phụ của `role = 'admin'` nên không mời được người ngoài xem mà không cấp
+cho họ quyền quản trị.
+
+⚠️ Điều dễ sai nhất: email trong danh sách phải là địa chỉ **Google** người đó
+đăng nhập, không phải email tài khoản Noalhub của họ. Lệch nhau thì nhận 403, và
+403 đó không nói gì về nguyên nhân.
 
 Hai điều cần nhớ khi viết story nội bộ:
 
@@ -234,8 +239,8 @@ không với tới đó. Code ở `.storybook/manager.tsx`.
 mất đúng lúc người ta đang dựng hoặc đi xem lại nó. Tooltip nói rõ "chỉ có trên
 bản đã deploy".
 
-Bấm vào lúc chưa đăng nhập thì rơi vào trang đăng nhập Google của oauth2-proxy —
-nút chỉ là đường dẫn, nó không quyết định quyền gì cả.
+Bấm vào lúc chưa đăng nhập thì rơi vào trang đăng nhập Google — nút chỉ là
+đường dẫn, nó không quyết định quyền gì cả.
 
 Nhãn nút đổi theo toolbar ngôn ngữ ("Nội bộ" / "Internal"). Manager không dùng
 được `next-intl` (nó nằm ngoài preview iframe, không có provider, và bundle của

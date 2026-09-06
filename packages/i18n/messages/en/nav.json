@@ -40,7 +40,8 @@
       "reports": "Reports",
       "categories": "Categories",
       "new": "New Post",
-      "slugs": "Slugs"
+      "slugs": "Slugs",
+      "storybook": "Internal Storybook"
     },
     "disabled": {
       "conversations": "Waiting on backend: no /admin/conversations endpoint yet (admin-plan §3)",

@@ -1,0 +1,25 @@
+{
+  "title": "Storybook nội bộ",
+  "intro": "Ai được mở bản Storybook nội bộ tại {url}. Người được cấp đăng nhập bằng Google — không cần có tài khoản Noalhub.",
+  "adminsNote": "Mọi tài khoản có vai trò admin đều vào được mà không cần nằm trong danh sách này, nên bảng trống không có nghĩa là chưa ai vào được.",
+  "emailWarning": "Email phải đúng địa chỉ Google họ dùng để đăng nhập. Địa chỉ tài khoản Noalhub của họ không liên quan — lệch nhau là họ nhận 403.",
+  "add": "Cấp quyền",
+  "caption": "Danh sách được cấp quyền xem Storybook nội bộ",
+  "columns": {
+    "email": "Email Google",
+    "note": "Ghi chú",
+    "grantedAt": "Ngày cấp"
+  },
+  "empty": "Chưa cấp cho ai ngoài admin.",
+  "addTitle": "Cấp quyền xem Storybook nội bộ",
+  "emailLabel": "Email Google",
+  "emailPlaceholder": "designer@example.com",
+  "noteLabel": "Ghi chú",
+  "noteHint": "Cho người duyệt sau này biết vì sao email này có mặt. Ví dụ: designer hợp đồng, review đến hết Q4.",
+  "grant": "Cấp quyền",
+  "granting": "Đang cấp…",
+  "revokeTitle": "Thu hồi quyền của {email}?",
+  "revokeBody": "Có hiệu lực ngay: phiên đang mở của họ bị chặn ở lần tải trang kế tiếp, không phải đợi hết hạn đăng nhập.",
+  "revoke": "Thu hồi",
+  "actionsColumn": "Thao tác"
+}

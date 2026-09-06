@@ -1,9 +1,14 @@
 "use client";
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import * as adminApi from "./api";
-import type { AdminUserListQuery } from "./types";
+import type { AdminUserListQuery, GrantStorybookAccessInput } from "./types";
 
 /** Query key factory — the ONLY source of truth for the admin feature's keys. */
 export const adminKeys = {
@@ -13,6 +18,7 @@ export const adminKeys = {
   userList: (query: AdminUserListQuery) =>
     [...adminKeys.users(), "list", query] as const,
   userDetail: (id: string) => [...adminKeys.users(), "detail", id] as const,
+  storybookAccess: () => [...adminKeys.all, "storybook-access"] as const,
 };
 
 /**
@@ -50,5 +56,40 @@ export function useAdminUser(id: string | undefined) {
     queryKey: adminKeys.userDetail(id ?? ""),
     queryFn: ({ signal }) => adminApi.getAdminUser(id!, signal),
     enabled: Boolean(id),
+  });
+}
+
+/**
+ * Who may open the internal Storybook.
+ *
+ * No `staleTime`: the list is short, changes rarely, and when it does change the
+ * mutations below invalidate it. Refetching on focus is what makes a second
+ * admin's grant show up in this tab.
+ */
+export function useStorybookAccess() {
+  return useQuery({
+    queryKey: adminKeys.storybookAccess(),
+    queryFn: ({ signal }) => adminApi.listStorybookAccess(signal),
+  });
+}
+
+export function useGrantStorybookAccess() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: GrantStorybookAccessInput) =>
+      adminApi.grantStorybookAccess(input),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: adminKeys.storybookAccess() }),
+  });
+}
+
+export function useRevokeStorybookAccess() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => adminApi.revokeStorybookAccess(id),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: adminKeys.storybookAccess() }),
   });
 }

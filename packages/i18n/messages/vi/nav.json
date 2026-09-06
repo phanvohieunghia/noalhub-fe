@@ -40,7 +40,8 @@
       "reports": "Báo cáo",
       "categories": "Chuyên mục",
       "new": "Bài mới",
-      "slugs": "Slugs"
+      "slugs": "Slugs",
+      "storybook": "Storybook nội bộ"
     },
     "disabled": {
       "conversations": "Chờ backend: chưa có endpoint /admin/conversations (admin-plan §3)",

@@ -103,6 +103,14 @@ export const ERROR_CODES = {
   mediaNotUploaded: "MEDIA_NOT_UPLOADED",
   /** The magic bytes do not match the declared mime, or the SVG will not parse. */
   mediaContentMismatch: "MEDIA_CONTENT_MISMATCH",
+
+  /**
+   * Internal Storybook access (`docs/deployment.md` "Storybook nội bộ" in
+   * `noalhub-be`). Two codes only — the list has no update path, just grant and
+   * revoke.
+   */
+  storybookAccessConflict: "STORYBOOK_ACCESS_CONFLICT",
+  storybookAccessNotFound: "STORYBOOK_ACCESS_NOT_FOUND",
 } as const;
 
 /**

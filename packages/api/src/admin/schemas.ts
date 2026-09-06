@@ -64,3 +64,32 @@ export const adminUserListQuerySchema = z.object({
 });
 
 export type AdminUserListQueryInput = z.infer<typeof adminUserListQuerySchema>;
+
+export const storybookAccessSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  note: nullableString,
+  createdBy: nullableString,
+  createdAt: z.string(),
+});
+
+/**
+ * The grant form.
+ *
+ * The email is lowercased here, not just trimmed, and that is load-bearing
+ * rather than tidiness: the backend matches this string against the address
+ * Google reports at sign-in, which is always lowercase. `Designer@Example.com`
+ * stored verbatim would look right in the table and still lock the person out.
+ */
+export const storybookAccessFormSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(1, "validation.email.invalid")
+    .max(320, "validation.email.tooLong")
+    .pipe(z.email("validation.email.invalid")),
+  note: z.string().trim().max(255),
+});
+
+export type StorybookAccessFormValues = z.infer<typeof storybookAccessFormSchema>;

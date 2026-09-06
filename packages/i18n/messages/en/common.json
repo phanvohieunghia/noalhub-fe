@@ -61,7 +61,8 @@
     "storageForbidden": "Storage refused the upload (403). Usually the upload link expired — start over; if it keeps happening it is the server's host or clock configuration.",
     "uploadDisconnected": "The connection dropped while uploading.",
     "uploadAborted": "Upload cancelled.",
-    "slugAliasNotFound": "This old URL no longer exists — someone may have just deleted it."
+    "slugAliasNotFound": "This old URL no longer exists — someone may have just deleted it.",
+    "storybookAccessConflict": "That email is already on the list."
   },
   "theme": {
     "label": "Appearance",

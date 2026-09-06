@@ -19,6 +19,7 @@
 export type NavLabelKey =
   | "items.overview"
   | "items.users"
+  | "items.storybook"
   | "items.posts"
   | "items.conversations"
   | "items.reports"
@@ -61,6 +62,13 @@ export const NAV_ITEMS: NavItem[] = [
       { href: "/posts/slugs", labelKey: "items.slugs" },
     ],
   },
+  /*
+   * Access control for the internal Storybook, which lives on another domain
+   * entirely (`storybook-noalhub.duckdns.org/internal/`). It sits in this
+   * sidebar rather than there because Storybook is a static build with no idea
+   * who is looking at it — the list it is gated by lives in this backend.
+   */
+  { href: "/storybook", labelKey: "items.storybook" },
   {
     href: "/conversations",
     labelKey: "items.conversations",

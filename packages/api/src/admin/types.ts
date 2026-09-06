@@ -83,3 +83,32 @@ export type AdminStats = {
   newUsersLast7Days: number;
   admins: number;
 };
+
+/**
+ * `StorybookAccessDto` — one email allowed into the internal Storybook at
+ * `storybook-noalhub.duckdns.org/internal/`.
+ *
+ * ⚠️ This list is **not** the answer to "who can currently get in". Every
+ * `role === "admin"` account gets in without a row here (the backend unions the
+ * two sources), so the screen must say so rather than letting an empty table
+ * read as "nobody has access".
+ *
+ * `email` is the real key, not a user id: the person granted access need not
+ * have an account in the app at all — a Google account is enough. That is why
+ * there is no `user` object to expand here.
+ */
+export type StorybookAccess = {
+  id: string;
+  email: string;
+  /** Why this email is on the list. Free text, may be absent. */
+  note: string | null;
+  /** The admin who granted it, or `null` once that account is deleted. */
+  createdBy: string | null;
+  createdAt: string;
+};
+
+/** The body of `POST /admin/storybook-access`. */
+export type GrantStorybookAccessInput = {
+  email: string;
+  note?: string;
+};

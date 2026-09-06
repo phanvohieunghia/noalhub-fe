@@ -1,0 +1,25 @@
+{
+  "title": "Internal Storybook",
+  "intro": "Who can open the internal Storybook at {url}. People on this list sign in with Google — a Noalhub account is not required.",
+  "adminsNote": "Every account with the admin role gets in without being listed here, so an empty table does not mean nobody has access.",
+  "emailWarning": "The email must be the exact Google address they sign in with. Their Noalhub account address is irrelevant — a mismatch means they get a 403.",
+  "add": "Grant access",
+  "caption": "People granted access to the internal Storybook",
+  "columns": {
+    "email": "Google email",
+    "note": "Note",
+    "grantedAt": "Granted"
+  },
+  "empty": "Nobody granted yet, beyond admins.",
+  "addTitle": "Grant access to the internal Storybook",
+  "emailLabel": "Google email",
+  "emailPlaceholder": "designer@example.com",
+  "noteLabel": "Note",
+  "noteHint": "So a later reviewer knows why this email is here. For example: contract designer, reviewing through Q4.",
+  "grant": "Grant",
+  "granting": "Granting…",
+  "revokeTitle": "Revoke access for {email}?",
+  "revokeBody": "Effective immediately: their open session is refused on the next page load, not at sign-in expiry.",
+  "revoke": "Revoke",
+  "actionsColumn": "Actions"
+}

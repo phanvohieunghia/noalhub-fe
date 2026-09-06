@@ -41,5 +41,19 @@ export const API_BASE_URL = apiBaseUrlFrom(RAW_API_BASE_URL);
 export const WS_URL =
   process.env.NEXT_PUBLIC_WS_URL ?? API_ORIGIN.replace(/^http/, "ws");
 
+/**
+ * The internal Storybook, shown as a link on the admin screen that manages who
+ * may open it. Display only — nothing here calls it, and it lives on a domain
+ * this app never talks to.
+ *
+ * The default IS the production URL, so no build arg is needed; the env var
+ * exists for a preview deployment on another domain. Like every
+ * `NEXT_PUBLIC_*`, it is inlined at build time — setting it at runtime does
+ * nothing.
+ */
+export const STORYBOOK_INTERNAL_URL =
+  process.env.NEXT_PUBLIC_STORYBOOK_INTERNAL_URL ??
+  "https://storybook-noalhub.duckdns.org/internal/";
+
 /** The chat layer's Socket.IO namespace. */
 export const CHAT_NAMESPACE = "/chat";

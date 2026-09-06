@@ -57,7 +57,7 @@ addons.setConfig({
  * when someone was building or reviewing it, which cost more confusion than the
  * dead click does. The tooltip says so.
  *
- * Clicking it while signed out lands on the Google login that oauth2-proxy puts
+ * Clicking it while signed out lands on the Google login that the backend puts
  * in front of that path; access itself is decided by the backend, never here.
  * A plain `<a>` doing a full page load, not a router push: `/internal/` is a
  * different Storybook build, a different document.

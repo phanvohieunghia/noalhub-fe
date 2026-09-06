@@ -3,8 +3,17 @@ import {
   adminStatsSchema,
   adminUserListSchema,
   adminUserSchema,
+  storybookAccessSchema,
 } from "./schemas";
-import type { AdminStats, AdminUser, AdminUserList, AdminUserListQuery } from "./types";
+import { z } from "zod";
+import type {
+  AdminStats,
+  AdminUser,
+  AdminUserList,
+  AdminUserListQuery,
+  GrantStorybookAccessInput,
+  StorybookAccess,
+} from "./types";
 
 /**
  * The contact surface with the admin backend, mapping 1-to-1 to the OpenAPI
@@ -71,4 +80,57 @@ export async function getAdminUser(
     { authRequired: true, schema: adminUserSchema, signal },
   );
   return data;
+}
+
+/**
+ * GET /admin/storybook-access → 200 `StorybookAccessDto[]`.
+ *
+ * A plain array, **not** a paginated envelope — unlike every other admin list
+ * here. That is the backend's shape and it fits: this list is a handful of
+ * people, and paginating it would hide the one row you came to revoke.
+ */
+export async function listStorybookAccess(
+  signal?: AbortSignal,
+): Promise<StorybookAccess[]> {
+  const { data } = await http.get<StorybookAccess[]>("/admin/storybook-access", {
+    authRequired: true,
+    schema: z.array(storybookAccessSchema),
+    signal,
+  });
+  return data;
+}
+
+/**
+ * POST /admin/storybook-access → 201. 409 `STORYBOOK_ACCESS_CONFLICT` when the
+ * email is already on the list.
+ *
+ * `note` is dropped when empty rather than sent as `""`: the field is optional
+ * in the DTO, and an empty string would store a note that renders as a blank
+ * cell instead of the "—" an absent note gets.
+ */
+export async function grantStorybookAccess(
+  input: GrantStorybookAccessInput,
+): Promise<StorybookAccess> {
+  const body: GrantStorybookAccessInput = { email: input.email };
+  if (input.note) body.note = input.note;
+
+  const { data } = await http.post<StorybookAccess>(
+    "/admin/storybook-access",
+    body,
+    { authRequired: true, schema: storybookAccessSchema },
+  );
+  return data;
+}
+
+/**
+ * DELETE /admin/storybook-access/{id} → 204. 404 `STORYBOOK_ACCESS_NOT_FOUND`.
+ *
+ * A **hard** delete, unlike `archiveBlogPost`: there is nothing to keep, and the
+ * effect is immediate — the person's open session is refused on its next request
+ * rather than at cookie expiry.
+ */
+export async function revokeStorybookAccess(id: string): Promise<void> {
+  await http.delete(`/admin/storybook-access/${encodeURIComponent(id)}`, {
+    authRequired: true,
+  });
 }

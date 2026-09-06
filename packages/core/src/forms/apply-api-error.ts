@@ -16,11 +16,17 @@ import type { Message } from "@noalhub/api/message";
  * attached to an input. Backend-authored sentences pass through verbatim;
  * unrecognized cases return an i18n key for the component to translate
  * (`docs/i18n.md` §7.3).
+ *
+ * `fallback` takes over for everything that is NOT a field-level
+ * `VALIDATION_FAILED` — pass a feature's `…ErrorText` when some of its codes
+ * deserve a translated sentence rather than the backend's raw `message`. Left
+ * out, the behaviour is what it always was.
  */
 export function applyApiError<T extends FieldValues>(
   error: unknown,
   setError: UseFormSetError<T>,
   knownFields: readonly string[] = [],
+  fallback?: (error: unknown) => Message | string,
 ): Message | string | null {
   if (error instanceof ApiError) {
     if (error.code === ERROR_CODES.validationFailed && error.details?.length) {
@@ -43,9 +49,10 @@ export function applyApiError<T extends FieldValues>(
       return unmatched.length ? unmatched.join(". ") : null;
     }
 
-    return error.message;
+    return fallback ? fallback(error) : error.message;
   }
 
+  if (fallback) return fallback(error);
   if (error instanceof Error) return error.message;
   return { key: "common.errors.unknown" };
 }

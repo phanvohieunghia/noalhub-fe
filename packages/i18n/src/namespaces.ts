@@ -22,6 +22,7 @@ export const NAMESPACES = [
   "admin.overview",
   "admin.posts",
   "admin.users",
+  "admin.storybook",
   "admin.login",
 ] as const;
 
@@ -57,6 +58,7 @@ const WEB_ROUTES: ReadonlyArray<readonly [string, Namespace]> = [
 const ADMIN_ROUTES: ReadonlyArray<readonly [string, Namespace]> = [
   ["/posts", "admin.posts"],
   ["/users", "admin.users"],
+  ["/storybook", "admin.storybook"],
   ["/login", "admin.login"],
 ];
 
