@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { Badge, BADGE_TONES } from "@noalhub/ui/badge";
 
 const meta: Meta<typeof Badge> = {

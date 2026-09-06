@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { Button } from "@noalhub/ui/button";
 import { useTranslations } from "next-intl";
 import { Tooltip } from "@noalhub/ui/tooltip";

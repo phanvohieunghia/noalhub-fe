@@ -13,8 +13,28 @@ type DialogProps = {
   open: boolean;
   onClose: () => void;
   title: string;
+  /**
+   * `md` is the centred card. `fullscreen` fills the viewport instead — for
+   * content that needs the room (a diagram to pan and zoom, a large preview);
+   * its body is the scroll container, so the header stays put.
+   */
+  size?: DialogSize;
+  /** Sits between the title and the close button — a toolbar for the content. */
+  actions?: React.ReactNode;
   children: React.ReactNode;
 };
+
+export type DialogSize = "md" | "fullscreen";
+
+const CONTENT_SIZES = {
+  md: "top-1/2 left-1/2 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-xl shadow-xl",
+  fullscreen: "inset-0 flex flex-col",
+} as const;
+
+const BODY_SIZES = {
+  md: "flex flex-col gap-4 p-5",
+  fullscreen: "flex min-h-0 flex-1 flex-col gap-4 p-5",
+} as const;
 
 /** Kept in sync with `--animate-popup-out` / `--animate-slide-out-right`. */
 export const DIALOG_EXIT_MS = 150;
@@ -64,7 +84,14 @@ export { useAnimatedClose };
  * existing call site has to change; Radix only ever emits
  * `onOpenChange(false)` here, so it maps directly.
  */
-export function Dialog({ open, onClose, title, children }: DialogProps) {
+export function Dialog({
+  open,
+  onClose,
+  title,
+  size = "md",
+  actions,
+  children,
+}: DialogProps) {
   const t = useTranslations("common");
   const { closing, requestClose } = useAnimatedClose(onClose, DIALOG_EXIT_MS);
 
@@ -75,8 +102,10 @@ export function Dialog({ open, onClose, title, children }: DialogProps) {
     >
       <RadixDialog.Portal>
         <RadixDialog.Overlay className="fixed inset-0 z-50 bg-black/40 data-[state=open]:animate-overlay-in data-[state=closed]:animate-overlay-out" />
-        <RadixDialog.Content className="fixed top-1/2 left-1/2 z-50 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-xl bg-background text-foreground shadow-xl focus:outline-none data-[state=open]:animate-popup-in data-[state=closed]:animate-popup-out">
-          <div className="flex flex-col gap-4 p-5">
+        <RadixDialog.Content
+          className={`fixed z-50 bg-background text-foreground focus:outline-none data-[state=open]:animate-popup-in data-[state=closed]:animate-popup-out ${CONTENT_SIZES[size]}`}
+        >
+          <div className={BODY_SIZES[size]}>
             <div className="flex items-start justify-between gap-4">
               {/* Radix requires a Title — it is the source of aria-labelledby. */}
               <RadixDialog.Title asChild>
@@ -84,6 +113,9 @@ export function Dialog({ open, onClose, title, children }: DialogProps) {
                   {title}
                 </Typography>
               </RadixDialog.Title>
+              {actions ? (
+                <div className="flex items-center gap-1">{actions}</div>
+              ) : null}
               <RadixDialog.Close asChild>
                 <Button
                   variant="ghost"

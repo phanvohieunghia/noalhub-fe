@@ -1,0 +1,19 @@
+import { Meta, Story } from "@storybook/addon-docs/blocks";
+
+import * as ChatStories from "./Chat.stories";
+
+<Meta title="Flows/Chat Overview" />
+
+{/*
+  The page itself is the `Overview` STORY, not markdown written here.
+
+  Reason: decorators wrap stories, so MDX prose never passes through the
+  `NextIntlClientProvider` — a page written in this file can only ever exist in
+  one language, while everything else in this Storybook follows the locale
+  toolbar. Rendering the page as a story puts every word through
+  `useTranslations` (copy in `apps/storybook/messages/{vi,en}.json` under
+  `sb.flows.chat`) and lets `test-storybook` run axe over it, which it does not
+  do for docs pages.
+*/}
+
+<Story of={ChatStories.Overview} />

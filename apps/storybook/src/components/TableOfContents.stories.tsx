@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { useTranslations } from "next-intl";
 import { TableOfContents } from "@noalhub/ui/blog/table-of-contents";
 import type { BlogDoc } from "@noalhub/api/blog";

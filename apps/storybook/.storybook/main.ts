@@ -1,8 +1,7 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
-import type { StorybookConfig } from "@storybook/nextjs";
-import webpack from "webpack";
+import type { StorybookConfig } from "@storybook/nextjs-vite";
 
 import { readThemeTokens } from "./theme-tokens.ts";
 
@@ -69,7 +68,7 @@ const config: StorybookConfig = {
    */
   addons: ["@storybook/addon-a11y", "@storybook/addon-themes", "@storybook/addon-docs"],
   framework: {
-    name: "@storybook/nextjs",
+    name: "@storybook/nextjs-vite",
     options: {},
   },
   /**
@@ -81,13 +80,12 @@ const config: StorybookConfig = {
    * eleven brand steps under hundreds of Tailwind ones. The file itself is the
    * only place that knows which tokens are OURS.
    */
-  webpackFinal: async (webpackConfig, { configDir }) => {
-    webpackConfig.plugins?.push(
-      new webpack.DefinePlugin({
-        __THEME_TOKENS__: JSON.stringify(readThemeTokens(configDir)),
-      }),
-    );
-    return webpackConfig;
-  },
+  viteFinal: async (viteConfig, { configDir }) => ({
+    ...viteConfig,
+    define: {
+      ...viteConfig.define,
+      __THEME_TOKENS__: JSON.stringify(readThemeTokens(configDir)),
+    },
+  }),
 };
 export default config;

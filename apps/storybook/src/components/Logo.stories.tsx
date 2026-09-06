@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { Logo } from "@noalhub/ui/logo";
 
 const meta: Meta<typeof Logo> = {

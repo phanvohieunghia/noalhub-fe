@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { Spinner, SPINNER_SIZES, SPINNER_VARIANTS } from "@noalhub/ui/spinner";
 
 const meta: Meta<typeof Spinner> = {

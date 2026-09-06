@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { useTranslations } from "next-intl";
 
 import { useMessage } from "@noalhub/i18n/use-message";
@@ -28,7 +28,13 @@ function AuthScreen({ children }: { children: React.ReactNode }) {
   return <div className="flex w-full max-w-sm flex-col gap-6">{children}</div>;
 }
 
-function ScreenHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+function ScreenHeader({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle?: string;
+}) {
   return (
     <header className="flex flex-col gap-1">
       <Typography variant="h3" as="h1">
@@ -79,8 +85,6 @@ const meta: Meta = {
   title: "Flows/Auth",
   parameters: {
     layout: "centered",
-    // The screens are pages, not components: a props table would be empty noise.
-    docs: { disable: true },
   },
 };
 
@@ -97,7 +101,11 @@ export const Login: Story = {
         <ScreenHeader title={t("title")} subtitle={t("subtitle")} />
         <form className="flex flex-col gap-4" noValidate>
           <Input label={t("email")} type="email" autoComplete="email" />
-          <Input label={t("password")} type="password" autoComplete="current-password" />
+          <Input
+            label={t("password")}
+            type="password"
+            autoComplete="current-password"
+          />
           <div className="flex justify-end">
             <a href="#" className="text-body-3 underline underline-offset-4">
               {t("forgot")}
@@ -136,7 +144,11 @@ export const LoginRejected: Story = {
         <ScreenHeader title={t("title")} subtitle={t("subtitle")} />
         <form className="flex flex-col gap-4" noValidate>
           <ToastError message={m("common.errors.generic")} />
-          <Input label={t("email")} type="email" defaultValue="noah@noalhub.dev" />
+          <Input
+            label={t("email")}
+            type="email"
+            defaultValue="noah@noalhub.dev"
+          />
           <Input
             label={t("password")}
             type="password"
@@ -160,8 +172,16 @@ export const Register: Story = {
         <form className="flex flex-col gap-4" noValidate>
           <Input label={t("displayName")} autoComplete="name" />
           <Input label={t("email")} type="email" autoComplete="email" />
-          <Input label={t("password")} type="password" autoComplete="new-password" />
-          <Input label={t("confirmPassword")} type="password" autoComplete="new-password" />
+          <Input
+            label={t("password")}
+            type="password"
+            autoComplete="new-password"
+          />
+          <Input
+            label={t("confirmPassword")}
+            type="password"
+            autoComplete="new-password"
+          />
           <Button type="submit">{t("submit")}</Button>
         </form>
         <OAuthButtons />
@@ -229,8 +249,16 @@ export const ResetPassword: Story = {
       <AuthScreen>
         <ScreenHeader title={t("title")} subtitle={t("subtitle")} />
         <form className="flex flex-col gap-4" noValidate>
-          <Input label={t("newPassword")} type="password" autoComplete="new-password" />
-          <Input label={t("confirmPassword")} type="password" autoComplete="new-password" />
+          <Input
+            label={t("newPassword")}
+            type="password"
+            autoComplete="new-password"
+          />
+          <Input
+            label={t("confirmPassword")}
+            type="password"
+            autoComplete="new-password"
+          />
           <Button type="submit">{t("submit")}</Button>
         </form>
       </AuthScreen>

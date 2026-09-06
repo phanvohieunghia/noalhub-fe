@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import React from "react";
 import { ThemeProvider } from "@noalhub/ui/theme/theme-provider";
 import { ThemeToggle } from "@noalhub/ui/theme/theme-toggle";

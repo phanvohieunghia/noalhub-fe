@@ -24,7 +24,7 @@ Dự án hiện tại là một Turborepo gồm các apps (`web`, `admin`) và p
 
 ### Giai Đoạn 1: Khởi Tạo & Cấu Hình Cơ Bản
 * **Bước 1.1:** Khởi tạo `apps/storybook`.
-  * Khởi tạo Storybook với framework `@storybook/nextjs` (Quyết định sử dụng để tương thích 100% với Next.js App Router, tự động hỗ trợ Server Components, `next/image`, `next/link` và đồng bộ cấu hình).
+  * Khởi tạo Storybook với framework `@storybook/nextjs-vite` (Quyết định sử dụng để tương thích 100% với Next.js App Router, tự động hỗ trợ Server Components, `next/image`, `next/link` và đồng bộ cấu hình).
   * Cài đặt các addons tiêu chuẩn: `@storybook/addon-links`, `@storybook/addon-essentials`, `@storybook/addon-interactions`, `@storybook/addon-a11y`.
 * **Bước 1.2:** Cấu hình thư mục chứa stories.
   * Thiết lập `.storybook/main.ts` bên trong `apps/storybook` để quét tất cả các file `*.stories.tsx` bên trong thư mục `apps/storybook/src`.
@@ -89,7 +89,7 @@ Môi trường render của component trong Storybook cần giống hệt với 
 | GĐ 1 — Khởi tạo `apps/storybook`, `main.ts`, scripts, `turbo.json` | ✅ Xong |
 | GĐ 2.1 — Tailwind + `theme.css` + toggle Light/Dark (`@storybook/addon-themes`) | ✅ Xong |
 | GĐ 2.2 — `NextIntlClientProvider` + công cụ đổi ngôn ngữ vi/en trên toolbar | ✅ Xong |
-| GĐ 2.3 — Router (`@storybook/nextjs` mock sẵn) + `@iconify/react` | ✅ Xong |
+| GĐ 2.3 — Router (`@storybook/nextjs-vite` mock sẵn) + `@iconify/react` | ✅ Xong |
 | GĐ 3 — Stories cho toàn bộ component trình bày trong `packages/ui` | ✅ Xong (trừ `auth/*` và `query-provider` — provider/guard, không có gì để render) |
 | Trang Docs tự sinh (`autodocs`) | ✅ Bật ở cấp `preview.tsx` cho mọi story |
 | Foundations — bảng màu & type scale | ✅ `src/foundations/` — đọc trực tiếp CSS variable từ document nên luôn khớp `theme.css` và đổi theo toggle light/dark |
@@ -173,7 +173,8 @@ sẵn**:
   service `app`.
 * `src/storybook/` trong backend — luồng đăng nhập Google và endpoint
   `verify` mà nginx gọi ở mỗi request.
-* `.env.example` — `STORYBOOK_BASE_URL` (dùng lại `AUTH_GOOGLE_*` sẵn có).
+* `.env.example` — `STORYBOOK_BASE_URL` + `STORYBOOK_GOOGLE_ID`/`_SECRET`
+  (OAuth client **riêng**, không dùng chung với đăng nhập của người dùng).
 
 Quy trình bật, cách thêm/bớt người, và bảng triệu chứng ↔ nguyên nhân khi hỏng:
 `noalhub-be/docs/deployment.md` § "Storybook nội bộ". Không chép lại ở đây —
@@ -184,7 +185,7 @@ Tóm tắt đủ để hình dung:
 | URL | Ai vào được | Thấy gì |
 |---|---|---|
 | `storybook-noalhub.duckdns.org/` | mở | 119 entries — UI + Foundations |
-| `storybook-noalhub.duckdns.org/internal/` | email trong bảng `storybook_access`, hoặc `role = 'admin'` | 131 entries — thêm `Flows/Auth` |
+| `storybook-noalhub.duckdns.org/internal/` | email trong bảng `storybook_access`, hoặc `role = 'admin'` | 149 entries — thêm `Flows/Auth`, `Flows/Chat` và `Flows/Presence` |
 
 Đăng nhập bằng tài khoản Google, do **backend** xử lý (nginx `auth_request` →
 `app`); danh sách ai được vào nằm trong DB và quản lý ở màn hình
@@ -230,9 +231,9 @@ biến đi vào bundle preview, còn `main.ts` chạy sớm hơn thế.
 Bản công khai có một nút **🔒 Nội bộ** trên thanh công cụ, trỏ tới `/internal/`.
 Nó chỉ ẩn khi đang ở trong `/internal/` — link sẽ thành `/internal/internal/`.
 
-Điều kiện đọc từ URL lúc chạy chứ không phải từ `SB_AUDIENCE`: webpack chỉ dựng
-phần preview, còn manager được bundle riêng nên `DefinePlugin` trong `main.ts`
-không với tới đó. Code ở `.storybook/manager.tsx`.
+Điều kiện đọc từ URL lúc chạy chứ không phải từ `SB_AUDIENCE`: Vite chỉ dựng
+phần preview, còn manager được bundle riêng nên `define` trong `main.ts` không
+với tới đó. Code ở `.storybook/manager.tsx`.
 
 **Trên localhost nút vẫn hiện và bấm vào sẽ 404** — dev server không phục vụ
 đường dẫn đó. Cố ý để vậy: bản trước ẩn nó trên localhost, và hệ quả là nút biến

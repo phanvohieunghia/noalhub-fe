@@ -1,4 +1,4 @@
-import type { Decorator, Preview } from "@storybook/nextjs";
+import type { Decorator, Preview } from "@storybook/nextjs-vite";
 import React from "react";
 import { NextIntlClientProvider } from "next-intl";
 import { withThemeByClassName } from "@storybook/addon-themes";
@@ -108,9 +108,6 @@ const withI18n: Decorator = (Story, context) => {
 };
 
 const preview: Preview = {
-  // Every component gets its auto-generated Docs page (props table from the
-  // TypeScript types + the JSDoc above them) without repeating the tag in each
-  // story file.
   tags: ["autodocs"],
   parameters: {
     controls: {
@@ -123,7 +120,7 @@ const preview: Preview = {
     // the whole point of running it in CI. The default scaffold ships "todo",
     // which reports violations and then passes anyway.
     a11y: { test: "error" },
-    // Both apps are App Router. Without this, `@storybook/nextjs` mocks the
+    // Both apps are App Router. Without this, `@storybook/nextjs-vite` mocks the
     // Pages Router and every `next/navigation` hook (`usePathname`,
     // `useSearchParams`, `useRouter`) throws when the story renders.
     nextjs: { appDirectory: true },
