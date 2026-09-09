@@ -53,7 +53,9 @@ export function UserDetailContent({ userId }: { userId: string }) {
             @{data.username}
           </Typography>
         </div>
-        <Badge tone={data.role === "admin" ? "info" : "neutral"} className="ml-auto">
+        {/* AdminUserDto answers "who is this person", so it carries `role` and
+            no capability flags — this is display, not a permission branch. */}
+        <Badge tone={data.role === "user" ? "neutral" : "info"} className="ml-auto">
           {data.role}
         </Badge>
       </div>
