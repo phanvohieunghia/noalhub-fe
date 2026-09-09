@@ -37,7 +37,12 @@ export function TableOfContents({ doc }: { doc: BlogDoc }) {
       </Typography>
       <ol className="mt-2 flex flex-col gap-1.5">
         {headings.map((heading) => (
-          <li key={heading.id} className={heading.level === 3 ? "pl-4" : undefined}>
+          <li
+            key={heading.id}
+            className={
+              heading.level === 4 ? "pl-8" : heading.level === 3 ? "pl-4" : undefined
+            }
+          >
             <a href={`#${heading.id}`} className="opacity-80 hover:underline hover:opacity-100">
               {heading.text}
             </a>

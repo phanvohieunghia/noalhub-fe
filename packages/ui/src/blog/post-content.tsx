@@ -107,6 +107,40 @@ function Block({
         </pre>
       );
 
+    /*
+     * Wrapped in a scroller: a wide table is the one block that makes the whole
+     * page scroll sideways on a phone, and that breaks every other block with it.
+     */
+    case "table":
+      return (
+        <div className="blog-table-scroll">
+          <table>
+            <tbody>
+              {node.content.map((row, index) => (
+                <tr key={index}>
+                  {row.content.map((cell, cellIndex) => {
+                    const Tag = cell.type === "tableHeader" ? "th" : "td";
+                    return (
+                      <Tag
+                        key={cellIndex}
+                        // `undefined` rather than 1: React omits the attribute
+                        // instead of writing the default into the markup.
+                        colSpan={cell.attrs.colspan > 1 ? cell.attrs.colspan : undefined}
+                        rowSpan={cell.attrs.rowspan > 1 ? cell.attrs.rowspan : undefined}
+                      >
+                        {cell.content.map((child, childIndex) => (
+                          <Block key={childIndex} node={child} />
+                        ))}
+                      </Tag>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+
     case "horizontalRule":
       return <hr />;
 

@@ -2,6 +2,12 @@
 
 import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
+import {
+  Table,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@tiptap/extension-table";
 import StarterKit from "@tiptap/starter-kit";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -115,8 +121,10 @@ export function TiptapEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({
-        // `<h1>` is the post title; content only has h2/h3 (§6.2).
-        heading: { levels: [2, 3] },
+        // `<h1>` is the post title; content has h2/h3/h4 (§6.2). h4 is what the
+        // Q&A outline's third level needs — without it the backend demotes a
+        // sub-point to h2 and it reads as a chapter that was never written.
+        heading: { levels: [2, 3, 4] },
         // Not in the §3.1 allowlist — enabling it produces a mark the renderer
         // drops, so an author underlines something, saves, and the text comes
         // back plain.
@@ -130,6 +138,15 @@ export function TiptapEditor({
         },
       }),
       BlogImage.configure({ inline: false, allowBase64: false }),
+      /*
+       * `resizable: false` — column widths would be a `colwidth` attribute the
+       * backend sanitizer does not keep, so the author drags a column, saves,
+       * and the width is gone.
+       */
+      Table.configure({ resizable: false }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: value,
     editorProps: {
@@ -261,6 +278,12 @@ function Toolbar({
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
         icon={LUCIDE.heading3}
       />
+      <ToolbarButton
+        label={t("h4")}
+        active={editor.isActive("heading", { level: 4 })}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
+        icon={LUCIDE.heading4}
+      />
 
       <Divider />
 
@@ -294,6 +317,59 @@ function Toolbar({
         onClick={() => editor.chain().focus().setHorizontalRule().run()}
         icon={LUCIDE.minus}
       />
+      {/*
+        One button inserts a 3×3 table with a header row; the row/column
+        controls appear only once the cursor is inside one. A full table toolbar
+        that is inert 99% of the time is six buttons of noise.
+      */}
+      <ToolbarButton
+        label={t("table")}
+        active={editor.isActive("table")}
+        onClick={() =>
+          editor
+            .chain()
+            .focus()
+            .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+            .run()
+        }
+        icon={LUCIDE.table}
+      />
+
+      {editor.isActive("table") ? (
+        <>
+          <Divider />
+          <ToolbarButton
+            label={t("addColumn")}
+            active={false}
+            onClick={() => editor.chain().focus().addColumnAfter().run()}
+            icon={LUCIDE.betweenHorizontalStart}
+          />
+          <ToolbarButton
+            label={t("addRow")}
+            active={false}
+            onClick={() => editor.chain().focus().addRowAfter().run()}
+            icon={LUCIDE.betweenVerticalStart}
+          />
+          <ToolbarButton
+            label={t("deleteColumn")}
+            active={false}
+            onClick={() => editor.chain().focus().deleteColumn().run()}
+            icon={LUCIDE.trash2}
+          />
+          <ToolbarButton
+            label={t("deleteRow")}
+            active={false}
+            onClick={() => editor.chain().focus().deleteRow().run()}
+            icon={LUCIDE.trash}
+          />
+          <ToolbarButton
+            label={t("deleteTable")}
+            active={false}
+            onClick={() => editor.chain().focus().deleteTable().run()}
+            icon={LUCIDE.tableCellsMerge}
+          />
+        </>
+      ) : null}
 
       <Divider />
 
