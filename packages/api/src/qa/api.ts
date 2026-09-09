@@ -19,6 +19,14 @@ import {
   qaSourceSchema,
   qaTemplateListSchema,
   qaTemplateSchema,
+  qaAnswerResultSchema,
+  qaAnswerReviewListSchema,
+  qaAttemptListSchema,
+  qaAttemptSchema,
+  qaItemListPlaySchema,
+  qaSetListPlaySchema,
+  qaSetPlaySchema,
+  qaStatsSchema,
   startGenerationSchema,
   type AddSourceInput,
   type CreateCredentialInput,
@@ -28,6 +36,7 @@ import {
   type PatchItemInput,
   type ReorderItemsInput,
   type StartAnalyzeInput,
+  type SubmitAnswerInput,
   type UpdateCredentialInput,
   type UpdateDatasetInput,
   type UpdateSetInput,
@@ -36,6 +45,15 @@ import {
 } from "./schemas";
 import type {
   AiCredential,
+  BrowseItemsQuery,
+  BrowseSetsQuery,
+  QaAnswerResult,
+  QaAnswerReview,
+  QaAttempt,
+  QaItemPlay,
+  QaSetPlay,
+  QaSetSummary,
+  QaStatsRow,
   AiModel,
   QaDataset,
   QaDatasetSource,
@@ -410,4 +428,110 @@ export async function searchItems(
     signal,
   });
   return data;
+}
+
+/* ------------------------------ learner surface ---------------------------- */
+
+/**
+ * The way in. Without it a learner only reaches a set through a link someone
+ * sent them — `getPlaySet` needs an id and nothing hands one out.
+ */
+export async function browseSets(
+  query: BrowseSetsQuery = {},
+  signal?: AbortSignal,
+): Promise<{ items: QaSetSummary[]; total: number }> {
+  const { data } = await http.get<{ items: QaSetSummary[]; total: number }>(
+    "/qa/sets",
+    { params: query, authRequired: true, schema: qaSetListPlaySchema, signal },
+  );
+  return data;
+}
+
+export async function getPlaySet(
+  id: string,
+  signal?: AbortSignal,
+): Promise<QaSetPlay> {
+  const { data } = await http.get<QaSetPlay>(`/qa/sets/${id}`, {
+    authRequired: true,
+    schema: qaSetPlaySchema,
+    signal,
+  });
+  return data;
+}
+
+/** Idempotent per (user, set): an open attempt comes back instead of a new row. */
+export async function startAttempt(setId: string): Promise<QaAttempt> {
+  const { data } = await http.post<QaAttempt>(
+    `/qa/sets/${setId}/attempts`,
+    undefined,
+    { authRequired: true, schema: qaAttemptSchema },
+  );
+  return data;
+}
+
+export async function listAttempts(
+  setId?: string,
+  signal?: AbortSignal,
+): Promise<QaAttempt[]> {
+  const { data } = await http.get<QaAttempt[]>("/qa/attempts", {
+    params: setId ? { setId } : undefined,
+    authRequired: true,
+    schema: qaAttemptListSchema,
+    signal,
+  });
+  return data;
+}
+
+export async function submitAnswer(
+  attemptId: string,
+  input: SubmitAnswerInput,
+): Promise<QaAnswerResult> {
+  const { data } = await http.post<QaAnswerResult>(
+    `/qa/attempts/${attemptId}/answers`,
+    input,
+    { authRequired: true, schema: qaAnswerResultSchema },
+  );
+  return data;
+}
+
+export async function finishAttempt(attemptId: string): Promise<QaAttempt> {
+  const { data } = await http.post<QaAttempt>(
+    `/qa/attempts/${attemptId}/finish`,
+    undefined,
+    { authRequired: true, schema: qaAttemptSchema },
+  );
+  return data;
+}
+
+/** Only questions already ANSWERED — a question not taken has no entry here. */
+export async function reviewAttempt(
+  attemptId: string,
+  signal?: AbortSignal,
+): Promise<QaAnswerReview[]> {
+  const { data } = await http.get<QaAnswerReview[]>(
+    `/qa/attempts/${attemptId}/answers`,
+    { authRequired: true, schema: qaAnswerReviewListSchema, signal },
+  );
+  return data;
+}
+
+/** Cuts across every set and every shape — "give me all the application questions". */
+export async function browseItems(
+  query: BrowseItemsQuery = {},
+  signal?: AbortSignal,
+): Promise<{ items: QaItemPlay[]; total: number }> {
+  const { data } = await http.get<{ items: QaItemPlay[]; total: number }>(
+    "/qa/items",
+    { params: query, authRequired: true, schema: qaItemListPlaySchema, signal },
+  );
+  return data;
+}
+
+export async function getStats(signal?: AbortSignal): Promise<QaStatsRow[]> {
+  const { data } = await http.get<{ rows: QaStatsRow[] }>("/qa/stats", {
+    authRequired: true,
+    schema: qaStatsSchema,
+    signal,
+  });
+  return data.rows;
 }

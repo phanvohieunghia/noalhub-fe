@@ -303,3 +303,116 @@ export type QaItemsQuery = {
   limit?: number;
   offset?: number;
 };
+
+/* ------------------------------ learner surface ---------------------------- */
+
+/**
+ * What a question looks like to a **learner**. A separate type, not
+ * `QaItemFull` with fields removed: the protection is that this one has no
+ * field to forget to strip. Answers appear in exactly two places — the response
+ * to submitting one, and the review of an attempt already taken.
+ */
+export type QaItemPlay = {
+  id: string;
+  order: number;
+  kind: QaItemKind;
+  question: BlogDoc;
+  /** `{ id, text }` only. Nothing here says which one is right. */
+  options: QaItemOption[] | null;
+  difficulty: QaDifficulty | null;
+};
+
+export type QaSetPlay = {
+  id: string;
+  title: string;
+  description: string | null;
+  intro: BlogDoc | null;
+  difficulty: QaDifficulty | null;
+  /** The denominator of progress. Read from the set, not a snapshot. */
+  itemCount: number;
+  /**
+   * Which input to render. Not inferable from `options`: a flashcard has none
+   * either, yet it needs two buttons rather than a text box.
+   */
+  templateKey: QaTemplateKey;
+  items: QaItemPlay[];
+};
+
+export type QaSetSummary = {
+  id: string;
+  title: string;
+  description: string | null;
+  difficulty: QaDifficulty | null;
+  itemCount: number;
+  templateKey: QaTemplateKey;
+  /** The kinds present IN the set — for "I want to drill application questions". */
+  itemKinds: QaItemKind[];
+  /** Your own open attempt. Present means the button says "Continue". */
+  openAttemptId: string | null;
+  publishedAt: string | null;
+};
+
+export type QaAttemptStatus = "in_progress" | "finished" | "abandoned";
+
+export type QaAttempt = {
+  id: string;
+  setId: string;
+  status: QaAttemptStatus;
+  /** Counts what HAPPENED. Never decremented, even if a question is deleted. */
+  answeredCount: number;
+  correctCount: number;
+  startedAt: string;
+  finishedAt: string | null;
+};
+
+/** `auto` = the machine matched an answer key; `self` = you told it (flashcards). */
+export type QaGradingMode = "auto" | "self";
+
+export type QaResponse =
+  | { optionIds: string[] }
+  | { text: string }
+  | { known: boolean };
+
+export type QaAnswerResult = {
+  isCorrect: boolean;
+  grading: QaGradingMode;
+  answer: BlogDoc | null;
+  explanation: BlogDoc | null;
+  attempt: QaAttempt;
+};
+
+/** One answered question in the review of a past attempt. */
+export type QaAnswerReview = {
+  itemId: string;
+  kind: QaItemKind;
+  question: BlogDoc;
+  options: QaItemOption[] | null;
+  response: QaResponse;
+  isCorrect: boolean;
+  grading: QaGradingMode;
+  answer: BlogDoc | null;
+  explanation: BlogDoc | null;
+  answeredAt: string;
+};
+
+export type QaStatsRow = {
+  grading: QaGradingMode;
+  kind: QaItemKind;
+  answered: number;
+  correct: number;
+};
+
+export type BrowseSetsQuery = {
+  datasetId?: string;
+  limit?: number;
+  offset?: number;
+};
+
+export type BrowseItemsQuery = {
+  kind?: QaItemKind;
+  datasetId?: string;
+  /** Your latest answer for each question was wrong. */
+  wrongOnly?: boolean;
+  limit?: number;
+  offset?: number;
+};

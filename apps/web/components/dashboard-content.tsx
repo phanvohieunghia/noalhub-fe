@@ -38,6 +38,14 @@ export function DashboardContent() {
           >
             {t("chat")}
           </Link>
+          {/* The only entry point to the learner surface — without a link here
+              a set is reachable only by someone pasting its URL. */}
+          <Link
+            href="/learn"
+            className="inline-flex h-10 items-center rounded-md border border-border px-4 text-body-3 font-medium hover:bg-muted"
+          >
+            {t("learn")}
+          </Link>
           <LogoutButton />
         </div>
       </div>

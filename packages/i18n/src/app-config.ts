@@ -12,6 +12,7 @@ import type webBlog from "../messages/vi/web.blog.json";
 import type webChat from "../messages/vi/web.chat.json";
 import type webDashboard from "../messages/vi/web.dashboard.json";
 import type webFriends from "../messages/vi/web.friends.json";
+import type webLearn from "../messages/vi/web.learn.json";
 import type webProfile from "../messages/vi/web.profile.json";
 
 /**
@@ -36,6 +37,7 @@ export type AppMessages = {
     chat: typeof webChat;
     dashboard: typeof webDashboard;
     friends: typeof webFriends;
+    learn: typeof webLearn;
     profile: typeof webProfile;
   };
   admin: {

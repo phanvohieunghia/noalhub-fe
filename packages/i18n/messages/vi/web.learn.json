@@ -1,0 +1,95 @@
+{
+  "browse": {
+    "title": "Luyện tập",
+    "intro": "Các bộ câu hỏi đã đăng. Chọn một bộ để làm.",
+    "filterKind": "Lọc theo dạng câu",
+    "allKinds": "Mọi dạng",
+    "practiceWrong": "Ôn câu đang sai",
+    "stats": "Thống kê",
+    "itemCount": "{count} câu",
+    "start": "Bắt đầu",
+    "continue": "Tiếp tục",
+    "emptyNone": "Chưa có bộ câu hỏi nào được đăng.",
+    "emptyFilter": "Không bộ nào có dạng câu bạn chọn."
+  },
+  "set": {
+    "title": "Bộ câu hỏi",
+    "start": "Bắt đầu làm",
+    "resumeHint": "Bấm lại vẫn an toàn: nếu bạn đang làm dở bộ này thì hệ thống mở lại đúng lượt đó, không tạo lượt mới.",
+    "notFound": "Không tìm thấy bộ này",
+    "notFoundBody": "Bộ có thể đã được gỡ, hoặc chưa từng tồn tại."
+  },
+  "attempt": {
+    "title": "Đang làm bài",
+    "progress": "Đã trả lời {answered}/{total} · đúng {correct}",
+    "correct": "Đúng.",
+    "wrong": "Chưa đúng.",
+    "answer": "Đáp án",
+    "explanation": "Giải thích",
+    "next": "Câu tiếp theo",
+    "finish": "Kết thúc và xem lại",
+    "finished": "Bạn đã trả lời {answered} câu, đúng {correct}.",
+    "backToBrowse": "Về danh sách bộ",
+    "notFound": "Không tìm thấy lượt làm bài này."
+  },
+  "answer": {
+    "submit": "Trả lời",
+    "text": "Câu trả lời của bạn",
+    "textHint": "Chấm không phân biệt hoa thường và không phân biệt dấu.",
+    "flip": "Lật thẻ xem đáp án",
+    "known": "Tôi đã nhớ",
+    "unknown": "Chưa nhớ",
+    "selfNote": "Thẻ ghi nhớ do bạn tự đánh giá, nên kết quả được tính riêng khỏi nhóm máy chấm."
+  },
+  "review": {
+    "title": "Xem lại lượt làm bài",
+    "correct": "Đúng",
+    "wrong": "Sai",
+    "selfGraded": "Bạn tự đánh giá",
+    "yourPick": "bạn chọn",
+    "youWrote": "Bạn đã trả lời: {text}",
+    "empty": "Lượt này chưa có câu nào được trả lời."
+  },
+  "practice": {
+    "title": "Câu đang sai",
+    "intro": "Những câu mà lần trả lời gần nhất của bạn là sai — cắt ngang mọi bộ. Trả lời đúng ở lần sau thì câu đó tự rời khỏi đây.",
+    "emptyNew": "Bạn chưa làm câu nào. Chọn một bộ để bắt đầu.",
+    "emptyAllRight": "Không có câu nào đang sai. Lần gần nhất bạn đều trả lời đúng."
+  },
+  "stats": {
+    "title": "Thống kê",
+    "empty": "Chưa có dữ liệu — bạn chưa trả lời câu nào.",
+    "groups": {
+      "auto": "Máy chấm",
+      "self": "Bạn tự đánh giá"
+    },
+    "groupHints": {
+      "auto": "Đối chiếu với đáp án đã lưu.",
+      "self": "Thẻ ghi nhớ: bạn tự nói mình đã nhớ hay chưa. Hai nhóm cố ý không cộng lại — gộp chúng ra một con số không có nghĩa."
+    },
+    "columns": {
+      "kind": "Dạng câu",
+      "answered": "Đã trả lời",
+      "correct": "Đúng",
+      "rate": "Tỉ lệ"
+    }
+  },
+  "kinds": {
+    "theory": "Lý thuyết",
+    "practice": "Vận dụng",
+    "recall": "Ghi nhớ",
+    "analysis": "Phân tích"
+  },
+  "difficulty": {
+    "easy": "Dễ",
+    "medium": "Trung bình",
+    "hard": "Khó"
+  },
+  "shapes": {
+    "multiple_choice": "Trắc nghiệm",
+    "true_false": "Đúng / Sai",
+    "short_answer": "Trả lời ngắn",
+    "fill_blank": "Điền chỗ trống",
+    "flashcard": "Thẻ ghi nhớ"
+  }
+}

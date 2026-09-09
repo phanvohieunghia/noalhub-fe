@@ -12,6 +12,7 @@ import type {
   PatchItemInput,
   ReorderItemsInput,
   StartAnalyzeInput,
+  SubmitAnswerInput,
   UpdateCredentialInput,
   UpdateDatasetInput,
   UpdateSetInput,
@@ -19,6 +20,8 @@ import type {
   WriteItemInput,
 } from "./schemas";
 import type {
+  BrowseItemsQuery,
+  BrowseSetsQuery,
   QaGeneration,
   QaItemsQuery,
   QaPromptKind,
@@ -56,6 +59,17 @@ export const qaKeys = {
 
   items: () => [...qaKeys.all, "items"] as const,
   itemSearch: (query: QaItemsQuery) => [...qaKeys.items(), query] as const,
+
+  /* The learner surface reads different rows than admin does, so it keeps its
+     own subtree — invalidating "sets" after publishing must not wipe a
+     learner's open attempt out of the cache. */
+  play: () => [...qaKeys.all, "play"] as const,
+  playSets: (query: BrowseSetsQuery) => [...qaKeys.play(), "sets", query] as const,
+  playSet: (id: string) => [...qaKeys.play(), "set", id] as const,
+  playItems: (query: BrowseItemsQuery) => [...qaKeys.play(), "items", query] as const,
+  attempts: (setId?: string) => [...qaKeys.play(), "attempts", setId ?? "all"] as const,
+  attemptReview: (id: string) => [...qaKeys.play(), "review", id] as const,
+  stats: () => [...qaKeys.play(), "stats"] as const,
 };
 
 /* ------------------------------ AI credentials ----------------------------- */
@@ -382,4 +396,87 @@ function invalidateSet(
   queryClient.invalidateQueries({ queryKey: qaKeys.set(setId) });
   queryClient.invalidateQueries({ queryKey: qaKeys.sets() });
   queryClient.invalidateQueries({ queryKey: qaKeys.items() });
+}
+
+/* ------------------------------ learner surface ---------------------------- */
+
+export function useBrowseQaSets(query: BrowseSetsQuery = {}) {
+  return useQuery({
+    queryKey: qaKeys.playSets(query),
+    queryFn: ({ signal }) => qaApi.browseSets(query, signal),
+  });
+}
+
+export function usePlayQaSet(id: string | undefined) {
+  return useQuery({
+    queryKey: qaKeys.playSet(id ?? ""),
+    queryFn: ({ signal }) => qaApi.getPlaySet(id!, signal),
+    enabled: Boolean(id),
+  });
+}
+
+export function useQaAttempts(setId?: string) {
+  return useQuery({
+    queryKey: qaKeys.attempts(setId),
+    queryFn: ({ signal }) => qaApi.listAttempts(setId, signal),
+  });
+}
+
+/**
+ * Idempotent per (user, set): calling it with an attempt already open returns
+ * that same attempt. So the button says "Continue", and a double click cannot
+ * strand the first attempt — which matters, because `(attempt_id, item_id)` is
+ * unique and an abandoned attempt can never be retaken.
+ */
+export function useStartQaAttempt() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (setId: string) => qaApi.startAttempt(setId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qaKeys.play() });
+    },
+  });
+}
+
+export function useSubmitQaAnswer(attemptId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: SubmitAnswerInput) => qaApi.submitAnswer(attemptId, input),
+    onSuccess: () => {
+      // `wrongOnly` and the stats both change with every answer.
+      queryClient.invalidateQueries({ queryKey: qaKeys.playItems({}) });
+      queryClient.invalidateQueries({ queryKey: qaKeys.stats() });
+      queryClient.invalidateQueries({ queryKey: qaKeys.attemptReview(attemptId) });
+    },
+  });
+}
+
+export function useFinishQaAttempt() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (attemptId: string) => qaApi.finishAttempt(attemptId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.play() }),
+  });
+}
+
+export function useQaAttemptReview(attemptId: string | undefined) {
+  return useQuery({
+    queryKey: qaKeys.attemptReview(attemptId ?? ""),
+    queryFn: ({ signal }) => qaApi.reviewAttempt(attemptId!, signal),
+    enabled: Boolean(attemptId),
+  });
+}
+
+export function useBrowseQaItems(query: BrowseItemsQuery = {}) {
+  return useQuery({
+    queryKey: qaKeys.playItems(query),
+    queryFn: ({ signal }) => qaApi.browseItems(query, signal),
+  });
+}
+
+export function useQaStats() {
+  return useQuery({
+    queryKey: qaKeys.stats(),
+    queryFn: ({ signal }) => qaApi.getStats(signal),
+  });
 }

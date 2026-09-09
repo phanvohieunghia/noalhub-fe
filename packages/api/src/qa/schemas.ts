@@ -397,3 +397,145 @@ export type UpdateSetInput = z.infer<typeof updateSetSchema>;
 export type WriteItemInput = z.infer<typeof writeItemSchema>;
 export type PatchItemInput = z.infer<typeof patchItemSchema>;
 export type ReorderItemsInput = z.infer<typeof reorderItemsSchema>;
+
+/* ------------------------------ learner surface ---------------------------- */
+
+const qaTemplateKey = z.enum([
+  "multiple_choice",
+  "true_false",
+  "short_answer",
+  "fill_blank",
+  "flashcard",
+]);
+
+/**
+ * The learner's view of a question. Written as its own object, NOT
+ * `qaItemFullSchema.omit(...)`: a derived schema keeps working when someone
+ * adds `answerKey` upstream, and the whole point of the split is that this
+ * shape has no field to forget.
+ */
+export const qaItemPlaySchema = z.object({
+  id: z.string(),
+  order: z.number(),
+  kind: qaItemKind,
+  question: richDoc,
+  options: z
+    .array(qaItemOptionSchema)
+    .nullish()
+    .transform((v) => v ?? null),
+  difficulty: qaDifficulty.nullish().transform((v) => v ?? null),
+});
+
+export const qaSetPlaySchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: nullableString,
+  intro: z
+    .unknown()
+    .nullish()
+    .transform((v) => (v == null ? null : sanitizeBlogDoc(v))),
+  difficulty: qaDifficulty.nullish().transform((v) => v ?? null),
+  itemCount: z.number(),
+  templateKey: qaTemplateKey,
+  items: z.array(qaItemPlaySchema),
+});
+
+export const qaSetSummarySchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: nullableString,
+  difficulty: qaDifficulty.nullish().transform((v) => v ?? null),
+  itemCount: z.number(),
+  templateKey: qaTemplateKey,
+  itemKinds: z.array(qaItemKind),
+  openAttemptId: nullableString,
+  publishedAt: nullableString,
+});
+
+export const qaSetListPlaySchema = z.object({
+  items: z.array(qaSetSummarySchema),
+  total: z.number(),
+});
+
+export const qaItemListPlaySchema = z.object({
+  items: z.array(qaItemPlaySchema),
+  total: z.number(),
+});
+
+export const qaAttemptSchema = z.object({
+  id: z.string(),
+  setId: z.string(),
+  status: z.enum(["in_progress", "finished", "abandoned"]),
+  answeredCount: z.number(),
+  correctCount: z.number(),
+  startedAt: z.string(),
+  finishedAt: nullableString,
+});
+
+export const qaAttemptListSchema = z.array(qaAttemptSchema);
+
+const qaGrading = z.enum(["auto", "self"]);
+
+const qaResponseSchema = z.union([
+  z.object({ optionIds: z.array(z.string()) }),
+  z.object({ text: z.string() }),
+  z.object({ known: z.boolean() }),
+]);
+
+export const qaAnswerResultSchema = z.object({
+  isCorrect: z.boolean(),
+  grading: qaGrading,
+  answer: z
+    .unknown()
+    .nullish()
+    .transform((v) => (v == null ? null : sanitizeBlogDoc(v))),
+  explanation: z
+    .unknown()
+    .nullish()
+    .transform((v) => (v == null ? null : sanitizeBlogDoc(v))),
+  attempt: qaAttemptSchema,
+});
+
+export const qaAnswerReviewListSchema = z.array(
+  z.object({
+    itemId: z.string(),
+    kind: qaItemKind,
+    question: richDoc,
+    options: z
+      .array(qaItemOptionSchema)
+      .nullish()
+      .transform((v) => v ?? null),
+    response: qaResponseSchema,
+    isCorrect: z.boolean(),
+    grading: qaGrading,
+    answer: z
+      .unknown()
+      .nullish()
+      .transform((v) => (v == null ? null : sanitizeBlogDoc(v))),
+    explanation: z
+      .unknown()
+      .nullish()
+      .transform((v) => (v == null ? null : sanitizeBlogDoc(v))),
+    answeredAt: z.string(),
+  }),
+);
+
+export const qaStatsSchema = z.object({
+  rows: z.array(
+    z.object({
+      grading: qaGrading,
+      kind: qaItemKind,
+      answered: z.number(),
+      correct: z.number(),
+    }),
+  ),
+});
+
+/** `durationMs` is measured by the client, so the backend clamps it and never grades on it. */
+export const submitAnswerSchema = z.object({
+  itemId: z.string().uuid(),
+  response: qaResponseSchema,
+  durationMs: z.number().int().min(0).optional(),
+});
+
+export type SubmitAnswerInput = z.infer<typeof submitAnswerSchema>;
