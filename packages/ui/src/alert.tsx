@@ -1,0 +1,126 @@
+"use client";
+
+import { useEffect } from "react";
+import { useTranslations } from "next-intl";
+
+import { Button } from "./button";
+import { Icon, ICONS } from "./icons";
+import { Typography } from "./typography";
+import { keysOf } from "./variants";
+
+/**
+ * Inline alerts (form-level banners): one tone table, four thin wrappers.
+ * Colours come from the status tokens (`docs/theme.md`), so they follow
+ * light/dark on their own.
+ *
+ * This is the IN-FLOW one: it takes space in the layout, sits next to the field
+ * or form it belongs to, and stays until its owner stops rendering it. For a
+ * transient message that floats over the page and stacks with others, see
+ * `toast.tsx`.
+ */
+const TONES = {
+  error: {
+    icon: ICONS.error,
+    className: "border-danger/30 bg-danger/10 text-danger",
+    role: "alert",
+  },
+  success: {
+    icon: ICONS.success,
+    className: "border-success/30 bg-success/10 text-success",
+    role: "status",
+  },
+  info: {
+    icon: ICONS.info,
+    /* `text-accent`, not `text-primary`: on its own /10 tint the brand-600 of
+       `--primary` measures 4.24:1, below the 4.5 AA floor — `--primary` is sized
+       for white-on-button, not for text on a pale wash of itself. `--accent` is
+       the token meant for emphasized TEXT (brand-700 light, brand-300 dark) and
+       gives 6.1:1 / 7.4:1 on the same tint. The other three tones already use a
+       status color picked against its own tint, which is why only `info` was
+       failing the a11y gate. */
+    className: "border-primary/30 bg-primary/10 text-accent",
+    role: "status",
+  },
+  warning: {
+    icon: ICONS.warning,
+    className: "border-warning/30 bg-warning/10 text-warning",
+    role: "status",
+  },
+} as const;
+
+export type AlertTone = keyof typeof TONES;
+
+/** The list, derived from the table above — see `variants.ts`. */
+export const ALERT_TONES = keysOf(TONES);
+
+export type AlertProps = {
+  tone: AlertTone;
+  message?: string | null;
+  /**
+   * Makes the alert dismissible: shows a close button, and is what the
+   * auto-dismiss timer calls. Without it the alert stays until the owner stops
+   * rendering it — which is what a form-level error should do.
+   */
+  onDismiss?: () => void;
+  /**
+   * Dismiss on its own after this many ms. Only has an effect together with
+   * `onDismiss` — closing is the owner's state change, never ours.
+   */
+  autoDismissMs?: number;
+};
+
+export function Alert({ tone, message, onDismiss, autoDismissMs }: AlertProps) {
+  // The timer restarts whenever the text changes, so a second message replacing
+  // the first is shown for its full duration instead of inheriting what is left
+  // of the previous one.
+  useEffect(() => {
+    if (!message || !onDismiss || !autoDismissMs) return;
+    const timer = setTimeout(onDismiss, autoDismissMs);
+    return () => clearTimeout(timer);
+  }, [message, onDismiss, autoDismissMs]);
+
+  const t = useTranslations("common");
+  if (!message) return null;
+  const { icon, className, role } = TONES[tone];
+
+  return (
+    <Typography
+      variant="body-3"
+      role={role}
+      className={`flex items-start gap-2 rounded-md border px-3 py-2 ${className}`}
+    >
+      <Icon icon={icon} className="mt-0.5 size-4 shrink-0" />
+      <span className="flex-1">{message}</span>
+      {onDismiss ? (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={onDismiss}
+          aria-label={t("actions.close")}
+          className="-mr-1 shrink-0"
+        >
+          <Icon icon={ICONS.close} className="size-4" />
+        </Button>
+      ) : null}
+    </Typography>
+  );
+}
+
+type ToneAlertProps = Omit<AlertProps, "tone">;
+
+/** Banner for form-level errors (5xx, offline, anything not tied to a field). */
+export function AlertError(props: ToneAlertProps) {
+  return <Alert tone="error" {...props} />;
+}
+
+export function AlertSuccess(props: ToneAlertProps) {
+  return <Alert tone="success" {...props} />;
+}
+
+export function AlertInfo(props: ToneAlertProps) {
+  return <Alert tone="info" {...props} />;
+}
+
+export function AlertWarning(props: ToneAlertProps) {
+  return <Alert tone="warning" {...props} />;
+}

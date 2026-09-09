@@ -6,7 +6,7 @@ import { useMessage } from "@noalhub/i18n/use-message";
 import { Button } from "@noalhub/ui/button";
 import { Icon, ICONS } from "@noalhub/ui/icons";
 import { Input } from "@noalhub/ui/input";
-import { ToastError, ToastSuccess } from "@noalhub/ui/toast";
+import { AlertError, AlertSuccess } from "@noalhub/ui/alert";
 import { Typography } from "@noalhub/ui/typography";
 
 /*
@@ -143,7 +143,7 @@ export const LoginRejected: Story = {
       <AuthScreen>
         <ScreenHeader title={t("title")} subtitle={t("subtitle")} />
         <form className="flex flex-col gap-4" noValidate>
-          <ToastError message={m("common.errors.generic")} />
+          <AlertError message={m("common.errors.generic")} />
           <Input
             label={t("email")}
             type="email"
@@ -229,7 +229,7 @@ export const ForgotPasswordSent: Story = {
     return (
       <AuthScreen>
         <ScreenHeader title={t("title")} subtitle={t("subtitle")} />
-        <ToastSuccess message={t("sent")} />
+        <AlertSuccess message={t("sent")} />
         <Typography variant="body-3" className="text-center opacity-70">
           <a href="#" className="underline underline-offset-4">
             {t("backToLogin")}
@@ -276,7 +276,7 @@ export const ResetPasswordInvalidLink: Story = {
         <Typography variant="h3" as="h1">
           {t("invalidLinkTitle")}
         </Typography>
-        <ToastError message={t("invalidLink")} />
+        <AlertError message={t("invalidLink")} />
         <a href="#" className="text-body-3 underline underline-offset-4">
           {t("requestNewLink")}
         </a>
@@ -293,7 +293,7 @@ export const ResetPasswordDone: Story = {
     return (
       <AuthScreen>
         <ScreenHeader title={t("title")} />
-        <ToastSuccess message={t("done")} />
+        <AlertSuccess message={t("done")} />
       </AuthScreen>
     );
   },
@@ -325,7 +325,7 @@ export const OAuthFailed: Story = {
 
     return (
       <AuthScreen>
-        <ToastError message={t("missingCode")} />
+        <AlertError message={t("missingCode")} />
         <a href="#" className="text-body-3 underline underline-offset-4">
           {t("backToLogin")}
         </a>

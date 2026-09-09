@@ -12,6 +12,7 @@ import { AuthProvider } from "@noalhub/ui/auth/auth-provider";
 import { NavigationProgress } from "@noalhub/ui/navigation-progress";
 import { QueryProvider } from "@noalhub/ui/query-provider";
 import { ThemeProvider } from "@noalhub/ui/theme/theme-provider";
+import { ToastHost } from "@noalhub/ui/toast";
 
 /** See the note in `apps/web/app/root-html.tsx` — both apps share one font. */
 const openSans = Open_Sans({
@@ -45,6 +46,7 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const locale = await getLocale();
+  const t = await getTranslations("common");
   return (
     // See the note in `apps/web/app/root-html.tsx` — both apps are deliberately
     // identical in this block, down to the localStorage key.
@@ -67,6 +69,11 @@ export default async function RootLayout({
                     `common.states.loading`; mounted once for the whole app, not
                     attached to a header. */}
                 <NavigationProgress />
+                {/* Also inside `IntlProvider`, and for the same reason: its
+                    close button needs `common.actions.close`. The label is
+                    passed in rather than read inside the package — see the note
+                    on `ToastHost`. */}
+                <ToastHost closeLabel={t("actions.close")} />
                 <AdminLocaleSync />
                 {children}
               </IntlProvider>

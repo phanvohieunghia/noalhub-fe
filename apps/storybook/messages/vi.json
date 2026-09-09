@@ -155,7 +155,7 @@
     "sampleBodyPre": "Chọn một đoạn rồi bấm ",
     "sampleBodyPost": " trên thanh công cụ để xem trạng thái active."
   },
-  "toast": {
+  "alert": {
     "error": "Đã xảy ra lỗi hệ thống hoặc bạn đã nhập sai mật khẩu.",
     "success": "Cập nhật thông tin thành công!",
     "info": "Bản nháp được lưu trên máy bạn cho tới khi bấm Lưu.",
@@ -632,5 +632,44 @@
         "docBodyC": "`revalidate` là mức sàn, không phải kế hoạch. Webhook mất thì site vẫn tự đúng lại; kiểu hỏng ở đây là chậm, không bao giờ là sai dữ liệu."
       }
     }
+  },
+  "checkbox": {
+    "newsletter": "Nhận bản tin hàng tuần",
+    "comments": "Cho phép bình luận",
+    "commentsHint": "Bình luận mới vẫn cần được duyệt trước khi hiển thị.",
+    "terms": "Tôi đồng ý với điều khoản sử dụng",
+    "termsError": "Bạn cần đồng ý với điều khoản trước khi tiếp tục.",
+    "hiddenHint": "Chú thích này bị ẩn khi có lỗi.",
+    "unchecked": "Chưa chọn",
+    "indeterminate": "Chọn một phần",
+    "checked": "Đã chọn",
+    "disabled": "Vô hiệu hóa",
+    "disabledChecked": "Vô hiệu hóa, đã chọn",
+    "selectAll": "Chọn tất cả",
+    "selectedCount": "Đã chọn {count} mục",
+    "rowPosts": "Bài viết",
+    "rowUsers": "Người dùng",
+    "rowComments": "Bình luận",
+    "published": "Công khai bài viết",
+    "publishedHint": "Bật lên là bài viết hiện ngay trên trang chủ.",
+    "saving": "Đang lưu...",
+    "loadingUnchecked": "Đang chờ, chưa chọn",
+    "loadingChecked": "Đang chờ, đã chọn"
+  },
+  "toast": {
+    "success": "Đã lưu thay đổi.",
+    "error": "Không gửi được yêu cầu. Thử lại sau ít phút.",
+    "info": "Bản nháp được lưu tự động trên máy bạn.",
+    "warning": "Ảnh bìa nặng hơn 2MB, tải trang sẽ chậm.",
+    "fireAll": "Bắn cả bốn",
+    "dismissAll": "Tắt hết",
+    "shortLived": "Toast thường — 4 giây.",
+    "longLived": "Toast lỗi — 6 giây.",
+    "sticky": "Toast này không tự tắt, phải bấm nút đóng.",
+    "default4s": "Mặc định (4s)",
+    "error6s": "Lỗi (6s)",
+    "stickyLabel": "Không tự tắt",
+    "long": "Không kết nối được máy chủ nên các thay đổi bạn vừa nhập đang nằm trên máy; chúng sẽ được gửi lại ngay khi có mạng trở lại.",
+    "longLabel": "Nội dung dài"
   }
 }

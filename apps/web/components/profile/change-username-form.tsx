@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@noalhub/ui/button";
-import { ToastError, ToastSuccess } from "@noalhub/ui/toast";
+import { AlertError, AlertSuccess } from "@noalhub/ui/alert";
 import { Input } from "@noalhub/ui/input";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { useDateFormat } from "@noalhub/i18n/use-date-format";
@@ -67,8 +67,8 @@ export function ChangeUsernameForm({ user }: { user: User }) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-      <ToastError message={m(formError)} />
-      {saved ? <ToastSuccess message={t("saved")} /> : null}
+      <AlertError message={m(formError)} />
+      {saved ? <AlertSuccess message={t("saved")} /> : null}
 
       <Input
         label={t("label")}

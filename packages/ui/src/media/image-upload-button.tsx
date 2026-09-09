@@ -13,7 +13,7 @@ import {
   type MediaAsset,
 } from "@noalhub/api/media";
 import { Button } from "../button";
-import { ToastError } from "../toast";
+import { AlertError } from "../alert";
 
 /**
  * The "Upload image" button — wrapping `useUploadMedia`'s whole three-step flow
@@ -79,7 +79,9 @@ export function ImageUploadButton({
           disabled={disabled || upload.isPending}
           onClick={() => inputRef.current?.click()}
         >
-          {upload.isPending ? t("uploading", { percent }) : (label ?? t("label"))}
+          {upload.isPending
+            ? t("uploading", { percent })
+            : (label ?? t("label"))}
         </Button>
         {upload.isPending ? (
           <Button variant="outline" onClick={upload.cancel}>
@@ -103,7 +105,7 @@ export function ImageUploadButton({
         </div>
       ) : null}
 
-      <ToastError message={m(error)} />
+      <AlertError message={m(error)} />
     </div>
   );
 }

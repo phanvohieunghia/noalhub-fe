@@ -5,7 +5,7 @@ import { useState } from "react";
 import { z } from "zod";
 
 import { Button } from "@noalhub/ui/button";
-import { ToastError, ToastSuccess } from "@noalhub/ui/toast";
+import { AlertError, AlertSuccess } from "@noalhub/ui/alert";
 import { Input } from "@noalhub/ui/input";
 import { Typography } from "@noalhub/ui/typography";
 import { useMessage } from "@noalhub/i18n/use-message";
@@ -62,8 +62,8 @@ function DemoForm({ serverError }: { serverError?: string }) {
         {t("title")}
       </Typography>
 
-      <ToastError message={serverError} />
-      {submitted ? <ToastSuccess message={m("web.profile.saved")} /> : null}
+      <AlertError message={serverError} />
+      {submitted ? <AlertSuccess message={m("web.profile.saved")} /> : null}
 
       <Input
         label={t("email")}

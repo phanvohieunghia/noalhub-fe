@@ -18,7 +18,7 @@ import { useMessage } from "@noalhub/i18n/use-message";
 import { useTranslations } from "next-intl";
 import { Button } from "../button";
 import { Dialog } from "../dialog";
-import { Toast, ToastError } from "../toast";
+import { Alert, AlertError } from "../alert";
 import { Icon, ICONS, LUCIDE, type IconName } from "../icons";
 import { Input } from "../input";
 import { Tooltip } from "../tooltip";
@@ -200,7 +200,7 @@ export function TiptapEditor({
           })}
         </Typography>
       ) : null}
-      <ToastError message={m(dropError)} />
+      <AlertError message={m(dropError)} />
 
       {linkOpen ? <LinkDialog editor={editor} onClose={() => setLinkOpen(false)} /> : null}
       {imageOpen ? <ImageDialog editor={editor} onClose={() => setImageOpen(false)} /> : null}
@@ -417,7 +417,7 @@ function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }
         <Typography variant="body-4" className="-mt-2 opacity-60">
           {t.rich("linkHint", { code: (chunks) => <code className="mx-1">{chunks}</code> })}
         </Typography>
-        <ToastError message={error} />
+        <AlertError message={error} />
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
             {tc("actions.cancel")}
@@ -519,8 +519,8 @@ function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void 
           onChange={(event) => setAlt(event.target.value)}
           placeholder={t("imageAltPlaceholder")}
         />
-        <ToastError message={error} />
-        <Toast tone="warning" message={notice} />
+        <AlertError message={error} />
+        <Alert tone="warning" message={notice} />
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
             {t("close")}

@@ -155,7 +155,7 @@
     "sampleBodyPre": "Select a passage, then press ",
     "sampleBodyPost": " on the toolbar to see the active state."
   },
-  "toast": {
+  "alert": {
     "error": "Something went wrong, or the password was incorrect.",
     "success": "Saved successfully!",
     "info": "The draft stays on your machine until you press Save.",
@@ -632,5 +632,44 @@
         "docBodyC": "`revalidate` is the floor, not the plan. If the webhook is lost the site still corrects itself; the failure mode is delay, never wrong data."
       }
     }
+  },
+  "checkbox": {
+    "newsletter": "Send me the weekly newsletter",
+    "comments": "Allow comments",
+    "commentsHint": "New comments still wait for approval before they show up.",
+    "terms": "I agree to the terms of service",
+    "termsError": "You have to accept the terms before continuing.",
+    "hiddenHint": "This hint is hidden while an error is showing.",
+    "unchecked": "Unchecked",
+    "indeterminate": "Partially selected",
+    "checked": "Checked",
+    "disabled": "Disabled",
+    "disabledChecked": "Disabled, checked",
+    "selectAll": "Select all",
+    "selectedCount": "{count} selected",
+    "rowPosts": "Posts",
+    "rowUsers": "Users",
+    "rowComments": "Comments",
+    "published": "Publish this post",
+    "publishedHint": "Turning this on puts the post on the home page right away.",
+    "saving": "Saving...",
+    "loadingUnchecked": "Pending, unchecked",
+    "loadingChecked": "Pending, checked"
+  },
+  "toast": {
+    "success": "Changes saved.",
+    "error": "The request did not go through. Try again in a minute.",
+    "info": "Your draft is saved locally as you type.",
+    "warning": "That cover image is over 2MB and will slow the page down.",
+    "fireAll": "Fire all four",
+    "dismissAll": "Dismiss all",
+    "shortLived": "A normal toast — 4 seconds.",
+    "longLived": "An error toast — 6 seconds.",
+    "sticky": "This one never expires; use the close button.",
+    "default4s": "Default (4s)",
+    "error6s": "Error (6s)",
+    "stickyLabel": "Never expires",
+    "long": "The server could not be reached, so the changes you just made are held on this device and will be sent again as soon as the connection is back.",
+    "longLabel": "Long message"
   }
 }

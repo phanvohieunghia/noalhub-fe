@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@noalhub/ui/button";
-import { ToastError, ToastSuccess } from "@noalhub/ui/toast";
+import { AlertError, AlertSuccess } from "@noalhub/ui/alert";
 import { Input } from "@noalhub/ui/input";
 import { useResetPassword } from "@noalhub/api/auth";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
@@ -48,7 +48,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
         <Typography variant="h3" as="h1">
           {t("invalidLinkTitle")}
         </Typography>
-        <ToastError message={t("invalidLink")} />
+        <AlertError message={t("invalidLink")} />
         <Link href="/forgot-password" className="text-body-3 underline underline-offset-4">
           {t("requestNewLink")}
         </Link>
@@ -68,10 +68,10 @@ export function ResetPasswordForm({ token }: { token: string }) {
       </header>
 
       {done ? (
-        <ToastSuccess message={t("done")} />
+        <AlertSuccess message={t("done")} />
       ) : (
         <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-          <ToastError message={m(formError)} />
+          <AlertError message={m(formError)} />
 
           <Input
             label={t("newPassword")}

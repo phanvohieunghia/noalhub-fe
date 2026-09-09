@@ -231,7 +231,7 @@ Primary vẫn là một **token**: đổi ý thì sửa hai dòng trong `theme.c
 ⚠️ **Chữ trên một lớp wash của chính màu brand thì dùng `--accent`, không dùng
 `--primary`.** Tỉ lệ 5.1:1 ghi ở `--primary` là đo trên **nút** (chữ trắng trên
 nền brand-600 đặc). Đặt chính brand-600 làm CHỮ trên `bg-primary/10` thì chỉ còn
-**4.24:1**, dưới ngưỡng AA — đúng lỗi đã làm đỏ story `Toast/InfoAlert`.
+**4.24:1**, dưới ngưỡng AA — đúng lỗi đã làm đỏ story `Alert/InfoAlert`.
 `--accent` sinh ra cho chữ nhấn: 6.1:1 ở light, 7.4:1 ở dark trên cùng lớp wash
 đó.
 

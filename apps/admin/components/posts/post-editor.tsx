@@ -30,7 +30,7 @@ import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { PostContent } from "@noalhub/ui/blog/post-content";
 import { TableOfContents } from "@noalhub/ui/blog/table-of-contents";
 import { Button } from "@noalhub/ui/button";
-import { ToastError } from "@noalhub/ui/toast";
+import { AlertError } from "@noalhub/ui/alert";
 import { Icon, ICONS, LUCIDE, type IconName } from "@noalhub/ui/icons";
 import { Input } from "@noalhub/ui/input";
 import { Skeleton } from "@noalhub/ui/skeleton";
@@ -278,7 +278,7 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
           </div>
         ) : null}
 
-        <ToastError message={m(formError)} />
+        <AlertError message={m(formError)} />
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="flex flex-col gap-4">
@@ -476,7 +476,7 @@ function CoverImageField({
         </div>
       )}
 
-      <ToastError message={error} />
+      <AlertError message={error} />
     </div>
   );
 }

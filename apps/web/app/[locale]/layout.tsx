@@ -1,6 +1,7 @@
 import { LOCALES } from "@noalhub/i18n/config";
 import { IntlProvider } from "@noalhub/i18n/provider";
 import { NavigationProgress } from "@noalhub/ui/navigation-progress";
+import { ToastHost } from "@noalhub/ui/toast";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -51,6 +52,8 @@ export default async function LocaleLayout({
    */
   setRequestLocale(locale);
 
+  const t = await getTranslations("common");
+
   return (
     <RootHtml lang={locale}>
       {/* The provider here carries only `common`/`nav`/`validation`. Each route
@@ -61,6 +64,10 @@ export default async function LocaleLayout({
           have no header at all (see the note in the component itself). */}
       <IntlProvider>
         <NavigationProgress />
+        {/* Also inside `IntlProvider`, and for the same reason: its close button
+            needs `common.actions.close`. The label is passed in rather than read
+            inside the package — see the note on `ToastHost`. */}
+        <ToastHost closeLabel={t("actions.close")} />
         <WebLocaleSync />
         {children}
       </IntlProvider>

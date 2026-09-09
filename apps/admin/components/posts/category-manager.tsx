@@ -39,7 +39,7 @@ import { slugify } from "@noalhub/core/blog/slugify";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
-import { ToastError } from "@noalhub/ui/toast";
+import { AlertError } from "@noalhub/ui/alert";
 import { Input } from "@noalhub/ui/input";
 import { Skeleton } from "@noalhub/ui/skeleton";
 import {
@@ -303,7 +303,7 @@ function CategoryDialog({
           error={m(errors.order?.message)}
         />
 
-        <ToastError message={m(formError)} />
+        <AlertError message={m(formError)} />
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
@@ -344,7 +344,7 @@ function DeleteCategoryDialog({
           {t("deleteBody")}
         </Typography>
 
-        <ToastError message={m(error)} />
+        <AlertError message={m(error)} />
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>

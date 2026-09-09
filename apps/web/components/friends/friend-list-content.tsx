@@ -9,7 +9,7 @@ import { FindFriendDialog } from "./find-friend-dialog";
 import { FriendRequestsDialog } from "./friend-requests-dialog";
 import { Avatar } from "@noalhub/ui/avatar";
 import { Button } from "@noalhub/ui/button";
-import { ToastError } from "@noalhub/ui/toast";
+import { AlertError } from "@noalhub/ui/alert";
 import { Spinner } from "@noalhub/ui/spinner";
 import { useFriendRequests, useFriends } from "@noalhub/api/friends";
 import { Typography } from "@noalhub/ui/typography";
@@ -67,7 +67,7 @@ export function FriendListContent() {
           {t("loading")}
         </Typography>
       ) : error ? (
-        <ToastError message={t("loadFailed")} />
+        <AlertError message={t("loadFailed")} />
       ) : data.items.length === 0 ? (
         <div className="text-body-3 rounded-lg border border-dashed border-black/15 p-8 text-center opacity-70 dark:border-white/20">
           {t("empty")}

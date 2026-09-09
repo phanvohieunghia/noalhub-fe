@@ -10,11 +10,11 @@ Code, comments, commit messages and this file are **English**. The `docs/` direc
 
 # Data layer
 
-Every feature that touches the backend MUST follow `docs/data-layer.md`. Types, api and hooks all live in the `@noalhub/api` package (`packages/api/src/<feature>/`): `types.ts` + `schemas.ts` → `api.ts` → `hooks.ts` (React Query hooks) → components. Components only import the `@noalhub/api/<feature>` barrel; `api.ts` and `client.ts` are NOT in the package `exports`, so there is no import path from outside. Read that doc before writing a new feature.
+Every feature that touches the backend MUST follow `docs/data-layer.md` — read it before writing a new feature. Components only import the `@noalhub/api/<feature>` barrel; `api.ts` and `client.ts` are NOT in the package `exports`, so there is no import path from outside.
 
 # Monorepo
 
-The repo is a pnpm workspace + Turborepo: `apps/web` (customer, port 3000) and `apps/admin` (port 3002) are two Next apps built and deployed independently, sharing `packages/{api,core,ui,config}`. Build mechanics, domains and the path to splitting the repo: `docs/monorepo.md`.
+Build mechanics, domains and the path to splitting the repo: `docs/monorepo.md`.
 
 Internal packages export raw TS, so each app must declare `transpilePackages` in `next.config.ts`. No cross-imports between the two apps; never import from `packages/*` back up into `apps/*`.
 

@@ -20,7 +20,8 @@
     "@tiptap/pm": "^3.30.5",
     "@tiptap/react": "^3.30.5",
     "@tiptap/starter-kit": "^3.30.5",
-    "radix-ui": "^1.6.7"
+    "radix-ui": "^1.6.7",
+    "react-hot-toast": "^2.6.0"
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5.101.4",

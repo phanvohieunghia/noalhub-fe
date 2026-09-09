@@ -31,7 +31,7 @@ import {
   TableRoot,
   TableRow,
 } from "@noalhub/ui/table";
-import { ToastError } from "@noalhub/ui/toast";
+import { AlertError } from "@noalhub/ui/alert";
 import { Typography } from "@noalhub/ui/typography";
 import { useTranslations } from "next-intl";
 
@@ -207,7 +207,7 @@ function GrantDialog({ onClose }: { onClose: () => void }) {
           {t("noteHint")}
         </Typography>
 
-        <ToastError message={m(formError)} />
+        <AlertError message={m(formError)} />
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
@@ -236,7 +236,7 @@ function RevokeDialog({ row, onClose }: { row: StorybookAccess; onClose: () => v
           {t("revokeBody")}
         </Typography>
 
-        <ToastError message={m(error)} />
+        <AlertError message={m(error)} />
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>

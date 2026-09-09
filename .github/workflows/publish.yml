@@ -200,6 +200,131 @@ jobs:
           cache-from: type=gha,scope=storybook-${{ matrix.audience }}
           cache-to: type=gha,mode=max,scope=storybook-${{ matrix.audience }}
 
+  # CD for Storybook, deliberately a SEPARATE job from `deploy` below.
+  #
+  # It only `needs: storybook`, so it neither waits for nor blocks the web/admin
+  # release: a Storybook deploy that fails turns THIS job red and the run with
+  # it, while `deploy` runs (or has already run) untouched. That is the whole
+  # point — a broken Storybook must never hold back production.
+  #
+  # It writes `SB_IMAGE_TAG`, NOT `FE_IMAGE_TAG`. The two are separate variables
+  # in `docker-compose.prod.yml` because this workflow filters by path: a push
+  # touching only `apps/storybook` skips `build`, so no web/admin image exists at
+  # that commit. Sharing one variable would leave `.env` pointing web/admin at a
+  # tag that was never pushed, and the next `up -d web` — a plain BE deploy, even
+  # — would die with `manifest unknown`.
+  deploy-storybook:
+    needs: storybook
+    runs-on: ubuntu-latest
+    permissions:
+      # Only so `docker login` on the VPS can pull the private images.
+      packages: read
+    # A manual run from the Actions tab can deploy too, but only from main.
+    if: github.ref == 'refs/heads/main'
+    # A group of its own: a Storybook deploy and a web/admin deploy touch
+    # different services and must not serialize behind each other.
+    concurrency:
+      group: deploy-storybook-fe
+      cancel-in-progress: false
+
+    steps:
+      - name: Pull & up on the VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          script: |
+            # REQUIRED, and NOT ssh-action's `script_stop` — see the long note on
+            # the `deploy` job below for both halves of that.
+            set -e
+
+            cd ${{ secrets.DEPLOY_PATH }}
+            test -f docker-compose.prod.yml
+
+            TAG=sha-${{ github.sha }}
+
+            # Into `.env` rather than `export`: compose reads `SB_IMAGE_TAG` from
+            # there, so a later BE deploy (`up -d`) keeps the running Storybook
+            # instead of swapping it back to `latest`.
+            if grep -q '^SB_IMAGE_TAG=' .env; then
+              sed -i "s|^SB_IMAGE_TAG=.*|SB_IMAGE_TAG=$TAG|" .env
+            else
+              echo "SB_IMAGE_TAG=$TAG" >> .env
+            fi
+
+            echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # BOTH images: `storybook` is the public build, `storybook-internal`
+            # additionally carries `src/internal/**` and is gated by nginx
+            # `auth_request`. They come from one Dockerfile and one commit, so
+            # they must move together — updating only one leaves the two builds
+            # showing different components under the same domain.
+            docker compose -f docker-compose.prod.yml pull storybook storybook-internal
+            docker compose -f docker-compose.prod.yml up -d storybook storybook-internal
+
+            docker logout ghcr.io
+
+            # REQUIRED for the same reason as in `deploy`: `storybook-tls.conf`
+            # writes `proxy_pass http://storybook:80` as a bare name, with no
+            # variable and no `resolver`, so nginx resolves it ONCE at config load
+            # and caches the IP forever. The two containers just recreated get new
+            # IPs, and nginx — not in the recreate list — keeps sending requests to
+            # the old ones, answering 502 while the config file is perfectly
+            # correct.
+            #
+            # `-T` because this ssh session has no TTY. `nginx -t` first so a
+            # broken config is caught here instead of killing nginx on reload.
+            docker compose -f docker-compose.prod.yml exec -T nginx nginx -t
+            docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload
+
+            # Confirm the RUNNING containers are on the tag just built. The health
+            # check below only hits the domain, and a surviving old container still
+            # answers 200 — it cannot tell "deployed" from "deploy did nothing".
+            for svc in storybook storybook-internal; do
+              cid=$(docker compose -f docker-compose.prod.yml ps -q "$svc")
+              [ -n "$cid" ] || { echo "$svc has no running container"; exit 1; }
+              img=$(docker inspect -f '{{.Config.Image}}' "$cid")
+              case "$img" in
+                *:"$TAG") echo "$svc → $img OK" ;;
+                *) echo "$svc is running $img, expected tag $TAG"; exit 1 ;;
+              esac
+            done
+
+            docker image prune -f
+
+      - name: Post-deploy health check
+        # From the public internet, through the same nginx/TLS path a real reader
+        # uses — it catches cert failures as well as a dead container.
+        run: |
+          # NO `-L` anywhere in this function, unlike the web/admin check below.
+          # Storybook is a static site with no locale prefix, so there is no
+          # redirect to follow — and the one redirect that does exist is the
+          # `/internal/` gate, which is precisely what must be measured rather
+          # than followed.
+          expect() {
+            url="$1"; want="$2"
+            for i in $(seq 1 10); do
+              code=$(curl -sS -o /dev/null -w '%{http_code}' "$url" || true)
+              [ "$code" = "$want" ] && echo "$url → $code OK" && return 0
+              echo "attempt $i: $url → $code (expected $want), retrying in 6s"
+              sleep 6
+            done
+            echo "$url did not return $want within 60s — check the logs on the VPS"
+            return 1
+          }
+
+          # The public build. No locale prefix here and no redirect to follow:
+          # Storybook is a static site, not a Next app.
+          expect https://storybook-noalhub.duckdns.org/ 200
+
+          # And the internal build is still CLOSED. Without a session, nginx's
+          # `auth_request` sends `/internal/` to `@sign_in`, which answers 302 to
+          # the sign-in start. A 200 here would mean the gate is gone and every
+          # internal story is public — the one failure this check exists to catch.
+          expect https://storybook-noalhub.duckdns.org/internal/ 302
+
   # CD: deploy only once both images are built. `needs` both orders the jobs and
   # cancels the deploy if either app's build is red — never deploy half of the pair.
   #

@@ -9,7 +9,7 @@ import { useMessage } from "@noalhub/i18n/use-message";
 import { useTranslations } from "next-intl";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
-import { ToastError } from "@noalhub/ui/toast";
+import { AlertError } from "@noalhub/ui/alert";
 
 import { publishChecklist } from "./publish-checklist";
 import { Typography } from "@noalhub/ui/typography";
@@ -74,7 +74,7 @@ export function PublishDialog({
           </Typography>
         )}
 
-        <ToastError message={m(error)} />
+        <AlertError message={m(error)} />
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>

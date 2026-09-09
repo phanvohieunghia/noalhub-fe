@@ -12,7 +12,7 @@ import { useMessage } from "@noalhub/i18n/use-message";
 import { safeRedirect } from "@noalhub/core/auth/redirect";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { Button } from "@noalhub/ui/button";
-import { ToastError } from "@noalhub/ui/toast";
+import { AlertError } from "@noalhub/ui/alert";
 import { Input } from "@noalhub/ui/input";
 import { Logo } from "@noalhub/ui/logo";
 import { Typography } from "@noalhub/ui/typography";
@@ -72,7 +72,7 @@ export function AdminLoginForm() {
       </header>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-        <ToastError message={m(formError)} />
+        <AlertError message={m(formError)} />
         <Input
           label={t("email")}
           type="email"
