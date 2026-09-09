@@ -2,7 +2,12 @@ import { forwardRef, useId } from "react";
 import { Icon, ICONS } from "./icons";
 import { Typography } from "./typography";
 
-type SelectOption = { value: string; label: string };
+/**
+ * `disabled` keeps a choice visible but unpickable. Removing it instead is what
+ * makes someone hunt for the option that "disappeared" — the label says why it
+ * cannot be chosen.
+ */
+type SelectOption = { value: string; label: string; disabled?: boolean };
 
 type SelectProps = Omit<React.ComponentPropsWithoutRef<"select">, "children"> & {
   label: string;
@@ -55,7 +60,12 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
             </option>
           ) : null}
           {options.map((option) => (
-            <option key={option.value} value={option.value} className="bg-surface">
+            <option
+              key={option.value}
+              value={option.value}
+              disabled={option.disabled}
+              className="bg-surface"
+            >
               {option.label}
             </option>
           ))}

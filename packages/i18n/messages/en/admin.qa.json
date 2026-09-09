@@ -1,0 +1,243 @@
+{
+  "loading": "Loading…",
+  "actionsColumn": "Actions",
+  "credentials": {
+    "title": "AI keys",
+    "intro": "The API keys the provider calls run on. Every generation runs on one of these and is billed for real.",
+    "caption": "AI keys",
+    "add": "Add a key",
+    "addTitle": "Add an AI key",
+    "editTitle": "Edit {label}",
+    "edit": "Edit",
+    "disable": "Disable",
+    "disabled": "Disabled",
+    "default": "Default",
+    "unlimited": "Unlimited",
+    "tokensPerMonth": "{count} tokens/month",
+    "empty": "No keys yet. Without one, every generate call stops at the first step.",
+    "noDefault": "No key is marked as default. A generate call that names no key will fail with \"credential not found\".",
+    "modelUnsupported": "{label} — cannot be forced into a JSON schema, unusable",
+    "columns": {
+      "label": "Label",
+      "provider": "Provider",
+      "key": "Key",
+      "model": "Default model",
+      "budget": "Budget"
+    },
+    "fields": {
+      "label": "Label",
+      "apiKey": "API key",
+      "apiKeyHint": "Accepted once. There is no way to read it back — lose it and you rotate.",
+      "rotate": "Replace the key",
+      "rotateHint": "Leave empty to keep the current key.",
+      "model": "Default model",
+      "modelPlaceholder": "Pick a model",
+      "isDefault": "Use this key when a generate call names none"
+    }
+  },
+  "templates": {
+    "title": "Prompts",
+    "intro": "Prompts for the two stages: turning sources into an outline, and writing questions. A prompt is yours to write — none are seeded.",
+    "caption": "Prompts",
+    "add": "Add a prompt",
+    "addTitle": "Add a prompt",
+    "editTitle": "Edit {name}",
+    "edit": "Edit",
+    "disable": "Disable",
+    "disabled": "Disabled",
+    "empty": "No prompts yet. Prompts are yours to write — copyable samples live in docs/qa.md §9 of the backend repo.",
+    "filterKind": "Filter by stage",
+    "allKinds": "All stages",
+    "defaultCount": "{count} questions per set",
+    "sourceVariable": "This prompt carries source variables ({variables}). The source travels in a separate half the backend assembles; putting it here means the cacheable prefix never repeats. The backend will refuse to save it.",
+    "countTooBig": "At most {max} questions per set.",
+    "kinds": {
+      "outline": "Outline",
+      "qa": "Questions"
+    },
+    "shapes": {
+      "multiple_choice": "Multiple choice",
+      "true_false": "True / False",
+      "short_answer": "Short answer",
+      "fill_blank": "Fill in the blank",
+      "flashcard": "Flashcard"
+    },
+    "columns": {
+      "name": "Name",
+      "kind": "Stage",
+      "key": "Key",
+      "defaults": "Defaults"
+    },
+    "fields": {
+      "kind": "Stage",
+      "key": "Key",
+      "keyHint": "Lowercase letters, digits and underscores. Cannot be changed later.",
+      "keyPlaceholder": "Pick a question shape",
+      "name": "Display name",
+      "prompt": "Prompt",
+      "variables": "Insert a variable:",
+      "variablesHint": "The three source variables ({forbidden}) do not belong here: the source travels separately, and the leading half must stay byte-identical between runs for caching to hit.",
+      "count": "Default questions per set",
+      "countHint": "At most {max}. The backend refuses a larger number instead of silently clamping it."
+    }
+  },
+  "datasets": {
+    "title": "Datasets",
+    "detailTitle": "Dataset",
+    "intro": "The textbook you paste in. Everything downstream is generated from it.",
+    "caption": "Datasets",
+    "add": "Add a dataset",
+    "addTitle": "Add a dataset",
+    "empty": "No datasets yet.",
+    "open": "Open",
+    "large": "Large source",
+    "chars": "{count} characters",
+    "charWarning": "The source is large: the analyze stage rewrites the whole document, so output is roughly the size of input and the call may hit the model's output ceiling. Consider splitting it into smaller datasets.",
+    "columns": {
+      "title": "Title",
+      "status": "Stage reached",
+      "chars": "Source size",
+      "updated": "Updated"
+    },
+    "status": {
+      "draft": "Draft",
+      "ready": "Has sources",
+      "outlined": "Has an outline",
+      "archived": "Archived"
+    },
+    "fields": {
+      "title": "Title",
+      "description": "Description"
+    }
+  },
+  "sources": {
+    "title": "Sources",
+    "intro": "Paste one chapter at a time. Content is normalised to Markdown as you paste.",
+    "empty": "No sources yet.",
+    "untitled": "Untitled",
+    "remove": "Remove",
+    "add": "Paste another source",
+    "save": "Save the source",
+    "charCount": "{count}/{max} characters",
+    "tooLong": "Over {max} characters. Split it into smaller pieces — the backend refuses anything longer.",
+    "fields": {
+      "title": "Name (optional)",
+      "content": "Content"
+    }
+  },
+  "outlines": {
+    "title": "Outline versions",
+    "intro": "Each analysis creates a new version. Older ones stay.",
+    "empty": "No versions yet. Run an analysis to create the first one.",
+    "version": "Version {version}",
+    "current": "Current",
+    "sections": "{count} sections",
+    "byHand": "written by hand",
+    "versionWarning": "There are {count} versions. Nothing cleans them up and question sets point at them — the only way to remove them is deleting the dataset, and that is only possible before any set exists.",
+    "editorTitle": "Edit outline",
+    "editorIntro": "The model drafts, you sign off. The outline on the right is recomputed by the backend from the content — editing a section means editing its heading.",
+    "backToDataset": "Back to the dataset",
+    "makeCurrent": "Make this the current one",
+    "label": "Note for this version",
+    "labelHint": "For example: \"finer split\", \"prompt v3\".",
+    "sectionsTitle": "Outline",
+    "sectionsHint": "Derived from the content, read-only. The `anchor` is what a generate call sends back.",
+    "noSections": "The document has no headings yet, so there are no sections to generate questions for."
+  },
+  "analyze": {
+    "button": "Analyze",
+    "title": "Analyze into an outline",
+    "intro": "Runs in the background for a few minutes. You can close this dialog and come back.",
+    "confirm": "Run",
+    "template": "Outline prompt",
+    "pickTemplate": "Pick a prompt",
+    "noTemplate": "No outline prompt exists yet",
+    "label": "Note for the version about to be created",
+    "labelHint": "Optional. A note makes versions tellable apart after several runs.",
+    "cost": "Runs on key \"{key}\", model {model}. This call is billed for real.",
+    "noCredential": "No default AI key — this call would stop immediately. Add one on the AI keys screen first."
+  },
+  "generation": {
+    "queued": "Queued, waiting for a worker…",
+    "running": "Running…",
+    "reused": "A run with these exact parameters was already going — this is that run, not a second one.",
+    "noWorker": "The job has been queued for over a minute with no worker picking it up. Most likely QA_WORKER_ENABLED is off in this environment.",
+    "failed": "The run failed.",
+    "succeeded": "Done. {count} results.",
+    "partial": "Done, but sections are MISSING. {count} results.",
+    "partialDetail": "Sections with no result: {sections}",
+    "partialUnknown": "The model returned fewer sections than were sent.",
+    "tokens": "Tokens: {input} in · {output} out · {cached} read from cache",
+    "pollFailed": "Could not read the run's status."
+  },
+  "sets": {
+    "title": "Question sets",
+    "detailTitle": "Question set",
+    "intro": "Every set, at every status. A generated set is always a draft — publishing is a person's decision.",
+    "caption": "Question sets",
+    "empty": "No sets yet.",
+    "open": "Open",
+    "filterStatus": "Filter by status",
+    "allStatuses": "All statuses",
+    "itemCount": "{count} questions",
+    "fromSection": "Generated from: {section}",
+    "noSection": "Not tied to a section",
+    "publish": "Publish",
+    "archive": "Remove from the learner surface",
+    "lockedShape": "This set has left draft, so its question shape is locked: changing it would make every question in it the wrong shape at once, including for someone taking it right now.",
+    "noItems": "No questions yet. An empty set cannot be published.",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "removeItem": "Remove",
+    "correct": "correct",
+    "accepted": "Accepted answers: {answers}",
+    "explanation": "Explanation",
+    "columns": {
+      "title": "Title",
+      "section": "Source section",
+      "status": "Status",
+      "items": "Questions"
+    },
+    "status": {
+      "draft": "Draft",
+      "published": "Published",
+      "archived": "Archived"
+    }
+  },
+  "items": {
+    "title": "Question bank",
+    "intro": "Search questions by text, across every set and every shape.",
+    "search": "Search question text",
+    "searchHint": "At least {min} characters. Accent-insensitive: \"hoa hoc\" finds \"hoá học\", \"dung\" finds \"đúng\".",
+    "typeMore": "Type at least {min} characters to search.",
+    "noResults": "No question matches.",
+    "found": "{count} questions match",
+    "openSet": "Open the set",
+    "filterKind": "Filter by question kind",
+    "allKinds": "All kinds",
+    "kinds": {
+      "theory": "Theory",
+      "practice": "Application",
+      "recall": "Recall",
+      "analysis": "Analysis"
+    },
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    }
+  },
+  "generate": {
+    "button": "Generate question sets",
+    "title": "Generate question sets",
+    "confirm": "Run",
+    "template": "Question shape",
+    "pickTemplate": "Pick a prompt",
+    "noTemplate": "No question prompt exists yet",
+    "count": "Questions per set",
+    "kinds": "Question kinds",
+    "sections": "Sections",
+    "allSections": "All {count} sections",
+    "cost": "Generating {sections} sections × {count} questions, on key \"{key}\", model {model}. This call is billed for real."
+  }
+}

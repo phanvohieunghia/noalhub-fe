@@ -23,6 +23,7 @@ export const NAMESPACES = [
   "admin.posts",
   "admin.users",
   "admin.storybook",
+  "admin.qa",
   "admin.login",
 ] as const;
 
@@ -59,6 +60,10 @@ const ADMIN_ROUTES: ReadonlyArray<readonly [string, Namespace]> = [
   ["/posts", "admin.posts"],
   ["/users", "admin.users"],
   ["/storybook", "admin.storybook"],
+  // One namespace for the whole Q&A area, not one per screen: the six screens
+  // share their status labels and error sentences, and splitting them would
+  // mean the same string translated twice, differently.
+  ["/qa", "admin.qa"],
   ["/login", "admin.login"],
 ];
 

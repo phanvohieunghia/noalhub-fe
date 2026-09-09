@@ -1,0 +1,243 @@
+{
+  "loading": "Đang tải…",
+  "actionsColumn": "Hành động",
+  "credentials": {
+    "title": "Khoá AI",
+    "intro": "Khoá API để gọi provider. Mỗi lần sinh nội dung đều chạy bằng một khoá ở đây và bị tính tiền thật.",
+    "caption": "Danh sách khoá AI",
+    "add": "Thêm khoá",
+    "addTitle": "Thêm khoá AI",
+    "editTitle": "Sửa khoá {label}",
+    "edit": "Sửa",
+    "disable": "Tắt",
+    "disabled": "Đã tắt",
+    "default": "Mặc định",
+    "unlimited": "Không giới hạn",
+    "tokensPerMonth": "{count} token/tháng",
+    "empty": "Chưa có khoá nào. Chưa có khoá thì mọi lệnh sinh đều dừng ngay ở bước đầu.",
+    "noDefault": "Chưa có khoá nào được đặt mặc định. Lệnh sinh không chỉ định khoá sẽ báo lỗi không tìm thấy khoá.",
+    "modelUnsupported": "{label} — không ép được JSON đúng schema, không dùng được",
+    "columns": {
+      "label": "Tên khoá",
+      "provider": "Nhà cung cấp",
+      "key": "Khoá",
+      "model": "Model mặc định",
+      "budget": "Ngân sách"
+    },
+    "fields": {
+      "label": "Tên gợi nhớ",
+      "apiKey": "API key",
+      "apiKeyHint": "Chỉ nhận một lần duy nhất. Không có đường xem lại — mất thì thay khoá mới.",
+      "rotate": "Thay khoá mới",
+      "rotateHint": "Để trống nếu không đổi khoá.",
+      "model": "Model mặc định",
+      "modelPlaceholder": "Chọn model",
+      "isDefault": "Dùng khoá này khi lệnh sinh không chỉ định khoá nào"
+    }
+  },
+  "templates": {
+    "title": "Prompt",
+    "intro": "Prompt cho hai chặng: phân tích tài liệu ra mục lục, và sinh câu hỏi. Prompt là dữ liệu bạn tự soạn — không có mẫu nào được cài sẵn.",
+    "caption": "Danh sách prompt",
+    "add": "Thêm prompt",
+    "addTitle": "Thêm prompt",
+    "editTitle": "Sửa prompt {name}",
+    "edit": "Sửa",
+    "disable": "Tắt",
+    "disabled": "Đã tắt",
+    "empty": "Chưa có prompt nào. Prompt là thứ bạn tự soạn — mẫu chép được nằm ở docs/qa.md §9 của repo backend.",
+    "filterKind": "Lọc theo chặng",
+    "allKinds": "Mọi chặng",
+    "defaultCount": "{count} câu mỗi bộ",
+    "sourceVariable": "Prompt đang chứa biến mang nguồn ({variables}). Nguồn đi ở phần sau do backend tự ghép; đặt nó vào đây làm phần dẫn hết ổn định và cache không bao giờ ăn. Backend sẽ từ chối lưu.",
+    "countTooBig": "Nhiều nhất {max} câu mỗi bộ.",
+    "kinds": {
+      "outline": "Phân tích mục lục",
+      "qa": "Sinh câu hỏi"
+    },
+    "shapes": {
+      "multiple_choice": "Trắc nghiệm nhiều lựa chọn",
+      "true_false": "Đúng / Sai",
+      "short_answer": "Trả lời ngắn",
+      "fill_blank": "Điền vào chỗ trống",
+      "flashcard": "Thẻ ghi nhớ"
+    },
+    "columns": {
+      "name": "Tên",
+      "kind": "Chặng",
+      "key": "Mã",
+      "defaults": "Mặc định"
+    },
+    "fields": {
+      "kind": "Chặng",
+      "key": "Mã",
+      "keyHint": "Chữ thường, số và gạch dưới. Không đổi được sau khi tạo.",
+      "keyPlaceholder": "Chọn hình dạng câu hỏi",
+      "name": "Tên hiển thị",
+      "prompt": "Nội dung prompt",
+      "variables": "Chèn biến:",
+      "variablesHint": "Ba biến mang nguồn ({forbidden}) không dùng được ở đây: nguồn đi ở phần sau, phần dẫn phải giống nhau từng byte giữa các lần bấm thì cache mới ăn.",
+      "count": "Số câu mặc định mỗi bộ",
+      "countHint": "Nhiều nhất {max}. Backend từ chối số lớn hơn thay vì tự kẹp lại."
+    }
+  },
+  "datasets": {
+    "title": "Bộ dữ liệu",
+    "detailTitle": "Chi tiết bộ dữ liệu",
+    "intro": "Giáo trình bạn dán vào. Đây là nguồn cho mọi thứ sinh ra sau đó.",
+    "caption": "Danh sách bộ dữ liệu",
+    "add": "Thêm bộ dữ liệu",
+    "addTitle": "Thêm bộ dữ liệu",
+    "empty": "Chưa có bộ dữ liệu nào.",
+    "open": "Mở",
+    "large": "Nguồn lớn",
+    "chars": "{count} ký tự",
+    "charWarning": "Nguồn khá lớn: chặng phân tích viết lại cả tài liệu nên đầu ra xấp xỉ đầu vào, và lần gọi có thể chạm trần đầu ra của model. Cân nhắc tách thành nhiều bộ nhỏ hơn.",
+    "columns": {
+      "title": "Tiêu đề",
+      "status": "Chặng đã đạt",
+      "chars": "Kích cỡ nguồn",
+      "updated": "Cập nhật"
+    },
+    "status": {
+      "draft": "Nháp",
+      "ready": "Đã có nguồn",
+      "outlined": "Đã có mục lục",
+      "archived": "Đã lưu trữ"
+    },
+    "fields": {
+      "title": "Tiêu đề",
+      "description": "Mô tả"
+    }
+  },
+  "sources": {
+    "title": "Mẩu nguồn",
+    "intro": "Dán từng chương một. Nội dung được chuẩn hoá về Markdown ngay khi dán.",
+    "empty": "Chưa có mẩu nguồn nào.",
+    "untitled": "Không đặt tên",
+    "remove": "Xoá",
+    "add": "Dán thêm nguồn",
+    "save": "Lưu mẩu nguồn",
+    "charCount": "{count}/{max} ký tự",
+    "tooLong": "Vượt {max} ký tự. Tách thành nhiều mẩu nhỏ hơn — backend sẽ từ chối mẩu dài hơn mức này.",
+    "fields": {
+      "title": "Tên mẩu (tuỳ chọn)",
+      "content": "Nội dung"
+    }
+  },
+  "outlines": {
+    "title": "Bản mục lục",
+    "intro": "Mỗi lần phân tích tạo một bản mới. Bản cũ không mất đi.",
+    "empty": "Chưa có bản nào. Bấm phân tích để tạo bản đầu tiên.",
+    "version": "Bản {version}",
+    "current": "Đang chốt",
+    "sections": "{count} mục",
+    "byHand": "soạn tay",
+    "versionWarning": "Đã có {count} bản. Bản cũ không tự dọn được và bộ câu hỏi trỏ vào chúng — đường dọn duy nhất là xoá cả bộ dữ liệu, mà việc đó chỉ mở khi chưa sinh bộ nào.",
+    "editorTitle": "Sửa bản mục lục",
+    "editorIntro": "AI ra bản nháp, bạn chốt. Mục lục bên phải do backend tính lại từ nội dung — sửa mục nghĩa là sửa tiêu đề trong trình soạn thảo.",
+    "backToDataset": "Về bộ dữ liệu",
+    "makeCurrent": "Chốt bản này",
+    "label": "Ghi chú cho bản này",
+    "labelHint": "Ví dụ: \"chia mịn hơn\", \"prompt v3\".",
+    "sectionsTitle": "Mục lục",
+    "sectionsHint": "Dẫn xuất từ nội dung, chỉ đọc. `anchor` là thứ lệnh sinh bộ gửi lên.",
+    "noSections": "Tài liệu chưa có tiêu đề nào, nên chưa có mục nào để sinh câu hỏi."
+  },
+  "analyze": {
+    "button": "Phân tích",
+    "title": "Phân tích ra mục lục",
+    "intro": "Chạy nền vài phút. Bạn có thể đóng hộp thoại này và quay lại sau.",
+    "confirm": "Chạy",
+    "template": "Prompt phân tích",
+    "pickTemplate": "Chọn prompt",
+    "noTemplate": "Chưa có prompt loại phân tích nào",
+    "label": "Ghi chú cho bản sắp sinh",
+    "labelHint": "Để trống cũng được. Ghi chú giúp phân biệt các bản khi có nhiều lần chạy.",
+    "cost": "Chạy bằng khoá \"{key}\", model {model}. Đây là thao tác tính tiền thật.",
+    "noCredential": "Chưa có khoá AI mặc định — lệnh này sẽ dừng ngay. Thêm khoá ở màn Khoá AI trước."
+  },
+  "generation": {
+    "queued": "Đã xếp hàng, đang chờ worker nhận…",
+    "running": "Đang chạy…",
+    "reused": "Đã có một lần chạy đúng như vậy đang chạy — đang theo dõi chính nó, không tạo thêm lần chạy thứ hai.",
+    "noWorker": "Job đã xếp hàng hơn một phút mà chưa worker nào nhận. Nhiều khả năng QA_WORKER_ENABLED đang tắt ở môi trường này.",
+    "failed": "Lần chạy hỏng.",
+    "succeeded": "Xong. Tạo được {count} kết quả.",
+    "partial": "Xong nhưng THIẾU mục. Tạo được {count} kết quả.",
+    "partialDetail": "Mục không có kết quả: {sections}",
+    "partialUnknown": "Model trả về thiếu mục so với danh sách đã gửi.",
+    "tokens": "Token: {input} vào · {output} ra · {cached} đọc từ cache",
+    "pollFailed": "Không đọc được trạng thái lần chạy."
+  },
+  "sets": {
+    "title": "Bộ câu hỏi",
+    "detailTitle": "Chi tiết bộ câu hỏi",
+    "intro": "Mọi bộ, ở mọi trạng thái. Bộ do AI sinh luôn ở trạng thái nháp — publish là quyết định của người.",
+    "caption": "Danh sách bộ câu hỏi",
+    "empty": "Chưa có bộ nào.",
+    "open": "Mở",
+    "filterStatus": "Lọc theo trạng thái",
+    "allStatuses": "Mọi trạng thái",
+    "itemCount": "{count} câu",
+    "fromSection": "Sinh từ mục: {section}",
+    "noSection": "Không gắn với mục nào",
+    "publish": "Đăng bộ",
+    "archive": "Gỡ khỏi bề mặt người học",
+    "lockedShape": "Bộ đã rời trạng thái nháp nên không đổi được hình dạng câu hỏi: đổi là mọi câu trong bộ sai hình dạng ngay lập tức, với cả người đang làm bài.",
+    "noItems": "Bộ chưa có câu nào. Không đăng được bộ rỗng.",
+    "moveUp": "Chuyển lên",
+    "moveDown": "Chuyển xuống",
+    "removeItem": "Xoá câu",
+    "correct": "đáp án đúng",
+    "accepted": "Đáp án chấp nhận: {answers}",
+    "explanation": "Giải thích",
+    "columns": {
+      "title": "Tiêu đề",
+      "section": "Mục nguồn",
+      "status": "Trạng thái",
+      "items": "Số câu"
+    },
+    "status": {
+      "draft": "Nháp",
+      "published": "Đã đăng",
+      "archived": "Đã gỡ"
+    }
+  },
+  "items": {
+    "title": "Ngân hàng câu hỏi",
+    "intro": "Tìm câu hỏi theo chữ, cắt ngang mọi bộ và mọi hình dạng.",
+    "search": "Tìm trong nội dung câu hỏi",
+    "searchHint": "Từ {min} ký tự trở lên. Tìm KHÔNG DẤU: gõ \"hoa hoc\" vẫn ra \"hoá học\", gõ \"dung\" vẫn ra \"đúng\".",
+    "typeMore": "Gõ ít nhất {min} ký tự để tìm.",
+    "noResults": "Không có câu nào khớp.",
+    "found": "{count} câu khớp",
+    "openSet": "Mở bộ chứa câu này",
+    "filterKind": "Lọc theo dạng câu",
+    "allKinds": "Mọi dạng",
+    "kinds": {
+      "theory": "Lý thuyết",
+      "practice": "Vận dụng",
+      "recall": "Ghi nhớ",
+      "analysis": "Phân tích"
+    },
+    "difficulty": {
+      "easy": "Dễ",
+      "medium": "Trung bình",
+      "hard": "Khó"
+    }
+  },
+  "generate": {
+    "button": "Sinh bộ câu hỏi",
+    "title": "Sinh bộ câu hỏi",
+    "confirm": "Chạy",
+    "template": "Hình dạng câu hỏi",
+    "pickTemplate": "Chọn prompt",
+    "noTemplate": "Chưa có prompt loại sinh câu hỏi nào",
+    "count": "Số câu mỗi bộ",
+    "kinds": "Dạng câu cần sinh",
+    "sections": "Mục cần sinh",
+    "allSections": "Tất cả {count} mục",
+    "cost": "Sinh {sections} mục × {count} câu, bằng khoá \"{key}\", model {model}. Đây là thao tác tính tiền thật."
+  }
+}

@@ -1,6 +1,7 @@
 import type adminLogin from "../messages/vi/admin.login.json";
 import type adminOverview from "../messages/vi/admin.overview.json";
 import type adminPosts from "../messages/vi/admin.posts.json";
+import type adminQa from "../messages/vi/admin.qa.json";
 import type adminStorybook from "../messages/vi/admin.storybook.json";
 import type adminUsers from "../messages/vi/admin.users.json";
 import type common from "../messages/vi/common.json";
@@ -41,6 +42,7 @@ export type AppMessages = {
     login: typeof adminLogin;
     overview: typeof adminOverview;
     posts: typeof adminPosts;
+    qa: typeof adminQa;
     storybook: typeof adminStorybook;
     users: typeof adminUsers;
   };

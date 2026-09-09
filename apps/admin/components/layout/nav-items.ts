@@ -25,7 +25,13 @@ export type NavLabelKey =
   | "items.reports"
   | "items.categories"
   | "items.slugs"
-  | "items.new";
+  | "items.new"
+  | "items.qa"
+  | "items.qaDatasets"
+  | "items.qaSets"
+  | "items.qaItems"
+  | "items.qaTemplates"
+  | "items.qaCredentials";
 
 export type NavReasonKey = "disabled.conversations" | "disabled.reports";
 
@@ -35,6 +41,11 @@ export type NavItem = {
   disabled?: boolean;
   /** Why it is locked, shown as a tooltip. */
   reasonKey?: NavReasonKey;
+  /**
+   * A capability the account must hold for the item to appear at all. Absent
+   * means everyone who got past the auth gate sees it.
+   */
+  requires?: "canGenerateAi";
   /**
    * Sub-screens of this section, rendered indented under it. One level only —
    * a second would be a menu, and this sidebar has five sections.
@@ -68,6 +79,26 @@ export const NAV_ITEMS: NavItem[] = [
    * sidebar rather than there because Storybook is a static build with no idea
    * who is looking at it — the list it is gated by lives in this backend.
    */
+  /*
+   * Q&A: four screens for `admin` plus one for `super_admin`. The last one is
+   * hidden — not disabled — when the account cannot generate: an `admin` has no
+   * reason to see a page that answers 403 to every request on it. Hiding is UX;
+   * the backend still refuses.
+   */
+  {
+    href: "/qa/datasets",
+    labelKey: "items.qa",
+    children: [
+      { href: "/qa/sets", labelKey: "items.qaSets" },
+      { href: "/qa/items", labelKey: "items.qaItems" },
+      { href: "/qa/templates", labelKey: "items.qaTemplates" },
+      {
+        href: "/qa/credentials",
+        labelKey: "items.qaCredentials",
+        requires: "canGenerateAi",
+      },
+    ],
+  },
   { href: "/storybook", labelKey: "items.storybook" },
   {
     href: "/conversations",

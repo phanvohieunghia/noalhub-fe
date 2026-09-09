@@ -41,7 +41,13 @@
       "categories": "Chuyên mục",
       "new": "Bài mới",
       "slugs": "Slugs",
-      "storybook": "Storybook nội bộ"
+      "storybook": "Storybook nội bộ",
+      "qa": "Q&A",
+      "qaDatasets": "Bộ dữ liệu",
+      "qaSets": "Bộ câu hỏi",
+      "qaItems": "Ngân hàng câu hỏi",
+      "qaTemplates": "Prompt",
+      "qaCredentials": "Khoá AI"
     },
     "disabled": {
       "conversations": "Chờ backend: chưa có endpoint /admin/conversations (admin-plan §3)",

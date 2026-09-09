@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useSyncExternalStore } from "react";
 
+import { useMe } from "@noalhub/api/auth";
+
 import { FLAT_NAV_ITEMS, NAV_ITEMS, type NavItem } from "./nav-items";
 import { Button } from "@noalhub/ui/button";
 import { Icon, ICONS } from "@noalhub/ui/icons";
@@ -107,6 +109,7 @@ export function AdminSidebar() {
   const ta = useTranslations("nav.admin");
   const active = activeNavHref(pathname);
   const { collapsed, toggle } = useCollapsedGroups();
+  const canSee = useCanSee();
 
   return (
     <aside className="w-56 shrink-0 border-r border-black/10 p-3 dark:border-white/15">
@@ -117,7 +120,7 @@ export function AdminSidebar() {
         </Typography>
       </div>
       <nav aria-label={ta("mainNav")} className="flex flex-col gap-0.5">
-        {NAV_ITEMS.map((item) => (
+        {NAV_ITEMS.filter(canSee).map((item) => (
           <NavEntry
             key={item.href}
             item={item}
@@ -130,6 +133,21 @@ export function AdminSidebar() {
       </nav>
     </aside>
   );
+}
+
+/**
+ * An item gated by a capability stays hidden until `/auth/me` says the account
+ * holds it — hidden rather than disabled, because an `admin` has no reason to
+ * see a page that answers 403 to every request on it. This is UX only; the
+ * backend is still the boundary.
+ *
+ * Both the top level and the nested list call this, so `useMe` runs in two
+ * components — React Query serves the second from cache, and the alternative
+ * (threading a predicate through props) makes the recursion harder to read.
+ */
+function useCanSee(): (item: NavItem) => boolean {
+  const me = useMe();
+  return (item) => !item.requires || me.data?.[item.requires] === true;
 }
 
 function NavEntry({
@@ -146,6 +164,7 @@ function NavEntry({
   onToggle: (href: string) => void;
 }) {
   const ta = useTranslations("nav.admin");
+  const canSee = useCanSee();
 
   if (item.disabled) {
     return (
@@ -224,7 +243,7 @@ function NavEntry({
         hidden={!isOpen}
         className="mt-0.5 ml-3 flex flex-col gap-0.5 border-l border-black/10 pl-2 dark:border-white/15"
       >
-        {item.children.map((child) => (
+        {item.children.filter(canSee).map((child) => (
           <li key={child.href}>
             <NavEntry
               item={child}
