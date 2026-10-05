@@ -170,6 +170,9 @@ export async function SiteFooter() {
             <Link href="/friends" className="text-body-4 opacity-60 hover:opacity-100">
               {t("footer.friends")}
             </Link>
+            <Link href="/learn" className="text-body-4 opacity-60 hover:opacity-100">
+              {t("footer.learn")}
+            </Link>
           </nav>
 
           {/* `ml-auto` pushes it to the right edge; when it wraps on a narrow

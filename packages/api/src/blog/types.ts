@@ -18,11 +18,15 @@
  */
 
 /**
- * `<h1>` is the post title (§6.2), so content may only use h2/h3. This is a
+ * `<h1>` is the post title (§6.2), so content may only use h2/h3/h4. This is a
  * constraint on the attribute's **value**, distinct from allowing the `heading`
  * node at all (§3.1a).
+ *
+ * `4` exists because the Q&A outline is built out of headings — three levels of
+ * it. Without h4 the backend's sanitizer demotes it to h2, turning a sub-point
+ * into a fake chapter, and it does so **silently**.
  */
-export type BlogHeadingLevel = 2 | 3;
+export type BlogHeadingLevel = 2 | 3 | 4;
 
 /** The marks allowed on `text` — allowlist §3.1, no others exist. */
 export type BlogMark =
@@ -100,6 +104,34 @@ export type BlogBlockquoteNode = {
   content: BlogBlockNode[];
 };
 
+/**
+ * A table, in Tiptap's exact shape: `table > tableRow > (tableCell |
+ * tableHeader) > BlockNode[]`.
+ *
+ * Textbooks have tables, and until the backend allowed this node it dropped
+ * them **silently** — the author pasted a table, saved, and it was gone.
+ *
+ * Two rules the backend enforces and this type mirrors: a cell holds ordinary
+ * blocks but **never another table** (nesting multiplies sanitize and render
+ * cost geometrically for a case textbooks do not have), and the spans are
+ * clamped — a `rowspan: 999999` from a hand-rolled client is a dead renderer.
+ */
+export type BlogTableCellNode = {
+  type: "tableCell" | "tableHeader";
+  attrs: { colspan: number; rowspan: number };
+  content: BlogBlockNode[];
+};
+
+export type BlogTableRowNode = {
+  type: "tableRow";
+  content: BlogTableCellNode[];
+};
+
+export type BlogTableNode = {
+  type: "table";
+  content: BlogTableRowNode[];
+};
+
 export type BlogBlockNode =
   | BlogParagraphNode
   | BlogHeadingNode
@@ -108,7 +140,8 @@ export type BlogBlockNode =
   | BlogHorizontalRuleNode
   | BlogBulletListNode
   | BlogOrderedListNode
-  | BlogBlockquoteNode;
+  | BlogBlockquoteNode
+  | BlogTableNode;
 
 /** A Tiptap/ProseMirror document — a `jsonb` column on the backend (§3). */
 export type BlogDoc = { type: "doc"; content: BlogBlockNode[] };

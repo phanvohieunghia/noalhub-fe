@@ -8,6 +8,7 @@
  */
 export * from "./hooks";
 export * from "./types";
+export * from "./roles";
 export * from "./schemas";
 export * from "./store";
 export * from "./token-store";

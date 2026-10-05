@@ -3,7 +3,16 @@
  * A change here must come with a change to the zod schemas in `./schemas.ts`.
  */
 
-export type UserRole = "user" | "admin";
+/**
+ * A mirror of the backend's `UserRole` enum (`src/users/entities/user.entity.ts`).
+ * Three values, not two — `super_admin` has existed since the RBAC migration and
+ * a list missing it rejects the very accounts with the most access.
+ *
+ * Do NOT branch on this string. It is for display; the backend ships derived
+ * flags (`isAdmin`, `canGenerateAi`) precisely so the role table lives in one
+ * place. See `satisfiesRole` in `./roles.ts`.
+ */
+export type UserRole = "user" | "admin" | "super_admin";
 
 /**
  * The interface language, stored on the account. A mirror of the backend's
@@ -27,6 +36,13 @@ export type User = {
   nextUsernameChangeAt: string | null;
   emailVerified: boolean;
   role: UserRole;
+  /**
+   * May enter the admin area. Derived by the backend from the role table — use
+   * THIS, never `role === "admin"`, which locks `super_admin` out.
+   */
+  isAdmin: boolean;
+  /** May trigger the AI actions that cost money (`super_admin` only, today). */
+  canGenerateAi: boolean;
   /**
    * The interface language the user picked. This is THE SOURCE OF TRUTH — the
    * `NOALHUB_LOCALE` cookie is only a buffer so SSR has something to work with

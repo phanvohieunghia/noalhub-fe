@@ -1,0 +1,108 @@
+{
+  "browse": {
+    "title": "Practice",
+    "intro": "Published question sets. Pick one to take.",
+    "filterKind": "Filter by question kind",
+    "allKinds": "All kinds",
+    "practiceWrong": "Review what you got wrong",
+    "stats": "Statistics",
+    "itemCount": "{count} questions",
+    "start": "Start",
+    "continue": "Continue",
+    "emptyNone": "No question set has been published yet.",
+    "emptyFilter": "No set contains the kind you picked."
+  },
+  "set": {
+    "title": "Question set",
+    "start": "Start",
+    "resumeHint": "Clicking again is safe: if you already have this set open, it reopens that same attempt rather than starting a new one.",
+    "notFound": "This set was not found",
+    "notFoundBody": "It may have been withdrawn, or it never existed."
+  },
+  "attempt": {
+    "title": "Taking a set",
+    "progress": "Answered {answered}/{total} · {correct} correct",
+    "correct": "Correct.",
+    "wrong": "Not quite.",
+    "answer": "Answer",
+    "explanation": "Explanation",
+    "next": "Next question",
+    "finish": "Finish and review",
+    "finished": "You answered {answered} questions, {correct} correct.",
+    "backToBrowse": "Back to the sets",
+    "notFound": "This attempt was not found.",
+    "progressLabel": "Progress through the set",
+    "questionOf": "Question {current} of {total}",
+    "correctSoFar": "{count} correct",
+    "knownSoFar": "{count} remembered",
+    "selfKnown": "You remembered it.",
+    "selfUnknown": "Not yet.",
+    "seeResult": "See the result",
+    "summaryTitle": "Set complete",
+    "summaryCorrect": "{rate}% answered correctly",
+    "summaryKnown": "{rate}% remembered, by your own judgement"
+  },
+  "answer": {
+    "submit": "Answer",
+    "text": "Your answer",
+    "textHint": "Grading ignores case and accents.",
+    "known": "I knew it",
+    "unknown": "I didn't",
+    "selfNote": "Flashcards are self-assessed, so the result is counted apart from machine-graded questions.",
+    "selfPrompt": "Recall the answer in your head first, then say honestly whether you knew it. The back of the card shows after you choose.",
+    "singleHint": "Pick one answer.",
+    "multiHint": "More than one answer may be correct — pick all that apply.",
+    "shortcuts": "Press 1–{max} to pick, Enter to answer"
+  },
+  "review": {
+    "title": "Attempt review",
+    "correct": "Correct",
+    "wrong": "Wrong",
+    "selfGraded": "Self-assessed",
+    "yourPick": "your pick",
+    "youWrote": "You answered: {text}",
+    "empty": "No question was answered in this attempt."
+  },
+  "practice": {
+    "title": "Questions you are getting wrong",
+    "intro": "Questions where your latest answer was wrong, across every set. Answer one correctly later and it leaves this list on its own.",
+    "emptyNew": "You have not answered anything yet. Pick a set to start.",
+    "emptyAllRight": "Nothing is wrong right now — your latest answer to every question was correct."
+  },
+  "stats": {
+    "title": "Statistics",
+    "empty": "Nothing yet — you have not answered a question.",
+    "groups": {
+      "auto": "Machine-graded",
+      "self": "Self-assessed"
+    },
+    "groupHints": {
+      "auto": "Checked against a stored answer key.",
+      "self": "Flashcards: you told it whether you remembered. The two groups are deliberately never added together — the sum would mean nothing."
+    },
+    "columns": {
+      "kind": "Kind",
+      "answered": "Answered",
+      "correct": "Correct",
+      "rate": "Rate"
+    }
+  },
+  "kinds": {
+    "theory": "Theory",
+    "practice": "Application",
+    "recall": "Recall",
+    "analysis": "Analysis"
+  },
+  "difficulty": {
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard"
+  },
+  "shapes": {
+    "multiple_choice": "Multiple choice",
+    "true_false": "True / False",
+    "short_answer": "Short answer",
+    "fill_blank": "Fill in the blank",
+    "flashcard": "Flashcard"
+  }
+}

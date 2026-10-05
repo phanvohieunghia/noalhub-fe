@@ -6,6 +6,8 @@ import { z } from "zod";
 
 import type {
   BlogBlockNode,
+  BlogTableCellNode,
+  BlogTableRowNode,
   BlogCategory,
   BlogDoc,
   BlogInlineNode,
@@ -156,17 +158,24 @@ export function sanitizeBlogDoc(value: unknown): BlogDoc {
   return { type: "doc", content: sanitizeBlocks(content) };
 }
 
-function sanitizeBlocks(value: unknown): BlogBlockNode[] {
+/**
+ * Upper bound for `colspan`/`rowspan`, mirroring the backend. It **clamps**
+ * rather than throwing: an absurd number in one cell is not a DoS vector, and
+ * dropping a whole table over one cell loses more than it saves.
+ */
+const MAX_TABLE_SPAN = 20;
+
+function sanitizeBlocks(value: unknown, allowTable = true): BlogBlockNode[] {
   if (!Array.isArray(value)) return [];
   const blocks: BlogBlockNode[] = [];
   for (const raw of value) {
-    const node = sanitizeBlock(raw);
+    const node = sanitizeBlock(raw, allowTable);
     if (node) blocks.push(node);
   }
   return blocks;
 }
 
-function sanitizeBlock(raw: unknown): BlogBlockNode | null {
+function sanitizeBlock(raw: unknown, allowTable: boolean): BlogBlockNode | null {
   if (!isRecord(raw) || typeof raw.type !== "string") return null;
   const attrs = isRecord(raw.attrs) ? raw.attrs : {};
 
@@ -175,9 +184,9 @@ function sanitizeBlock(raw: unknown): BlogBlockNode | null {
       return { type: "paragraph", content: sanitizeInline(raw.content) };
 
     case "heading": {
-      // A level outside [2,3] falls back to h2 rather than dropping the whole
+      // A level outside [2,3,4] falls back to h2 rather than dropping the whole
       // heading: losing a TOC entry beats losing the section under it.
-      const level = attrs.level === 3 ? 3 : 2;
+      const level = attrs.level === 3 || attrs.level === 4 ? attrs.level : 2;
       return {
         type: "heading",
         attrs: { level },
@@ -187,13 +196,21 @@ function sanitizeBlock(raw: unknown): BlogBlockNode | null {
 
     case "bulletList":
     case "orderedList": {
-      const items = sanitizeListItems(raw.content);
+      const items = sanitizeListItems(raw.content, allowTable);
       return items.length ? { type: raw.type, content: items } : null;
     }
 
     case "blockquote": {
-      const content = sanitizeBlocks(raw.content);
+      const content = sanitizeBlocks(raw.content, allowTable);
       return content.length ? { type: "blockquote", content } : null;
+    }
+
+    case "table": {
+      // `allowTable` is false inside a cell: a table within a table is dropped.
+      if (!allowTable) return null;
+      const rows = sanitizeTableRows(raw.content);
+      // A table with no valid row left is noise in the reading flow.
+      return rows.length ? { type: "table", content: rows } : null;
     }
 
     case "codeBlock": {
@@ -233,12 +250,48 @@ function sanitizeBlock(raw: unknown): BlogBlockNode | null {
   }
 }
 
-function sanitizeListItems(value: unknown): BlogListItemNode[] {
+function sanitizeTableRows(value: unknown): BlogTableRowNode[] {
+  if (!Array.isArray(value)) return [];
+  const rows: BlogTableRowNode[] = [];
+  for (const raw of value) {
+    if (!isRecord(raw) || raw.type !== "tableRow") continue;
+    const cells = sanitizeTableCells(raw.content);
+    if (cells.length) rows.push({ type: "tableRow", content: cells });
+  }
+  return rows;
+}
+
+function sanitizeTableCells(value: unknown): BlogTableCellNode[] {
+  if (!Array.isArray(value)) return [];
+  const cells: BlogTableCellNode[] = [];
+  for (const raw of value) {
+    if (!isRecord(raw)) continue;
+    if (raw.type !== "tableCell" && raw.type !== "tableHeader") continue;
+    const attrs = isRecord(raw.attrs) ? raw.attrs : {};
+
+    cells.push({
+      type: raw.type,
+      attrs: { colspan: toSpan(attrs.colspan), rowspan: toSpan(attrs.rowspan) },
+      // An EMPTY cell is kept, unlike an empty listItem: it is a real cell in
+      // the grid, and dropping it shifts every column after it.
+      content: sanitizeBlocks(raw.content, false),
+    });
+  }
+  return cells;
+}
+
+/** Missing or odd → 1 (an ordinary cell). Over the cap → clamped, never dropped. */
+function toSpan(value: unknown): number {
+  const n = toPositiveInt(value);
+  return n === null ? 1 : Math.min(n, MAX_TABLE_SPAN);
+}
+
+function sanitizeListItems(value: unknown, allowTable = true): BlogListItemNode[] {
   if (!Array.isArray(value)) return [];
   const items: BlogListItemNode[] = [];
   for (const raw of value) {
     if (!isRecord(raw) || raw.type !== "listItem") continue;
-    const content = sanitizeBlocks(raw.content);
+    const content = sanitizeBlocks(raw.content, allowTable);
     if (content.length) items.push({ type: "listItem", content });
   }
   return items;

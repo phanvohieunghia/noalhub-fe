@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { FLAT_NAV_ITEMS, SEGMENT_LABEL_KEYS } from "./nav-items";
+import { FLAT_NAV_ITEMS, NON_ROUTE_SEGMENTS, SEGMENT_LABEL_KEYS } from "./nav-items";
 
 /**
  * The breadcrumb is derived from the pathname, not from separate state — so
@@ -15,9 +15,13 @@ import { FLAT_NAV_ITEMS, SEGMENT_LABEL_KEYS } from "./nav-items";
  * page's own `<h1>` (which is where the data is); the breadcrumb fetches
  * nothing.
  *
- * Lookup order: nav items, sub-items included → `SEGMENT_LABEL_KEYS` (segments
- * with a real name that no sidebar entry points at, e.g. `/posts/new`) →
- * "Detail".
+ * Lookup order: `SEGMENT_LABEL_KEYS` (a name for the segment itself, e.g.
+ * `/posts/new`, `/qa`) → nav items, sub-items included → "Detail". The segment
+ * map wins because a nav entry's label names a *destination*, which is not
+ * always the name of its last segment — "Q&A" points at `/qa/datasets`.
+ *
+ * A segment in `NON_ROUTE_SEGMENTS` is a grouping folder with no page: it
+ * stays in the trail for orientation but is not a link.
  */
 export function AdminBreadcrumb() {
   const t = useTranslations("nav.admin");
@@ -27,14 +31,15 @@ export function AdminBreadcrumb() {
   const crumbs = segments.map((segment, index) => {
     const href = `/${segments.slice(0, index + 1).join("/")}`;
     const key =
-      FLAT_NAV_ITEMS.find((item) => item.href === href)?.labelKey ??
-      SEGMENT_LABEL_KEYS[segment];
+      SEGMENT_LABEL_KEYS[segment] ??
+      FLAT_NAV_ITEMS.find((item) => item.href === href)?.labelKey;
     return {
       href,
       // A first segment matching no key is shown verbatim: it is a meaningful
       // path segment, and turning it into "Detail" loses information.
       label: key ? t(key) : index === 0 ? segment : t("detail"),
       isLast: index === segments.length - 1,
+      isRoute: !NON_ROUTE_SEGMENTS.has(segment),
     };
   });
 
@@ -47,6 +52,13 @@ export function AdminBreadcrumb() {
               <span aria-current="page" className="font-medium">
                 {crumb.label}
               </span>
+            ) : !crumb.isRoute ? (
+              <>
+                <span className="opacity-70">{crumb.label}</span>
+                <span aria-hidden className="opacity-40">
+                  /
+                </span>
+              </>
             ) : (
               <>
                 <Link href={crumb.href} className="opacity-70 hover:underline">

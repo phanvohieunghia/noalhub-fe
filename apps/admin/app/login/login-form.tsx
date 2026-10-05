@@ -43,11 +43,16 @@ export function AdminLoginForm() {
     try {
       await login.mutateAsync(values);
 
-      // Stopped at the door: an ordinary user with the right password still has
-      // a valid session, but has nothing to do in here. `RoleGuard` stops them
-      // too; this exists so they read the reason on the form they just
-      // submitted rather than landing on a block screen.
-      if (useAuthStore.getState().user?.role !== "admin") {
+      /*
+       * Stopped at the door: an ordinary user with the right password still has
+       * a valid session, but has nothing to do in here. `RoleGuard` stops them
+       * too; this exists so they read the reason on the form they just
+       * submitted rather than landing on a block screen.
+       *
+       * Gate on the CAPABILITY, not on `role === "admin"` — that comparison
+       * used to lock `super_admin` out of the app that exists for them.
+       */
+      if (!useAuthStore.getState().user?.isAdmin) {
         await logout();
         setFormError({ key: "admin.login.notAdmin" });
         return;

@@ -93,7 +93,9 @@ function ProfileFacts({ user }: { user: User }) {
           <span className="text-amber-700 dark:text-amber-400">{t("unverified")}</span>
         )}
       </Fact>
-      <Fact label={t("role")}>{t(user.role === "admin" ? "admin" : "member")}</Fact>
+      {/* `isAdmin` covers both admin roles; `role` alone would call a
+          super admin a "member". */}
+      <Fact label={t("role")}>{t(user.isAdmin ? "admin" : "member")}</Fact>
       <Fact label={t("joined")}>{df.date(user.createdAt)}</Fact>
       <Fact label={t("usernameChangedAt")}>
         {user.usernameChangedAt ? df.date(user.usernameChangedAt) : t("neverChanged")}

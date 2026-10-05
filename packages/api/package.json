@@ -17,6 +17,7 @@
     "./chat": "./src/chat/index.ts",
     "./friends": "./src/friends/index.ts",
     "./media": "./src/media/index.ts",
+    "./qa": "./src/qa/index.ts",
     "./users": "./src/users/index.ts"
   },
   "dependencies": {

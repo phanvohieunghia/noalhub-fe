@@ -1,6 +1,7 @@
 import type adminLogin from "../messages/vi/admin.login.json";
 import type adminOverview from "../messages/vi/admin.overview.json";
 import type adminPosts from "../messages/vi/admin.posts.json";
+import type adminQa from "../messages/vi/admin.qa.json";
 import type adminStorybook from "../messages/vi/admin.storybook.json";
 import type adminUsers from "../messages/vi/admin.users.json";
 import type common from "../messages/vi/common.json";
@@ -11,6 +12,7 @@ import type webBlog from "../messages/vi/web.blog.json";
 import type webChat from "../messages/vi/web.chat.json";
 import type webDashboard from "../messages/vi/web.dashboard.json";
 import type webFriends from "../messages/vi/web.friends.json";
+import type webLearn from "../messages/vi/web.learn.json";
 import type webProfile from "../messages/vi/web.profile.json";
 
 /**
@@ -35,12 +37,14 @@ export type AppMessages = {
     chat: typeof webChat;
     dashboard: typeof webDashboard;
     friends: typeof webFriends;
+    learn: typeof webLearn;
     profile: typeof webProfile;
   };
   admin: {
     login: typeof adminLogin;
     overview: typeof adminOverview;
     posts: typeof adminPosts;
+    qa: typeof adminQa;
     storybook: typeof adminStorybook;
     users: typeof adminUsers;
   };

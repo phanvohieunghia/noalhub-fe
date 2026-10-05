@@ -1,8 +1,23 @@
 "use client";
 
 import Image from "@tiptap/extension-image";
-import { EditorContent, useEditor, type Editor } from "@tiptap/react";
+import {
+  EditorContent,
+  useEditor,
+  useEditorState,
+  type Editor,
+  type Extensions,
+} from "@tiptap/react";
+import {
+  Table,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@tiptap/extension-table";
 import StarterKit from "@tiptap/starter-kit";
+// Type-only: `contentType` on the editor options is declared by this package's
+// module augmentation. Nothing is bundled — `MarkdownEditor` adds the runtime.
+import type {} from "@tiptap/markdown";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
@@ -12,7 +27,11 @@ import {
   sanitizeBlogDoc,
   type BlogDoc,
 } from "@noalhub/api/blog";
-import { MEDIA_IMAGE_MIMES, useUploadMedia, type MediaAsset } from "@noalhub/api/media";
+import {
+  MEDIA_IMAGE_MIMES,
+  useUploadMedia,
+  type MediaAsset,
+} from "@noalhub/api/media";
 import { messageOf, type Message } from "@noalhub/api/message";
 import { useMessage } from "@noalhub/i18n/use-message";
 import { useTranslations } from "next-intl";
@@ -51,6 +70,41 @@ const BlogImage = Image.extend({
 });
 
 /**
+ * The schema half of the editor: exactly the §3.1 allowlist. Shared by every
+ * editor and by the headless doc ↔ markdown conversion in `markdown-editor.tsx`,
+ * so a conversion can never produce a node the editors would refuse.
+ */
+export const BLOG_EXTENSIONS: Extensions = [
+  StarterKit.configure({
+    // `<h1>` is the post title; content has h2/h3/h4 (§6.2). h4 is what the
+    // Q&A outline's third level needs — without it the backend demotes a
+    // sub-point to h2 and it reads as a chapter that was never written.
+    heading: { levels: [2, 3, 4] },
+    // Not in the §3.1 allowlist — enabling it produces a mark the renderer
+    // drops, so an author underlines something, saves, and the text comes
+    // back plain.
+    underline: false,
+    link: {
+      openOnClick: false,
+      protocols: ["http", "https", "mailto"],
+      // The first gate for `href`. `sanitizeBlogDoc` is the second and the
+      // mandatory one — this exists so the author finds out on the spot.
+      isAllowedUri: (url) => isSafeLinkHref(url),
+    },
+  }),
+  BlogImage.configure({ inline: false, allowBase64: false }),
+  /*
+   * `resizable: false` — column widths would be a `colwidth` attribute the
+   * backend sanitizer does not keep, so the author drags a column, saves,
+   * and the width is gone.
+   */
+  Table.configure({ resizable: false }),
+  TableRow,
+  TableHeader,
+  TableCell,
+];
+
+/**
  * The Tiptap editor, configured to **exactly the §3.1 allowlist** — not one node
  * more.
  *
@@ -66,9 +120,50 @@ const BlogImage = Image.extend({
 export function TiptapEditor({
   value,
   onChange,
+  contentClassName,
 }: {
   value: BlogDoc;
   onChange: (doc: BlogDoc) => void;
+  /**
+   * Extra classes on the editable surface itself (the `.ProseMirror` node) —
+   * e.g. a `max-h-*` + `overflow-y-auto` pair so a long document scrolls
+   * inside its border instead of stretching the page. Applied there rather
+   * than on a wrapper so the border and focus ring stay with the scrollbox.
+   */
+  contentClassName?: string;
+}) {
+  return (
+    <RichTextEditor
+      content={value}
+      // Sanitized RIGHT IN the editor rather than at submit time: that way the
+      // preview (§8) and what will be saved are the same tree, with no "visible
+      // while writing, gone after saving".
+      onUpdate={(instance) => onChange(sanitizeBlogDoc(instance.getJSON()))}
+      contentClassName={contentClassName}
+    />
+  );
+}
+
+/**
+ * The editor body both `TiptapEditor` (JSON) and `MarkdownEditor` (markdown
+ * string) are built on: the allowlisted schema, toolbar, dialogs and image
+ * upload. Only how content goes in and comes out differs between the two, so
+ * that is all the wrappers supply.
+ */
+export function RichTextEditor({
+  content,
+  contentType,
+  extensions = [],
+  onUpdate,
+  contentClassName,
+}: {
+  content: BlogDoc | string;
+  /** How Tiptap parses `content`. `"markdown"` needs the `Markdown` extension. */
+  contentType?: "json" | "markdown";
+  /** Appended to the allowlisted set — never a node the renderers drop. */
+  extensions?: Extensions;
+  onUpdate: (editor: Editor) => void;
+  contentClassName?: string;
 }) {
   const t = useTranslations("common.editor");
   const [linkOpen, setLinkOpen] = useState(false);
@@ -103,8 +198,7 @@ export function TiptapEditor({
         onSuccess: (asset) => {
           void insertImageAsset(editorInstance, asset, file.name);
         },
-        onError: (error) =>
-          setDropError(messageOf(error)),
+        onError: (error) => setDropError(messageOf(error)),
       });
     },
     [dropUpload],
@@ -113,29 +207,17 @@ export function TiptapEditor({
   const editor = useEditor({
     // Required with Next's SSR: rendering on the first pass mismatches hydration.
     immediatelyRender: false,
-    extensions: [
-      StarterKit.configure({
-        // `<h1>` is the post title; content only has h2/h3 (§6.2).
-        heading: { levels: [2, 3] },
-        // Not in the §3.1 allowlist — enabling it produces a mark the renderer
-        // drops, so an author underlines something, saves, and the text comes
-        // back plain.
-        underline: false,
-        link: {
-          openOnClick: false,
-          protocols: ["http", "https", "mailto"],
-          // The first gate for `href`. `sanitizeBlogDoc` is the second and the
-          // mandatory one — this exists so the author finds out on the spot.
-          isAllowedUri: (url) => isSafeLinkHref(url),
-        },
-      }),
-      BlogImage.configure({ inline: false, allowBase64: false }),
-    ],
-    content: value,
+    extensions: [...BLOG_EXTENSIONS, ...extensions],
+    content,
+    contentType,
     editorProps: {
       attributes: {
-        class:
+        class: [
           "blog-content min-h-80 rounded-md border border-black/15 px-4 py-3 outline-none focus:border-foreground/60 dark:border-white/20",
+          contentClassName,
+        ]
+          .filter(Boolean)
+          .join(" "),
       },
       /*
        * Returning `true` means "handled, ProseMirror should do nothing more".
@@ -162,10 +244,7 @@ export function TiptapEditor({
         return true;
       },
     },
-    // Sanitized RIGHT IN the editor rather than at submit time: that way the
-    // preview (§8) and what will be saved are the same tree, with no "visible
-    // while writing, gone after saving".
-    onUpdate: ({ editor: instance }) => onChange(sanitizeBlogDoc(instance.getJSON())),
+    onUpdate: ({ editor: instance }) => onUpdate(instance),
   });
 
   /*
@@ -179,7 +258,9 @@ export function TiptapEditor({
   }, [editor]);
 
   if (!editor) {
-    return <div className="h-96 animate-pulse rounded-md bg-black/5 dark:bg-white/5" />;
+    return (
+      <div className="h-96 animate-pulse rounded-md bg-black/5 dark:bg-white/5" />
+    );
   }
 
   return (
@@ -202,8 +283,12 @@ export function TiptapEditor({
       ) : null}
       <AlertError message={m(dropError)} />
 
-      {linkOpen ? <LinkDialog editor={editor} onClose={() => setLinkOpen(false)} /> : null}
-      {imageOpen ? <ImageDialog editor={editor} onClose={() => setImageOpen(false)} /> : null}
+      {linkOpen ? (
+        <LinkDialog editor={editor} onClose={() => setLinkOpen(false)} />
+      ) : null}
+      {imageOpen ? (
+        <ImageDialog editor={editor} onClose={() => setImageOpen(false)} />
+      ) : null}
     </div>
   );
 }
@@ -218,31 +303,58 @@ function Toolbar({
   onImage: () => void;
 }) {
   const t = useTranslations("common.editor");
-  const inCodeBlock = editor.isActive("codeBlock");
+  /*
+   * Tiptap v3 no longer re-renders on every transaction, so a bare
+   * `editor.isActive(...)` in JSX is frozen at first render — the heading
+   * button would not light up when the caret moves into a heading. The
+   * selector runs on each transaction and the toolbar re-renders only when one
+   * of these booleans flips.
+   */
+  const active = useEditorState({
+    editor,
+    selector: ({ editor: e }) => ({
+      bold: e.isActive("bold"),
+      italic: e.isActive("italic"),
+      strike: e.isActive("strike"),
+      code: e.isActive("code"),
+      h2: e.isActive("heading", { level: 2 }),
+      h3: e.isActive("heading", { level: 3 }),
+      h4: e.isActive("heading", { level: 4 }),
+      bulletList: e.isActive("bulletList"),
+      orderedList: e.isActive("orderedList"),
+      blockquote: e.isActive("blockquote"),
+      codeBlock: e.isActive("codeBlock"),
+      table: e.isActive("table"),
+      link: e.isActive("link"),
+      codeBlockLanguage:
+        (e.getAttributes("codeBlock").language as string | undefined) ?? "",
+    }),
+  });
+  const inCodeBlock = active.codeBlock;
 
   return (
     <div className="flex flex-wrap items-center gap-1 rounded-md border border-black/10 p-1.5 dark:border-white/15">
       <ToolbarButton
         label={t("bold")}
-        active={editor.isActive("bold")}
+        active={active.bold}
         onClick={() => editor.chain().focus().toggleBold().run()}
         icon={LUCIDE.bold}
       />
       <ToolbarButton
         label={t("italic")}
-        active={editor.isActive("italic")}
+        active={active.italic}
         onClick={() => editor.chain().focus().toggleItalic().run()}
         icon={LUCIDE.italic}
       />
       <ToolbarButton
         label={t("strike")}
-        active={editor.isActive("strike")}
+        active={active.strike}
         onClick={() => editor.chain().focus().toggleStrike().run()}
         icon={LUCIDE.strikethrough}
       />
       <ToolbarButton
         label={t("code")}
-        active={editor.isActive("code")}
+        active={active.code}
         onClick={() => editor.chain().focus().toggleCode().run()}
         icon={LUCIDE.code}
       />
@@ -251,34 +363,40 @@ function Toolbar({
 
       <ToolbarButton
         label={t("h2")}
-        active={editor.isActive("heading", { level: 2 })}
+        active={active.h2}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         icon={LUCIDE.heading2}
       />
       <ToolbarButton
         label={t("h3")}
-        active={editor.isActive("heading", { level: 3 })}
+        active={active.h3}
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
         icon={LUCIDE.heading3}
+      />
+      <ToolbarButton
+        label={t("h4")}
+        active={active.h4}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
+        icon={LUCIDE.heading4}
       />
 
       <Divider />
 
       <ToolbarButton
         label={t("bulletList")}
-        active={editor.isActive("bulletList")}
+        active={active.bulletList}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         icon={LUCIDE.list}
       />
       <ToolbarButton
         label={t("orderedList")}
-        active={editor.isActive("orderedList")}
+        active={active.orderedList}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         icon={LUCIDE.listOrdered}
       />
       <ToolbarButton
         label={t("quote")}
-        active={editor.isActive("blockquote")}
+        active={active.blockquote}
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
         icon={LUCIDE.textQuote}
       />
@@ -294,12 +412,65 @@ function Toolbar({
         onClick={() => editor.chain().focus().setHorizontalRule().run()}
         icon={LUCIDE.minus}
       />
+      {/*
+        One button inserts a 3×3 table with a header row; the row/column
+        controls appear only once the cursor is inside one. A full table toolbar
+        that is inert 99% of the time is six buttons of noise.
+      */}
+      <ToolbarButton
+        label={t("table")}
+        active={active.table}
+        onClick={() =>
+          editor
+            .chain()
+            .focus()
+            .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+            .run()
+        }
+        icon={LUCIDE.table}
+      />
+
+      {active.table ? (
+        <>
+          <Divider />
+          <ToolbarButton
+            label={t("addColumn")}
+            active={false}
+            onClick={() => editor.chain().focus().addColumnAfter().run()}
+            icon={LUCIDE.betweenHorizontalStart}
+          />
+          <ToolbarButton
+            label={t("addRow")}
+            active={false}
+            onClick={() => editor.chain().focus().addRowAfter().run()}
+            icon={LUCIDE.betweenVerticalStart}
+          />
+          <ToolbarButton
+            label={t("deleteColumn")}
+            active={false}
+            onClick={() => editor.chain().focus().deleteColumn().run()}
+            icon={LUCIDE.trash2}
+          />
+          <ToolbarButton
+            label={t("deleteRow")}
+            active={false}
+            onClick={() => editor.chain().focus().deleteRow().run()}
+            icon={LUCIDE.trash}
+          />
+          <ToolbarButton
+            label={t("deleteTable")}
+            active={false}
+            onClick={() => editor.chain().focus().deleteTable().run()}
+            icon={LUCIDE.tableCellsMerge}
+          />
+        </>
+      ) : null}
 
       <Divider />
 
       <ToolbarButton
         label={t("link")}
-        active={editor.isActive("link")}
+        active={active.link}
         onClick={onLink}
         icon={LUCIDE.link}
       />
@@ -316,12 +487,14 @@ function Toolbar({
         <select
           aria-label={t("codeLanguage")}
           className="ml-auto h-8 rounded-md border border-black/15 bg-transparent px-2 text-body-4 dark:border-white/20"
-          value={(editor.getAttributes("codeBlock").language as string) ?? ""}
+          value={active.codeBlockLanguage}
           onChange={(event) =>
             editor
               .chain()
               .focus()
-              .updateAttributes("codeBlock", { language: event.target.value || null })
+              .updateAttributes("codeBlock", {
+                language: event.target.value || null,
+              })
               .run()
           }
         >
@@ -374,17 +547,27 @@ function ToolbarButton({
 }
 
 function Divider() {
-  return <span aria-hidden className="mx-1 h-5 w-px bg-black/10 dark:bg-white/15" />;
+  return (
+    <span aria-hidden className="mx-1 h-5 w-px bg-black/10 dark:bg-white/15" />
+  );
 }
 
 /**
  * A dialog in place of `window.prompt`: prompt blocks the whole tab, cannot be
  * styled, and is close to unusable on mobile.
  */
-function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }) {
+function LinkDialog({
+  editor,
+  onClose,
+}: {
+  editor: Editor;
+  onClose: () => void;
+}) {
   const t = useTranslations("common.editor");
   const tc = useTranslations("common");
-  const [href, setHref] = useState((editor.getAttributes("link").href as string) ?? "");
+  const [href, setHref] = useState(
+    (editor.getAttributes("link").href as string) ?? "",
+  );
   const [error, setError] = useState<string | null>(null);
 
   const apply = () => {
@@ -401,7 +584,12 @@ function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }
     // Do NOT set `target`/`rel` here: the renderer decides them (§3.1a), and
     // writing them into the data reopens the door the attribute allowlist just
     // closed.
-    editor.chain().focus().extendMarkRange("link").setLink({ href: value }).run();
+    editor
+      .chain()
+      .focus()
+      .extendMarkRange("link")
+      .setLink({ href: value })
+      .run();
     onClose();
   };
 
@@ -415,7 +603,9 @@ function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }
           placeholder="https://…"
         />
         <Typography variant="body-4" className="-mt-2 opacity-60">
-          {t.rich("linkHint", { code: (chunks) => <code className="mx-1">{chunks}</code> })}
+          {t.rich("linkHint", {
+            code: (chunks) => <code className="mx-1">{chunks}</code>,
+          })}
         </Typography>
         <AlertError message={error} />
         <div className="flex justify-end gap-2">
@@ -444,7 +634,13 @@ function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }
  * to an `aspect-video` frame, and the author should know that before the post
  * goes live.
  */
-function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void }) {
+function ImageDialog({
+  editor,
+  onClose,
+}: {
+  editor: Editor;
+  onClose: () => void;
+}) {
   const t = useTranslations("common.editor");
   const [src, setSrc] = useState("");
   const [alt, setAlt] = useState("");
@@ -458,9 +654,7 @@ function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void 
     setNotice(null);
 
     if (!isSafeImageSrc(value)) {
-      setError(
-        t("imageHostInvalid"),
-      );
+      setError(t("imageHostInvalid"));
       return;
     }
 
@@ -469,9 +663,7 @@ function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void 
     setMeasuring(false);
 
     if (!size) {
-      setNotice(
-        t("imageMeasureFailed"),
-      );
+      setNotice(t("imageMeasureFailed"));
     }
 
     editor
@@ -535,10 +727,13 @@ function ImageDialog({ editor, onClose }: { editor: Editor; onClose: () => void 
 }
 
 /** The image's `naturalWidth`/`naturalHeight`, or `null` if it will not load. */
-function measureImage(src: string): Promise<{ width: number; height: number } | null> {
+function measureImage(
+  src: string,
+): Promise<{ width: number; height: number } | null> {
   return new Promise((resolve) => {
     const image = new window.Image();
-    image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
+    image.onload = () =>
+      resolve({ width: image.naturalWidth, height: image.naturalHeight });
     image.onerror = () => resolve(null);
     image.src = src;
   });

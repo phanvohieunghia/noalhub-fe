@@ -1,0 +1,181 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "heading",
+      "attrs": { "level": 2 },
+      "content": [{ "text": "Mở đầu", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 3 },
+      "content": [{ "text": "[00:00] Mở đầu", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 3 },
+      "content": [{ "text": "1. REST API", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "GET:", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "POST:", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "PUT / PATCH:", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "DELETE:", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 3 },
+      "content": [{ "text": "2. SOAP API", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "Envelope (Lớp vỏ):", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "Header:", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "Body:", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 3 },
+      "content": [{ "text": "3. gRPC API", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "Protocol Buffers (Protobuf):", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "HTTP/2:", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "4 mô hình giao tiếp:", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "Unary RPC:", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "Server Streaming:", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "Client Streaming:", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "Bidirectional Streaming:", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 3 },
+      "content": [{ "text": "4. GraphQL", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [
+        { "text": "Over-fetching (Lấy thừa dữ liệu):", "type": "text" }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [
+        { "text": "Under-fetching (Lấy thiếu dữ liệu):", "type": "text" }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "Cách GraphQL giải quyết:", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 3 },
+      "content": [{ "text": "5. Webhook", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "Callback URL", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 3 },
+      "content": [{ "text": "6. WebSocket", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [
+        { "text": "Full-Duplex (Hai chiều liên tục):", "type": "text" }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "Quy trình bắt tay (Handshake):", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 3 },
+      "content": [{ "text": "7. WebRTC", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "Ứng dụng:", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "Cơ chế hoạt động ngầm:", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "Signaling & NAT Traversal:", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "Codec & Tối ưu hóa:", "type": "text" }]
+    },
+    {
+      "type": "heading",
+      "attrs": { "level": 4 },
+      "content": [{ "text": "Adaptive Bitrate:", "type": "text" }]
+    }
+  ]
+}

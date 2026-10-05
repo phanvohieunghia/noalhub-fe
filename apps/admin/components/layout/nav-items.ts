@@ -25,7 +25,14 @@ export type NavLabelKey =
   | "items.reports"
   | "items.categories"
   | "items.slugs"
-  | "items.new";
+  | "items.new"
+  | "items.qa"
+  | "items.qaDatasets"
+  | "items.qaSets"
+  | "items.qaItems"
+  | "items.qaTemplates"
+  | "items.qaCredentials"
+  | "items.qaOutlines";
 
 export type NavReasonKey = "disabled.conversations" | "disabled.reports";
 
@@ -35,6 +42,11 @@ export type NavItem = {
   disabled?: boolean;
   /** Why it is locked, shown as a tooltip. */
   reasonKey?: NavReasonKey;
+  /**
+   * A capability the account must hold for the item to appear at all. Absent
+   * means everyone who got past the auth gate sees it.
+   */
+  requires?: "canGenerateAi";
   /**
    * Sub-screens of this section, rendered indented under it. One level only —
    * a second would be a menu, and this sidebar has five sections.
@@ -68,6 +80,26 @@ export const NAV_ITEMS: NavItem[] = [
    * sidebar rather than there because Storybook is a static build with no idea
    * who is looking at it — the list it is gated by lives in this backend.
    */
+  /*
+   * Q&A: four screens for `admin` plus one for `super_admin`. The last one is
+   * hidden — not disabled — when the account cannot generate: an `admin` has no
+   * reason to see a page that answers 403 to every request on it. Hiding is UX;
+   * the backend still refuses.
+   */
+  {
+    href: "/qa/datasets",
+    labelKey: "items.qa",
+    children: [
+      { href: "/qa/sets", labelKey: "items.qaSets" },
+      { href: "/qa/items", labelKey: "items.qaItems" },
+      { href: "/qa/templates", labelKey: "items.qaTemplates" },
+      {
+        href: "/qa/credentials",
+        labelKey: "items.qaCredentials",
+        requires: "canGenerateAi",
+      },
+    ],
+  },
   { href: "/storybook", labelKey: "items.storybook" },
   {
     href: "/conversations",
@@ -90,8 +122,8 @@ export const FLAT_NAV_ITEMS: NavItem[] = NAV_ITEMS.flatMap((item) => [
 ]);
 
 /**
- * Labels for segments that are NOT nav items — the breadcrumb's second lookup
- * layer, before falling back to "Detail".
+ * Labels keyed by the segment itself — the breadcrumb's FIRST lookup layer,
+ * ahead of the nav and the "Detail" fallback.
  *
  * `/posts/new` is the archetype: a route with a real name that no sidebar entry
  * points at, where letting the breadcrumb say "Detail" would read as some
@@ -99,4 +131,21 @@ export const FLAT_NAV_ITEMS: NavItem[] = NAV_ITEMS.flatMap((item) => [
  */
 export const SEGMENT_LABEL_KEYS: Record<string, NavLabelKey> = {
   new: "items.new",
+  outlines: "items.qaOutlines",
+  /*
+   * `qa` and `datasets` are here rather than resolved from the nav because the
+   * sidebar's Q&A entry points at `/qa/datasets` under the label "Q&A": read
+   * off the nav, the trail comes out as "qa / Q&A" — the group segment raw and
+   * the leaf named after its parent.
+   */
+  qa: "items.qa",
+  datasets: "items.qaDatasets",
 };
+
+/**
+ * Segments that group routes but have no `page.tsx` of their own —
+ * `/qa/datasets/[id]/outlines` exists only to nest `[outlineId]` under the
+ * dataset, and `/qa` only to group the five Q&A screens. The breadcrumb must
+ * show them as plain text: a link there is a 404.
+ */
+export const NON_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(["outlines", "qa"]);

@@ -22,7 +22,8 @@
 }
 
 .blog-content h2,
-.blog-content h3 {
+.blog-content h3,
+.blog-content h4 {
   font-weight: 600;
   line-height: 1.3;
   /* scroll-margin: headings are anchor targets (#id) — without it the heading
@@ -38,6 +39,11 @@
 .blog-content > h3 {
   margin-top: 2rem;
   font-size: 1.25rem;
+}
+
+.blog-content > h4 {
+  margin-top: 1.5rem;
+  font-size: 1.075rem;
 }
 
 .blog-content a {
@@ -121,4 +127,40 @@
   border-radius: 0.5rem;
   height: auto;
   max-width: 100%;
+}
+
+/*
+ * Tables. The scroller is on a wrapper, not the table: a wide table would
+ * otherwise make the whole page scroll sideways on a phone, dragging every
+ * other block along with it.
+ */
+.blog-table-scroll {
+  overflow-x: auto;
+}
+
+.blog-content table {
+  border-collapse: collapse;
+  /* `auto` over `fixed`: column widths are not stored (the editor has resizing
+     off), so let the content decide. */
+  table-layout: auto;
+  width: 100%;
+}
+
+.blog-content th,
+.blog-content td {
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.blog-content th {
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  font-weight: 600;
+}
+
+/* Blocks inside a cell keep the rhythm of the cell, not of the article. */
+.blog-content td > * + *,
+.blog-content th > * + * {
+  margin-top: 0.5rem;
 }

@@ -26,7 +26,8 @@
     "sitemap": "Sitemap",
     "nav": "Footer links",
     "chat": "Messages",
-    "friends": "Friends"
+    "friends": "Friends",
+    "learn": "Practice"
   },
   "admin": {
     "mainNav": "Main navigation",
@@ -41,7 +42,14 @@
       "categories": "Categories",
       "new": "New Post",
       "slugs": "Slugs",
-      "storybook": "Internal Storybook"
+      "storybook": "Internal Storybook",
+      "qa": "Q&A",
+      "qaDatasets": "Datasets",
+      "qaSets": "Question sets",
+      "qaItems": "Question bank",
+      "qaTemplates": "Prompts",
+      "qaCredentials": "AI keys",
+      "qaOutlines": "Outlines"
     },
     "disabled": {
       "conversations": "Waiting on backend: no /admin/conversations endpoint yet (admin-plan §3)",

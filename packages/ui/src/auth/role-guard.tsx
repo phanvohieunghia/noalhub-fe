@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-import { useMe, type UserRole } from "@noalhub/api/auth";
+import { satisfiesRole, useMe, type UserRole } from "@noalhub/api/auth";
 
 import { Button } from "../button";
 import { Typography } from "../typography";
@@ -30,7 +30,10 @@ export function RoleGuard({ role, children }: { role: UserRole; children: React.
   const me = useMe();
   const router = useRouter();
 
-  const isDenied = me.isSuccess && me.data.role !== role;
+  // `satisfiesRole`, not `role !== role`: the required role is a FLOOR, so a
+  // `super_admin` walking into an `admin` area is allowed — comparing the
+  // strings shut the most privileged account out of the admin app entirely.
+  const isDenied = me.isSuccess && !satisfiesRole(me.data, role);
 
   useEffect(() => {
     // No auto-redirect. Kicking a user with a VALID session out to `/login` is
