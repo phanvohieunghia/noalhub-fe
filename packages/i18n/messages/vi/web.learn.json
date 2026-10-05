@@ -30,16 +30,29 @@
     "finish": "Kết thúc và xem lại",
     "finished": "Bạn đã trả lời {answered} câu, đúng {correct}.",
     "backToBrowse": "Về danh sách bộ",
-    "notFound": "Không tìm thấy lượt làm bài này."
+    "notFound": "Không tìm thấy lượt làm bài này.",
+    "progressLabel": "Tiến độ làm bộ câu hỏi",
+    "questionOf": "Câu {current}/{total}",
+    "correctSoFar": "Đúng {count}",
+    "knownSoFar": "Đã nhớ {count}",
+    "selfKnown": "Bạn đã nhớ câu này.",
+    "selfUnknown": "Bạn chưa nhớ câu này.",
+    "seeResult": "Xem kết quả",
+    "summaryTitle": "Hoàn thành bộ câu hỏi",
+    "summaryCorrect": "Đúng {rate}%",
+    "summaryKnown": "Đã nhớ {rate}%, theo bạn tự đánh giá"
   },
   "answer": {
     "submit": "Trả lời",
     "text": "Câu trả lời của bạn",
     "textHint": "Chấm không phân biệt hoa thường và không phân biệt dấu.",
-    "flip": "Lật thẻ xem đáp án",
     "known": "Tôi đã nhớ",
     "unknown": "Chưa nhớ",
-    "selfNote": "Thẻ ghi nhớ do bạn tự đánh giá, nên kết quả được tính riêng khỏi nhóm máy chấm."
+    "selfNote": "Thẻ ghi nhớ do bạn tự đánh giá, nên kết quả được tính riêng khỏi nhóm máy chấm.",
+    "selfPrompt": "Nhớ lại câu trả lời trong đầu trước, rồi tự đánh giá thật lòng là bạn đã nhớ hay chưa. Mặt sau của thẻ hiện ra sau khi bạn chọn.",
+    "singleHint": "Chọn một đáp án.",
+    "multiHint": "Có thể có nhiều đáp án đúng — chọn tất cả các ý đúng.",
+    "shortcuts": "Nhấn 1–{max} để chọn, Enter để trả lời"
   },
   "review": {
     "title": "Xem lại lượt làm bài",

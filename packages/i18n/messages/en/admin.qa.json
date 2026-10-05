@@ -11,12 +11,18 @@
     "edit": "Edit",
     "disable": "Disable",
     "disabled": "Disabled",
+    "enable": "Enable",
+    "delete": "Delete",
+    "deleteTitle": "Delete {label}?",
+    "deleteBody": "This key has never run a generation, so nothing in the history points at it. It is removed for good.",
     "default": "Default",
     "unlimited": "Unlimited",
     "tokensPerMonth": "{count} tokens/month",
     "empty": "No keys yet. Without one, every generate call stops at the first step.",
     "noDefault": "No key is marked as default. A generate call that names no key will fail with \"credential not found\".",
     "modelUnsupported": "{label} — cannot be forced into a JSON schema, unusable",
+    "modelOption": "{label} · {context, number, ::compact-short} context · {output, number, ::compact-short} output",
+    "modelsLoadFailed": "Could not load the model list. Reload the page to try again.",
     "columns": {
       "label": "Label",
       "provider": "Provider",
@@ -32,7 +38,10 @@
       "rotateHint": "Leave empty to keep the current key.",
       "model": "Default model",
       "modelPlaceholder": "Pick a model",
-      "isDefault": "Use this key when a generate call names none"
+      "isDefault": "Use this key when a generate call names none",
+      "budget": "Monthly token budget",
+      "budgetHint": "Leave empty for unlimited. Counted per calendar month, UTC.",
+      "budgetInvalid": "A whole number of tokens, at least 1."
     }
   },
   "templates": {
@@ -43,6 +52,10 @@
     "addTitle": "Add a prompt",
     "editTitle": "Edit {name}",
     "edit": "Edit",
+    "duplicate": "Duplicate",
+    "duplicateTitle": "Duplicate {name}",
+    "duplicateIntro": "The prompt, defaults and description are copied. Only the name and key are yours to set — the key cannot be changed afterwards.",
+    "copySuffix": "{name} (copy)",
     "disable": "Disable",
     "disabled": "Disabled",
     "empty": "No prompts yet. Prompts are yours to write — copyable samples live in docs/qa.md §9 of the backend repo.",
@@ -116,6 +129,9 @@
     "empty": "No sources yet.",
     "untitled": "Untitled",
     "remove": "Remove",
+    "view": "View content",
+    "hide": "Hide content",
+    "loadFailed": "Could not load this source.",
     "add": "Paste another source",
     "save": "Save the source",
     "charCount": "{count}/{max} characters",
@@ -142,7 +158,24 @@
     "labelHint": "For example: \"finer split\", \"prompt v3\".",
     "sectionsTitle": "Outline",
     "sectionsHint": "Derived from the content, read-only. The `anchor` is what a generate call sends back.",
-    "noSections": "The document has no headings yet, so there are no sections to generate questions for."
+    "noSections": "The document has no headings yet, so there are no sections to generate questions for.",
+    "format": "Content format",
+    "formats": {
+      "doc": "Rich text",
+      "markdown": "Markdown"
+    },
+    "formatHint": "Switching converts what you are editing into the other format; anything it cannot hold is dropped. This version changes only when you save.",
+    "showSource": "Edit markdown source",
+    "hideSource": "Back to the editor",
+    "source": "Markdown source"
+  },
+  "run": {
+    "credential": "AI key",
+    "pickCredential": "Pick a key",
+    "noCredential": "No enabled key",
+    "noCredentialHint": "No AI key is enabled. Add or enable one on the AI keys screen first.",
+    "model": "Model",
+    "pickModel": "Pick a model"
   },
   "analyze": {
     "button": "Analyze",
@@ -154,8 +187,7 @@
     "noTemplate": "No outline prompt exists yet",
     "label": "Note for the version about to be created",
     "labelHint": "Optional. A note makes versions tellable apart after several runs.",
-    "cost": "Runs on key \"{key}\", model {model}. This call is billed for real.",
-    "noCredential": "No default AI key — this call would stop immediately. Add one on the AI keys screen first."
+    "cost": "Runs on key \"{key}\", model {model}. This call is billed for real."
   },
   "generation": {
     "queued": "Queued, waiting for a worker…",

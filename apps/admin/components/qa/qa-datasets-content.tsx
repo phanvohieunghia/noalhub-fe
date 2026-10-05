@@ -177,16 +177,6 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
       open
       onClose={onClose}
       title={t("datasets.addTitle")}
-      actions={
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onClose}>
-            {tc("actions.cancel")}
-          </Button>
-          <Button onClick={() => void save()} disabled={create.isPending || title === ""}>
-            {tc("actions.save")}
-          </Button>
-        </div>
-      }
     >
       <div className="space-y-4">
         <Input
@@ -200,6 +190,18 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
           onChange={(event) => setDescription(event.target.value)}
         />
         {formError ? <AlertError message={m(formError)} /> : null}
+
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>
+            {tc("actions.cancel")}
+          </Button>
+          <Button
+            onClick={() => void save()}
+            disabled={create.isPending || title === ""}
+          >
+            {tc("actions.save")}
+          </Button>
+        </div>
       </div>
     </Dialog>
   );

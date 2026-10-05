@@ -10,6 +10,7 @@ import {
   PROMPT_VARIABLES,
   useCreateQaTemplate,
   useDisableQaTemplate,
+  useDuplicateQaTemplate,
   useQaTemplates,
   useUpdateQaTemplate,
   type QaPromptKind,
@@ -64,6 +65,7 @@ export function QaTemplatesContent() {
   const templates = useQaTemplates(kind === "" ? undefined : kind);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<QaPromptTemplate | null>(null);
+  const [duplicating, setDuplicating] = useState<QaPromptTemplate | null>(null);
 
   const rows = templates.data ?? [];
 
@@ -96,7 +98,10 @@ export function QaTemplatesContent() {
 
       {templates.isError ? (
         <div className="mt-4">
-          <AdminErrorState error={templates.error} onRetry={() => templates.refetch()} />
+          <AdminErrorState
+            error={templates.error}
+            onRetry={() => templates.refetch()}
+          />
         </div>
       ) : (
         <div className="mt-4">
@@ -106,7 +111,9 @@ export function QaTemplatesContent() {
                 <TableHeaderCell>{t("templates.columns.name")}</TableHeaderCell>
                 <TableHeaderCell>{t("templates.columns.kind")}</TableHeaderCell>
                 <TableHeaderCell>{t("templates.columns.key")}</TableHeaderCell>
-                <TableHeaderCell>{t("templates.columns.defaults")}</TableHeaderCell>
+                <TableHeaderCell>
+                  {t("templates.columns.defaults")}
+                </TableHeaderCell>
                 <TableHeaderCell>
                   <span className="sr-only">{t("actionsColumn")}</span>
                 </TableHeaderCell>
@@ -121,7 +128,12 @@ export function QaTemplatesContent() {
                 </TableEmptyRow>
               ) : (
                 rows.map((row) => (
-                  <TemplateRow key={row.id} row={row} onEdit={() => setEditing(row)} />
+                  <TemplateRow
+                    key={row.id}
+                    row={row}
+                    onEdit={() => setEditing(row)}
+                    onDuplicate={() => setDuplicating(row)}
+                  />
                 ))
               )}
             </TableBody>
@@ -133,6 +145,12 @@ export function QaTemplatesContent() {
       {editing ? (
         <TemplateDialog row={editing} onClose={() => setEditing(null)} />
       ) : null}
+      {duplicating ? (
+        <DuplicateDialog
+          row={duplicating}
+          onClose={() => setDuplicating(null)}
+        />
+      ) : null}
     </main>
   );
 }
@@ -140,9 +158,11 @@ export function QaTemplatesContent() {
 function TemplateRow({
   row,
   onEdit,
+  onDuplicate,
 }: {
   row: QaPromptTemplate;
   onEdit: () => void;
+  onDuplicate: () => void;
 }) {
   const t = useTranslations("admin.qa");
   const disable = useDisableQaTemplate();
@@ -157,7 +177,9 @@ function TemplateRow({
           </Badge>
         )}
       </TableCell>
-      <TableCell className="opacity-70">{t(`templates.kinds.${row.kind}`)}</TableCell>
+      <TableCell className="opacity-70">
+        {t(`templates.kinds.${row.kind}`)}
+      </TableCell>
       <TableCell className="font-mono opacity-70">{row.key}</TableCell>
       <TableCell className="opacity-70">
         {row.defaults?.count
@@ -168,6 +190,9 @@ function TemplateRow({
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onEdit}>
             {t("templates.edit")}
+          </Button>
+          <Button variant="outline" onClick={onDuplicate}>
+            {t("templates.duplicate")}
           </Button>
           {row.enabled ? (
             <Button
@@ -214,7 +239,8 @@ function TemplateDialog({
   // prompt is the worst moment to learn the rule.
   const sourceVariables = findSourceVariables(prompt);
   const countValue = count === "" ? undefined : Number(count);
-  const countTooBig = countValue !== undefined && countValue > MAX_ITEMS_PER_SET;
+  const countTooBig =
+    countValue !== undefined && countValue > MAX_ITEMS_PER_SET;
 
   const insertVariable = (variable: string) => {
     const field = promptRef.current;
@@ -249,23 +275,18 @@ function TemplateDialog({
     }
   };
 
-  const canSave = sourceVariables.length === 0 && !countTooBig && prompt.trim() !== "";
+  const canSave =
+    sourceVariables.length === 0 && !countTooBig && prompt.trim() !== "";
 
   return (
     <Dialog
       open
       onClose={onClose}
       size="fullscreen"
-      title={row ? t("templates.editTitle", { name: row.name }) : t("templates.addTitle")}
-      actions={
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onClose}>
-            {tc("actions.cancel")}
-          </Button>
-          <Button onClick={() => void save()} disabled={!canSave}>
-            {tc("actions.save")}
-          </Button>
-        </div>
+      title={
+        row
+          ? t("templates.editTitle", { name: row.name })
+          : t("templates.addTitle")
       }
     >
       <div className="space-y-4">
@@ -280,31 +301,12 @@ function TemplateDialog({
               { value: "qa", label: t("templates.kinds.qa") },
             ]}
           />
-          {/*
-            A dropdown, not a free text box: `key` must match a shape in the
-            backend registry, and one typo saves fine but generates nothing.
-          */}
-          {kind === "qa" ? (
-            <Select
-              label={t("templates.fields.key")}
-              value={key}
-              disabled={Boolean(row)}
-              onChange={(event) => setKey(event.target.value)}
-              placeholder={t("templates.fields.keyPlaceholder")}
-              options={QA_TEMPLATE_KEYS.map((value) => ({
-                value,
-                label: t(`templates.shapes.${value}`),
-              }))}
-            />
-          ) : (
-            <Input
-              label={t("templates.fields.key")}
-              value={key}
-              disabled={Boolean(row)}
-              hint={t("templates.fields.keyHint")}
-              onChange={(event) => setKey(event.target.value)}
-            />
-          )}
+          <KeyField
+            kind={kind}
+            value={key}
+            disabled={Boolean(row)}
+            onChange={setKey}
+          />
         </div>
 
         <Input
@@ -315,7 +317,9 @@ function TemplateDialog({
 
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <Typography variant="title-4">{t("templates.fields.variables")}</Typography>
+            <Typography variant="title-4">
+              {t("templates.fields.variables")}
+            </Typography>
             {PROMPT_VARIABLES.map((variable) => (
               <Button
                 key={variable}
@@ -328,7 +332,9 @@ function TemplateDialog({
           </div>
           <Typography variant="body-3" className="text-muted-foreground">
             {t("templates.fields.variablesHint", {
-              forbidden: FORBIDDEN_PROMPT_VARIABLES.map((v) => `{{${v}}}`).join(", "),
+              forbidden: FORBIDDEN_PROMPT_VARIABLES.map((v) => `{{${v}}}`).join(
+                ", ",
+              ),
             })}
           </Typography>
         </div>
@@ -356,13 +362,140 @@ function TemplateDialog({
           max={MAX_ITEMS_PER_SET}
           value={count}
           hint={t("templates.fields.countHint", { max: MAX_ITEMS_PER_SET })}
-          error={countTooBig ? t("templates.countTooBig", { max: MAX_ITEMS_PER_SET }) : undefined}
+          error={
+            countTooBig
+              ? t("templates.countTooBig", { max: MAX_ITEMS_PER_SET })
+              : undefined
+          }
           onChange={(event) => setCount(event.target.value)}
         />
 
         {/* `useMessage` turns the error KEY into text at render time — the api
             layer returns a key so the sentence follows the reader's locale. */}
         {formError ? <AlertError message={m(formError)} /> : null}
+
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>
+            {tc("actions.cancel")}
+          </Button>
+          <Button onClick={() => void save()} disabled={!canSave}>
+            {tc("actions.save")}
+          </Button>
+        </div>
+      </div>
+    </Dialog>
+  );
+}
+
+/**
+ * A dropdown, not a free text box, when `kind = "qa"`: `key` must match a shape
+ * in the backend registry, and one typo saves fine but generates nothing.
+ */
+function KeyField({
+  kind,
+  value,
+  disabled,
+  onChange,
+}: {
+  kind: QaPromptKind;
+  value: string;
+  disabled?: boolean;
+  onChange: (key: string) => void;
+}) {
+  const t = useTranslations("admin.qa");
+  return kind === "qa" ? (
+    <Select
+      label={t("templates.fields.key")}
+      value={value}
+      disabled={disabled}
+      onChange={(event) => onChange(event.target.value)}
+      placeholder={t("templates.fields.keyPlaceholder")}
+      options={QA_TEMPLATE_KEYS.map((option) => ({
+        value: option,
+        label: t(`templates.shapes.${option}`),
+      }))}
+    />
+  ) : (
+    <Input
+      label={t("templates.fields.key")}
+      value={value}
+      disabled={disabled}
+      hint={t("templates.fields.keyHint")}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  );
+}
+
+/**
+ * Confirms the two things a copy cannot inherit before anything is written:
+ * `key` is unique within a `kind`, and it is the one field that cannot be edited
+ * afterwards — so a one-click duplicate would leave the admin with a row they
+ * can only disable. For `kind = "qa"` the key comes from the registry, so the
+ * copy starts with the source's key selected and the backend's 409 tells them
+ * to pick another; for `outline` we suggest `<key>_copy`.
+ */
+function DuplicateDialog({
+  row,
+  onClose,
+}: {
+  row: QaPromptTemplate;
+  onClose: () => void;
+}) {
+  const t = useTranslations("admin.qa");
+  const tc = useTranslations("common");
+  const m = useMessage();
+  const duplicate = useDuplicateQaTemplate();
+
+  const [name, setName] = useState(
+    t("templates.copySuffix", { name: row.name }),
+  );
+  const [key, setKey] = useState(
+    row.kind === "qa" ? row.key : `${row.key}_copy`,
+  );
+  const [formError, setFormError] = useState<Message | string | null>(null);
+
+  const save = async () => {
+    setFormError(null);
+    try {
+      await duplicate.mutateAsync({ id: row.id, input: { key, name } });
+      onClose();
+    } catch (error) {
+      setFormError(applyApiError(error, () => undefined, []));
+    }
+  };
+
+  const canSave =
+    name.trim() !== "" && key.trim() !== "" && !duplicate.isPending;
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={t("templates.duplicateTitle", { name: row.name })}
+    >
+      <div className="space-y-4">
+        <Typography variant="body-3" className="opacity-70">
+          {t("templates.duplicateIntro")}
+        </Typography>
+
+        <Input
+          label={t("templates.fields.name")}
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
+
+        <KeyField kind={row.kind} value={key} onChange={setKey} />
+
+        {formError ? <AlertError message={m(formError)} /> : null}
+
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>
+            {tc("actions.cancel")}
+          </Button>
+          <Button onClick={() => void save()} disabled={!canSave}>
+            {t("templates.duplicate")}
+          </Button>
+        </div>
       </div>
     </Dialog>
   );

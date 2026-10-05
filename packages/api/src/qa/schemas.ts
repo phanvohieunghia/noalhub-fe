@@ -30,15 +30,35 @@ const nullableNumber = z
 
 /* ------------------------------ AI credentials ----------------------------- */
 
+/**
+ * Mirrors the backend `AiProviderName` enum (`src/ai/entities/ai-credential.entity.ts`).
+ *
+ * Every value the backend can emit must be here. `/admin/ai/credentials/models`
+ * returns the WHOLE registry in one array, so a single unknown `provider`
+ * fails `aiModelListSchema` and the model dropdown comes back empty for every
+ * provider — the symptom reads as "the models endpoint is broken", not as a
+ * missing enum member. Adding a provider on the backend means adding it here in
+ * the same change.
+ */
+export const aiProviderNameSchema = z.enum([
+  "openrouter",
+  "openai",
+  "anthropic",
+  /** An OpenAI-compatible gateway, not a model vendor. */
+  "vilao",
+]);
+
 export const aiCredentialSchema = z.object({
   id: z.string(),
-  provider: z.enum(["openrouter"]),
+  provider: aiProviderNameSchema,
   label: z.string(),
   keyLast4: z.string(),
   defaultModel: z.string(),
   enabled: z.boolean(),
   isDefault: z.boolean(),
   monthlyTokenLimit: nullableNumber,
+  /** At least one generation ran on this key — only disabling is left then. */
+  inUse: z.boolean(),
   createdAt: z.string(),
 });
 
@@ -46,7 +66,7 @@ export const aiCredentialListSchema = z.array(aiCredentialSchema);
 
 export const aiModelSchema = z.object({
   id: z.string(),
-  provider: z.enum(["openrouter"]),
+  provider: aiProviderNameSchema,
   label: z.string(),
   contextWindow: z.number(),
   maxOutputTokens: z.number(),
@@ -56,7 +76,7 @@ export const aiModelSchema = z.object({
 export const aiModelListSchema = z.array(aiModelSchema);
 
 export const createCredentialSchema = z.object({
-  provider: z.enum(["openrouter"]),
+  provider: aiProviderNameSchema,
   label: z.string().min(1).max(120),
   /** Accepted ONCE. There is no endpoint that reads it back. */
   apiKey: z.string().min(8).max(400),
@@ -101,9 +121,7 @@ export const qaTemplateSchema = z.object({
   name: z.string(),
   description: nullableString,
   prompt: z.string(),
-  defaults: qaPromptDefaultsSchema
-    .nullish()
-    .transform((v) => v ?? null),
+  defaults: qaPromptDefaultsSchema.nullish().transform((v) => v ?? null),
   enabled: z.boolean(),
   order: z.number(),
   updatedAt: z.string(),
@@ -132,7 +150,9 @@ export const createTemplateSchema = z.object({
   description: z.string().max(320).nullable().optional(),
   prompt: promptField,
   defaults: qaPromptDefaultsSchema
-    .extend({ count: z.number().int().min(1).max(MAX_ITEMS_PER_SET).optional() })
+    .extend({
+      count: z.number().int().min(1).max(MAX_ITEMS_PER_SET).optional(),
+    })
     .nullable()
     .optional(),
   order: z.number().int().min(0).optional(),
@@ -144,8 +164,15 @@ export const updateTemplateSchema = createTemplateSchema
   .partial()
   .extend({ enabled: z.boolean().optional() });
 
+/** Duplicate asks only for what must differ: `key` is unique within a `kind`. */
+export const duplicateTemplateSchema = createTemplateSchema.pick({
+  key: true,
+  name: true,
+});
+
 export type CreateTemplateInput = z.infer<typeof createTemplateSchema>;
 export type UpdateTemplateInput = z.infer<typeof updateTemplateSchema>;
+export type DuplicateTemplateInput = z.infer<typeof duplicateTemplateSchema>;
 
 /* --------------------------------- datasets -------------------------------- */
 
@@ -174,6 +201,12 @@ export const qaSourceSchema = z.object({
 });
 
 export const qaSourceListSchema = z.array(qaSourceSchema);
+
+/** The read-one shape: the same row plus the text that was pasted. */
+export const qaSourceFullSchema = qaSourceSchema.extend({
+  content: nullableString,
+  datasetId: z.string(),
+});
 
 export const createDatasetSchema = z.object({
   title: z.string().min(1).max(200),
@@ -229,10 +262,18 @@ export const startGenerationSchema = z.object({
   reused: z.boolean(),
 });
 
+/**
+ * `credentialId` and `model` are required on both billed calls: the backend no
+ * longer falls back to the `isDefault` key, so the person clicking picks both.
+ */
+const aiRunFields = {
+  credentialId: z.string().uuid(),
+  model: z.string().min(1).max(64),
+};
+
 export const startAnalyzeSchema = z.object({
   templateId: z.string().uuid(),
-  credentialId: z.string().uuid().optional(),
-  model: z.string().max(64).optional(),
+  ...aiRunFields,
   label: z.string().max(120).optional(),
 });
 
@@ -252,11 +293,11 @@ export const generateSetsSchema = z
       .array(z.enum(["theory", "practice", "recall", "analysis"]))
       .min(1),
     difficulty: z.enum(["easy", "medium", "hard"]).optional(),
-    credentialId: z.string().uuid().optional(),
-    model: z.string().max(64).optional(),
+    ...aiRunFields,
   })
   .refine(
-    (value) => value.allSections === true || (value.sectionAnchors?.length ?? 0) > 0,
+    (value) =>
+      value.allSections === true || (value.sectionAnchors?.length ?? 0) > 0,
     { message: "generate.pickSections", path: ["sectionAnchors"] },
   );
 
@@ -278,15 +319,28 @@ export const qaOutlineSummarySchema = z.object({
   version: z.number(),
   label: nullableString,
   sectionCount: z.number(),
+  contentFormat: z.enum(["doc", "markdown"]),
   isCurrent: z.boolean(),
   generationId: nullableString,
   createdAt: z.string(),
 });
 
-export const qaOutlineSchema = qaOutlineSummarySchema.extend({
-  content: richDoc,
-  outline: z.array(qaOutlineEntrySchema),
-});
+/*
+ * A discriminated union, so a markdown string never reaches `sanitizeBlogDoc`
+ * — that filter would turn it into an empty document without a word.
+ */
+export const qaOutlineSchema = z.discriminatedUnion("contentFormat", [
+  qaOutlineSummarySchema.extend({
+    contentFormat: z.literal("doc"),
+    content: richDoc,
+    outline: z.array(qaOutlineEntrySchema),
+  }),
+  qaOutlineSummarySchema.extend({
+    contentFormat: z.literal("markdown"),
+    content: z.string(),
+    outline: z.array(qaOutlineEntrySchema),
+  }),
+]);
 
 export const qaOutlineListSchema = z.object({
   items: z.array(qaOutlineSummarySchema),
@@ -385,7 +439,9 @@ export const writeItemSchema = z.object({
   sectionAnchor: z.string().max(160).nullable().optional(),
 });
 
-export const patchItemSchema = writeItemSchema.partial().omit({ sectionAnchor: true });
+export const patchItemSchema = writeItemSchema
+  .partial()
+  .omit({ sectionAnchor: true });
 
 export const reorderItemsSchema = z.object({
   version: z.number().int().min(1),

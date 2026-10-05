@@ -10,6 +10,7 @@ import {
   useDeleteQaSource,
   useQaDatasets,
   useQaOutlines,
+  useQaSource,
   useQaSources,
 } from "@noalhub/api/qa";
 import type { Message } from "@noalhub/api/message";
@@ -165,6 +166,11 @@ export function QaDatasetDetail({ datasetId }: { datasetId: string }) {
   );
 }
 
+/**
+ * A source row that can open its own body. The list endpoint deliberately omits
+ * `content`, so the text is fetched per row, only once someone asks for it —
+ * expanding every chapter at once is hundreds of KB nobody read.
+ */
 function SourceRow({
   datasetId,
   source,
@@ -174,24 +180,55 @@ function SourceRow({
 }) {
   const t = useTranslations("admin.qa");
   const remove = useDeleteQaSource(datasetId);
+  const [open, setOpen] = useState(false);
+  const full = useQaSource(open ? source.id : undefined);
+  const bodyId = `source-body-${source.id}`;
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
-      <div className="min-w-0">
-        <Typography variant="title-4" className="truncate">
-          {source.title ?? t("sources.untitled")}
-        </Typography>
-        <Typography variant="body-4" className="opacity-60">
-          {t("datasets.chars", { count: source.charCount })}
-        </Typography>
+    <div className="rounded-md border border-border p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <Typography variant="title-4" className="truncate">
+            {source.title ?? t("sources.untitled")}
+          </Typography>
+          <Typography variant="body-4" className="opacity-60">
+            {t("datasets.chars", { count: source.charCount })}
+          </Typography>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            variant="ghost"
+            aria-expanded={open}
+            aria-controls={bodyId}
+            onClick={() => setOpen(!open)}
+          >
+            {open ? t("sources.hide") : t("sources.view")}
+          </Button>
+          <Button
+            variant="outline"
+            disabled={remove.isPending}
+            onClick={() => remove.mutate(source.id)}
+          >
+            {t("sources.remove")}
+          </Button>
+        </div>
       </div>
-      <Button
-        variant="outline"
-        disabled={remove.isPending}
-        onClick={() => remove.mutate(source.id)}
-      >
-        {t("sources.remove")}
-      </Button>
+
+      {open ? (
+        <div id={bodyId} className="mt-3">
+          {full.isPending ? (
+            <Skeleton className="h-24 w-full" />
+          ) : full.isError ? (
+            <AlertError message={t("sources.loadFailed")} />
+          ) : (
+            /* Markdown as stored, not rendered: this view exists to check what
+               actually goes into the prompt. */
+            <pre className="max-h-96 overflow-auto rounded-md bg-muted p-3 text-body-4 whitespace-pre-wrap break-words">
+              {full.data?.content}
+            </pre>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

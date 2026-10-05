@@ -11,6 +11,7 @@ import {
   useQaOutlines,
   useSetCurrentOutline,
   useUpdateQaOutline,
+  type QaContentFormat,
 } from "@noalhub/api/qa";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { useMessage } from "@noalhub/i18n/use-message";
@@ -18,11 +19,21 @@ import { AlertError, AlertWarning } from "@noalhub/ui/alert";
 import { Button } from "@noalhub/ui/button";
 import { Input } from "@noalhub/ui/input";
 import { Skeleton } from "@noalhub/ui/skeleton";
+import {
+  MarkdownEditor,
+  blogDocToMarkdown,
+  markdownToBlogDoc,
+} from "@noalhub/ui/blog/markdown-editor";
 import { TiptapEditor } from "@noalhub/ui/blog/tiptap-editor";
+import { Textarea } from "@noalhub/ui/textarea";
 import { Typography } from "@noalhub/ui/typography";
 
 import { AdminErrorState } from "../admin-error-state";
 import { GenerateSetsButton } from "./generate-sets-button";
+
+const FORMATS: readonly QaContentFormat[] = ["doc", "markdown"];
+const EMPTY_DOC: BlogDoc = { type: "doc", content: [{ type: "paragraph" }] };
+const EDITOR_SURFACE = "max-h-[calc(100vh-22rem)] overflow-y-auto";
 
 /**
  * Where "the model drafts, a person signs off" happens.
@@ -84,15 +95,49 @@ function Loaded({
   const update = useUpdateQaOutline(outlineId, datasetId);
   const setCurrent = useSetCurrentOutline(datasetId);
 
-  const [doc, setDoc] = useState<BlogDoc>(initial.content);
+  /*
+   * Each format keeps its own state and only the active one is saved. A switch
+   * converts from the side on screen, so whatever the other format cannot hold
+   * is dropped then — the hint under the switch says so, and nothing is lost
+   * on the server until Save.
+   */
+  const [format, setFormat] = useState<QaContentFormat>(initial.contentFormat);
+  const [doc, setDoc] = useState<BlogDoc>(() =>
+    initial.contentFormat === "doc" ? initial.content : EMPTY_DOC,
+  );
+  const [markdown, setMarkdown] = useState(() =>
+    initial.contentFormat === "markdown" ? initial.content : "",
+  );
+  // Raw markdown in a textarea — the way to paste markdown in as text rather
+  // than have the editor treat it as literal characters.
+  const [showSource, setShowSource] = useState(false);
+  // Bumped whenever the editor must re-read its value: both editors read
+  // `value` on mount only.
+  const [editorKey, setEditorKey] = useState(0);
   const [label, setLabel] = useState(initial.label ?? "");
   const [saveError, setSaveError] = useState<Message | string | null>(null);
+
+  const switchFormat = (next: QaContentFormat) => {
+    if (next === format) return;
+    if (next === "markdown") setMarkdown(blogDocToMarkdown(doc));
+    else setDoc(markdownToBlogDoc(markdown));
+    setFormat(next);
+    setShowSource(false);
+    setEditorKey((key) => key + 1);
+  };
+
+  const toggleSource = () => {
+    setShowSource((shown) => !shown);
+    setEditorKey((key) => key + 1);
+  };
 
   const save = async () => {
     setSaveError(null);
     try {
       await update.mutateAsync({
-        content: doc,
+        ...(format === "markdown"
+          ? { contentFormat: "markdown", content: markdown }
+          : { contentFormat: "doc", content: doc }),
         label: label === "" ? null : label,
       });
     } catch (error) {
@@ -159,9 +204,61 @@ function Loaded({
             value={label}
             onChange={(event) => setLabel(event.target.value)}
           />
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div
+              role="group"
+              aria-label={t("outlines.format")}
+              className="flex gap-1 rounded-md border border-border p-1"
+            >
+              {FORMATS.map((option) => (
+                <Button
+                  key={option}
+                  size="sm"
+                  variant={format === option ? "primary" : "ghost"}
+                  aria-pressed={format === option}
+                  onClick={() => switchFormat(option)}
+                >
+                  {t(`outlines.formats.${option}`)}
+                </Button>
+              ))}
+            </div>
+            {format === "markdown" ? (
+              <Button size="sm" variant="outline" onClick={toggleSource}>
+                {showSource ? t("outlines.hideSource") : t("outlines.showSource")}
+              </Button>
+            ) : null}
+          </div>
+          <Typography variant="body-4" className="text-muted-foreground">
+            {t("outlines.formatHint")}
+          </Typography>
+
           {/* The same editor the blog uses — one Tiptap schema, so what is
-              allowed here is exactly what the backend keeps. */}
-          <TiptapEditor value={doc} onChange={setDoc} />
+              allowed here is exactly what the backend keeps. A dataset is a
+              whole document, so the surface is capped to the viewport and
+              scrolls inside; otherwise the save button is a page away. */}
+          {format === "doc" ? (
+            <TiptapEditor
+              key={editorKey}
+              value={doc}
+              onChange={setDoc}
+              contentClassName={EDITOR_SURFACE}
+            />
+          ) : showSource ? (
+            <Textarea
+              label={t("outlines.source")}
+              value={markdown}
+              onChange={(event) => setMarkdown(event.target.value)}
+              className="min-h-80 font-mono"
+              rows={24}
+            />
+          ) : (
+            <MarkdownEditor
+              key={editorKey}
+              value={markdown}
+              onChange={setMarkdown}
+              contentClassName={EDITOR_SURFACE}
+            />
+          )}
         </div>
 
         <aside className="space-y-2">

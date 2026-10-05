@@ -8,6 +8,7 @@ import type {
   CreateCredentialInput,
   CreateDatasetInput,
   CreateTemplateInput,
+  DuplicateTemplateInput,
   GenerateSetsInput,
   PatchItemInput,
   ReorderItemsInput,
@@ -26,6 +27,7 @@ import type {
   QaItemsQuery,
   QaPromptKind,
   QaSetsQuery,
+  UpdateQaOutlineInput,
 } from "./types";
 
 /**
@@ -45,6 +47,7 @@ export const qaKeys = {
   datasets: () => [...qaKeys.all, "datasets"] as const,
   datasetList: () => [...qaKeys.datasets(), "list"] as const,
   sources: (datasetId: string) => [...qaKeys.datasets(), datasetId, "sources"] as const,
+  source: (id: string) => [...qaKeys.all, "source", id] as const,
 
   generations: () => [...qaKeys.all, "generations"] as const,
   generation: (id: string) => [...qaKeys.generations(), id] as const,
@@ -116,6 +119,14 @@ export function useDisableAiCredential() {
   });
 }
 
+export function useDeleteAiCredential() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => qaApi.deleteCredential(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.credentials() }),
+  });
+}
+
 /* -------------------------------- templates -------------------------------- */
 
 export function useQaTemplates(kind?: QaPromptKind) {
@@ -137,6 +148,15 @@ export function useUpdateQaTemplate(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: UpdateTemplateInput) => qaApi.updateTemplate(id, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.templates() }),
+  });
+}
+
+export function useDuplicateQaTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: DuplicateTemplateInput }) =>
+      qaApi.duplicateTemplate(id, input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.templates() }),
   });
 }
@@ -187,6 +207,19 @@ export function useQaSources(datasetId: string | undefined) {
     queryKey: qaKeys.sources(datasetId ?? ""),
     queryFn: ({ signal }) => qaApi.listSources(datasetId!, signal),
     enabled: Boolean(datasetId),
+  });
+}
+
+/**
+ * One source with its text. Keyed off the source id alone, NOT under the
+ * dataset's `sources` key: invalidating the list after an add or a delete must
+ * not throw away the body someone has open.
+ */
+export function useQaSource(id: string | undefined) {
+  return useQuery({
+    queryKey: qaKeys.source(id ?? ""),
+    queryFn: ({ signal }) => qaApi.getSource(id!, signal),
+    enabled: Boolean(id),
   });
 }
 
@@ -280,8 +313,7 @@ export function useQaOutline(id: string | undefined) {
 export function useUpdateQaOutline(id: string, datasetId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { content: unknown; label?: string | null }) =>
-      qaApi.updateOutline(id, input),
+    mutationFn: (input: UpdateQaOutlineInput) => qaApi.updateOutline(id, input),
     onSuccess: (outline) => {
       queryClient.setQueryData(qaKeys.outline(id), outline);
       // `sectionCount` on the summary changes with the content.

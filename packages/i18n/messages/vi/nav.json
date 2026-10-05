@@ -26,7 +26,8 @@
     "sitemap": "Sitemap",
     "nav": "Liên kết chân trang",
     "chat": "Tin nhắn",
-    "friends": "Bạn bè"
+    "friends": "Bạn bè",
+    "learn": "Luyện tập"
   },
   "admin": {
     "mainNav": "Điều hướng chính",
@@ -47,7 +48,8 @@
       "qaSets": "Bộ câu hỏi",
       "qaItems": "Ngân hàng câu hỏi",
       "qaTemplates": "Prompt",
-      "qaCredentials": "Khoá AI"
+      "qaCredentials": "Khoá AI",
+      "qaOutlines": "Dàn ý"
     },
     "disabled": {
       "conversations": "Chờ backend: chưa có endpoint /admin/conversations (admin-plan §3)",

@@ -11,12 +11,18 @@
     "edit": "Sửa",
     "disable": "Tắt",
     "disabled": "Đã tắt",
+    "enable": "Bật lại",
+    "delete": "Xoá",
+    "deleteTitle": "Xoá khoá {label}?",
+    "deleteBody": "Khoá này chưa chạy lần sinh nào nên không có lịch sử nào trỏ vào nó. Xoá là mất hẳn.",
     "default": "Mặc định",
     "unlimited": "Không giới hạn",
     "tokensPerMonth": "{count} token/tháng",
     "empty": "Chưa có khoá nào. Chưa có khoá thì mọi lệnh sinh đều dừng ngay ở bước đầu.",
     "noDefault": "Chưa có khoá nào được đặt mặc định. Lệnh sinh không chỉ định khoá sẽ báo lỗi không tìm thấy khoá.",
     "modelUnsupported": "{label} — không ép được JSON đúng schema, không dùng được",
+    "modelOption": "{label} · ngữ cảnh {context, number} · đầu ra {output, number}",
+    "modelsLoadFailed": "Không tải được danh sách model. Tải lại trang để thử lại.",
     "columns": {
       "label": "Tên khoá",
       "provider": "Nhà cung cấp",
@@ -32,7 +38,10 @@
       "rotateHint": "Để trống nếu không đổi khoá.",
       "model": "Model mặc định",
       "modelPlaceholder": "Chọn model",
-      "isDefault": "Dùng khoá này khi lệnh sinh không chỉ định khoá nào"
+      "isDefault": "Dùng khoá này khi lệnh sinh không chỉ định khoá nào",
+      "budget": "Ngân sách token mỗi tháng",
+      "budgetHint": "Để trống là không giới hạn. Tính theo tháng dương lịch, giờ UTC.",
+      "budgetInvalid": "Nhập số token nguyên, tối thiểu là 1."
     }
   },
   "templates": {
@@ -43,6 +52,10 @@
     "addTitle": "Thêm prompt",
     "editTitle": "Sửa prompt {name}",
     "edit": "Sửa",
+    "duplicate": "Nhân bản",
+    "duplicateTitle": "Nhân bản {name}",
+    "duplicateIntro": "Nội dung prompt, mặc định và mô tả được chép nguyên. Bạn chỉ đặt tên và mã — mã không đổi được sau khi tạo.",
+    "copySuffix": "{name} (bản sao)",
     "disable": "Tắt",
     "disabled": "Đã tắt",
     "empty": "Chưa có prompt nào. Prompt là thứ bạn tự soạn — mẫu chép được nằm ở docs/qa.md §9 của repo backend.",
@@ -116,6 +129,9 @@
     "empty": "Chưa có mẩu nguồn nào.",
     "untitled": "Không đặt tên",
     "remove": "Xoá",
+    "view": "Xem nội dung",
+    "hide": "Ẩn nội dung",
+    "loadFailed": "Không tải được nội dung mẩu nguồn.",
     "add": "Dán thêm nguồn",
     "save": "Lưu mẩu nguồn",
     "charCount": "{count}/{max} ký tự",
@@ -142,7 +158,24 @@
     "labelHint": "Ví dụ: \"chia mịn hơn\", \"prompt v3\".",
     "sectionsTitle": "Mục lục",
     "sectionsHint": "Dẫn xuất từ nội dung, chỉ đọc. `anchor` là thứ lệnh sinh bộ gửi lên.",
-    "noSections": "Tài liệu chưa có tiêu đề nào, nên chưa có mục nào để sinh câu hỏi."
+    "noSections": "Tài liệu chưa có tiêu đề nào, nên chưa có mục nào để sinh câu hỏi.",
+    "format": "Định dạng nội dung",
+    "formats": {
+      "doc": "Rich text",
+      "markdown": "Markdown"
+    },
+    "formatHint": "Đổi định dạng sẽ chuyển nội dung đang soạn sang định dạng kia; phần định dạng kia không hỗ trợ sẽ bị bỏ. Chỉ khi bấm Lưu thì bản này mới đổi.",
+    "showSource": "Sửa mã markdown",
+    "hideSource": "Về trình soạn thảo",
+    "source": "Mã markdown"
+  },
+  "run": {
+    "credential": "Khoá AI",
+    "pickCredential": "Chọn khoá",
+    "noCredential": "Chưa có khoá nào đang bật",
+    "noCredentialHint": "Chưa có khoá AI nào đang bật. Thêm hoặc bật một khoá ở màn Khoá AI trước.",
+    "model": "Model",
+    "pickModel": "Chọn model"
   },
   "analyze": {
     "button": "Phân tích",
@@ -154,8 +187,7 @@
     "noTemplate": "Chưa có prompt loại phân tích nào",
     "label": "Ghi chú cho bản sắp sinh",
     "labelHint": "Để trống cũng được. Ghi chú giúp phân biệt các bản khi có nhiều lần chạy.",
-    "cost": "Chạy bằng khoá \"{key}\", model {model}. Đây là thao tác tính tiền thật.",
-    "noCredential": "Chưa có khoá AI mặc định — lệnh này sẽ dừng ngay. Thêm khoá ở màn Khoá AI trước."
+    "cost": "Chạy bằng khoá \"{key}\", model {model}. Đây là thao tác tính tiền thật."
   },
   "generation": {
     "queued": "Đã xếp hàng, đang chờ worker nhận…",

@@ -30,16 +30,29 @@
     "finish": "Finish and review",
     "finished": "You answered {answered} questions, {correct} correct.",
     "backToBrowse": "Back to the sets",
-    "notFound": "This attempt was not found."
+    "notFound": "This attempt was not found.",
+    "progressLabel": "Progress through the set",
+    "questionOf": "Question {current} of {total}",
+    "correctSoFar": "{count} correct",
+    "knownSoFar": "{count} remembered",
+    "selfKnown": "You remembered it.",
+    "selfUnknown": "Not yet.",
+    "seeResult": "See the result",
+    "summaryTitle": "Set complete",
+    "summaryCorrect": "{rate}% answered correctly",
+    "summaryKnown": "{rate}% remembered, by your own judgement"
   },
   "answer": {
     "submit": "Answer",
     "text": "Your answer",
     "textHint": "Grading ignores case and accents.",
-    "flip": "Flip the card",
     "known": "I knew it",
     "unknown": "I didn't",
-    "selfNote": "Flashcards are self-assessed, so the result is counted apart from machine-graded questions."
+    "selfNote": "Flashcards are self-assessed, so the result is counted apart from machine-graded questions.",
+    "selfPrompt": "Recall the answer in your head first, then say honestly whether you knew it. The back of the card shows after you choose.",
+    "singleHint": "Pick one answer.",
+    "multiHint": "More than one answer may be correct — pick all that apply.",
+    "shortcuts": "Press 1–{max} to pick, Enter to answer"
   },
   "review": {
     "title": "Attempt review",

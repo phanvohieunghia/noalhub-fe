@@ -6,7 +6,6 @@ import { useState } from "react";
 import { useMe } from "@noalhub/api/auth";
 import type { Message } from "@noalhub/api/message";
 import {
-  useAiCredentials,
   useGenerateSets,
   useQaTemplates,
   type QaItemKind,
@@ -21,6 +20,7 @@ import { Dialog } from "@noalhub/ui/dialog";
 import { Input } from "@noalhub/ui/input";
 import { Select } from "@noalhub/ui/select";
 
+import { useAiRunChoice } from "./ai-run-picker";
 import { GenerationProgress } from "./generation-progress";
 
 const ITEM_KINDS = ["theory", "practice", "recall", "analysis"] as const;
@@ -75,7 +75,7 @@ function GenerateDialog({
   const tc = useTranslations("common");
   const m = useMessage();
   const templates = useQaTemplates("qa");
-  const credentials = useAiCredentials();
+  const aiRun = useAiRunChoice();
   const generate = useGenerateSets();
 
   const [templateId, setTemplateId] = useState("");
@@ -87,14 +87,15 @@ function GenerateDialog({
   const [started, setStarted] = useState<{ id: string; reused: boolean } | null>(null);
 
   const usableTemplates = (templates.data ?? []).filter((row) => row.enabled);
-  const defaultCredential = (credentials.data ?? []).find(
-    (row) => row.isDefault && row.enabled,
-  );
 
   const chosenCount = allSections ? sections.length : picked.length;
   const countValue = Number(count) || 0;
   const canRun =
-    templateId !== "" && chosenCount > 0 && countValue > 0 && kinds.length > 0;
+    templateId !== "" &&
+    chosenCount > 0 &&
+    countValue > 0 &&
+    kinds.length > 0 &&
+    aiRun.ready;
 
   const toggleSection = (anchor: string) =>
     setPicked((current) =>
@@ -104,11 +105,14 @@ function GenerateDialog({
     );
 
   const run = async () => {
+    if (!aiRun.credential) return;
     setFormError(null);
     try {
       const result = await generate.mutateAsync({
         outlineId,
         templateId,
+        credentialId: aiRun.credential.id,
+        model: aiRun.model,
         count: countValue,
         itemKinds: kinds,
         ...(allSections ? { allSections: true } : { sectionAnchors: picked }),
@@ -128,20 +132,6 @@ function GenerateDialog({
       onClose={onClose}
       size="fullscreen"
       title={t("generate.title")}
-      actions={
-        started ? (
-          <Button onClick={onClose}>{tc("actions.close")}</Button>
-        ) : (
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>
-              {tc("actions.cancel")}
-            </Button>
-            <Button onClick={() => void run()} disabled={!canRun || generate.isPending}>
-              {t("generate.confirm")}
-            </Button>
-          </div>
-        )
-      }
     >
       {started ? (
         <GenerationProgress generationId={started.id} reused={started.reused} />
@@ -170,6 +160,8 @@ function GenerateDialog({
               onChange={(event) => setCount(event.target.value)}
             />
           </div>
+
+          {aiRun.fields}
 
           <fieldset className="space-y-2">
             <legend className="text-title-4">{t("generate.kinds")}</legend>
@@ -222,22 +214,42 @@ function GenerateDialog({
 
           {/* State the price before the click: how many sections × how many
               questions, on which key and model. */}
-          <AlertInfo
-            message={
-              defaultCredential
-                ? t("generate.cost", {
-                    sections: chosenCount,
-                    count: countValue,
-                    key: defaultCredential.label,
-                    model: defaultCredential.defaultModel,
-                  })
-                : t("analyze.noCredential")
-            }
-          />
+          {aiRun.empty ? (
+            <AlertError message={t("run.noCredentialHint")} />
+          ) : aiRun.credential && aiRun.ready ? (
+            <AlertInfo
+              message={t("generate.cost", {
+                sections: chosenCount,
+                count: countValue,
+                key: aiRun.credential.label,
+                model: aiRun.model,
+              })}
+            />
+          ) : null}
 
           {formError ? <AlertError message={m(formError)} /> : null}
         </div>
       )}
+
+      {/* Nút ở CUỐI nội dung, không phải ở `actions` — `actions` của Dialog là
+          thanh công cụ cạnh nút đóng trên header. */}
+      <div className="mt-4 flex justify-end gap-2">
+        {started ? (
+          <Button onClick={onClose}>{tc("actions.close")}</Button>
+        ) : (
+          <>
+            <Button variant="outline" onClick={onClose}>
+              {tc("actions.cancel")}
+            </Button>
+            <Button
+              onClick={() => void run()}
+              disabled={!canRun || generate.isPending}
+            >
+              {t("generate.confirm")}
+            </Button>
+          </>
+        )}
+      </div>
     </Dialog>
   );
 }

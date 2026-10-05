@@ -31,7 +31,8 @@ export type NavLabelKey =
   | "items.qaSets"
   | "items.qaItems"
   | "items.qaTemplates"
-  | "items.qaCredentials";
+  | "items.qaCredentials"
+  | "items.qaOutlines";
 
 export type NavReasonKey = "disabled.conversations" | "disabled.reports";
 
@@ -121,8 +122,8 @@ export const FLAT_NAV_ITEMS: NavItem[] = NAV_ITEMS.flatMap((item) => [
 ]);
 
 /**
- * Labels for segments that are NOT nav items — the breadcrumb's second lookup
- * layer, before falling back to "Detail".
+ * Labels keyed by the segment itself — the breadcrumb's FIRST lookup layer,
+ * ahead of the nav and the "Detail" fallback.
  *
  * `/posts/new` is the archetype: a route with a real name that no sidebar entry
  * points at, where letting the breadcrumb say "Detail" would read as some
@@ -130,4 +131,21 @@ export const FLAT_NAV_ITEMS: NavItem[] = NAV_ITEMS.flatMap((item) => [
  */
 export const SEGMENT_LABEL_KEYS: Record<string, NavLabelKey> = {
   new: "items.new",
+  outlines: "items.qaOutlines",
+  /*
+   * `qa` and `datasets` are here rather than resolved from the nav because the
+   * sidebar's Q&A entry points at `/qa/datasets` under the label "Q&A": read
+   * off the nav, the trail comes out as "qa / Q&A" — the group segment raw and
+   * the leaf named after its parent.
+   */
+  qa: "items.qa",
+  datasets: "items.qaDatasets",
 };
+
+/**
+ * Segments that group routes but have no `page.tsx` of their own —
+ * `/qa/datasets/[id]/outlines` exists only to nest `[outlineId]` under the
+ * dataset, and `/qa` only to group the five Q&A screens. The breadcrumb must
+ * show them as plain text: a link there is a 404.
+ */
+export const NON_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(["outlines", "qa"]);

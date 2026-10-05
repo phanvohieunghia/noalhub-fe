@@ -26,7 +26,8 @@
     "sitemap": "Sitemap",
     "nav": "Footer links",
     "chat": "Messages",
-    "friends": "Friends"
+    "friends": "Friends",
+    "learn": "Practice"
   },
   "admin": {
     "mainNav": "Main navigation",
@@ -47,7 +48,8 @@
       "qaSets": "Question sets",
       "qaItems": "Question bank",
       "qaTemplates": "Prompts",
-      "qaCredentials": "AI keys"
+      "qaCredentials": "AI keys",
+      "qaOutlines": "Outlines"
     },
     "disabled": {
       "conversations": "Waiting on backend: no /admin/conversations endpoint yet (admin-plan §3)",

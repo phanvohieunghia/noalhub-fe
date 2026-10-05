@@ -10,9 +10,11 @@ import {
   useAiCredentials,
   useAiModels,
   useCreateAiCredential,
+  useDeleteAiCredential,
   useDisableAiCredential,
   useUpdateAiCredential,
   type AiCredential,
+  type AiModel,
   type CreateCredentialInput,
 } from "@noalhub/api/qa";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
@@ -39,7 +41,7 @@ import { Typography } from "@noalhub/ui/typography";
 
 import { AdminErrorState } from "../admin-error-state";
 
-const FIELDS = ["label", "apiKey", "defaultModel"] as const;
+const FIELDS = ["label", "apiKey", "defaultModel", "monthlyTokenLimit"] as const;
 const COLUMN_COUNT = 6;
 
 /**
@@ -54,14 +56,16 @@ const COLUMN_COUNT = 6;
  * 2. **A model without structured output is disabled, not hidden.** Hidden, the
  *    reader goes looking for their model; disabled with the reason, they learn
  *    why it cannot be used.
- * 3. **Delete disables.** `qa_generations` points at these rows, so a hard
- *    delete would erase which key produced which run.
+ * 3. **Delete disables** — except for a key that never ran (`inUse === false`),
+ *    which can be removed for good. `qa_generations` points at the used ones, so
+ *    a hard delete would erase which key produced which run.
  */
 export function AiCredentialsContent() {
   const t = useTranslations("admin.qa");
   const credentials = useAiCredentials();
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<AiCredential | null>(null);
+  const [deleting, setDeleting] = useState<AiCredential | null>(null);
 
   const rows = credentials.data ?? [];
   const hasDefault = rows.some((row) => row.isDefault && row.enabled);
@@ -122,7 +126,12 @@ export function AiCredentialsContent() {
                 </TableEmptyRow>
               ) : (
                 rows.map((row) => (
-                  <CredentialRow key={row.id} row={row} onEdit={() => setEditing(row)} />
+                  <CredentialRow
+                    key={row.id}
+                    row={row}
+                    onEdit={() => setEditing(row)}
+                    onDelete={() => setDeleting(row)}
+                  />
                 ))
               )}
             </TableBody>
@@ -134,6 +143,9 @@ export function AiCredentialsContent() {
       {editing ? (
         <EditDialog row={editing} onClose={() => setEditing(null)} />
       ) : null}
+      {deleting ? (
+        <DeleteDialog row={deleting} onClose={() => setDeleting(null)} />
+      ) : null}
     </main>
   );
 }
@@ -141,13 +153,16 @@ export function AiCredentialsContent() {
 function CredentialRow({
   row,
   onEdit,
+  onDelete,
 }: {
   row: AiCredential;
   onEdit: () => void;
+  onDelete: () => void;
 }) {
   const t = useTranslations("admin.qa");
   const df = useDateFormat();
   const disable = useDisableAiCredential();
+  const enable = useUpdateAiCredential(row.id);
 
   return (
     <TableRow className={row.enabled ? undefined : "opacity-50"}>
@@ -185,7 +200,23 @@ function CredentialRow({
             >
               {t("credentials.disable")}
             </Button>
-          ) : null}
+          ) : (
+            // PATCH, not a dedicated route: `enabled` is a plain field there, and
+            // the default flag stays off — making it default again is a choice.
+            <Button
+              variant="outline"
+              disabled={enable.isPending}
+              onClick={() => enable.mutate({ enabled: true })}
+            >
+              {t("credentials.enable")}
+            </Button>
+          )}
+          {/* Only a key no run points at — a used one has nothing left but disable. */}
+          {row.inUse ? null : (
+            <Button variant="outline" className="text-danger" onClick={onDelete}>
+              {t("credentials.delete")}
+            </Button>
+          )}
         </div>
       </TableCell>
     </TableRow>
@@ -208,18 +239,34 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
   } = useForm<CreateCredentialInput>({
     resolver: zodResolver(createCredentialSchema),
     defaultValues: {
+      // Overwritten on submit from the chosen model — see `onSubmit`. It is only
+      // here because the resolver validates the field before that.
       provider: "openrouter",
       label: "",
       apiKey: "",
       defaultModel: "",
       isDefault: false,
+      monthlyTokenLimit: null,
     },
   });
 
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null);
+    /*
+     * `provider` comes from the CHOSEN MODEL, it is not a field. A model id
+     * belongs to exactly one provider (`model-registry.ts`), so asking for both
+     * only creates a pair that can disagree — and the disagreement surfaces as
+     * the backend's `AI_MODEL_NOT_ALLOWED` on a form that looked filled in
+     * correctly. This used to be hardcoded `"openrouter"`, which meant no key
+     * for any other provider could be created here at all.
+     */
+    const provider = models.data?.find((model) => model.id === values.defaultModel)?.provider;
+    if (!provider) {
+      setFormError(t("credentials.modelsLoadFailed"));
+      return;
+    }
     try {
-      await create.mutateAsync(values);
+      await create.mutateAsync({ ...values, provider });
       onClose();
     } catch (error) {
       setFormError(applyApiError(error, setError, FIELDS));
@@ -231,16 +278,6 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
       open
       onClose={onClose}
       title={t("credentials.addTitle")}
-      actions={
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onClose}>
-            {tc("actions.cancel")}
-          </Button>
-          <Button onClick={() => void onSubmit()} disabled={isSubmitting}>
-            {tc("actions.save")}
-          </Button>
-        </div>
-      }
     >
       <form className="space-y-4" onSubmit={(event) => void onSubmit(event)}>
         <Input
@@ -259,8 +296,21 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
         <ModelSelect
           models={models.data ?? []}
           loading={models.isPending}
-          error={errors.defaultModel?.message}
+          error={
+            errors.defaultModel?.message ??
+            (models.isError ? t("credentials.modelsLoadFailed") : undefined)
+          }
           registration={register("defaultModel")}
+        />
+        <Input
+          label={t("credentials.fields.budget")}
+          type="number"
+          min={1}
+          step={1}
+          inputMode="numeric"
+          hint={t("credentials.fields.budgetHint")}
+          error={errors.monthlyTokenLimit ? t("credentials.fields.budgetInvalid") : undefined}
+          {...register("monthlyTokenLimit", { setValueAs: parseBudget })}
         />
         <label className="flex items-center gap-2 text-body-3">
           <input type="checkbox" {...register("isDefault")} />
@@ -269,6 +319,17 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
         {/* `useMessage` turns the error KEY into text at render time — the api
             layer returns a key so the sentence follows the reader's locale. */}
         {formError ? <AlertError message={m(formError)} /> : null}
+
+        {/* Nút ở CUỐI nội dung, không phải ở `actions` — `actions` của Dialog là
+            thanh công cụ cạnh nút đóng trên header. Khuôn có sẵn: màn Storybook. */}
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>
+            {tc("actions.cancel")}
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {tc("actions.save")}
+          </Button>
+        </div>
       </form>
     </Dialog>
   );
@@ -285,14 +346,27 @@ function EditDialog({ row, onClose }: { row: AiCredential; onClose: () => void }
   const [apiKey, setApiKey] = useState("");
   const [defaultModel, setDefaultModel] = useState(row.defaultModel);
   const [isDefault, setIsDefault] = useState(row.isDefault);
+  const [budget, setBudget] = useState(
+    row.monthlyTokenLimit === null ? "" : String(row.monthlyTokenLimit),
+  );
+  const [budgetError, setBudgetError] = useState(false);
 
   const save = async () => {
     setFormError(null);
+    const monthlyTokenLimit = parseBudget(budget);
+    // `parseBudget` hands back NaN or a fraction untouched so this check sees it;
+    // sending it would only come back as a VALIDATION_FAILED string.
+    const invalid =
+      monthlyTokenLimit !== null &&
+      (!Number.isInteger(monthlyTokenLimit) || monthlyTokenLimit < 1);
+    setBudgetError(invalid);
+    if (invalid) return;
     try {
       await update.mutateAsync({
         label,
         defaultModel,
         isDefault,
+        monthlyTokenLimit,
         // Sending an empty string would rotate the key to "" — only send the
         // field when the operator actually typed a new key.
         ...(apiKey ? { apiKey } : {}),
@@ -308,16 +382,6 @@ function EditDialog({ row, onClose }: { row: AiCredential; onClose: () => void }
       open
       onClose={onClose}
       title={t("credentials.editTitle", { label: row.label })}
-      actions={
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onClose}>
-            {tc("actions.cancel")}
-          </Button>
-          <Button onClick={() => void save()} disabled={update.isPending}>
-            {tc("actions.save")}
-          </Button>
-        </div>
-      }
     >
       <div className="space-y-4">
         <Input
@@ -337,7 +401,23 @@ function EditDialog({ row, onClose }: { row: AiCredential; onClose: () => void }
           label={t("credentials.fields.model")}
           value={defaultModel}
           onChange={(event) => setDefaultModel(event.target.value)}
-          options={modelOptions(models.data ?? [], t)}
+          // The key's provider is fixed, and a model of another provider is
+          // refused with AI_MODEL_NOT_ALLOWED — offer only this provider's.
+          options={modelOptions(
+            (models.data ?? []).filter((model) => model.provider === row.provider),
+            t,
+          )}
+        />
+        <Input
+          label={t("credentials.fields.budget")}
+          type="number"
+          min={1}
+          step={1}
+          inputMode="numeric"
+          hint={t("credentials.fields.budgetHint")}
+          error={budgetError ? t("credentials.fields.budgetInvalid") : undefined}
+          value={budget}
+          onChange={(event) => setBudget(event.target.value)}
         />
         <label className="flex items-center gap-2 text-body-3">
           <input
@@ -350,6 +430,62 @@ function EditDialog({ row, onClose }: { row: AiCredential; onClose: () => void }
         {/* `useMessage` turns the error KEY into text at render time — the api
             layer returns a key so the sentence follows the reader's locale. */}
         {formError ? <AlertError message={m(formError)} /> : null}
+
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>
+            {tc("actions.cancel")}
+          </Button>
+          <Button onClick={() => void save()} disabled={update.isPending}>
+            {tc("actions.save")}
+          </Button>
+        </div>
+      </div>
+    </Dialog>
+  );
+}
+
+function DeleteDialog({ row, onClose }: { row: AiCredential; onClose: () => void }) {
+  const t = useTranslations("admin.qa");
+  const tc = useTranslations("common");
+  const m = useMessage();
+  const remove = useDeleteAiCredential();
+  const [formError, setFormError] = useState<Message | string | null>(null);
+
+  const confirm = async () => {
+    setFormError(null);
+    try {
+      await remove.mutateAsync(row.id);
+      onClose();
+    } catch (error) {
+      // A run that started after the list loaded lands here as
+      // AI_CREDENTIAL_IN_USE; the backend message says to disable instead.
+      setFormError(applyApiError(error, () => undefined, []));
+    }
+  };
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={t("credentials.deleteTitle", { label: row.label })}
+    >
+      <div className="space-y-4">
+        <Typography variant="body-3">{t("credentials.deleteBody")}</Typography>
+        {formError ? <AlertError message={m(formError)} /> : null}
+
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>
+            {tc("actions.cancel")}
+          </Button>
+          <Button
+            className="text-danger"
+            variant="outline"
+            onClick={() => void confirm()}
+            disabled={remove.isPending}
+          >
+            {t("credentials.delete")}
+          </Button>
+        </div>
       </div>
     </Dialog>
   );
@@ -385,16 +521,32 @@ function ModelSelect({
  * where their model went.
  */
 function modelOptions(
-  models: { id: string; label: string; supportsStructuredOutput: boolean }[],
+  models: AiModel[],
   t: ReturnType<typeof useTranslations<"admin.qa">>,
 ) {
   return models.map((model) => ({
     value: model.id,
+    // The two limits decide whether a long source fits before anything is
+    // billed (QA_CONTEXT_EXCEEDED / QA_OUTPUT_EXCEEDED) — worth seeing at pick time.
     label: model.supportsStructuredOutput
-      ? model.label
+      ? t("credentials.modelOption", {
+          label: model.label,
+          context: model.contextWindow,
+          output: model.maxOutputTokens,
+        })
       : t("credentials.modelUnsupported", { label: model.label }),
     disabled: !model.supportsStructuredOutput,
   }));
+}
+
+/**
+ * Empty means unlimited (`null`), not 0 — the backend has no "zero budget".
+ * Anything else goes through as a number, invalid or not, so the validator
+ * (zod in the add form, the check in the edit form) is what rejects it.
+ */
+function parseBudget(value: unknown): number | null {
+  if (value === "" || value === null || value === undefined) return null;
+  return Number(value);
 }
 
 function SkeletonRows() {

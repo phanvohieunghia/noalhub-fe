@@ -15,6 +15,7 @@ import {
   qaSetDetailSchema,
   qaSetListSchema,
   qaSetSchema,
+  qaSourceFullSchema,
   qaSourceListSchema,
   qaSourceSchema,
   qaTemplateListSchema,
@@ -32,6 +33,7 @@ import {
   type CreateCredentialInput,
   type CreateDatasetInput,
   type CreateTemplateInput,
+  type DuplicateTemplateInput,
   type GenerateSetsInput,
   type PatchItemInput,
   type ReorderItemsInput,
@@ -57,6 +59,7 @@ import type {
   AiModel,
   QaDataset,
   QaDatasetSource,
+  QaDatasetSourceFull,
   QaGeneration,
   QaItemFull,
   QaItemList,
@@ -69,6 +72,7 @@ import type {
   QaSet,
   QaSetDetail,
   QaSetsQuery,
+  UpdateQaOutlineInput,
   StartGenerationResponse,
 } from "./types";
 
@@ -132,6 +136,14 @@ export async function disableCredential(id: string): Promise<AiCredential> {
   return data;
 }
 
+/**
+ * Hard delete — only for a key no generation ever ran on (`inUse === false`).
+ * A used key answers 409 `AI_CREDENTIAL_IN_USE`.
+ */
+export async function deleteCredential(id: string): Promise<void> {
+  await http.delete(`/admin/ai/credentials/${id}/permanent`, { authRequired: true });
+}
+
 /* -------------------------------- templates -------------------------------- */
 
 export async function listTemplates(
@@ -163,6 +175,18 @@ export async function updateTemplate(
 ): Promise<QaPromptTemplate> {
   const { data } = await http.patch<QaPromptTemplate>(
     `/admin/qa/templates/${id}`,
+    input,
+    { authRequired: true, schema: qaTemplateSchema },
+  );
+  return data;
+}
+
+export async function duplicateTemplate(
+  id: string,
+  input: DuplicateTemplateInput,
+): Promise<QaPromptTemplate> {
+  const { data } = await http.post<QaPromptTemplate>(
+    `/admin/qa/templates/${id}/duplicate`,
     input,
     { authRequired: true, schema: qaTemplateSchema },
   );
@@ -216,6 +240,19 @@ export async function listSources(
     `/admin/qa/datasets/${datasetId}/sources`,
     { authRequired: true, schema: qaSourceListSchema, signal },
   );
+  return data;
+}
+
+/** Read one source WITH its text — the list endpoint never carries `content`. */
+export async function getSource(
+  id: string,
+  signal?: AbortSignal,
+): Promise<QaDatasetSourceFull> {
+  const { data } = await http.get<QaDatasetSourceFull>(`/admin/qa/sources/${id}`, {
+    authRequired: true,
+    schema: qaSourceFullSchema,
+    signal,
+  });
   return data;
 }
 
@@ -301,12 +338,13 @@ export async function getOutline(
 }
 
 /**
- * Sends `content` only. `outline` is derived — the backend recomputes it on
- * every write, and posting a second copy is how the two drift apart.
+ * Sends `content` (with its `contentFormat`) only. `outline` is derived — the
+ * backend recomputes it on every write, and posting a second copy is how the
+ * two drift apart.
  */
 export async function updateOutline(
   id: string,
-  input: { content: unknown; label?: string | null },
+  input: UpdateQaOutlineInput,
 ): Promise<QaOutline> {
   const { data } = await http.patch<QaOutline>(`/admin/qa/outlines/${id}`, input, {
     authRequired: true,

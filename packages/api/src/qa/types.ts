@@ -12,7 +12,12 @@ import type { BlogDoc } from "../blog/types";
 
 /* ------------------------------ AI credentials ----------------------------- */
 
-export type AiProviderName = "openrouter";
+/** Mirrors the backend enum — see the note on `aiProviderNameSchema`. */
+export type AiProviderName =
+  | "openrouter"
+  | "openai"
+  | "anthropic"
+  | "vilao";
 
 /**
  * `AiCredentialDto`. There is no field carrying the key — not an omission: the
@@ -30,6 +35,11 @@ export type AiCredential = {
   isDefault: boolean;
   /** Tokens per calendar month, UTC. `null` means unlimited. */
   monthlyTokenLimit: number | null;
+  /**
+   * At least one generation ran on this key. `false` ⇒ it can be deleted for
+   * good; `true` ⇒ only disabled, so the history keeps which key ran.
+   */
+  inUse: boolean;
   createdAt: string;
 };
 
@@ -83,6 +93,15 @@ export type QaDatasetSource = {
   charCount: number;
   order: number;
   createdAt: string;
+};
+
+/**
+ * `QaDatasetSourceFullDto` — the read-one shape. `content` is only ever fetched
+ * for the one row someone opened, never for the list.
+ */
+export type QaDatasetSourceFull = QaDatasetSource & {
+  content: string | null;
+  datasetId: string;
 };
 
 /* -------------------------------- templates -------------------------------- */
@@ -203,22 +222,36 @@ export type QaOutlineEntry = {
   charCount: number;
 };
 
+/**
+ * How a content column is stored: Tiptap JSON (`BlogDoc`) or a markdown
+ * string. Explicit rather than sniffed from `typeof content` — it is what picks
+ * the editor and the renderer, and the backend 400s a mismatched pair.
+ */
+export type QaContentFormat = "doc" | "markdown";
+
 export type QaOutlineSummary = {
   id: string;
   version: number;
   label: string | null;
   sectionCount: number;
+  contentFormat: QaContentFormat;
   isCurrent: boolean;
   /** `null` = typed by hand, not produced by a model. */
   generationId: string | null;
   createdAt: string;
 };
 
-export type QaOutline = QaOutlineSummary & {
-  content: BlogDoc;
+/** `content` and `contentFormat` travel as a pair — narrow on the format. */
+export type QaOutlineContent =
+  | { contentFormat: "doc"; content: BlogDoc }
+  | { contentFormat: "markdown"; content: string };
+
+export type QaOutline = QaOutlineSummary & QaOutlineContent & {
   /** Derived from `content` on every write. Read-only — the backend recomputes it. */
   outline: QaOutlineEntry[];
 };
+
+export type UpdateQaOutlineInput = QaOutlineContent & { label?: string | null };
 
 export type QaOutlineList = {
   items: QaOutlineSummary[];

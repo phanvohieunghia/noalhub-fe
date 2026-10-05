@@ -6,7 +6,6 @@ import { useState } from "react";
 import { useMe } from "@noalhub/api/auth";
 import type { Message } from "@noalhub/api/message";
 import {
-  useAiCredentials,
   useQaTemplates,
   useStartAnalyze,
 } from "@noalhub/api/qa";
@@ -19,6 +18,7 @@ import { Input } from "@noalhub/ui/input";
 import { Select } from "@noalhub/ui/select";
 import { Typography } from "@noalhub/ui/typography";
 
+import { useAiRunChoice } from "./ai-run-picker";
 import { GenerationProgress } from "./generation-progress";
 
 /**
@@ -67,24 +67,27 @@ function AnalyzeDialog({
   const tc = useTranslations("common");
   const m = useMessage();
   const templates = useQaTemplates("outline");
-  const credentials = useAiCredentials();
+  const aiRun = useAiRunChoice();
   const start = useStartAnalyze(datasetId);
 
   const [templateId, setTemplateId] = useState("");
   const [label, setLabel] = useState("");
   const [formError, setFormError] = useState<Message | string | null>(null);
-  const [started, setStarted] = useState<{ id: string; reused: boolean } | null>(null);
+  const [started, setStarted] = useState<{
+    id: string;
+    reused: boolean;
+  } | null>(null);
 
   const usableTemplates = (templates.data ?? []).filter((row) => row.enabled);
-  const defaultCredential = (credentials.data ?? []).find(
-    (row) => row.isDefault && row.enabled,
-  );
 
   const run = async () => {
+    if (!aiRun.credential) return;
     setFormError(null);
     try {
       const result = await start.mutateAsync({
         templateId,
+        credentialId: aiRun.credential.id,
+        model: aiRun.model,
         label: label === "" ? undefined : label,
       });
       setStarted({ id: result.generationId, reused: result.reused });
@@ -96,28 +99,7 @@ function AnalyzeDialog({
   };
 
   return (
-    <Dialog
-      open
-      onClose={onClose}
-      title={t("analyze.title")}
-      actions={
-        started ? (
-          <Button onClick={onClose}>{tc("actions.close")}</Button>
-        ) : (
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>
-              {tc("actions.cancel")}
-            </Button>
-            <Button
-              onClick={() => void run()}
-              disabled={templateId === "" || start.isPending}
-            >
-              {t("analyze.confirm")}
-            </Button>
-          </div>
-        )
-      }
-    >
+    <Dialog open onClose={onClose} title={t("analyze.title")}>
       {started ? (
         <GenerationProgress generationId={started.id} reused={started.reused} />
       ) : (
@@ -141,6 +123,8 @@ function AnalyzeDialog({
             }))}
           />
 
+          {aiRun.fields}
+
           <Input
             label={t("analyze.label")}
             hint={t("analyze.labelHint")}
@@ -149,20 +133,40 @@ function AnalyzeDialog({
           />
 
           {/* State the price before the click: which key, which model. */}
-          <AlertInfo
-            message={
-              defaultCredential
-                ? t("analyze.cost", {
-                    key: defaultCredential.label,
-                    model: defaultCredential.defaultModel,
-                  })
-                : t("analyze.noCredential")
-            }
-          />
+          {aiRun.empty ? (
+            <AlertError message={t("run.noCredentialHint")} />
+          ) : aiRun.credential && aiRun.ready ? (
+            <AlertInfo
+              message={t("analyze.cost", {
+                key: aiRun.credential.label,
+                model: aiRun.model,
+              })}
+            />
+          ) : null}
 
           {formError ? <AlertError message={m(formError)} /> : null}
         </div>
       )}
+
+      {/* Nút ở CUỐI nội dung, không phải ở `actions` — `actions` của Dialog là
+          thanh công cụ cạnh nút đóng trên header. */}
+      <div className="mt-4 flex justify-end gap-2">
+        {started ? (
+          <Button onClick={onClose}>{tc("actions.close")}</Button>
+        ) : (
+          <>
+            <Button variant="outline" onClick={onClose}>
+              {tc("actions.cancel")}
+            </Button>
+            <Button
+              onClick={() => void run()}
+              disabled={templateId === "" || !aiRun.ready || start.isPending}
+            >
+              {t("analyze.confirm")}
+            </Button>
+          </>
+        )}
+      </div>
     </Dialog>
   );
 }
