@@ -17,6 +17,14 @@ const password = z
   .min(12, "validation.password.tooShort")
   .max(128, "validation.password.tooLong");
 
+/**
+ * The single list of roles. Shared with `admin/schemas.ts` rather than retyped:
+ * the literal array used to be spelled out in four places and every one of them
+ * was missing `super_admin`, which made `/auth/me` unparseable — and an
+ * unparseable `/auth/me` signs the account straight back out.
+ */
+export const userRoleSchema = z.enum(["user", "admin", "super_admin"]);
+
 /* ---- Form schemas ---- */
 
 export const loginSchema = z.object({
@@ -81,7 +89,9 @@ export const userSchema = z.object({
     .nullish()
     .transform((v) => v ?? null),
   emailVerified: z.boolean(),
-  role: z.enum(["user", "admin"]),
+  role: userRoleSchema,
+  isAdmin: z.boolean(),
+  canGenerateAi: z.boolean(),
   /*
    * `catch` rather than `default`: the backend always returns this field (a NOT
    * NULL column with a DEFAULT), but tokens issued before the migration are

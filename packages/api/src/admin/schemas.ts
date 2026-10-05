@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { userRoleSchema } from "../auth/schemas";
+
 /**
  * Response schemas for the admin feature — REST bodies are parsed so a backend
  * shape change is caught right here instead of drifting into the table.
@@ -19,7 +21,7 @@ export const adminUserSchema = z.object({
   id: z.string(),
   email: z.string(),
   username: z.string(),
-  role: z.enum(["user", "admin"]),
+  role: userRoleSchema,
   displayName: nullableString,
   avatarUrl: nullableString,
   emailVerifiedAt: nullableString,
@@ -60,7 +62,7 @@ export const adminUserListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).catch(1),
   limit: z.coerce.number().int().min(1).max(100).catch(20),
   q: z.string().trim().min(1).optional().catch(undefined),
-  role: z.enum(["user", "admin"]).optional().catch(undefined),
+  role: userRoleSchema.optional().catch(undefined),
 });
 
 export type AdminUserListQueryInput = z.infer<typeof adminUserListQuerySchema>;
