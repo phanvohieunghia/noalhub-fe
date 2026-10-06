@@ -7,8 +7,33 @@
  * The env var holds an origin only, never `/api`: changing hosts in production
  * should not require remembering the suffix.
  */
-const RAW_API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3101";
+let customApiOrigin: string | null = null;
+let customWsUrl: string | null = null;
+
+const configListeners = new Set<() => void>();
+
+/**
+ * Configure API origin and WebSocket URL dynamically at runtime (e.g. for React Native / Expo).
+ * If not called, falls back to `process.env.NEXT_PUBLIC_API_BASE_URL` / `process.env.NEXT_PUBLIC_WS_URL`.
+ */
+export function configureApi(input: { apiOrigin: string; wsUrl?: string }): void {
+  customApiOrigin = input.apiOrigin;
+  if (input.wsUrl) {
+    customWsUrl = input.wsUrl;
+  }
+  for (const listener of configListeners) {
+    try {
+      listener();
+    } catch {
+      /* ignored */
+    }
+  }
+}
+
+export function onApiConfigChange(cb: () => void): () => void {
+  configListeners.add(cb);
+  return () => configListeners.delete(cb);
+}
 
 /**
  * Normalize down to a bare ORIGIN and re-attach `/api`: strip any trailing `/`
@@ -25,9 +50,24 @@ export function apiBaseUrlFrom(rawOrigin: string): string {
   return `${rawOrigin.replace(/\/+$/, "").replace(/\/api$/, "")}/api`;
 }
 
-const API_ORIGIN = RAW_API_BASE_URL.replace(/\/+$/, "").replace(/\/api$/, "");
+export function getApiOrigin(): string {
+  if (customApiOrigin) return customApiOrigin.replace(/\/+$/, "").replace(/\/api$/, "");
+  const raw = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3101";
+  return raw.replace(/\/+$/, "").replace(/\/api$/, "");
+}
 
-export const API_BASE_URL = apiBaseUrlFrom(RAW_API_BASE_URL);
+export function getApiBaseUrl(): string {
+  if (customApiOrigin) return apiBaseUrlFrom(customApiOrigin);
+  const raw = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3101";
+  return apiBaseUrlFrom(raw);
+}
+
+export function getWsUrl(): string {
+  if (customWsUrl) return customWsUrl;
+  return process.env.NEXT_PUBLIC_WS_URL ?? getApiOrigin().replace(/^http/, "ws");
+}
+
+export const API_BASE_URL = getApiBaseUrl();
 
 /**
  * Socket.IO connects to the ORIGIN, not to `/api`: its handshake goes through
@@ -38,8 +78,7 @@ export const API_BASE_URL = apiBaseUrlFrom(RAW_API_BASE_URL);
  * A separate variable because production usually differs in host/scheme
  * (`wss://`).
  */
-export const WS_URL =
-  process.env.NEXT_PUBLIC_WS_URL ?? API_ORIGIN.replace(/^http/, "ws");
+export const WS_URL = getWsUrl();
 
 /**
  * The internal Storybook, shown as a link on the admin screen that manages who

@@ -10,10 +10,14 @@
     "confirm": "Xác nhận",
     "back": "Quay lại",
     "add": "Thêm",
+    "create": "Tạo",
     "viewAll": "Xem tất cả",
     "copy": "Sao chép",
     "copied": "Đã sao chép",
-    "continue": "Tiếp tục"
+    "continue": "Tiếp tục",
+    "show": "Hiện",
+    "hide": "Ẩn",
+    "logout": "Đăng xuất"
   },
   "states": {
     "loading": "Đang tải…",
@@ -34,6 +38,8 @@
     "range": "{from}–{to} trên {total}"
   },
   "errors": {
+    "invalidCredentials": "Email hoặc mật khẩu không chính xác.",
+    "emailTaken": "Email này đã được sử dụng.",
     "unknown": "Đã có lỗi xảy ra",
     "generic": "Đã có lỗi xảy ra. Vui lòng thử lại.",
     "network": "Không kết nối được tới máy chủ. Kiểm tra mạng rồi thử lại.",

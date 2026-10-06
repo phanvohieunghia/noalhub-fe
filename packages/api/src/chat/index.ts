@@ -11,3 +11,4 @@ export * from "./types";
 export * from "./schemas";
 export * from "./ephemeral-store";
 export * from "./outbox";
+export { connectChatSocket, disconnectChatSocket } from "./socket";

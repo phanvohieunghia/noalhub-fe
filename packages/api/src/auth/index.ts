@@ -12,3 +12,4 @@ export * from "./roles";
 export * from "./schemas";
 export * from "./store";
 export * from "./token-store";
+export { ensureAccessToken } from "../client";

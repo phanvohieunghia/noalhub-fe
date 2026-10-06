@@ -1,0 +1,33 @@
+{
+  "name": "@noalhub/ui-native",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "gen:icons": "node scripts/generate-icon-data.mjs"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.tsx"
+  },
+  "dependencies": {
+    "@noalhub/config": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-native": "*",
+    "react-native-svg": "*"
+  },
+  "devDependencies": {
+    "@iconify-json/lucide": "^1.2.129",
+    "@noalhub/config": "workspace:*",
+    "@types/react": "^19",
+    "nativewind": "^4.2.6",
+    "react": "19.2.4",
+    "react-native": "0.86.3",
+    "react-native-css-interop": "0.2.6",
+    "react-native-svg": "15.15.4",
+    "typescript": "^5"
+  }
+}

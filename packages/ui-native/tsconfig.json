@@ -1,0 +1,12 @@
+{
+  "extends": "@noalhub/config/tsconfig.base.json",
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "nativewind-env.d.ts"],
+  "exclude": ["node_modules"]
+}

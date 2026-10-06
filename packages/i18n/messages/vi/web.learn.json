@@ -40,7 +40,9 @@
     "seeResult": "Xem kết quả",
     "summaryTitle": "Hoàn thành bộ câu hỏi",
     "summaryCorrect": "Đúng {rate}%",
-    "summaryKnown": "Đã nhớ {rate}%, theo bạn tự đánh giá"
+    "summaryKnown": "Đã nhớ {rate}%, theo bạn tự đánh giá",
+    "showExplanation": "Xem giải thích",
+    "autoClose": "Tự đóng sau {seconds} giây · chạm để đóng ngay"
   },
   "answer": {
     "submit": "Trả lời",

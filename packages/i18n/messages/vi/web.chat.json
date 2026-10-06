@@ -57,7 +57,8 @@
   "typing": {
     "one": "{name} đang nhập…",
     "two": "{first} và {second} đang nhập…",
-    "many": "{first} và {count} người khác đang nhập…"
+    "many": "{first} và {count} người khác đang nhập…",
+    "someone": "Đang soạn tin nhắn…"
   },
   "presence": {
     "online": "Đang hoạt động",

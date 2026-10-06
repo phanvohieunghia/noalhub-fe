@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import type { Message } from "../message";
 
-import type { MediaKind } from "./types";
+import type { MediaKind, UploadFile } from "./types";
 
 /* ------------------------------------------------------------------------- *
  * Allowlist — a copy of the backend's `src/media/media-limits.ts`
@@ -77,24 +77,26 @@ function formatBytes(bytes: number): string {
  * from one object only create the chance to pass them crossed over.
  */
 export function describeMediaRejection(
-  file: File,
+  file: UploadFile,
   options: { allow?: readonly string[] } = {},
 ): Message | null {
   const allow = options.allow ?? Object.keys(MEDIA_MIME_TO_KIND);
-  if (!allow.includes(file.type)) {
+  const mime = file.type || "application/octet-stream";
+  if (!allow.includes(mime)) {
     return {
       key: "validation.file.typeNotAllowed",
       values: {
-        type: file.type,
-        allowed: allow.map((mime) => mime.replace(/^[a-z]+\//, "")).join(", "),
+        type: mime,
+        allowed: allow.map((m) => m.replace(/^[a-z]+\//, "")).join(", "),
       },
     };
   }
-  const max = maxBytesForMime(file.type);
-  if (max !== null && file.size > max) {
+  const fileSize = typeof file.size === "number" ? file.size : 0;
+  const max = maxBytesForMime(mime);
+  if (max !== null && fileSize > max) {
     return {
       key: "validation.file.tooLarge",
-      values: { size: formatBytes(file.size), max: formatBytes(max) },
+      values: { size: formatBytes(fileSize), max: formatBytes(max) },
     };
   }
   if (file.size === 0) return { key: "validation.file.empty" };

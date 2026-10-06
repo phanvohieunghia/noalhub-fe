@@ -3,6 +3,7 @@ import {
   adminBlogPostListSchema,
   blogCategoryListSchema,
   blogCategorySchema,
+  blogPostListSchema,
   blogPostSchema,
   blogTagListSchema,
   blogTagSchema,
@@ -16,6 +17,8 @@ import type {
   AdminBlogPostQuery,
   BlogCategory,
   BlogPost,
+  BlogPostList,
+  BlogPostQuery,
   BlogTag,
   AdminBlogSlugList,
   AdminBlogSlugQuery,
@@ -331,5 +334,55 @@ export async function createBlogTag(name: string): Promise<BlogTag> {
     { name },
     { authRequired: true, schema: blogTagSchema },
   );
+  return data;
+}
+
+/* --------------------------------- Public ---------------------------------- */
+
+/**
+ * GET /blog/posts → 200 BlogPostList.
+ * Public published posts listing (e.g. for mobile).
+ */
+export async function listPublishedBlogPosts(
+  query: BlogPostQuery = {},
+  signal?: AbortSignal,
+): Promise<BlogPostList> {
+  const { data } = await http.get<BlogPostList>("/blog/posts", {
+    params: query,
+    schema: blogPostListSchema,
+    signal,
+  });
+  return data;
+}
+
+/**
+ * GET /blog/posts/{slug} → 200 BlogPost.
+ * Public post detail (e.g. for mobile).
+ */
+export async function getPublishedBlogPost(
+  slug: string,
+  signal?: AbortSignal,
+): Promise<BlogPost> {
+  const { data } = await http.get<BlogPost>(
+    `/blog/posts/${encodeURIComponent(slug)}`,
+    {
+      schema: blogPostSchema,
+      signal,
+    },
+  );
+  return data;
+}
+
+/**
+ * GET /blog/categories → 200 BlogCategory[].
+ * Public categories list (e.g. for mobile).
+ */
+export async function listBlogCategories(
+  signal?: AbortSignal,
+): Promise<BlogCategory[]> {
+  const { data } = await http.get<BlogCategory[]>("/blog/categories", {
+    schema: blogCategoryListSchema,
+    signal,
+  });
   return data;
 }

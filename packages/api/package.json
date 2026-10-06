@@ -10,6 +10,7 @@
     "./config": "./src/config.ts",
     "./errors": "./src/errors.ts",
     "./message": "./src/message.ts",
+    "./storage": "./src/storage.ts",
     "./admin": "./src/admin/index.ts",
     "./auth": "./src/auth/index.ts",
     "./blog": "./src/blog/index.ts",

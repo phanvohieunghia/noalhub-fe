@@ -10,10 +10,14 @@
     "confirm": "Confirm",
     "back": "Back",
     "add": "Add",
+    "create": "Create",
     "viewAll": "View all",
     "copy": "Copy",
     "copied": "Copied",
-    "continue": "Continue"
+    "continue": "Continue",
+    "show": "Show",
+    "hide": "Hide",
+    "logout": "Sign out"
   },
   "states": {
     "loading": "Loading…",
@@ -34,6 +38,8 @@
     "range": "{from}–{to} of {total}"
   },
   "errors": {
+    "invalidCredentials": "Invalid email or password.",
+    "emailTaken": "This email is already in use.",
     "unknown": "Something went wrong",
     "generic": "Something went wrong. Please try again.",
     "network": "Could not reach the server. Check your connection and try again.",

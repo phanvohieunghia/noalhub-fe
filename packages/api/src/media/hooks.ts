@@ -5,7 +5,7 @@ import { useCallback, useRef, useState } from "react";
 
 import * as mediaApi from "./api";
 import { describeMediaRejection } from "./schemas";
-import type { MediaAsset, UploadProgress } from "./types";
+import type { MediaAsset, UploadFile, UploadProgress } from "./types";
 import { MessageError } from "../message";
 
 
@@ -26,7 +26,7 @@ export function useUploadMedia(options: { allow?: readonly string[] } = {}) {
   const [progress, setProgress] = useState<UploadProgress | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const mutation = useMutation<MediaAsset, Error, File>({
+  const mutation = useMutation<MediaAsset, Error, UploadFile>({
     mutationFn: async (file) => {
       /*
        * Checked on the client BEFORE calling presign. The backend still checks
@@ -39,7 +39,8 @@ export function useUploadMedia(options: { allow?: readonly string[] } = {}) {
 
       const controller = new AbortController();
       abortRef.current = controller;
-      setProgress({ loaded: 0, total: file.size, ratio: 0 });
+      const total = typeof file.size === "number" ? file.size : 0;
+      setProgress({ loaded: 0, total, ratio: 0 });
 
       try {
         return await mediaApi.uploadMedia({

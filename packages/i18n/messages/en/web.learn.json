@@ -40,7 +40,9 @@
     "seeResult": "See the result",
     "summaryTitle": "Set complete",
     "summaryCorrect": "{rate}% answered correctly",
-    "summaryKnown": "{rate}% remembered, by your own judgement"
+    "summaryKnown": "{rate}% remembered, by your own judgement",
+    "showExplanation": "Show explanation",
+    "autoClose": "Closes in {seconds}s · tap to close now"
   },
   "answer": {
     "submit": "Answer",

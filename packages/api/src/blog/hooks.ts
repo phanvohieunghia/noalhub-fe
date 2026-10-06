@@ -10,6 +10,7 @@ import type {
   AdminBlogSlugQuery,
   BlogCategory,
   BlogPost,
+  BlogPostQuery,
 } from "./types";
 
 /**
@@ -26,6 +27,10 @@ export const blogKeys = {
   postList: (query: AdminBlogPostQuery) =>
     [...blogKeys.posts(), "list", query] as const,
   postDetail: (id: string) => [...blogKeys.posts(), "detail", id] as const,
+  publishedPosts: (query: BlogPostQuery = {}) =>
+    [...blogKeys.posts(), "published", query] as const,
+  publishedPost: (slug: string) =>
+    [...blogKeys.posts(), "detail-slug", slug] as const,
   categories: () => [...blogKeys.all, "categories"] as const,
   tags: () => [...blogKeys.all, "tags"] as const,
   slugs: () => [...blogKeys.all, "slugs"] as const,
@@ -269,5 +274,30 @@ export function useDeleteAdminBlogSlug() {
     mutationFn: (id: string) => blogApi.deleteAdminBlogSlug(id),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: blogKeys.slugs() }),
+  });
+}
+
+/* --------------------------------- Public ---------------------------------- */
+
+export function usePublishedPosts(query: BlogPostQuery = {}) {
+  return useQuery({
+    queryKey: blogKeys.publishedPosts(query),
+    queryFn: ({ signal }) => blogApi.listPublishedBlogPosts(query, signal),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function usePublishedPost(slug: string | undefined) {
+  return useQuery({
+    queryKey: blogKeys.publishedPost(slug ?? ""),
+    queryFn: ({ signal }) => blogApi.getPublishedBlogPost(slug!, signal),
+    enabled: Boolean(slug),
+  });
+}
+
+export function useBlogCategories() {
+  return useQuery({
+    queryKey: blogKeys.categories(),
+    queryFn: ({ signal }) => blogApi.listBlogCategories(signal),
   });
 }

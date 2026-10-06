@@ -1,5 +1,5 @@
 import { http } from "../client";
-import { API_BASE_URL } from "../config";
+import { getApiBaseUrl } from "../config";
 import { sessionSchema, tokenPairSchema, userSchema } from "./schemas";
 import type {
   ChangePasswordInput,
@@ -134,7 +134,7 @@ export async function changePassword(
  * backend, and the spec takes no `redirect_uri`.
  */
 export function oauthStartUrl(provider: OAuthProvider): string {
-  return `${API_BASE_URL}/auth/oauth/${provider}`;
+  return `${getApiBaseUrl()}/auth/oauth/${provider}`;
 }
 
 /**

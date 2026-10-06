@@ -1,7 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import type { ZodType } from "zod";
 
-import { API_BASE_URL } from "./config";
+import { API_BASE_URL, getApiBaseUrl, onApiConfigChange } from "./config";
 import { ApiError, ERROR_CODES } from "./errors";
 import type { ApiErrorBody } from "./errors";
 import { tokenStore } from "./auth/token-store";
@@ -29,7 +29,7 @@ declare module "axios" {
 }
 
 export const http = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: getApiBaseUrl(),
   headers: { "Content-Type": "application/json" },
 });
 
@@ -38,8 +38,14 @@ export const http = axios.create({
  * cannot recurse into itself.
  */
 const refreshHttp = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: getApiBaseUrl(),
   headers: { "Content-Type": "application/json" },
+});
+
+onApiConfigChange(() => {
+  const url = getApiBaseUrl();
+  http.defaults.baseURL = url;
+  refreshHttp.defaults.baseURL = url;
 });
 
 /**
@@ -110,9 +116,12 @@ function refreshTokens(): Promise<AuthTokens> {
  *
  * The Web Locks API holds the lock per origin and releases it when the tab
  * dies, even one closed mid-flight — something a localStorage flag cannot do (a
- * dead tab leaves the flag stuck forever). Browsers without it run straight
- * through: the cross-tab guard is lost, but the backend's grace window still
- * covers it.
+ * dead tab leaves the flag stuck forever).
+ *
+ * In environments without `navigator.locks` (e.g. React Native / Expo or older
+ * browsers), `withRefreshLock` runs straight through. On mobile, there is only
+ * a single process and single tab, so in-process `refreshPromise` is already
+ * completely sufficient without external locking.
  */
 function withRefreshLock<T>(run: () => Promise<T>): Promise<T> {
   const locks = globalThis.navigator?.locks;

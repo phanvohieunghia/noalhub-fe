@@ -57,7 +57,8 @@
   "typing": {
     "one": "{name} is typing…",
     "two": "{first} and {second} are typing…",
-    "many": "{first} and {count} others are typing…"
+    "many": "{first} and {count} others are typing…",
+    "someone": "Someone is typing…"
   },
   "presence": {
     "online": "Active now",

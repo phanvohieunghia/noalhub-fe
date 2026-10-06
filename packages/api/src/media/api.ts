@@ -1,7 +1,7 @@
 import { http } from "../client";
 import { mediaAssetSchema, presignedUploadSchema } from "./schemas";
 import { StorageUploadError } from "./types";
-import type { MediaAsset, PresignedUpload, UploadProgress } from "./types";
+import type { MediaAsset, PresignedUpload, UploadFile, UploadProgress } from "./types";
 
 /**
  * The media feature's **client** path — used only by `apps/admin`. Contract:
@@ -55,7 +55,7 @@ export async function completeMedia(
 }
 
 /**
- * Step 2 — the browser `PUT`s straight to storage.
+ * Step 2 — the client (browser or native) `PUT`s straight to storage.
  *
  * ⚠️ **Do not use `http` (the axios instance) here.** Three reasons, any one of
  * them fatal: `baseURL` would append `uploadUrl` to the API's origin; the
@@ -69,12 +69,12 @@ export async function completeMedia(
  * video with no progress bar just looks like a frozen app.
  *
  * `Content-Type` must match **exactly** what was declared in step 1: it is part
- * of what was signed. `Content-Length` is set by the browser from the body and
+ * of what was signed. `Content-Length` is set by the client from the body and
  * cannot be set by hand.
  */
 export function putToStorage(params: {
   uploadUrl: string;
-  file: File;
+  file: UploadFile;
   onProgress?: (progress: UploadProgress) => void;
   signal?: AbortSignal;
 }): Promise<void> {
@@ -83,7 +83,7 @@ export function putToStorage(params: {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("PUT", uploadUrl, true);
-    xhr.setRequestHeader("Content-Type", file.type);
+    xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
 
     xhr.upload.onprogress = (event) => {
       if (!onProgress) return;
@@ -130,7 +130,9 @@ export function putToStorage(params: {
       signal.addEventListener("abort", () => xhr.abort(), { once: true });
     }
 
-    xhr.send(file);
+    // React Native's XMLHttpRequest accepts { uri, type, name } object
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    xhr.send(file as any);
   });
 }
 
@@ -145,16 +147,17 @@ export function putToStorage(params: {
  * should not be): the backend's cleanup job removes it after 24h.
  */
 export async function uploadMedia(params: {
-  file: File;
+  file: UploadFile;
   onProgress?: (progress: UploadProgress) => void;
   signal?: AbortSignal;
 }): Promise<MediaAsset> {
   const { file, onProgress, signal } = params;
+  const sizeBytes = "size" in file && typeof file.size === "number" ? file.size : 0;
 
   const ticket = await presignMedia(
     {
       mime: file.type,
-      sizeBytes: file.size,
+      sizeBytes,
       // For display on the backend only; it takes NO part in the storage key.
       originalName: file.name || null,
     },

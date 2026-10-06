@@ -1,12 +1,13 @@
+import { getStorage } from "../storage";
 import type { AuthTokens } from "./types";
 
 /**
- * AN ISOLATION BOUNDARY — the only file in the codebase allowed to touch
- * localStorage.
+ * AN ISOLATION BOUNDARY — the module managing auth token lifecycle.
  *
  * The access token lives in a module variable (memory): lost on reload, but out
  * of reach of "read the storage" XSS. The refresh token has to survive a reload
- * and therefore lives in localStorage.
+ * and lives in the configured KeyValueStorage (localStorage on web,
+ * SecureStore on mobile).
  *
  * To move to httpOnly cookies plus a BFF later: rewrite this one file, and no
  * component has to change.
@@ -44,22 +45,17 @@ export const tokenStore = {
 
   setTokens(tokens: AuthTokens) {
     accessToken = tokens.accessToken;
-    if (typeof window !== "undefined") {
-      localStorage.setItem(REFRESH_KEY, tokens.refreshToken);
-    }
+    getStorage().set(REFRESH_KEY, tokens.refreshToken);
     notify();
   },
 
   getRefresh(): string | null {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem(REFRESH_KEY);
+    return getStorage().get(REFRESH_KEY);
   },
 
   clear() {
     accessToken = null;
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(REFRESH_KEY);
-    }
+    getStorage().remove(REFRESH_KEY);
     notify();
   },
 
@@ -75,23 +71,17 @@ export const tokenStore = {
   },
 
   /**
-   * Cross-tab sync: another tab cleared the refresh token (logout) → this tab
+   * Cross-tab / external sync: another tab or external process cleared the refresh token (logout) → this instance
    * must sign out too. Returns an unsubscribe function.
    */
   onExternalClear(callback: () => void): () => void {
-    if (typeof window === "undefined") return () => {};
+    const storage = getStorage();
+    if (!storage.subscribeExternalClear) return () => {};
 
-    const handler = (event: StorageEvent) => {
-      // event.key === null means localStorage.clear()
-      if (event.key !== null && event.key !== REFRESH_KEY) return;
-      if (event.newValue === null) {
-        accessToken = null;
-        notify();
-        callback();
-      }
-    };
-
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
+    return storage.subscribeExternalClear(REFRESH_KEY, () => {
+      accessToken = null;
+      notify();
+      callback();
+    });
   },
 };

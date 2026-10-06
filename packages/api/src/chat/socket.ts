@@ -1,6 +1,6 @@
 import { io, type Socket } from "socket.io-client";
 
-import { CHAT_NAMESPACE, WS_URL } from "../config";
+import { CHAT_NAMESPACE, getWsUrl, WS_URL } from "../config";
 import { ensureAccessToken } from "../client";
 import { tokenStore } from "../auth/token-store";
 
@@ -47,7 +47,8 @@ export function connectChatSocket(): Promise<Socket | null> {
     // Another call finished building the socket while we awaited.
     if (socket) return socket;
 
-    socket = io(`${WS_URL}${CHAT_NAMESPACE}`, {
+    const wsUrl = getWsUrl();
+    socket = io(`${wsUrl}${CHAT_NAMESPACE}`, {
       // The token rides in the handshake payload, NOT in the query string
       // (query strings end up in the server's access log).
       auth: { token },
@@ -173,6 +174,30 @@ function clearRefreshTimer() {
   refreshTimer = null;
 }
 
+function decodeBase64(str: string): string {
+  if (typeof globalThis.atob === "function") {
+    return globalThis.atob(str);
+  }
+  const maybeBuffer = (globalThis as unknown as { Buffer?: { from(data: string, encoding: string): { toString(enc: string): string } } }).Buffer;
+  if (maybeBuffer) {
+    return maybeBuffer.from(str, "base64").toString("utf-8");
+  }
+  // Pure JS fallback
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+  let output = "";
+  const clean = String(str).replace(/=+$/, "");
+  for (
+    let bc = 0, bs = 0, buffer: number, idx = 0;
+    (buffer = clean.charCodeAt(idx++));
+    ~buffer && ((bs = bc % 4 ? bs * 64 + buffer : buffer), bc++ % 4)
+      ? (output += String.fromCharCode(255 & (bs >> ((-2 * bc) & 6))))
+      : 0
+  ) {
+    buffer = chars.indexOf(String.fromCharCode(buffer));
+  }
+  return output;
+}
+
 /**
  * Reads `exp` (in seconds) from the JWT payload. For scheduling renewal ONLY —
  * never for a security decision; the signature is not verified on the client.
@@ -182,7 +207,7 @@ function readJwtExpiry(token: string): number | null {
     const payload = token.split(".")[1];
     if (!payload) return null;
     const json = JSON.parse(
-      atob(payload.replace(/-/g, "+").replace(/_/g, "/")),
+      decodeBase64(payload.replace(/-/g, "+").replace(/_/g, "/")),
     ) as { exp?: number };
     return typeof json.exp === "number" ? json.exp * 1000 : null;
   } catch {

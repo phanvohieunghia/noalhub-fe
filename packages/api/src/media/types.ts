@@ -54,6 +54,20 @@ export type MediaAsset = {
   createdAt: string;
 };
 
+/**
+ * Platform-agnostic file shape for uploads.
+ * Web uses DOM `File` / `Blob`.
+ * React Native / Expo uses `{ uri: string; name: string; type: string; size?: number }`.
+ */
+export type UploadFile =
+  | File
+  | {
+      uri: string;
+      name: string;
+      type: string;
+      size?: number;
+    };
+
 /** Step 2's progress. `total` is 0 when the browser cannot report a length. */
 export type UploadProgress = {
   loaded: number;
