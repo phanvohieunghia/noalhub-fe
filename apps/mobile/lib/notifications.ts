@@ -95,7 +95,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
     // getExpoPushTokenAsync throws without a project id; say why instead.
     if (!projectId) {
       if (__DEV__) {
-        console.warn("[PushNotifications] EAS_PROJECT_ID is not set (see .env.example); skipping push token.");
+        console.warn("[PushNotifications] EAS project id is missing from app.config.ts; skipping push token.");
       }
       return null;
     }

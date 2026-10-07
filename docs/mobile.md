@@ -304,3 +304,50 @@ Giai đoạn 0 đứng độc lập và **có giá trị ngay cả khi dừng d�
 | pnpm + Metro | Xử lý một lần ở GĐ 1 (§7); nếu quá đau, phương án dự phòng là `node-linker=hoisted` cho riêng `apps/mobile` |
 | Hai bảng màu lệch nhau | §5.7 sinh cả hai từ một file dữ liệu, không copy tay |
 | Sửa `packages/api` làm hỏng web | GĐ 0 tách riêng, mọi thay đổi đều có default giữ nguyên hành vi cũ |
+
+---
+
+## 11. Bản thử nghiệm không cần Apple Developer: Expo Go + EAS Update
+
+Chưa có tài khoản 99$/năm (§9-C) thì không ký được bản Ad Hoc/TestFlight. Đường
+miễn phí là **Expo Go** (có sẵn trên App Store) tải bundle JS từ **EAS Update**:
+quét một mã QR cố định, không cần bật máy Mac.
+
+Cấu hình đã có sẵn trong `apps/mobile/app.config.ts`:
+
+- `runtimeVersion: "exposdk:57.0.0"` — Expo Go **chỉ nhận** update có runtime
+  `exposdk:<SDK của nó>`. Nâng `expo` lên major mới thì phải sửa giá trị này.
+  Trước khi làm bản standalone/dev build thật, đổi sang policy theo build
+  (ví dụ `{ policy: "fingerprint" }`).
+- `updates.url` + `extra.eas.projectId` ghi thẳng project id (không phải bí mật).
+
+### Phát hành một bản
+
+```bash
+cd apps/mobile
+cp .env.preview.example .env.preview   # một lần — điền URL backend thật (https/wss)
+npx eas login                          # một lần
+pnpm update:preview --message "mô tả thay đổi"
+```
+
+`update:preview` nạp `.env.preview` vào **biến shell**, mà biến shell thắng mọi
+file `.env*` của Expo — nên `.env.local` (localhost cho dev) không bị gắn vào
+bundle. `EXPO_PUBLIC_*` được **inline lúc build**: đổi URL backend là phải chạy
+lại lệnh.
+
+### Mã QR
+
+Channel `preview` cố định nên link cũng cố định — in một lần, dùng mãi:
+
+```
+https://qr.expo.dev/eas-update?projectId=685744ca-643b-49e8-a59a-fd9b241f1f31&runtimeVersion=exposdk:57.0.0&channel=preview
+```
+
+URL trên trả về ảnh SVG của mã QR (nhúng thẳng vào trang trên VPS bằng `<img>`).
+Thêm `&format=url` để lấy link thô rồi tự sinh QR (`qrencode`).
+
+### Giới hạn
+
+- Chỉ chạy được module native **có sẵn trong Expo Go**.
+- **Push notification từ xa không hoạt động** trong Expo Go (chỉ local).
+- Người dùng phải cài Expo Go đúng SDK 57.

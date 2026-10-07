@@ -8,6 +8,7 @@
     "start:go": "EXPO_NO_REDIRECT_PAGE=1 NODE_OPTIONS=--dns-result-order=ipv4first expo start --go --localhost",
     "android": "expo run:android",
     "ios": "expo run:ios",
+    "update:preview": "sh -c 'set -a && . ./.env.preview && set +a && eas update --channel preview --clear-cache \"$@\"' --",
     "lint": "eslint",
     "typecheck": "tsc --noEmit"
   },
@@ -31,6 +32,7 @@
     "expo-router": "~57.0.20",
     "expo-secure-store": "~57.0.3",
     "expo-status-bar": "~57.0.1",
+    "expo-updates": "~57.0.25",
     "nativewind": "^4.2.6",
     "react": "19.2.4",
     "react-hook-form": "^7.83.0",
@@ -46,6 +48,7 @@
   },
   "devDependencies": {
     "@types/react": "^19",
+    "eas-cli": "^24.11.0",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
   }
