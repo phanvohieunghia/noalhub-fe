@@ -8,5 +8,17 @@
   "verifiedUsers": "Đã verify email",
   "newUsers": "Mới trong 7 ngày",
   "newUsersHint": "Cửa sổ 7 ngày do backend tính",
-  "admins": "Quản trị viên"
+  "admins": "Quản trị viên",
+  "verificationRate": "Tỉ lệ verify email",
+  "verified": "Đã verify",
+  "unverified": "Chưa verify",
+  "verificationSummary": "{verified} trên {total} người dùng đã verify email",
+  "adminShare": "Tỉ lệ quản trị viên",
+  "adminsLabel": "Quản trị viên",
+  "regularUsers": "Người dùng thường",
+  "adminShareSummary": "{admins} trên {total} người dùng là quản trị viên",
+  "recentShare": "Tham gia trong 7 ngày",
+  "newLabel": "Mới",
+  "earlier": "Trước đó",
+  "recentShareSummary": "{recent} trên {total} người dùng tham gia trong 7 ngày qua"
 }

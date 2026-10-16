@@ -8,5 +8,17 @@
   "verifiedUsers": "Verified email",
   "newUsers": "New in 7 days",
   "newUsersHint": "The 7-day window is computed by the backend",
-  "admins": "Administrators"
+  "admins": "Administrators",
+  "verificationRate": "Verification rate",
+  "verified": "Verified",
+  "unverified": "Unverified",
+  "verificationSummary": "{verified} of {total} users have verified their email",
+  "adminShare": "Administrator share",
+  "adminsLabel": "Administrators",
+  "regularUsers": "Regular users",
+  "adminShareSummary": "{admins} of {total} users are administrators",
+  "recentShare": "Joined in 7 days",
+  "newLabel": "New",
+  "earlier": "Earlier",
+  "recentShareSummary": "{recent} of {total} users joined in the last 7 days"
 }
