@@ -19,7 +19,7 @@
   "recentShareSummary": "{recent} trên {total} người dùng tham gia trong 7 ngày qua",
   "signups": {
     "title": "Người dùng mới theo thời gian",
-    "total": "{count} người dùng mới trong kỳ này",
+    "total": "{count, number} người dùng mới trong kỳ này",
     "change": "{percent} so với kỳ trước",
     "rangeLabel": "Khoảng thời gian",
     "ranges": {

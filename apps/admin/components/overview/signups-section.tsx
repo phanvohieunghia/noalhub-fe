@@ -132,14 +132,20 @@ export function SignupsSection() {
                 contentStyle={TOOLTIP_STYLE}
                 cursor={{ fill: "var(--muted)" }}
               />
-              <Legend wrapperStyle={{ fontSize: 12, color: "var(--muted-foreground)" }} />
+              <Legend
+                wrapperStyle={{ fontSize: 12 }}
+                // Recharts paints the label in the series colour, which for the
+                // translucent "unverified" series is nearly unreadable text.
+                formatter={(value) => <span style={{ color: "var(--muted-foreground)" }}>{value}</span>}
+              />
               <Bar dataKey="verified" name={t("verified")} stackId="status" fill="var(--primary)" />
               <Bar
                 dataKey="unverified"
                 name={t("unverified")}
                 stackId="status"
-                fill="var(--muted-foreground)"
-                fillOpacity={0.35}
+                // color-mix rather than `fillOpacity`: Recharts' legend swatch ignores
+                // opacity, so the swatch came out darker than the bars it labels.
+                fill="color-mix(in srgb, var(--muted-foreground) 35%, transparent)"
               />
             </BarChart>
           </ResponsiveContainer>
