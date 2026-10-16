@@ -27,10 +27,8 @@ export function OverviewContent() {
   // total by one — a negative "unverified" would be worse than an off-by-one.
   const total = stats.data?.totalUsers ?? 0;
   const verified = stats.data?.verifiedUsers ?? 0;
-  const admins = stats.data?.admins ?? 0;
   const recent = stats.data?.newUsersLast7Days ?? 0;
   const unverified = Math.max(total - verified, 0);
-  const regularUsers = Math.max(total - admins, 0);
   const earlier = Math.max(total - recent, 0);
 
   if (stats.isError) {
@@ -89,7 +87,7 @@ export function OverviewContent() {
 
       {/* Everything below is derived from the same four numbers — no extra
           endpoint, so it is exactly as fresh (and as unfresh) as the cards above. */}
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
         <ProportionCard
           title={t("verificationRate")}
           isLoading={stats.isPending}
@@ -98,15 +96,6 @@ export function OverviewContent() {
             { label: t("unverified"), value: unverified, tone: "muted" },
           ]}
           summary={t("verificationSummary", { verified, total })}
-        />
-        <ProportionCard
-          title={t("adminShare")}
-          isLoading={stats.isPending}
-          segments={[
-            { label: t("adminsLabel"), value: admins, tone: "primary" },
-            { label: t("regularUsers"), value: regularUsers, tone: "muted" },
-          ]}
-          summary={t("adminShareSummary", { admins, total })}
         />
         <ProportionCard
           title={t("recentShare")}

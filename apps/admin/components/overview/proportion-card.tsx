@@ -4,22 +4,35 @@ import { Typography } from "@noalhub/ui/typography";
 export type ProportionSegment = {
   label: string;
   value: number;
-  /** Fill of this segment's slice of the bar and its legend dot. */
+  /** Colour of this segment's arc and its legend dot. */
   tone: "primary" | "muted";
 };
 
-const TONES = {
+const STROKES = {
+  primary: "stroke-primary",
+  muted: "stroke-muted-foreground/30",
+} as const;
+
+const DOTS = {
   primary: "bg-primary",
   muted: "bg-muted-foreground/30",
 } as const;
 
+// A circle of radius R with its circumference as the dash unit: a segment of
+// `p` percent is just `p` of 100 dashes, so no arc maths is needed.
+const SIZE = 120;
+const STROKE_WIDTH = 14;
+const RADIUS = (SIZE - STROKE_WIDTH) / 2;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
 /**
- * A card that splits one total into two parts: a headline percentage for the
- * first segment, a bar, and a legend with the raw counts.
+ * A donut chart that splits one total into two parts: the first segment's share
+ * in the centre, a legend with the raw counts beside it.
  *
- * The bar is `role="img"` with a text label rather than a bare `div` pair — the
- * legend already carries the numbers, so a screen reader gets one sentence
- * instead of two meaningless empty boxes.
+ * Drawn as SVG circles by hand — a chart library for two rings would be the
+ * heaviest dependency in the app. The ring is `role="img"` with a text label
+ * rather than bare shapes; the legend already carries the numbers, so a screen
+ * reader gets one sentence instead of two meaningless arcs.
  */
 export function ProportionCard({
   title,
@@ -29,12 +42,13 @@ export function ProportionCard({
 }: {
   title: string;
   segments: [ProportionSegment, ProportionSegment];
-  /** Accessible description of the bar, e.g. "12 of 40 verified". */
+  /** Accessible description of the chart, e.g. "12 of 40 verified". */
   summary: string;
   isLoading?: boolean;
 }) {
   const total = segments[0].value + segments[1].value;
   const percent = total === 0 ? 0 : Math.round((segments[0].value / total) * 100);
+  const firstLength = total === 0 ? 0 : (segments[0].value / total) * CIRCUMFERENCE;
 
   return (
     <div className="border-border rounded-xl border p-6">
@@ -43,36 +57,63 @@ export function ProportionCard({
       </Typography>
 
       {isLoading ? (
-        <>
-          <Skeleton className="mt-2 h-10 w-24" />
-          <Skeleton className="mt-4 h-2 w-full" />
-        </>
+        <div className="mt-4 flex items-center gap-6">
+          <Skeleton className="size-30 shrink-0 rounded-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
       ) : (
-        <>
-          <Typography variant="h1" as="p" className="mt-2 tabular-nums">
-            {percent}%
-          </Typography>
-          <div
-            role="img"
-            aria-label={summary}
-            className="bg-muted mt-4 flex h-2 w-full overflow-hidden rounded-full"
-          >
-            <div className={`${TONES[segments[0].tone]} h-full`} style={{ width: `${percent}%` }} />
+        <div className="mt-4 flex flex-wrap items-center gap-6">
+          <div className="relative size-30 shrink-0">
+            <svg
+              role="img"
+              aria-label={summary}
+              viewBox={`0 0 ${SIZE} ${SIZE}`}
+              className="size-full -rotate-90"
+            >
+              {/* The rest of the ring, drawn full-circle underneath. */}
+              <circle
+                cx={SIZE / 2}
+                cy={SIZE / 2}
+                r={RADIUS}
+                fill="none"
+                strokeWidth={STROKE_WIDTH}
+                className={STROKES[segments[1].tone]}
+              />
+              {firstLength > 0 ? (
+                <circle
+                  cx={SIZE / 2}
+                  cy={SIZE / 2}
+                  r={RADIUS}
+                  fill="none"
+                  strokeWidth={STROKE_WIDTH}
+                  strokeDasharray={`${firstLength} ${CIRCUMFERENCE}`}
+                  className={STROKES[segments[0].tone]}
+                />
+              ) : null}
+            </svg>
+            <Typography
+              variant="h4"
+              as="p"
+              className="absolute inset-0 flex items-center justify-center tabular-nums"
+            >
+              {percent}%
+            </Typography>
           </div>
-          <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
+
+          <ul className="flex min-w-0 flex-1 flex-col gap-2">
             {segments.map((segment) => (
               <li key={segment.label} className="flex items-center gap-2">
-                <span aria-hidden className={`${TONES[segment.tone]} size-2 rounded-full`} />
+                <span aria-hidden className={`${DOTS[segment.tone]} size-2 shrink-0 rounded-full`} />
                 <Typography variant="body-3" as="span" className="text-muted-foreground">
                   {segment.label}
                 </Typography>
-                <Typography variant="body-3" as="span" weight={500} className="tabular-nums">
+                <Typography variant="body-3" as="span" weight={500} className="ml-auto tabular-nums">
                   {segment.value.toLocaleString("vi-VN")}
                 </Typography>
               </li>
             ))}
           </ul>
-        </>
+        </div>
       )}
     </div>
   );
