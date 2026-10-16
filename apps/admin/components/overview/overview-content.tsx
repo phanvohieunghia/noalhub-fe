@@ -8,6 +8,7 @@ import { StatCard } from "@noalhub/ui/stat-card";
 
 import { AdminErrorState } from "../admin-error-state";
 import { ProportionCard } from "./proportion-card";
+import { SignupsSection } from "./signups-section";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
@@ -107,6 +108,8 @@ export function OverviewContent() {
           summary={t("recentShareSummary", { recent, total })}
         />
       </div>
+
+      <SignupsSection />
     </main>
   );
 }

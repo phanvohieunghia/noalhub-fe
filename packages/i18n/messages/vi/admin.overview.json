@@ -16,5 +16,21 @@
   "recentShare": "Tham gia trong 7 ngày",
   "newLabel": "Mới",
   "earlier": "Trước đó",
-  "recentShareSummary": "{recent} trên {total} người dùng tham gia trong 7 ngày qua"
+  "recentShareSummary": "{recent} trên {total} người dùng tham gia trong 7 ngày qua",
+  "signups": {
+    "title": "Người dùng mới theo thời gian",
+    "total": "{count} người dùng mới trong kỳ này",
+    "change": "{percent} so với kỳ trước",
+    "rangeLabel": "Khoảng thời gian",
+    "ranges": {
+      "week": "Tuần",
+      "month": "Tháng",
+      "year": "Năm"
+    },
+    "sampleNotice": "Dữ liệu mẫu: backend chưa có endpoint theo thời gian nên các số này là số giả. Xem docs/admin-plan.md §2b.",
+    "newUsersTitle": "Người dùng mới",
+    "newUsersSummary": "Biểu đồ vùng số người dùng mới theo từng mốc thời gian trong khoảng đã chọn",
+    "statusTitle": "Người dùng mới theo trạng thái email",
+    "statusSummary": "Biểu đồ cột chồng chia người dùng mới của mỗi mốc thời gian thành đã verify và chưa verify email"
+  }
 }

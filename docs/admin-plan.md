@@ -68,6 +68,47 @@ cộng với việc **vá lỗ hổng phân quyền ở §1** (đây là việc 
 Hết Phase 1 thì nhóm A cạn contract: **không có** ban/khoá, đổi role, xoá user, buộc
 logout, resend verify. Nếu bạn cần chúng thì đó cũng là việc backend (§3).
 
+## 2b. Chart người dùng mới theo thời gian — đề xuất contract
+
+`/overview` có hai chart (người dùng mới theo thời gian; người dùng mới theo trạng thái
+email) với bộ lọc **tuần / tháng / năm**. Backend **chưa có** endpoint nào trả chuỗi thời
+gian, nên hiện chart chạy bằng **dữ liệu mẫu** (`use-signup-series.ts`) và trang hiện cảnh
+báo vàng nói rõ điều đó. Khi endpoint dưới đây có thật: thêm types + schema vào
+`packages/api/src/admin/`, viết hook `useAdminSignupSeries(range)`, đổi một dòng trong
+`signups-section.tsx`, rồi xoá cảnh báo và hook mẫu — **cùng một lượt**, không tách.
+
+- [ ] `GET /admin/stats/signups?range=week|month|year` — 403, 429 như các endpoint admin khác.
+
+```jsonc
+{
+  "range": "month",
+  "granularity": "day", // "day" cho week/month, "month" cho year
+  "points": [
+    { "date": "2026-09-17T00:00:00.000Z", "newUsers": 12, "verifiedNewUsers": 9 }
+    // ...
+  ],
+  "total": 342,         // tổng newUsers của kỳ này
+  "previousTotal": 301  // tổng của kỳ liền trước, cùng độ dài — để FE tính % thay đổi
+}
+```
+
+Ràng buộc cần backend chốt (FE không tự đoán được):
+
+- **Mốc thời gian dày đặc.** `points` phải đủ mọi mốc trong kỳ, mốc không có ai đăng ký
+  trả `0`. Nếu thiếu mốc thì FE vẽ đường nối tắt qua khoảng trống và nói dối về xu hướng.
+- **Múi giờ.** Bucket theo UTC hay theo giờ Việt Nam? Đề xuất UTC, ghi rõ trong spec — cùng
+  lý do "cửa sổ 7 ngày do backend tính" ở `AdminStatsDto`.
+- **"Tuần" và "tháng" là gì.** Đề xuất cuốn chiếu: 7 ngày / 30 ngày gần nhất tính cả hôm
+  nay; năm = 12 tháng gần nhất tính cả tháng hiện tại. Tháng cuối của `year` chưa trọn —
+  chốt xem có cần cờ `partial` để FE vẽ khác đi không.
+- **`verifiedNewUsers` là trạng thái _hiện tại_**, không phải lúc đăng ký: một người đăng
+  ký tháng trước và vừa verify hôm qua vẫn được tính là đã verify. Chart trạng thái email
+  vì thế đọc là "trong số người đăng ký ở mốc này, hiện bao nhiêu đã verify".
+- **Tài khoản đã xoá** (tombstone, `account-deletion.md` §4.6) có nằm trong `newUsers` không?
+  Phải khớp với cách `AdminStatsDto.totalUsers` đang đếm, nếu không hai con số trong cùng
+  một trang lệch nhau mà không ai giải thích được.
+- **Không cache** cũng như `/admin/stats`: FE dùng `staleTime` ngắn và nút làm mới.
+
 ## 3. Phase 2 — Nhóm B: cần backend trước
 
 **Chính sách đã chốt: metadata-only.** Admin **không** đọc được nội dung tin nhắn
