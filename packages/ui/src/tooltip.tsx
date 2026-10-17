@@ -19,18 +19,27 @@ export function Tooltip({
   children,
   side = "top",
   delayMs = 200,
+  open,
+  onOpenChange,
 }: {
   /** The text shown in the bubble. Empty renders the child on its own. */
   label: string;
   children: React.ReactNode;
   side?: "top" | "right" | "bottom" | "left";
   delayMs?: number;
+  /**
+   * Take over opening — for a trigger that should also open on tap (Radix closes
+   * on click and ignores touch). Pass both, and fold hover/focus into `open`
+   * through `onOpenChange`.
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   if (!label) return children;
 
   return (
     <RadixTooltip.Provider delayDuration={delayMs}>
-      <RadixTooltip.Root>
+      <RadixTooltip.Root open={open} onOpenChange={onOpenChange}>
         <RadixTooltip.Trigger asChild>{children}</RadixTooltip.Trigger>
         <RadixTooltip.Portal>
           <RadixTooltip.Content

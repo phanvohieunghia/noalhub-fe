@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import type { ConversationMember } from "@noalhub/api/chat";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * "An is typing…". It clears itself after 5s thanks to the TTL in the ephemeral
@@ -33,8 +34,13 @@ export function TypingIndicator({
         : t("many", { first: names[0]!, count: names.length - 1 });
 
   return (
-    <div className="text-body-4 h-5 shrink-0 px-4 opacity-60" aria-live="polite">
+    <Typography
+      as="div"
+      variant="body-4"
+      className="h-5 shrink-0 px-4 opacity-60"
+      aria-live="polite"
+    >
       {label}
-    </div>
+    </Typography>
   );
 }

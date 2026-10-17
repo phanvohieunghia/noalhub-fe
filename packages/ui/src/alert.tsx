@@ -90,7 +90,9 @@ export function Alert({ tone, message, onDismiss, autoDismissMs }: AlertProps) {
       className={`flex items-start gap-2 rounded-md border px-3 py-2 ${className}`}
     >
       <Icon icon={icon} className="mt-0.5 size-4 shrink-0" />
-      <span className="flex-1">{message}</span>
+      <Typography as="span" variant="body-3" className="flex-1">
+        {message}
+      </Typography>
       {onDismiss ? (
         <Button
           variant="ghost"

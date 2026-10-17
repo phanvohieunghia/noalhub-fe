@@ -7,8 +7,7 @@ import { useTranslations } from "use-intl";
 import type { Message } from "@noalhub/api/message";
 import {
   useFinishQaAttempt,
-  usePlayQaSet,
-  useQaAttempts,
+  useQaAttemptPlay,
   useQaAttemptReview,
   useSubmitQaAnswer,
   type QaAnswerResult,
@@ -25,7 +24,7 @@ import { NativePostContent } from "../../../../components/post-content";
 import { useMessage } from "../../../../lib/i18n";
 
 /**
- * Taking a set, one question at a time — same flow as the web `LearnAttempt`,
+ * Taking a dataset, one question at a time — same flow as the web `LearnAttempt`,
  * laid out for a phone: the question and its answers fill the screen, and the
  * verdict + explanation pop up as a sheet that closes itself after 3s. The
  * answered question stays behind it, coloured, with "Next" and a way to reopen
@@ -41,9 +40,7 @@ export default function LearnAttemptScreen() {
   const router = useRouter();
   const { id: attemptId } = useLocalSearchParams<{ id: string }>();
 
-  const attempts = useQaAttempts();
-  const listed = attempts.data?.find((row) => row.id === attemptId);
-  const set = usePlayQaSet(listed?.setId);
+  const set = useQaAttemptPlay(attemptId);
   const answered = useQaAttemptReview(attemptId);
   const submit = useSubmitQaAnswer(attemptId);
   const finish = useFinishQaAttempt();
@@ -70,7 +67,7 @@ export default function LearnAttemptScreen() {
     (item) => !answeredIds.has(item.id) && item.id !== shown?.item.id,
   );
   const current = shown?.item ?? remaining[0];
-  const attempt = latest ?? listed;
+  const attempt = latest ?? set.data?.attempt;
 
   const send = async (response: QaResponse, durationMs: number) => {
     if (!current) return;
@@ -81,6 +78,16 @@ export default function LearnAttemptScreen() {
       setSheet("auto");
       setLatest(result.attempt);
       setJustAnswered((ids) => [...ids, current.id]);
+      // The last answer closes the attempt; `wrapUp` retries if this fails.
+      const last = result.attempt;
+      if (last.status === "in_progress" && last.answeredCount >= last.itemCount) {
+        try {
+          await finish.mutateAsync(attemptId);
+          setLatest({ ...last, status: "finished" });
+        } catch {
+          // Keep the verdict on screen.
+        }
+      }
     } catch (err) {
       setError(applyApiError(err, () => undefined, []));
     }
@@ -103,7 +110,7 @@ export default function LearnAttemptScreen() {
     }
   };
 
-  const loading = attempts.isPending || answered.isPending || (listed && set.isPending);
+  const loading = set.isPending || answered.isPending;
 
   if (loading || !attempt || !set.data) {
     return (
@@ -122,16 +129,19 @@ export default function LearnAttemptScreen() {
     );
   }
 
-  const total = set.data.itemCount;
+  const total = attempt.itemCount;
   const done = attempt.status !== "in_progress" || !current;
   const position = Math.min(total, attempt.answeredCount + (shown ? 0 : 1));
   const percent = total > 0 ? Math.round((attempt.answeredCount / total) * 100) : 0;
-  const selfGraded = set.data.templateKey === "flashcard";
+  // Self-graded wording only when the whole bank is flashcards.
+  const selfGraded =
+    set.data.items.length > 0 &&
+    set.data.items.every((item) => item.templateKey === "flashcard");
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top", "bottom"]}>
       <LearnHeader
-        title={set.data.title}
+        title={set.data.datasetTitle}
         right={
           <Badge variant="success">
             {t(selfGraded ? "attempt.knownSoFar" : "attempt.correctSoFar", {
@@ -177,7 +187,7 @@ export default function LearnAttemptScreen() {
         >
           <AnswerInput
             key={current.id}
-            templateKey={set.data.templateKey}
+            templateKey={current.templateKey}
             item={current}
             result={shown?.result ?? null}
             disabled={submit.isPending}

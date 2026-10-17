@@ -1,4 +1,4 @@
-export const DEFAULT_REDIRECT = "/chat";
+export const DEFAULT_REDIRECT = "/";
 
 /**
  * Accepts internal paths only. Without this,

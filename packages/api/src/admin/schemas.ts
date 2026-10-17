@@ -63,6 +63,8 @@ export const adminUserListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).catch(20),
   q: z.string().trim().min(1).optional().catch(undefined),
   role: userRoleSchema.optional().catch(undefined),
+  sort: z.enum(["createdAt", "username", "email", "role"]).optional().catch(undefined),
+  order: z.enum(["asc", "desc"]).optional().catch(undefined),
 });
 
 export type AdminUserListQueryInput = z.infer<typeof adminUserListQuerySchema>;

@@ -20,6 +20,7 @@ export const NAMESPACES = [
   "web.profile",
   "web.dashboard",
   "web.learn",
+  "web.home",
   "admin.overview",
   "admin.posts",
   "admin.users",

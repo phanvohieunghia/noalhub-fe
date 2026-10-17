@@ -25,8 +25,7 @@
     "modelsLoadFailed": "Không tải được danh sách model. Tải lại trang để thử lại.",
     "columns": {
       "label": "Tên khoá",
-      "provider": "Nhà cung cấp",
-      "key": "Khoá",
+      "providerKey": "Nhà cung cấp / Khoá",
       "model": "Model mặc định",
       "budget": "Ngân sách"
     },
@@ -56,14 +55,26 @@
     "duplicateTitle": "Nhân bản {name}",
     "duplicateIntro": "Nội dung prompt, mặc định và mô tả được chép nguyên. Bạn chỉ đặt tên và mã — mã không đổi được sau khi tạo.",
     "copySuffix": "{name} (bản sao)",
-    "disable": "Tắt",
-    "disabled": "Đã tắt",
+    "selected": "Đã chọn {count}",
+    "bulkActions": "Thao tác với các prompt đã chọn",
+    "clearSelection": "Bỏ chọn",
+    "selectAll": "Chọn tất cả prompt",
+    "selectRow": "Chọn {name}",
+    "disableSelected": "Tắt các mục đã chọn",
+    "disableSelectedTitle": "Tắt {count} prompt?",
+    "disableSelectedIntro": "Các prompt này sẽ không còn được dùng cho lần sinh mới. Bộ câu hỏi đã sinh từ chúng không bị ảnh hưởng.",
+    "disableSelectedFailed": "Không tắt được {count} prompt, các mục này vẫn được giữ ở trạng thái chọn.",
+    "toggleRow": "Bật {name}",
     "empty": "Chưa có prompt nào. Prompt là thứ bạn tự soạn — mẫu chép được nằm ở docs/qa.md §9 của repo backend.",
     "filterKind": "Lọc theo chặng",
     "allKinds": "Mọi chặng",
+    "footer": "{from}–{to} trên {total} prompt",
+    "sortHint": "Sắp xếp theo {column}",
+    "perPage": "{count} mỗi trang",
+    "perPageLabel": "Số prompt mỗi trang",
     "defaultCount": "{count} câu mỗi bộ",
+    "defaultSummary": "{count} câu mỗi bộ · {shape}",
     "sourceVariable": "Prompt đang chứa biến mang nguồn ({variables}). Nguồn đi ở phần sau do backend tự ghép; đặt nó vào đây làm phần dẫn hết ổn định và cache không bao giờ ăn. Backend sẽ từ chối lưu.",
-    "countTooBig": "Nhiều nhất {max} câu mỗi bộ.",
     "kinds": {
       "outline": "Phân tích mục lục",
       "qa": "Sinh câu hỏi"
@@ -73,25 +84,26 @@
       "true_false": "Đúng / Sai",
       "short_answer": "Trả lời ngắn",
       "fill_blank": "Điền vào chỗ trống",
-      "flashcard": "Thẻ ghi nhớ"
+      "flashcard": "Thẻ ghi nhớ",
+      "single_choice": "Trắc nghiệm một đáp án"
     },
     "columns": {
       "name": "Tên",
       "kind": "Chặng",
-      "key": "Mã",
-      "defaults": "Mặc định"
+      "key": "Key",
+      "defaults": "Mặc định",
+      "enabled": "Trạng thái"
     },
     "fields": {
       "kind": "Chặng",
       "key": "Mã",
       "keyHint": "Chữ thường, số và gạch dưới. Không đổi được sau khi tạo.",
-      "keyPlaceholder": "Chọn hình dạng câu hỏi",
       "name": "Tên hiển thị",
       "prompt": "Nội dung prompt",
-      "variables": "Chèn biến:",
-      "variablesHint": "Ba biến mang nguồn ({forbidden}) không dùng được ở đây: nguồn đi ở phần sau, phần dẫn phải giống nhau từng byte giữa các lần bấm thì cache mới ăn.",
-      "count": "Số câu mặc định mỗi bộ",
-      "countHint": "Nhiều nhất {max}. Backend từ chối số lớn hơn thay vì tự kẹp lại."
+      "promptOf": "Prompt — {name}",
+      "characters": "{count} ký tự",
+      "insertVariable": "Chèn biến",
+      "variablesHint": "Ba biến mang nguồn ({forbidden}) không dùng được ở đây: nguồn đi ở phần sau, phần dẫn phải giống nhau từng byte giữa các lần bấm thì cache mới ăn."
     }
   },
   "datasets": {
@@ -121,7 +133,10 @@
     "fields": {
       "title": "Tiêu đề",
       "description": "Mô tả"
-    }
+    },
+    "delete": "Xóa",
+    "deleteTitle": "Xóa “{title}”?",
+    "deleteBody": "Bộ dữ liệu và các nguồn của nó sẽ bị xóa vĩnh viễn. Chỉ xóa được khi chưa sinh bộ câu hỏi nào từ nó."
   },
   "sources": {
     "title": "Mẩu nguồn",
@@ -139,7 +154,9 @@
     "fields": {
       "title": "Tên mẩu (tuỳ chọn)",
       "content": "Nội dung"
-    }
+    },
+    "addButton": "Thêm nguồn",
+    "addHint": "Dán từng chương một"
   },
   "outlines": {
     "title": "Bản mục lục",
@@ -156,9 +173,13 @@
     "makeCurrent": "Chốt bản này",
     "label": "Ghi chú cho bản này",
     "labelHint": "Ví dụ: \"chia mịn hơn\", \"prompt v3\".",
+    "versionShort": "v{version}",
+    "searchLabel": "Tìm trong mục lục",
+    "searchPlaceholder": "Tìm mục lục... ⌘K",
     "sectionsTitle": "Mục lục",
     "sectionsHint": "Dẫn xuất từ nội dung, chỉ đọc. `anchor` là thứ lệnh sinh bộ gửi lên.",
     "noSections": "Tài liệu chưa có tiêu đề nào, nên chưa có mục nào để sinh câu hỏi.",
+    "resize": "Kéo để đổi độ rộng mục lục",
     "format": "Định dạng nội dung",
     "formats": {
       "doc": "Rich text",
@@ -178,6 +199,7 @@
     "pickModel": "Chọn model"
   },
   "analyze": {
+    "another": "Tạo thêm một phiên bản",
     "button": "Phân tích",
     "title": "Phân tích ra mục lục",
     "intro": "Chạy nền vài phút. Bạn có thể đóng hộp thoại này và quay lại sau.",
@@ -205,15 +227,33 @@
   "sets": {
     "title": "Bộ câu hỏi",
     "detailTitle": "Chi tiết bộ câu hỏi",
-    "intro": "Mọi bộ, ở mọi trạng thái. Bộ do AI sinh luôn ở trạng thái nháp — publish là quyết định của người.",
     "caption": "Danh sách bộ câu hỏi",
     "empty": "Chưa có bộ nào.",
     "open": "Mở",
     "filterStatus": "Lọc theo trạng thái",
     "allStatuses": "Mọi trạng thái",
+    "count": "{count} bộ câu hỏi",
     "itemCount": "{count} câu",
     "fromSection": "Sinh từ mục: {section}",
     "noSection": "Không gắn với mục nào",
+    "deleteForever": "Xóa hẳn",
+    "deleteTitle": "Xóa hẳn \"{title}\"?",
+    "deleteBody": "Bộ câu hỏi và toàn bộ câu hỏi bên trong sẽ bị xóa vĩnh viễn, không thể khôi phục. Bộ đã có người học làm bài thì không xóa được — hãy lưu trữ thay thế.",
+    "selected": "Đã chọn {count} bộ",
+    "deleteSelected": "Xóa đã chọn",
+    "footer": "Đã chọn {selected} trên {total} bộ",
+    "perPage": "{count} mỗi trang",
+    "perPageLabel": "Số bộ mỗi trang",
+    "selectAll": "Chọn tất cả bộ",
+    "selectRow": "Chọn {title}",
+    "bulkDeleteTitle": "Xóa hẳn {count} bộ?",
+    "bulkDeleteFailed": "Không xóa được {count} bộ — đã có người học làm bài. Hãy lưu trữ các bộ đó thay thế.",
+    "sortHint": "Sắp xếp theo {column}",
+    "bulkActions": "Thao tác trên các bộ đã chọn",
+    "remove": "Lưu trữ",
+    "removeTitle": "Lưu trữ \"{title}\"?",
+    "removeBody": "Bộ câu hỏi sẽ bị gỡ khỏi phía người học và chuyển sang Đã lưu trữ. Các câu hỏi vẫn được giữ, nhưng không thể xuất bản lại.",
+    "removeFailed": "Không thể lưu trữ bộ câu hỏi. Thử lại.",
     "publish": "Đăng bộ",
     "archive": "Gỡ khỏi bề mặt người học",
     "lockedShape": "Bộ đã rời trạng thái nháp nên không đổi được hình dạng câu hỏi: đổi là mọi câu trong bộ sai hình dạng ngay lập tức, với cả người đang làm bài.",
@@ -234,19 +274,29 @@
       "draft": "Nháp",
       "published": "Đã đăng",
       "archived": "Đã gỡ"
-    }
+    },
+    "editItem": "Sửa câu hỏi",
+    "correctAnswer": "Đáp án đúng",
+    "optionsLabel": "Các lựa chọn",
+    "optionLabel": "Lựa chọn {letter}",
+    "markCorrect": "Đánh dấu lựa chọn {letter} là đúng",
+    "optionsHint": "Tick vào mọi lựa chọn đúng.",
+    "optionEmpty": "Mỗi lựa chọn cần có nội dung.",
+    "needCorrect": "Chọn ít nhất một đáp án đúng.",
+    "needAccepted": "Thêm ít nhất một đáp án chấp nhận được.",
+    "acceptedLabel": "Đáp án chấp nhận",
+    "acceptedHint": "Mỗi đáp án một dòng.",
+    "difficultyLabel": "Độ khó",
+    "noDifficulty": "Chưa đặt",
+    "publishedSwitch": "Đã xuất bản",
+    "addQuestion": "Thêm câu hỏi"
   },
   "items": {
-    "title": "Ngân hàng câu hỏi",
-    "intro": "Tìm câu hỏi theo chữ, cắt ngang mọi bộ và mọi hình dạng.",
-    "search": "Tìm trong nội dung câu hỏi",
-    "searchHint": "Từ {min} ký tự trở lên. Tìm KHÔNG DẤU: gõ \"hoa hoc\" vẫn ra \"hoá học\", gõ \"dung\" vẫn ra \"đúng\".",
-    "typeMore": "Gõ ít nhất {min} ký tự để tìm.",
+    "title": "Loại câu hỏi",
+    "intro": "Các loại câu hỏi hệ thống hỗ trợ. Mở một loại để xem câu hỏi, xem giao diện và chọn câu nào được xuất bản.",
     "noResults": "Không có câu nào khớp.",
     "found": "{count} câu khớp",
     "openSet": "Mở bộ chứa câu này",
-    "filterKind": "Lọc theo dạng câu",
-    "allKinds": "Mọi dạng",
     "kinds": {
       "theory": "Lý thuyết",
       "practice": "Vận dụng",
@@ -257,7 +307,35 @@
       "easy": "Dễ",
       "medium": "Trung bình",
       "hard": "Khó"
-    }
+    },
+    "newQuestion": "Câu hỏi mới",
+    "edit": "Sửa",
+    "summaryChoice": "{count} lựa chọn · Đúng: {correct}",
+    "summaryAccepted": "Đáp án chấp nhận: {answers}",
+    "published": "Đã xuất bản",
+    "unpublished": "Chưa xuất bản",
+    "publishedSwitch": "Đã xuất bản",
+    "previewUi": "Xem giao diện",
+    "publishFailed": "Không đổi được trạng thái xuất bản của câu hỏi này.",
+    "previewMultiHint": "Có thể có nhiều hơn một đáp án đúng — chọn tất cả đáp án phù hợp.",
+    "countQuestions": "{count} câu hỏi",
+    "countPublished": "{count} đã xuất bản",
+    "previewTitle": "Xem trước câu hỏi",
+    "previewIntro": "Bản xem trước chỉ đọc của câu hỏi {shape}, đúng như người học thấy.",
+    "previewSingleHint": "Chọn một đáp án.",
+    "previewAnswer": "Câu trả lời của bạn",
+    "previewAnswerHint": "Nhấn Enter để trả lời · không phân biệt hoa thường và dấu",
+    "previewFlashHint": "Hãy nhớ đáp án trong đầu trước, rồi nói thật là bạn đã biết hay chưa. Mặt sau của thẻ hiện ra sau khi bạn chọn.",
+    "previewKnewIt": "Tôi đã biết",
+    "previewDidntKnow": "Tôi chưa biết",
+    "previewFlashNote": "Thẻ ghi nhớ là tự chấm, nên kết quả được tính riêng với các câu máy chấm.",
+    "viewLabel": "Kiểu hiển thị",
+    "viewList": "Dạng danh sách",
+    "viewGrid": "Dạng lưới",
+    "previewEmpty": "Chưa có câu hỏi nào thuộc loại này.",
+    "previewFailed": "Không tải được câu hỏi của loại này.",
+    "stateEmpty": "Chưa có câu hỏi",
+    "statePartial": "Xuất bản một phần ({published}/{total})"
   },
   "generate": {
     "button": "Sinh bộ câu hỏi",
@@ -266,10 +344,234 @@
     "template": "Hình dạng câu hỏi",
     "pickTemplate": "Chọn prompt",
     "noTemplate": "Chưa có prompt loại sinh câu hỏi nào",
-    "count": "Số câu mỗi bộ",
+    "minCount": "Số câu tối thiểu",
+    "maxCount": "Số câu tối đa",
+    "countHint": "Tổng số câu của cả lần chạy (không phải mỗi mục); model tự phân bổ giữa các mục và các dạng câu đã chọn. Tối đa phụ thuộc trần output của model.",
+    "expandChildren": "Hiện mục con",
+    "collapseChildren": "Ẩn mục con",
+    "questionTypes": "Dạng câu hỏi",
+    "questionTypesHint": "Model tự chọn dạng cho từng câu trong các dạng đã tick, và mỗi dạng tự thêm luật riêng vào prompt.",
     "kinds": "Dạng câu cần sinh",
     "sections": "Mục cần sinh",
     "allSections": "Tất cả {count} mục",
-    "cost": "Sinh {sections} mục × {count} câu, bằng khoá \"{key}\", model {model}. Đây là thao tác tính tiền thật."
+    "cost": "Sinh {min}–{max} câu từ {sections} mục, bằng khoá \"{key}\", model {model}. Đây là thao tác tính tiền thật.",
+    "contextExceeded": "Các mục đã chọn dài {chars} ký tự (≈ {tokens} token), vượt cửa sổ {window} token của {model}. Chọn ít mục hơn hoặc chọn model có cửa sổ lớn hơn.",
+    "outputExceeded": "Bạn chọn tối đa {max} câu, nhưng {model} chỉ sinh được khoảng {capacity} câu mỗi lần gọi. Giảm số câu xuống {capacity} hoặc ít hơn, hoặc chọn model có trần output lớn hơn."
+  },
+  "pipeline": {
+    "label": "Quy trình",
+    "step": {
+      "sources": "1 · NGUỒN",
+      "outline": "2 · MỤC LỤC",
+      "questions": "3 · CÂU HỎI"
+    },
+    "sources": {
+      "ready": "Sẵn sàng",
+      "none": "Trống",
+      "chapters": "{count} chương",
+      "detail": "{chars} ký tự · Markdown"
+    },
+    "outline": {
+      "none": "Chưa phân tích",
+      "pending": "Chưa có",
+      "version": "Bản {version} · {sections} mục",
+      "analyzed": "Phân tích {date}",
+      "analyzedLabel": "Phân tích {date} · {label}",
+      "current": "Đang chốt"
+    },
+    "questions": {
+      "empty": "{count} bộ rỗng",
+      "none": "Chưa có",
+      "count": "{count} câu hỏi",
+      "covered": "{covered}/{total} mục đã có câu hỏi"
+    }
+  },
+  "map": {
+    "title": "Bản đồ nội dung",
+    "hint": "Mỗi khối là một nguồn, kích thước theo độ dài"
+  },
+  "reader": {
+    "label": "Trình đọc nguồn",
+    "rendered": "Hiển thị",
+    "markdown": "Markdown",
+    "empty": "Thêm một nguồn để đọc tại đây."
+  },
+  "workbench": {
+    "tabsLabel": "Bảng bên trái",
+    "tabs": {
+      "sources": "Nguồn",
+      "outline": "Mục lục"
+    },
+    "sourcesEyebrow": "Nguồn đã đính kèm",
+    "outlineEyebrow": "Mục lục · bản {version}",
+    "sectionMeta": "{count, plural, other {# câu hỏi}}",
+    "outlineEmpty": "Chưa có mục lục. Phân tích các nguồn để tạo.",
+    "newVersion": "Bản mới",
+    "editor": {
+      "title": "Trình sửa mục lục",
+      "openFull": "Mở trình sửa đầy đủ",
+      "saved": "Đã lưu",
+      "saveFailed": "Không lưu được mục lục. Tải lại trang rồi thử lại."
+    },
+    "inspector": {
+      "title": "Bộ câu hỏi & độ phủ",
+      "noQuestions": "Chưa có câu hỏi",
+      "review": "Xem lại",
+      "empty": "Chọn một mục trong mục lục để xem các bộ câu hỏi.",
+      "noOutline": "Hãy phân tích nguồn trước — bộ câu hỏi gắn với các mục của mục lục."
+    },
+    "sets": {
+      "title": "Bộ câu hỏi",
+      "empty": "Chưa có bộ câu hỏi nào. Hãy tạo từ một mục của mục lục.",
+      "setHeading": "{title} · {count, plural, other {# câu hỏi}}",
+      "toggle": "Hiện hoặc ẩn bộ câu hỏi này",
+      "answer": "Đáp án",
+      "correctAnswer": "Đáp án đúng",
+      "deleteItem": "Xoá câu hỏi",
+      "loadFailed": "Không tải được bộ câu hỏi này."
+    }
+  },
+  "form": {
+    "createTitle": "Câu hỏi mới",
+    "createIntro": "Tự viết một câu hỏi vào bộ nháp. Bộ đã xuất bản bị khóa.",
+    "editTitle": "Sửa câu hỏi",
+    "targetSet": "Thêm vào bộ",
+    "pickSet": "Chọn một bộ nháp",
+    "noDraftSets": "Chưa có bộ nháp nào để thêm câu hỏi. Hãy sinh một bộ, hoặc đưa một bộ về nháp trước.",
+    "itemMissing": "Câu hỏi này không còn trong bộ.",
+    "answerType": "Kiểu đáp án",
+    "shapeChoice": "Trắc nghiệm",
+    "shapeShort": "Trả lời ngắn",
+    "kind": "Loại",
+    "question": "Câu hỏi",
+    "addOption": "Thêm lựa chọn",
+    "removeOption": "Xóa lựa chọn {letter}",
+    "needQuestion": "Câu hỏi không được để trống.",
+    "richNote": "Nội dung này có định dạng (bảng, danh sách hoặc chữ đậm). Nó được hiển thị nguyên trạng và giữ nguyên khi bạn lưu."
+  },
+  "ws": {
+    "chapters": "{count} chương",
+    "characters": "{count} ký tự",
+    "stepsLabel": "Các bước",
+    "steps": {
+      "sources": "Nguồn",
+      "outline": "Mục lục",
+      "sets": "Bộ câu hỏi",
+      "final": "Bộ cuối"
+    },
+    "meta": {
+      "generating": "Đang tạo…",
+      "outlineNone": "Chưa phân tích",
+      "version": "Bản {version}",
+      "versionLabel": "Bản mục lục",
+      "questions": "{count} câu hỏi",
+      "draft": "{count} nháp",
+      "published": "{count} đã xuất bản",
+      "finalAdded": "Đã thêm {added}/{approved}"
+    },
+    "source": {
+      "saved": "Đã lưu nguồn",
+      "rawMarkdown": "Markdown thô",
+      "actions": "Thao tác với nguồn",
+      "fullscreen": "Toàn màn hình",
+      "save": "Lưu",
+      "add": "Thêm nguồn",
+      "remove": "Xoá",
+      "pick": "Nguồn",
+      "empty": "Chưa có nguồn nào. Thêm một nguồn để bắt đầu.",
+      "loadFailed": "Không tải được nguồn này.",
+      "saveFailed": "Không lưu được nguồn này."
+    },
+    "outline": {
+      "editor": "Trình soạn mục lục",
+      "words": "{count} từ",
+      "characters": "{count} ký tự",
+      "heading": "Mục lục · bản {version}",
+      "empty": "Chưa có mục lục. Hãy phân tích nguồn để tạo.",
+      "saveFailed": "Không lưu được mục lục.",
+      "saved": "Đã lưu outline",
+      "statusSaved": "Đã lưu tất cả",
+      "statusUnsaved": "Chưa lưu thay đổi",
+      "statusSaving": "Đang lưu…",
+      "active": "Hiện hành",
+      "readTime": "~{count} phút đọc",
+      "metrics": {
+        "title": "Chỉ số outline",
+        "words": "Số từ",
+        "characters": "Số ký tự",
+        "tokens": "Token ước tính",
+        "readTime": "Thời gian đọc",
+        "minutes": "~{count} phút"
+      },
+      "openDrawer": "Mở mục lục",
+      "saveChanges": "Lưu thay đổi",
+      "generatingHeading": "Mục lục · đang tạo",
+      "generatingTitle": "Đang tạo mục lục từ {count} chương…",
+      "generatingHint": "Thường mất chưa đến một phút.",
+      "fullscreen": "Toàn màn hình",
+      "longWarning": "Tài liệu đã dài {chars} ký tự (≈ {tokens} token). Có thể không vừa cửa sổ của các model nhỏ khi sinh câu hỏi — khi đó hãy chọn ít mục mỗi lần hoặc dùng model lớn hơn."
+    },
+    "sets": {
+      "generatingTitle": "Đang sinh bộ câu hỏi…",
+      "generatingHint": "Thường mất một đến hai phút. Câu hỏi sẽ hiện ở đây khi xong.",
+      "generatingHeading": "Bộ câu hỏi · đang sinh",
+      "heading": "Bộ câu hỏi",
+      "setCount": "{count} bộ",
+      "actions": "Thao tác với câu hỏi",
+      "approveSection": "Duyệt tất cả câu hỏi trong mục này",
+      "removeSection": "Xóa mục",
+      "removeTitle": "Xóa \"{title}\"?",
+      "removeIntro": "Các bộ câu hỏi của mục này sẽ biến mất khỏi danh sách, kể cả những câu đã duyệt. Không thể hoàn tác từ đây.",
+      "removeFailed": "Không xóa được {count} bộ. Hãy thử lại.",
+      "removeConfirm": "Xóa",
+      "expandAll": "Mở tất cả mục",
+      "collapseAll": "Thu gọn tất cả mục",
+      "viewMode": "Kiểu xem câu hỏi",
+      "viewFull": "Hiện đáp án",
+      "viewHover": "Di chuột để mở đáp án",
+      "approvedOf": "Đã duyệt {approved}/{total}",
+      "pending": "Chờ duyệt",
+      "approved": "Đã duyệt",
+      "rejected": "Đã từ chối",
+      "approve": "Duyệt",
+      "reject": "Từ chối",
+      "delete": "Xoá",
+      "none": "Mục này chưa có câu hỏi.",
+      "correct": "Đáp án đúng",
+      "answer": "Đáp án",
+      "explanation": "Giải thích",
+      "more": "Tạo thêm câu hỏi",
+      "empty": "Chưa có bộ câu hỏi nào. Hãy sinh từ một mục trong mục lục.",
+      "loadFailed": "Không tải được các câu hỏi này.",
+      "metrics": {
+        "title": "Tóm tắt mục",
+        "created": "Sinh lúc",
+        "questions": "Số câu",
+        "approved": "Đã duyệt"
+      }
+    },
+    "final": {
+      "headingCreated": "Bộ câu hỏi cuối · {count} câu trong cơ sở dữ liệu",
+      "headingNew": "Bộ câu hỏi cuối · {count} câu, chưa tạo",
+      "create": "Tạo bộ cuối",
+      "addNew": "Thêm {count} câu mới",
+      "notInFinal": "Chưa vào bộ cuối",
+      "published": "Đã xuất bản",
+      "newTag": "Mới",
+      "edit": "Sửa câu hỏi",
+      "add": "Thêm vào bộ cuối",
+      "sectionNew": "{title} · {count} câu mới đã duyệt",
+      "sectionApproved": "{title} · {count} câu đã duyệt",
+      "empty": "Chưa có câu nào được duyệt. Hãy duyệt câu hỏi ở bước trước.",
+      "editTitle": "Sửa câu hỏi · {section}",
+      "type": "Loại",
+      "difficulty": "Độ khó",
+      "question": "Câu hỏi",
+      "options": "Lựa chọn · tích đáp án đúng",
+      "explanation": "Giải thích",
+      "accepted": "Đáp án chấp nhận · mỗi dòng một đáp án",
+      "save": "Lưu thay đổi",
+      "saveFailed": "Không lưu được câu hỏi này."
+    }
   }
 }

@@ -8,8 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Message } from "@noalhub/api/message";
 import {
   useFinishQaAttempt,
-  usePlayQaSet,
-  useQaAttempts,
+  useQaAttemptPlay,
   useQaAttemptReview,
   useSubmitQaAnswer,
   type QaAnswerResult,
@@ -23,14 +22,23 @@ import { AlertError } from "@noalhub/ui/alert";
 import { Badge } from "@noalhub/ui/badge";
 import { PostContent } from "@noalhub/ui/blog/post-content";
 import { Button } from "@noalhub/ui/button";
+import { Dialog } from "@noalhub/ui/dialog";
 import { Icon, LUCIDE } from "@noalhub/ui/icons";
 import { Skeleton } from "@noalhub/ui/skeleton";
+import { Tooltip } from "@noalhub/ui/tooltip";
 import { Typography } from "@noalhub/ui/typography";
 
 import { AnswerInput } from "./answer-input";
+import { playCorrect, playWrong } from "./sounds";
+
+/** How long a right answer's celebration shows before the next question. */
+const ADVANCE_MS = 1000;
+
+/** Questions per progress segment. */
+const SEGMENT_SIZE = 10;
 
 /**
- * Taking a set, one question at a time.
+ * Taking a dataset, one question at a time.
  *
  * The result of each answer comes back with the explanation for **that**
  * question, and that is the only moment an answer is visible. There is no "peek
@@ -41,18 +49,17 @@ import { AnswerInput } from "./answer-input";
  * `remaining` — reading `remaining[0]` there would swap the question out from
  * under its own explanation, and on the last one leave nothing on screen.
  *
- * Progress reads `answeredCount / set.itemCount`. If an admin soft-deletes a
- * question mid-attempt the denominator moves (8/10 → 8/9); that is intended,
- * and nothing the learner did is lost — the log only ever appends.
+ * Progress reads `answeredCount / attempt.itemCount`, fixed when the attempt started
+ * (the learner picks how many questions), so it does not move when an admin
+ * publishes more mid-attempt. A question unpublished mid-attempt just stops
+ * being served; nothing the learner did is lost — the log only ever appends.
  */
 export function LearnAttempt({ attemptId }: { attemptId: string }) {
   const t = useTranslations("web.learn");
   const m = useMessage();
   const router = useRouter();
 
-  const attempts = useQaAttempts();
-  const listed = attempts.data?.find((row) => row.id === attemptId);
-  const set = usePlayQaSet(listed?.setId);
+  const set = useQaAttemptPlay(attemptId);
   const answered = useQaAttemptReview(attemptId);
   const submit = useSubmitQaAnswer(attemptId);
   const finish = useFinishQaAttempt();
@@ -61,10 +68,20 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
     item: QaItemPlay;
     result: QaAnswerResult;
   } | null>(null);
-  // Every answer returns the updated attempt; the list query is not refetched
+  // Every answer returns the updated attempt; the attempt query is not refetched
   // per answer, so this is the fresher copy of the counters.
   const [latest, setLatest] = useState<QaAttempt | null>(null);
   const [error, setError] = useState<Message | string | null>(null);
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  // The position label lives in a tooltip: hover/focus open it, and a tap pins
+  // it for a moment (Radix itself closes on click and ignores touch).
+  const [tipHover, setTipHover] = useState(false);
+  const [tipPinned, setTipPinned] = useState(false);
+  useEffect(() => {
+    if (!tipPinned) return;
+    const timer = window.setTimeout(() => setTipPinned(false), 2000);
+    return () => window.clearTimeout(timer);
+  }, [tipPinned]);
   // Answered here, this session. The review refetch catches up on its own, but
   // "next" can be clicked before it lands — and the question it would bring
   // back is one the backend already refuses as a duplicate.
@@ -79,7 +96,7 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
     (item) => !answeredIds.has(item.id) && item.id !== shown?.item.id,
   );
   const current = shown?.item ?? remaining[0];
-  const attempt = latest ?? listed;
+  const attempt = latest ?? set.data?.attempt;
 
   const send = async (response: QaResponse, durationMs: number) => {
     if (!current) return;
@@ -90,9 +107,22 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
         response,
         durationMs,
       });
+      (result.isCorrect ? playCorrect : playWrong)();
       setShown({ item: current, result });
       setLatest(result.attempt);
       setJustAnswered((ids) => [...ids, current.id]);
+      // The last answer closes the attempt — the learner is never left with an
+      // "in progress" set that has nothing left to continue. If this call fails,
+      // `wrapUp` retries it.
+      const last = result.attempt;
+      if (last.status === "in_progress" && last.answeredCount >= last.itemCount) {
+        try {
+          await finish.mutateAsync(attemptId);
+          setLatest({ ...last, status: "finished" });
+        } catch {
+          // Keep the verdict on screen; finishing is retried on "review".
+        }
+      }
     } catch (err) {
       // A duplicate is a real case — a double click, a flaky connection. It is
       // not worth an error screen; the message says what happened.
@@ -132,7 +162,7 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
     }
   };
 
-  if (attempts.isPending || set.isPending || answered.isPending) {
+  if (set.isPending || answered.isPending) {
     return (
       <main className="mx-auto w-full max-w-3xl space-y-4 p-4 sm:p-6">
         <Skeleton className="h-8 w-64" />
@@ -152,52 +182,83 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
     );
   }
 
-  const total = set.data.itemCount;
+  const total = attempt.itemCount;
   const done = attempt.status !== "in_progress" || !current;
   const position = Math.min(total, attempt.answeredCount + (shown ? 0 : 1));
-  const percent = total > 0 ? Math.round((attempt.answeredCount / total) * 100) : 0;
-  const selfGraded = set.data.templateKey === "flashcard";
+  // Past ten questions the bar is cut into sittings of ten, one segment each.
+  const segments = Array.from({ length: Math.max(1, Math.ceil(total / SEGMENT_SIZE)) }, (_, i) => ({
+    start: i * SEGMENT_SIZE,
+    size: Math.max(1, Math.min(SEGMENT_SIZE, total - i * SEGMENT_SIZE)),
+  }));
+  // Self-graded wording only when the whole bank is flashcards; a mixed bank
+  // counts "correct", since most of its answers are machine-graded.
+  const selfGraded =
+    set.data.items.length > 0 &&
+    set.data.items.every((item) => item.templateKey === "flashcard");
 
   return (
-    <main className="mx-auto w-full max-w-3xl p-4 sm:p-6">
-      <header className="space-y-3">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <Typography variant="body-4" className="text-muted-foreground">
-              {t(`shapes.${set.data.templateKey}`)}
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col p-4 sm:p-6">
+      {/* The summary stands alone: its own buttons say where to go next. */}
+      {done ? null : (
+        <header className="mb-6 space-y-3">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={t("attempt.back")}
+              className="-ml-2 shrink-0"
+              // Nothing is lost by leaving (answers are saved as they go), but a
+              // stray tap should not end the sitting — only ask while it is open.
+              onClick={() => (done ? router.push("/learn") : setConfirmLeave(true))}
+            >
+              <Icon icon={LUCIDE.arrowLeft} />
+            </Button>
+            <Typography variant="h4" as="h1" className="min-w-0 flex-1 break-words">
+              {set.data.datasetTitle}
             </Typography>
-            <Typography variant="h4" as="h1" className="break-words">
-              {set.data.title}
-            </Typography>
+            <Badge tone="success" className="shrink-0">
+              {t(selfGraded ? "attempt.knownSoFar" : "attempt.correctSoFar", {
+                count: attempt.correctCount,
+              })}
+            </Badge>
           </div>
-          <Badge tone="success" className="shrink-0">
-            {t(selfGraded ? "attempt.knownSoFar" : "attempt.correctSoFar", {
-              count: attempt.correctCount,
-            })}
-          </Badge>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <div
-            role="progressbar"
-            aria-label={t("attempt.progressLabel")}
-            aria-valuemin={0}
-            aria-valuemax={total}
-            aria-valuenow={attempt.answeredCount}
-            className="h-2 flex-1 overflow-hidden rounded-full bg-muted"
+          <Tooltip
+            label={done ? t("attempt.progressLabel") : t("attempt.questionOf", { current: position, total })}
+            open={tipHover || tipPinned}
+            onOpenChange={setTipHover}
           >
             <div
-              className="h-full rounded-full bg-primary transition-[width] duration-300"
-              style={{ width: `${percent}%` }}
-            />
-          </div>
-          {!done ? (
-            <Typography variant="body-4" className="shrink-0 tabular-nums text-muted-foreground">
-              {t("attempt.questionOf", { current: position, total })}
-            </Typography>
-          ) : null}
-        </div>
-      </header>
+              role="progressbar"
+              tabIndex={0}
+              aria-label={t("attempt.progressLabel")}
+              aria-valuemin={0}
+              aria-valuemax={total}
+              aria-valuenow={attempt.answeredCount}
+              aria-valuetext={t("attempt.questionOf", { current: position, total })}
+              onClick={() => setTipPinned(true)}
+              className="flex w-full cursor-pointer gap-1.5 rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            >
+              {segments.map(({ start, size }) => (
+                <div
+                  key={start}
+                  // A segment is as wide as the questions it holds, so a short
+                  // last one does not read as a full stretch of the set.
+                  style={{ flexGrow: size, flexBasis: 0 }}
+                  className="h-2 overflow-hidden rounded-full bg-muted"
+                >
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width] duration-300"
+                    style={{
+                      width: `${Math.min(1, Math.max(0, (attempt.answeredCount - start) / size)) * 100}%`,
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </Tooltip>
+        </header>
+      )}
 
       {done ? (
         <Summary
@@ -208,7 +269,7 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
           onReview={() => void wrapUp()}
         />
       ) : current ? (
-        <article className="mt-6 space-y-5 rounded-xl border border-border bg-surface p-4 sm:p-6">
+        <article className="flex flex-1 flex-col gap-5">
           <div className="flex flex-wrap gap-2">
             <Badge tone="neutral">{t(`kinds.${current.kind}`)}</Badge>
             {current.difficulty ? (
@@ -216,13 +277,12 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
             ) : null}
           </div>
 
-          <div className="text-body-1">
+          <div className="text-body-1 font-semibold">
             <PostContent doc={current.question} />
           </div>
 
           <AnswerInput
             key={current.id}
-            templateKey={set.data.templateKey}
             item={current}
             result={shown?.result ?? null}
             disabled={submit.isPending}
@@ -241,6 +301,26 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
         <div className="mt-4">
           <AlertError message={m(error)} />
         </div>
+      ) : null}
+
+      {confirmLeave ? (
+        <Dialog
+          open
+          onClose={() => setConfirmLeave(false)}
+          title={t("attempt.leaveTitle")}
+          tone="danger"
+          icon={LUCIDE.circleX}
+        >
+          <Typography variant="body-3" className="text-muted-foreground">
+            {t("attempt.leaveBody")}
+          </Typography>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button variant="outline" onClick={() => setConfirmLeave(false)}>
+              {t("attempt.leaveStay")}
+            </Button>
+            <Button onClick={() => router.push("/learn")}>{t("attempt.leaveConfirm")}</Button>
+          </div>
+        </Dialog>
       ) : null}
     </main>
   );
@@ -264,20 +344,20 @@ function Feedback({
     ? t(good ? "attempt.selfKnown" : "attempt.selfUnknown")
     : t(good ? "attempt.correct" : "attempt.wrong");
 
-  return (
-    <section
-      aria-live="polite"
-      className={`space-y-4 rounded-lg border p-4 ${
-        good ? "border-success/40 bg-success/8" : "border-danger/40 bg-danger/8"
-      }`}
-    >
-      <div className={`flex items-center gap-2 ${good ? "text-success" : "text-danger"}`}>
-        <Icon icon={good ? LUCIDE.circleCheck : LUCIDE.circleX} className="size-5" />
-        <Typography variant="title-3" as="p">
-          {verdict}
-        </Typography>
-      </div>
+  // Right answer: no modal, just a short celebration — then on to the next
+  // question after a second, or sooner on a click anywhere / Enter.
+  if (good) return <Celebration verdict={verdict} onNext={onNext} />;
 
+  return (
+    // Closing the modal (X, Esc, overlay) is the same as "next": the verdict
+    // is not something to dismiss and stay on the question.
+    <Dialog
+      open
+      onClose={onNext}
+      title={verdict}
+      icon={good ? LUCIDE.circleCheck : LUCIDE.circleX}
+      tone={good ? "success" : "danger"}
+    >
       {result.answer ? (
         <div className="space-y-1">
           <Typography variant="title-4" as="h3">
@@ -296,13 +376,49 @@ function Feedback({
         </div>
       ) : null}
 
-      <div className="flex justify-end">
-        <Button onClick={onNext} autoFocus>
+      <div>
+        <Button onClick={onNext} autoFocus className="w-full">
           {last ? t("attempt.seeResult") : t("attempt.next")}
           <Icon icon={LUCIDE.arrowRight} />
         </Button>
       </div>
-    </section>
+    </Dialog>
+  );
+}
+
+/** Full-screen, click-through-to-next burst shown for a right answer. */
+function Celebration({ verdict, onNext }: { verdict: string; onNext: () => void }) {
+  useEffect(() => {
+    const timer = window.setTimeout(onNext, ADVANCE_MS);
+    return () => window.clearTimeout(timer);
+    // `onNext` is recreated every render; the timer must run once per answer.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div
+      role="status"
+      onClick={onNext}
+      className="fixed inset-0 z-50 flex cursor-pointer items-center justify-center bg-success/10"
+    >
+      <div className="flex flex-col items-center gap-3 motion-safe:animate-popup-in">
+        <span className="relative flex size-24 items-center justify-center rounded-full bg-success text-background">
+          <span
+            aria-hidden
+            className="absolute inset-0 rounded-full bg-success opacity-40 motion-safe:animate-ping"
+          />
+          <Icon icon={LUCIDE.check} className="relative size-14" />
+        </span>
+        <Typography variant="h5" as="p" className="text-success">
+          {verdict}
+        </Typography>
+        <Icon
+          icon={LUCIDE.sparkles}
+          aria-hidden
+          className="size-6 text-warning motion-safe:animate-bounce"
+        />
+      </div>
+    </div>
   );
 }
 
@@ -323,18 +439,28 @@ function Summary({
   const rate = answered > 0 ? Math.round((correct / answered) * 100) : 0;
 
   return (
-    <section className="mt-6 flex flex-col items-center gap-4 rounded-xl border border-border bg-surface p-6 text-center sm:p-10">
-      <span className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <Icon icon={LUCIDE.trophy} className="size-7" />
-      </span>
-      <Typography variant="h5" as="h2">
-        {t("attempt.summaryTitle")}
-      </Typography>
+    <section className="my-auto flex flex-col items-center gap-4 rounded-xl border border-border bg-surface px-6 py-10 text-center sm:px-10 sm:py-12">
+      {/* Decorative: the trophy carries the moment, the sparkles are garnish. */}
+      <div className="flex items-center gap-5">
+        <Icon icon={LUCIDE.sparkles} className="size-6 text-warning" />
+        <span className="flex size-18 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Icon icon={LUCIDE.trophy} className="size-9" />
+        </span>
+        <Icon icon={LUCIDE.partyPopper} className="size-6 text-accent" />
+      </div>
+      <div className="space-y-1">
+        <Typography variant="h5" as="h2">
+          {t("attempt.summaryCongrats")}
+        </Typography>
+        <Typography variant="body-3" className="text-muted-foreground">
+          {t("attempt.summaryBody")}
+        </Typography>
+      </div>
       <div>
-        <p className="text-h2 font-semibold tabular-nums">
+        <Typography variant="h2" as="p" className="tabular-nums">
           {correct}
           <span className="text-muted-foreground">/{answered}</span>
-        </p>
+        </Typography>
         <Typography variant="body-3" className="text-muted-foreground">
           {t(selfGraded ? "attempt.summaryKnown" : "attempt.summaryCorrect", { rate })}
         </Typography>

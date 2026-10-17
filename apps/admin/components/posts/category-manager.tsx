@@ -39,10 +39,13 @@ import { slugify } from "@noalhub/core/blog/slugify";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
+import { DropdownMenuItem } from "@noalhub/ui/dropdown-menu";
+import { ICONS } from "@noalhub/ui/icons";
 import { AlertError } from "@noalhub/ui/alert";
 import { Input } from "@noalhub/ui/input";
 import { Skeleton } from "@noalhub/ui/skeleton";
 import {
+  TableActionsHeaderCell,
   TableBody,
   TableCell,
   TableEmptyRow,
@@ -50,6 +53,7 @@ import {
   TableHeaderCell,
   TableRoot,
   TableRow,
+  TableRowActions,
 } from "@noalhub/ui/table";
 import { Textarea } from "@noalhub/ui/textarea";
 
@@ -139,9 +143,7 @@ export function CategoryManager() {
                   <TableHeaderCell>{t("columns.slug")}</TableHeaderCell>
                   <TableHeaderCell>{t("columns.order")}</TableHeaderCell>
                   <TableHeaderCell>{t("columns.postCount")}</TableHeaderCell>
-                  <TableHeaderCell>
-                    <span className="sr-only">{t("actionsColumn")}</span>
-                  </TableHeaderCell>
+                  <TableActionsHeaderCell label={t("actionsColumn")} />
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -420,22 +422,20 @@ function CategoryRow({
           ⠿
         </Button>
       </TableCell>
-      <TableCell className="font-medium">{category.name}</TableCell>
+      <TableCell weight={500}>{category.name}</TableCell>
       <TableCell className="opacity-70">/{category.slug}</TableCell>
       <TableCell className="tabular-nums">{category.order}</TableCell>
       {/* This number counts drafts TOO — unlike the public `postCount`, which
           counts published posts only (§2.2). */}
       <TableCell className="tabular-nums">{category.postCount}</TableCell>
-      <TableCell>
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onEdit}>
-            {tc("actions.edit")}
-          </Button>
-          <Button variant="outline" onClick={onDelete}>
-            {tc("actions.delete")}
-          </Button>
-        </div>
-      </TableCell>
+      <TableRowActions label={t("actionsColumn")}>
+        <DropdownMenuItem icon={ICONS.edit} onSelect={onEdit}>
+          {tc("actions.edit")}
+        </DropdownMenuItem>
+        <DropdownMenuItem icon={ICONS.delete} tone="danger" onSelect={onDelete}>
+          {tc("actions.delete")}
+        </DropdownMenuItem>
+      </TableRowActions>
     </tr>
   );
 }

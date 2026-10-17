@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 import React from "react";
 import { Button } from "@noalhub/ui/button";
 import { NavigationProgress } from "@noalhub/ui/navigation-progress";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * The bar is driven by real route transitions, which do not happen inside
@@ -26,7 +27,9 @@ export const Demo: Story = {
     return (
     <div className="relative flex min-h-40 flex-col items-start gap-4 overflow-hidden rounded-xl border border-border p-6">
       <NavigationProgress className="absolute inset-x-0 top-0" />
-      <p className="text-body-3 text-muted-foreground">{t("note")}</p>
+      <Typography variant="body-3" className="text-muted-foreground">
+        {t("note")}
+      </Typography>
       <Button onClick={() => window.dispatchEvent(new PopStateEvent("popstate"))}>
         {t("start")}
       </Button>

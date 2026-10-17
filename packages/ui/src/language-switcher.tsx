@@ -79,7 +79,7 @@ export function LanguageSwitcher({
         <Button
           key={locale}
           variant={locale === active ? "primary" : "ghost"}
-          size="sm"
+          size="xs"
           shape="circle"
           onClick={() => void switchTo(locale)}
           aria-pressed={locale === active}
@@ -89,7 +89,7 @@ export function LanguageSwitcher({
           aria-busy={changeLanguage.isPending}
           // `whitespace-nowrap`: the longest label ("Tiếng Việt") wraps onto two
           // lines inside admin's account dropdown, which is only 16rem wide.
-          className="px-3 whitespace-nowrap"
+          className="whitespace-nowrap"
         >
           {t(locale)}
         </Button>

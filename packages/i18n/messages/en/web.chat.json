@@ -3,7 +3,7 @@
     "backToList": "Back to conversations",
     "viewProfile": "View {name}'s profile",
     "accountMenu": "Account menu",
-    "memberCount": "{count} members",
+    "memberCount": "{count, plural, one {# member} other {# members}}",
     "profile": "Profile",
     "friends": "Friends",
     "appearance": "Appearance"
@@ -14,6 +14,7 @@
     "composerOffline": "Connection lost — your message will be sent once you are back online."
   },
   "sidebar": {
+    "friends": "Friends",
     "empty": "No conversations yet",
     "loading": "Loading conversations…",
     "searchPlaceholder": "Search loaded conversations…",
@@ -64,9 +65,9 @@
     "online": "Active now",
     "offline": "Not active",
     "justNow": "Active just now",
-    "minutesAgo": "Active {minutes} minutes ago",
-    "hoursAgo": "Active {hours} hours ago",
-    "daysAgo": "Active {days} days ago",
+    "minutesAgo": "Active {minutes, plural, one {# minute} other {# minutes}} ago",
+    "hoursAgo": "Active {hours, plural, one {# hour} other {# hours}} ago",
+    "daysAgo": "Active {days, plural, one {# day} other {# days}} ago",
     "onDate": "Active {date}"
   },
   "day": {

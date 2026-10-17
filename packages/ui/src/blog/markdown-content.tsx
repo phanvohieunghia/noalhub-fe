@@ -4,11 +4,11 @@ import remarkGfm from "remark-gfm";
 
 import { isSafeImageSrc, isSafeLinkHref } from "@noalhub/api/blog";
 
-import "./post-content.css";
+import "./post-prose.css";
 
 /**
  * `PostContent`'s twin for content stored as a **markdown string**. Same
- * `.blog-content` stylesheet, so the two formats read identically, and the
+ * `.post-prose` stylesheet, so the two formats read identically, and the
  * same three rules (see the note atop `post-content.tsx`):
  *
  * 1. **No `@tiptap/*`** — `react-markdown` parses on the server, so this is
@@ -20,7 +20,7 @@ import "./post-content.css";
  */
 export function MarkdownContent({ markdown }: { markdown: string }) {
   return (
-    <div className="blog-content">
+    <div className="post-prose">
       <Markdown
         remarkPlugins={[remarkGfm]}
         skipHtml
@@ -97,11 +97,11 @@ const COMPONENTS: Components = {
     );
   },
 
-  // Scrolls sideways (`post-content.css`), so it must be keyboard-reachable.
+  // Scrolls sideways (`post-prose.css`), so it must be keyboard-reachable.
   pre: ({ children }) => <pre tabIndex={0}>{children}</pre>,
 
   table: ({ children }) => (
-    <div className="blog-table-scroll">
+    <div className="post-prose-table-scroll">
       <table>{children}</table>
     </div>
   ),

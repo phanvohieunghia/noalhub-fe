@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { useTranslations } from "next-intl";
-import { Select } from "@noalhub/ui/select";
+import { Select, SELECT_SIZES } from "@noalhub/ui/select";
 
 const meta: Meta<typeof Select> = {
   title: "UI/Elements/Select",
@@ -12,6 +12,15 @@ const meta: Meta<typeof Select> = {
     label: {
       control: "text",
       description: "Nhãn hiển thị phía trên",
+    },
+    size: {
+      control: "select",
+      options: SELECT_SIZES,
+      description: "Kích thước: lg 48 · md 40 · sm 32 · xs 28",
+    },
+    hint: {
+      control: "text",
+      description: "Dòng gợi ý bên dưới (ẩn khi có lỗi)",
     },
     placeholder: {
       control: "text",

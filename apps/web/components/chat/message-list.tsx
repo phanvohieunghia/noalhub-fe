@@ -200,7 +200,9 @@ export function MessageList({
         <div ref={sentinelRef} className="flex justify-center py-1">
           {isFetchingOlder ? <Spinner /> : null}
           {!hasOlder && ordered.length > 0 ? (
-            <span className="text-[11px] opacity-40">{t("conversationStart")}</span>
+            <Typography as="span" variant="body-4" className="opacity-40">
+              {t("conversationStart")}
+            </Typography>
           ) : null}
         </div>
 

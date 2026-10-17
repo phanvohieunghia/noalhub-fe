@@ -22,6 +22,8 @@ export function useUserFilters() {
     limit: searchParams.get("limit") ?? undefined,
     q: searchParams.get("q") ?? undefined,
     role: searchParams.get("role") ?? undefined,
+    sort: searchParams.get("sort") ?? undefined,
+    order: searchParams.get("order") ?? undefined,
   });
 
   const [searchInput, setSearchInput] = useState(query.q ?? "");
@@ -67,5 +69,11 @@ export function useUserFilters() {
     setRole: (role: string) =>
       setParams({ role: (role || undefined) as AdminUserListQuery["role"] }),
     setPage: (page: number) => setParams({ page }),
+    /** asc → desc → off (back to the server's default order). */
+    toggleSort: (sort: NonNullable<AdminUserListQuery["sort"]>) => {
+      if (query.sort !== sort) setParams({ sort, order: "asc" });
+      else if (query.order === "asc") setParams({ sort, order: "desc" });
+      else setParams({ sort: undefined, order: undefined });
+    },
   };
 }

@@ -56,6 +56,9 @@
     "coupon": "Mã giảm giá",
     "couponPlaceholder": "Nhập mã...",
     "emailTakenError": "Email này đã được sử dụng.",
+    "search": "Tìm kiếm",
+    "searchPlaceholder": "Tìm kiếm...",
+    "password": "Mật khẩu",
     "username": "Tên đăng nhập",
     "emailError": "Định dạng email không hợp lệ."
   },
@@ -100,6 +103,12 @@
     "personB": "Trần Thị B",
     "personC": "Lê Văn C",
     "personD": "Phạm Thị D",
+    "actions": {
+      "column": "Thao tác",
+      "label": "Thao tác với dòng",
+      "duplicate": "Nhân bản",
+      "delete": "Xóa"
+    },
     "sortHint": "Sắp xếp theo {column}",
     "asc": "Tăng dần",
     "desc": "Giảm dần",

@@ -6,7 +6,7 @@
   "friendSince": "Friends since {date}",
   "openRequests": "Friend requests",
   "find": "Find friends",
-  "messages": "Messages",
+  "back": "Back to messages",
   "requests": {
     "title": "Friend requests",
     "loading": "Loading…",

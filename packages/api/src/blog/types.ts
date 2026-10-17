@@ -26,7 +26,7 @@
  * it. Without h4 the backend's sanitizer demotes it to h2, turning a sub-point
  * into a fake chapter, and it does so **silently**.
  */
-export type BlogHeadingLevel = 2 | 3 | 4;
+export type BlogHeadingLevel = 1 | 2 | 3 | 4;
 
 /** The marks allowed on `text` — allowlist §3.1, no others exist. */
 export type BlogMark =

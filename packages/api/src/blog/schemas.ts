@@ -186,7 +186,7 @@ function sanitizeBlock(raw: unknown, allowTable: boolean): BlogBlockNode | null 
     case "heading": {
       // A level outside [2,3,4] falls back to h2 rather than dropping the whole
       // heading: losing a TOC entry beats losing the section under it.
-      const level = attrs.level === 3 || attrs.level === 4 ? attrs.level : 2;
+      const level = attrs.level === 1 || attrs.level === 3 || attrs.level === 4 ? attrs.level : 2;
       return {
         type: "heading",
         attrs: { level },

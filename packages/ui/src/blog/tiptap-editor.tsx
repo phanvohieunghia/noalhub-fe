@@ -45,10 +45,10 @@ import { Tooltip } from "../tooltip";
 import { ImageUploadButton } from "../media/image-upload-button";
 import { Typography } from "../typography";
 
-// The editor writes into a `.blog-content` element, so it needs the very same
+// The editor writes into a `.post-prose` element, so it needs the very same
 // stylesheet the renderer uses — otherwise what is typed and what is published
 // look different.
-import "./post-content.css";
+import "./post-prose.css";
 
 /**
  * The `image` node carries `width`/`height` **from day one**.
@@ -76,10 +76,10 @@ const BlogImage = Image.extend({
  */
 export const BLOG_EXTENSIONS: Extensions = [
   StarterKit.configure({
-    // `<h1>` is the post title; content has h2/h3/h4 (§6.2). h4 is what the
+    // h1 is the Q&A outline document title; h2/h3/h4 are its levels (§6.2). h4 is what the
     // Q&A outline's third level needs — without it the backend demotes a
     // sub-point to h2 and it reads as a chapter that was never written.
-    heading: { levels: [2, 3, 4] },
+    heading: { levels: [1, 2, 3, 4] },
     // Not in the §3.1 allowlist — enabling it produces a mark the renderer
     // drops, so an author underlines something, saves, and the text comes
     // back plain.
@@ -117,13 +117,19 @@ export const BLOG_EXTENSIONS: Extensions = [
  * than slipped in (§3.1c). This pass only **stores** `language`; no
  * highlighting.
  */
+/** The full-screen toggle an editor can show in its toolbar; the parent owns the state. */
+export type EditorFullscreen = { active: boolean; onToggle: () => void };
+
 export function TiptapEditor({
   value,
   onChange,
   contentClassName,
+  fullscreen,
 }: {
   value: BlogDoc;
   onChange: (doc: BlogDoc) => void;
+  /** Draws the full-screen toggle as the toolbar's first button. */
+  fullscreen?: EditorFullscreen;
   /**
    * Extra classes on the editable surface itself (the `.ProseMirror` node) —
    * e.g. a `max-h-*` + `overflow-y-auto` pair so a long document scrolls
@@ -140,6 +146,7 @@ export function TiptapEditor({
       // while writing, gone after saving".
       onUpdate={(instance) => onChange(sanitizeBlogDoc(instance.getJSON()))}
       contentClassName={contentClassName}
+      fullscreen={fullscreen}
     />
   );
 }
@@ -156,6 +163,9 @@ export function RichTextEditor({
   extensions = [],
   onUpdate,
   contentClassName,
+  fullscreen,
+  toolbarExtra,
+  onReady,
 }: {
   content: BlogDoc | string;
   /** How Tiptap parses `content`. `"markdown"` needs the `Markdown` extension. */
@@ -164,6 +174,12 @@ export function RichTextEditor({
   extensions?: Extensions;
   onUpdate: (editor: Editor) => void;
   contentClassName?: string;
+  /** Draws the full-screen toggle as the toolbar's first button. */
+  fullscreen?: EditorFullscreen;
+  /** Controls for the caller's own insertions, pinned to the toolbar's right edge. */
+  toolbarExtra?: React.ReactNode;
+  /** Hands the live instance to the parent (and `null` on unmount), e.g. to insert text at the caret. */
+  onReady?: (editor: Editor | null) => void;
 }) {
   const t = useTranslations("common.editor");
   const [linkOpen, setLinkOpen] = useState(false);
@@ -213,7 +229,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class: [
-          "blog-content min-h-80 rounded-md border border-black/15 px-4 py-3 outline-none focus:border-foreground/60 dark:border-white/20",
+          "post-prose post-prose-compact min-h-80 rounded-md border border-border bg-surface px-4 py-3 outline-none focus:border-foreground/60",
           contentClassName,
         ]
           .filter(Boolean)
@@ -255,7 +271,9 @@ export function RichTextEditor({
    */
   useEffect(() => {
     editorRef.current = editor;
-  }, [editor]);
+    onReady?.(editor);
+    return () => onReady?.(null);
+  }, [editor, onReady]);
 
   if (!editor) {
     return (
@@ -264,13 +282,18 @@ export function RichTextEditor({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    // `min-h-0 flex-1` lets a parent that is a fixed-height flex column (the
+    // full-screen window) hand the editor its height: the toolbar stays put and
+    // only the content scrolls. In a plain block parent they do nothing.
+    <div className="flex min-h-0 flex-1 flex-col gap-2">
       <Toolbar
         editor={editor}
+        fullscreen={fullscreen}
+        extra={toolbarExtra}
         onLink={() => setLinkOpen(true)}
         onImage={() => setImageOpen(true)}
       />
-      <EditorContent editor={editor} />
+      <EditorContent editor={editor} className="min-h-0 flex-1" />
 
       {dropUpload.isPending ? (
         <Typography variant="body-4" role="status" className="opacity-70">
@@ -295,10 +318,14 @@ export function RichTextEditor({
 
 function Toolbar({
   editor,
+  fullscreen,
+  extra,
   onLink,
   onImage,
 }: {
   editor: Editor;
+  fullscreen?: EditorFullscreen;
+  extra?: React.ReactNode;
   onLink: () => void;
   onImage: () => void;
 }) {
@@ -317,6 +344,7 @@ function Toolbar({
       italic: e.isActive("italic"),
       strike: e.isActive("strike"),
       code: e.isActive("code"),
+      h1: e.isActive("heading", { level: 1 }),
       h2: e.isActive("heading", { level: 2 }),
       h3: e.isActive("heading", { level: 3 }),
       h4: e.isActive("heading", { level: 4 }),
@@ -333,7 +361,18 @@ function Toolbar({
   const inCodeBlock = active.codeBlock;
 
   return (
-    <div className="flex flex-wrap items-center gap-1 rounded-md border border-black/10 p-1.5 dark:border-white/15">
+    <div className="flex flex-wrap items-center gap-0.5 rounded-md border border-border bg-surface px-2 py-1.5">
+      {fullscreen ? (
+        <>
+          <ToolbarButton
+            label={t(fullscreen.active ? "exitFullscreen" : "fullscreen")}
+            active={false}
+            onClick={fullscreen.onToggle}
+            icon={fullscreen.active ? LUCIDE.minimize : LUCIDE.maximize}
+          />
+          <Divider />
+        </>
+      ) : null}
       <ToolbarButton
         label={t("bold")}
         active={active.bold}
@@ -361,6 +400,12 @@ function Toolbar({
 
       <Divider />
 
+      <ToolbarButton
+        label={t("h1")}
+        active={active.h1}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+        icon={LUCIDE.heading1}
+      />
       <ToolbarButton
         label={t("h2")}
         active={active.h2}
@@ -486,7 +531,7 @@ function Toolbar({
       {inCodeBlock ? (
         <select
           aria-label={t("codeLanguage")}
-          className="ml-auto h-8 rounded-md border border-black/15 bg-transparent px-2 text-body-4 dark:border-white/20"
+          className={`${extra ? "" : "ml-auto "}h-8 rounded-md border border-border bg-transparent px-2 text-body-4`}
           value={active.codeBlockLanguage}
           onChange={(event) =>
             editor
@@ -508,6 +553,8 @@ function Toolbar({
           ))}
         </select>
       ) : null}
+
+      {extra ? <div className="ml-auto flex items-center gap-1">{extra}</div> : null}
     </div>
   );
 }
@@ -548,7 +595,7 @@ function ToolbarButton({
 
 function Divider() {
   return (
-    <span aria-hidden className="mx-1 h-5 w-px bg-black/10 dark:bg-white/15" />
+    <span aria-hidden className="mx-0.5 h-5 w-px bg-border" />
   );
 }
 

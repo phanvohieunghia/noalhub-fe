@@ -11,6 +11,7 @@ import { slugify } from "@noalhub/core/blog/slugify";
 import { AlertError } from "@noalhub/ui/alert";
 import { Button } from "@noalhub/ui/button";
 import { Input } from "@noalhub/ui/input";
+import { Typography } from "@noalhub/ui/typography";
 
 const MAX_SUGGESTIONS = 8;
 
@@ -98,7 +99,9 @@ export function TagMultiselect({
                 shape="circle"
                 onClick={() => onChange(value.filter((item) => item !== slug))}
               >
-                <span>#{bySlug.get(slug)?.name ?? slug}</span>
+                <Typography variant="body-4" as="span">
+                  #{bySlug.get(slug)?.name ?? slug}
+                </Typography>
                 <span aria-hidden>×</span>
                 <span className="sr-only">{t("tags.remove")}</span>
               </Button>

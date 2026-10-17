@@ -24,8 +24,15 @@ const brandMark =
   encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" width="118" height="24" viewBox="0 0 118 24">' +
       '<g transform="scale(0.2)">' +
-      '<path fill="#006066" d="M96 0H24C10.7452 0 0 10.7452 0 24V96C0 109.255 10.7452 120 24 120H96C109.255 120 120 109.255 120 96V24C120 10.7452 109.255 0 96 0Z"/>' +
-      '<path fill="#ffffff" d="M32 88V32H48L88 76V32V88H72L32 44V88Z"/>' +
+      '<rect width="120" height="120" rx="28" fill="#113138"/>' +
+      '<g transform="translate(22 23.32) scale(0.2)">' +
+      '<path fill="#469894" d="M88.0996 0L185.4 97.31V152.53L88.0996 56.54V0Z"/>' +
+      '<path fill="#469894" d="M89.41 95.99L117.02 123.6L56.54 185.4L138.06 268.24L176.19 230.11V286.65L138.06 323.46L0 185.4L89.41 95.99Z"/>' +
+      '<path fill="#469894" d="M239.31 132.81L286.64 177.51L239.31 226.16L211.7 198.55L231.42 178.83L211.7 157.79L239.31 132.81Z"/>' +
+      '<path fill="#95D9BD" d="M243.25 39.45L380 177.51L289.27 269.55L262.98 243.26L323.46 177.51L243.25 95.99L203.81 134.12V78.9L243.25 39.45Z"/>' +
+      '<path fill="#95D9BD" d="M193.29 211.7L289.27 309V366.86L193.29 269.55V211.7Z"/>' +
+      '<path fill="#95D9BD" d="M140.69 139.38L168.3 165.68L151.21 185.4L168.3 203.81L140.69 231.42L94.6699 185.4L140.69 139.38Z"/>' +
+      "</g>" +
       "</g>" +
       '<text x="32" y="17" fill="#2e3438" font-family="Nunito Sans, -apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="700">Noalhub UI</text>' +
       "</svg>",

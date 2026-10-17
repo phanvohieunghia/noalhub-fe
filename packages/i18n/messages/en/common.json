@@ -16,6 +16,8 @@
     "copied": "Copied",
     "continue": "Continue",
     "show": "Show",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "hide": "Hide",
     "logout": "Sign out"
   },
@@ -92,6 +94,7 @@
     "italic": "Italic",
     "strike": "Strikethrough",
     "code": "Inline code",
+    "h1": "Heading level 1",
     "h2": "Heading level 2",
     "h3": "Heading level 3",
     "h4": "Heading level 4",
@@ -127,7 +130,9 @@
     "close": "Close",
     "linkHint": "Clear the field and press Apply to remove the link. Outbound links automatically carry <code>rel=\"nofollow noopener\"</code> when rendered.",
     "linkUrl": "URL",
-    "uploading": "Uploading the image… {percent}%"
+    "uploading": "Uploading the image… {percent}%",
+    "fullscreen": "Full screen",
+    "exitFullscreen": "Exit full screen"
   },
   "upload": {
     "label": "Upload an image",

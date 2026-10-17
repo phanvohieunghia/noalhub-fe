@@ -132,7 +132,7 @@ function AccessRow({ row, onRevoke }: { row: StorybookAccess; onRevoke: () => vo
 
   return (
     <TableRow>
-      <TableCell className="font-medium">{row.email}</TableCell>
+      <TableCell weight={500}>{row.email}</TableCell>
       <TableCell className="opacity-70">{row.note ?? "—"}</TableCell>
       <TableCell className="whitespace-nowrap opacity-70">
         {df.date(row.createdAt)}

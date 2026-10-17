@@ -52,5 +52,13 @@
     "processing": "Working…",
     "backToLogin": "Back to sign in",
     "pageTitle": "Signing in…"
+  },
+  "shell": {
+    "tagline": "Learn, chat and write — all in one place.",
+    "features": {
+      "chat": "Real-time conversations with your friends",
+      "practice": "Practice with question sets and track your progress",
+      "blog": "Notes on product and engineering, written as we build"
+    }
   }
 }

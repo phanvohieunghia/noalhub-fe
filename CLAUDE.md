@@ -12,6 +12,7 @@ Run from the repo root (Turborepo fans out to every workspace):
 |---|---|
 | `pnpm dev` | Dev servers for both Next apps |
 | `pnpm dev:web` / `pnpm dev:admin` | One app only |
+| `pnpm dev:mobile` / `dev:ios` / `dev:android` | Expo app (`apps/mobile`); not part of `pnpm dev` / `pnpm build` |
 | `pnpm build` / `pnpm build:web` / `pnpm build:admin` | Production builds (separate artifacts per app) |
 | `pnpm lint` | ESLint flat config — `next build` does **not** lint |
 | `pnpm typecheck` | `tsc --noEmit` across all apps and packages |
@@ -45,6 +46,8 @@ next-intl · Socket.IO. The browser calls the backend **directly**; there is no 
 
 - `apps/web` — customer app, locale-segmented routes under `app/[locale]/`.
 - `apps/admin` — admin app, `app/(protected)/` behind an auth gate, no locale segment in the URL.
+- `apps/mobile` — Expo + Expo Router app (iOS/Android, NativeWind), shares `packages/api`, `packages/i18n`
+  and the theme tokens with web (`docs/mobile.md`). Previews ship through EAS Update (`update:preview`).
 - `apps/storybook` — standalone Storybook app; stories live here (`src/`), never inside `packages/ui`.
   Builds split public vs. internal audiences via `SB_AUDIENCE`.
 - `packages/api` — the whole data layer (see `docs/data-layer.md`): per-feature
@@ -53,11 +56,13 @@ next-intl · Socket.IO. The browser calls the backend **directly**; there is no 
   `chat/outbox.ts`) — they sit here because `hooks.ts` depends on them and they depend back on
   `api.ts`. `API_BASE_URL` already includes `/api`, so api-layer paths omit it.
 - `packages/core` — framework-light helpers (`format-date`, forms, theme, per-feature formatting).
-- `packages/ui`, `packages/i18n`, `packages/config`.
+- `packages/ui` (web) and `packages/ui-native` (React Native) — separate component sets, not shared code.
+- `packages/i18n`, `packages/config`.
 
 Two documented exceptions to the data-layer convention: chat **writes** go over the socket
 (`packages/api/src/chat/socket.ts`, `docs/chat.md` §6), and blog **reads** on the public site are
 server-only fetches, not React Query (`docs/blog.md` §7).
 
 `docs/` is the design record — read the file for the area you are touching (`data-layer`, `auth`,
-`chat`, `blog`, `i18n`, `theme`, `monorepo`, `media`, `storybook`, `slug-management`, `admin-plan`).
+`chat`, `blog`, `i18n`, `theme`, `monorepo`, `mobile`, `media`, `storybook`, `slug-management`,
+`admin-plan`, `account-deletion`).

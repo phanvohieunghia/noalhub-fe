@@ -3,7 +3,6 @@
   "loading": "Đang tải hồ sơ…",
   "loadFailed": "Không tải được hồ sơ.",
   "noData": "Không có dữ liệu hồ sơ.",
-  "dashboard": "Dashboard",
   "facts": {
     "email": "Email",
     "verified": "· đã xác thực",

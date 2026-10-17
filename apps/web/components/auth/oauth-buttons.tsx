@@ -7,6 +7,7 @@ import { Icon, ICONS } from "@noalhub/ui/icons";
 import { rememberOAuthNext } from "@noalhub/core/auth/redirect";
 import { oauthStartUrl } from "@noalhub/api/auth";
 import type { OAuthProvider } from "@noalhub/api/auth";
+import { Typography } from "@noalhub/ui/typography";
 
 const PROVIDERS: { id: OAuthProvider; label: string; icon: string }[] = [
   { id: "google", label: "Google", icon: ICONS.google },
@@ -27,11 +28,15 @@ export function OAuthButtons({ next }: { next?: string }) {
       {/* `text-muted-foreground` rather than `opacity-50`: opacity on small text
           gives a 3.94:1 contrast ratio, below the WCAG AA threshold of 4.5:1. The
           muted token exists for exactly this and switches with light/dark. */}
-      <div className="text-body-4 text-muted-foreground flex items-center gap-3 uppercase tracking-wide">
+      <Typography
+        as="div"
+        variant="body-4"
+        className="flex items-center gap-3 uppercase tracking-wide text-muted-foreground"
+      >
         <span className="h-px flex-1 bg-current" />
         {t("divider")}
         <span className="h-px flex-1 bg-current" />
-      </div>
+      </Typography>
 
       <div className="grid grid-cols-2 gap-3">
         {PROVIDERS.map(({ id, label, icon }) => (

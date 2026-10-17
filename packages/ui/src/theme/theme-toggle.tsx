@@ -3,7 +3,6 @@
 import { THEME_MODES, type ThemeMode } from "@noalhub/core/theme/types";
 import { useTranslations } from "next-intl";
 
-import { Button } from "../button";
 import { Icon, ICONS } from "../icons";
 import { useTheme } from "./theme-provider";
 
@@ -18,7 +17,14 @@ const MODE_ICONS: Record<ThemeMode, string> = {
  * explicitly selectable, and the user has to see which mode they are in — a
  * toggle cannot say "following the system".
  */
-export function ThemeToggle({ className = "" }: { className?: string }) {
+export function ThemeToggle({
+  className = "",
+  modes = THEME_MODES,
+}: {
+  className?: string;
+  /** Which modes to offer — defaults to all three. */
+  modes?: readonly ThemeMode[];
+}) {
   // `common` is the namespace every page of both apps loads — a shared
   // component must not pin one app's namespace (`docs/i18n.md` §6).
   const t = useTranslations("common.theme");
@@ -32,23 +38,26 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       // server cannot read localStorage). All 3 buttons still render so the
       // layout does not shift, but the "selected" marking is hidden — showing
       // it would paint the wrong button first and then jump to the right one.
-      className={`inline-flex items-center gap-0.5 rounded-full border border-border p-0.5 ${className}`}
+      className={`inline-flex items-center overflow-clip rounded-full bg-muted p-0.5 ${className}`}
     >
-      {THEME_MODES.map((value) => {
+      {modes.map((value) => {
         const active = mounted && mode === value;
         return (
-          <Button
+          <button
             key={value}
-            variant={active ? "primary" : "ghost"}
-            size="icon-sm"
-            shape="circle"
+            type="button"
             onClick={() => setMode(value)}
             aria-pressed={active}
             title={t(value)}
+            className={`flex size-7 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              active
+                ? "bg-surface text-foreground shadow-sm ring-1 ring-border"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
-            <Icon icon={MODE_ICONS[value]} />
+            <Icon icon={MODE_ICONS[value]} className="size-4" />
             <span className="sr-only">{t(value)}</span>
-          </Button>
+          </button>
         );
       })}
     </div>

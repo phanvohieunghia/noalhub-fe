@@ -41,9 +41,9 @@ export function RelatedPosts({ posts }: { posts: BlogPostListItem[] }) {
             <Link href={`/blogs/${post.slug}`} className="font-medium leading-snug hover:underline">
               {post.title}
             </Link>
-            <time dateTime={post.publishedAt} className="text-body-4 opacity-60">
+            <Typography as="time" variant="body-4" dateTime={post.publishedAt} className="opacity-60">
               {df.date(post.publishedAt)}
-            </time>
+            </Typography>
           </li>
         ))}
       </ul>

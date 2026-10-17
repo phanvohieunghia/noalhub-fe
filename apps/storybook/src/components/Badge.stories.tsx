@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { Badge, BADGE_TONES } from "@noalhub/ui/badge";
+import { Badge, BADGE_SIZES, BADGE_TONES } from "@noalhub/ui/badge";
 
 const meta: Meta<typeof Badge> = {
   title: "UI/Elements/Badge",
@@ -12,6 +12,11 @@ const meta: Meta<typeof Badge> = {
       control: "select",
       options: BADGE_TONES,
       description: "Màu sắc ngữ nghĩa của Badge",
+    },
+    size: {
+      control: "select",
+      options: BADGE_SIZES,
+      description: "Kích thước: lg · md (mặc định) · sm",
     },
     children: {
       control: "text",

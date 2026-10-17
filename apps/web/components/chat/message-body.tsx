@@ -1,3 +1,5 @@
+import { Typography } from "@noalhub/ui/typography";
+
 /** Matches simple http/https URLs — enough for chat content, not a markdown parser. */
 const URL_SPLIT = /(https?:\/\/[^\s<]+)/g;
 
@@ -19,7 +21,7 @@ export function MessageBody({ body }: { body: string }) {
   const parts = body.split(URL_SPLIT);
 
   return (
-    <span className="break-words whitespace-pre-wrap">
+    <Typography as="span" variant="body-3" className="break-words whitespace-pre-wrap">
       {parts.map((part, index) =>
         IS_URL.test(part) ? (
           <a
@@ -38,6 +40,6 @@ export function MessageBody({ body }: { body: string }) {
           part
         ),
       )}
-    </span>
+    </Typography>
   );
 }

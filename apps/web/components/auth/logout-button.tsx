@@ -6,6 +6,8 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@noalhub/ui/button";
+import { Icon, ICONS } from "@noalhub/ui/icons";
+import { Tooltip } from "@noalhub/ui/tooltip";
 import { useAuthStore } from "@noalhub/api/auth";
 
 /**
@@ -18,7 +20,14 @@ import { useAuthStore } from "@noalhub/api/auth";
  * really exists, it is simply not sent to the client on that route). `nav` is
  * one of the three namespaces every page loads.
  */
-export function LogoutButton({ className }: { className?: string } = {}) {
+export function LogoutButton({
+  className,
+  iconOnly = false,
+}: {
+  className?: string;
+  /** A round ghost icon with a tooltip, as in admin's account menu. */
+  iconOnly?: boolean;
+} = {}) {
   const t = useTranslations("nav");
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -33,6 +42,25 @@ export function LogoutButton({ className }: { className?: string } = {}) {
     queryClient.clear();
     router.replace("/login");
   };
+
+  if (iconOnly) {
+    return (
+      <Tooltip label={pending ? t("loggingOut") : t("logout")} side="bottom">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          shape="circle"
+          onClick={onClick}
+          disabled={pending}
+          aria-busy={pending}
+          aria-label={t("logout")}
+          className={`shrink-0 text-muted-foreground hover:text-foreground ${className ?? ""}`}
+        >
+          <Icon icon={ICONS.logout} className="size-4" />
+        </Button>
+      </Tooltip>
+    );
+  }
 
   return (
     <Button variant="outline" onClick={onClick} disabled={pending} className={className}>

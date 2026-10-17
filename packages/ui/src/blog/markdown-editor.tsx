@@ -5,7 +5,10 @@ import { Editor } from "@tiptap/react";
 
 import { sanitizeBlogDoc, type BlogDoc } from "@noalhub/api/blog";
 
-import { BLOG_EXTENSIONS, RichTextEditor } from "./tiptap-editor";
+import { BLOG_EXTENSIONS, RichTextEditor, type EditorFullscreen } from "./tiptap-editor";
+
+/** Re-exported so apps need not depend on Tiptap just to type `onReady`. */
+export type { Editor };
 
 const MARKDOWN_EXTENSIONS = [Markdown];
 
@@ -25,10 +28,18 @@ export function MarkdownEditor({
   value,
   onChange,
   contentClassName,
+  fullscreen,
+  toolbarExtra,
+  onReady,
 }: {
   value: string;
   onChange: (markdown: string) => void;
   contentClassName?: string;
+  fullscreen?: EditorFullscreen;
+  /** Controls pinned to the toolbar's right edge — e.g. a menu that inserts the caller's own tokens. */
+  toolbarExtra?: React.ReactNode;
+  /** The live Tiptap instance, for callers that insert content programmatically. Pass a stable callback. */
+  onReady?: (editor: Editor | null) => void;
 }) {
   return (
     <RichTextEditor
@@ -37,6 +48,9 @@ export function MarkdownEditor({
       extensions={MARKDOWN_EXTENSIONS}
       onUpdate={(editor) => onChange(editor.getMarkdown())}
       contentClassName={contentClassName}
+      fullscreen={fullscreen}
+      toolbarExtra={toolbarExtra}
+      onReady={onReady}
     />
   );
 }

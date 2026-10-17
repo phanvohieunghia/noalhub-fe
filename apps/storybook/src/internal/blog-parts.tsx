@@ -127,13 +127,19 @@ export function Breadcrumb({ items }: { items: Crumb[] }) {
       <ol className="flex flex-wrap items-center gap-1.5">
         {items.map((item, index) => (
           <li key={index} className="flex items-center gap-1.5">
-            {index > 0 ? <span aria-hidden>/</span> : null}
-            <span
+            {index > 0 ? (
+              <Typography as="span" variant="body-3" aria-hidden>
+                /
+              </Typography>
+            ) : null}
+            <Typography
+              as="span"
+              variant="body-3"
               {...(item.current ? { "aria-current": "page" as const } : {})}
               className={item.current ? undefined : "underline underline-offset-4"}
             >
               {item.label}
-            </span>
+            </Typography>
           </li>
         ))}
       </ol>
@@ -201,9 +207,14 @@ export function PostCard({ post }: { post: SamplePost }) {
       {post.cover ? <Cover className="aspect-[16/9]" /> : null}
 
       <div className="flex flex-col gap-2">
-        <span className="text-body-4 w-fit font-medium tracking-wide uppercase opacity-60">
+        <Typography
+          as="span"
+          variant="body-4"
+          weight={500}
+          className="w-fit tracking-wide uppercase opacity-60"
+        >
           {s("categoryName")}
-        </span>
+        </Typography>
 
         <Typography variant="h5" as="h2" className="leading-snug">
           {post.title}
@@ -304,12 +315,17 @@ export function RelatedPosts({ posts }: { posts: SamplePost[] }) {
       <ul className="mt-4 grid gap-4 sm:grid-cols-3">
         {posts.map((post) => (
           <li key={post.id} className="flex flex-col gap-1">
-            <span className="leading-snug font-medium underline underline-offset-4">
+            <Typography
+              as="span"
+              variant="body-2"
+              weight={500}
+              className="leading-snug underline underline-offset-4"
+            >
               {post.title}
-            </span>
-            <time dateTime={post.publishedAt} className="text-body-4 opacity-60">
+            </Typography>
+            <Typography as="time" variant="body-4" dateTime={post.publishedAt} className="opacity-60">
               {df.date(post.publishedAt)}
-            </time>
+            </Typography>
           </li>
         ))}
       </ul>

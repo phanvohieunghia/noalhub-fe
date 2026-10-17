@@ -14,10 +14,23 @@ const TONES = {
   info: "bg-highlight text-highlight-foreground",
 } as const;
 
+/**
+ * Size carries the text size too, for the same reason as in `Button`: a
+ * `text-*` in the base and another in the size have equal specificity, so the
+ * stylesheet order would pick the winner instead of the class string.
+ */
+const SIZES = {
+  lg: "px-3 py-1 text-body-3",
+  md: "px-2.5 py-[3px] text-body-4",
+  sm: "px-2 py-0.5 text-body-4",
+} as const;
+
 export type BadgeTone = keyof typeof TONES;
+export type BadgeSize = keyof typeof SIZES;
 
 /** Derived from the table above — see `variants.ts`. */
 export const BADGE_TONES = keysOf(TONES);
+export const BADGE_SIZES = keysOf(SIZES);
 
 /**
  * A small status label. `tone` is **semantic**, not a color — the call site says
@@ -30,16 +43,18 @@ export const BADGE_TONES = keysOf(TONES);
  */
 export function Badge({
   tone = "neutral",
+  size = "md",
   className = "",
   children,
 }: {
   tone?: BadgeTone;
+  size?: BadgeSize;
   className?: string;
   children: React.ReactNode;
 }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-body-4 font-medium ${TONES[tone]} ${className}`}
+      className={`inline-flex items-center rounded-full font-medium ${SIZES[size]} ${TONES[tone]} ${className}`}
     >
       {children}
     </span>

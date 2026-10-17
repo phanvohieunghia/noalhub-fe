@@ -4,7 +4,7 @@ import { IntlProvider } from "@noalhub/i18n/provider";
 import { AdminLocaleSync } from "@/components/layout/locale-sync";
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
-import { Open_Sans } from "next/font/google";
+import { Be_Vietnam_Pro } from "next/font/google";
 
 import "./globals.css";
 import { THEME_INIT_SCRIPT } from "@noalhub/core/theme/script";
@@ -15,16 +15,18 @@ import { ThemeProvider } from "@noalhub/ui/theme/theme-provider";
 import { ToastHost } from "@noalhub/ui/toast";
 
 /** See the note in `apps/web/app/root-html.tsx` — both apps share one font. */
-const openSans = Open_Sans({
-  variable: "--font-open-sans",
+const beVietnamPro = Be_Vietnam_Pro({
+  variable: "--font-be-vietnam-pro",
   subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600"],
   display: "swap",
 });
 
 /** The italic face for the `caption` variant — see the note in `apps/web/app/root-html.tsx`. */
-const openSansItalic = Open_Sans({
-  variable: "--font-open-sans-italic",
+const beVietnamProItalic = Be_Vietnam_Pro({
+  variable: "--font-be-vietnam-pro-italic",
   subsets: ["latin", "vietnamese"],
+  weight: "400",
   style: "italic",
   display: "swap",
 });
@@ -53,7 +55,7 @@ export default async function RootLayout({
     <html
       lang={isLocale(locale) ? locale : DEFAULT_LOCALE}
       suppressHydrationWarning
-      className={`${openSans.variable} ${openSansItalic.variable} h-full antialiased`}
+      className={`${beVietnamPro.variable} ${beVietnamProItalic.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />

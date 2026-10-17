@@ -998,7 +998,7 @@ packages/api/package.json         ← + "./blog", "./blog/server"; + dependency 
 packages/ui/src/blog/
   post-content.tsx                ← renderer Tiptap JSON → React, dùng chung web + admin (§3, §8).
                                     KHÔNG import @tiptap/* (§3.2)
-  post-content.css                ← typography đi kèm renderer, KHÔNG để ở apps/web (§3.4)
+  post-prose.css                ← typography đi kèm renderer, KHÔNG để ở apps/web (§3.4)
   table-of-contents.tsx           ← TOC dựng từ chính JSON (§3.3)
 packages/ui/src/
   pagination-links.tsx            ← phân trang bằng <a href>, cho trang public (§4.5).

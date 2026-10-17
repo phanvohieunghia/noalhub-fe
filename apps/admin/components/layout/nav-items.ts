@@ -1,3 +1,5 @@
+import { ICONS, LUCIDE } from "@noalhub/ui/icons";
+
 /**
  * The single source of truth for admin navigation — the sidebar and the
  * breadcrumb read this same array, or the two drift apart on the first rename.
@@ -32,19 +34,24 @@ export type NavLabelKey =
   | "items.qaItems"
   | "items.qaTemplates"
   | "items.qaCredentials"
-  | "items.qaOutlines";
+  | "items.qaOutlines"
+  | "items.ai"
+  | "items.edit";
 
-export type NavReasonKey = "disabled.conversations" | "disabled.reports";
+export type NavReasonKey = "disabled.conversations" | "disabled.reports" | "disabled.requiresSuperAdmin";
 
 export type NavItem = {
   href: string;
   labelKey: NavLabelKey;
+  /** An iconify name for top-level rows. Children are drawn without one. */
+  icon?: string;
   disabled?: boolean;
   /** Why it is locked, shown as a tooltip. */
   reasonKey?: NavReasonKey;
   /**
-   * A capability the account must hold for the item to appear at all. Absent
-   * means everyone who got past the auth gate sees it.
+   * A capability the account must hold for the item to be usable. Without it
+   * the item is still shown, but locked. Absent means everyone who got past the
+   * auth gate can use it.
    */
   requires?: "canGenerateAi";
   /**
@@ -55,8 +62,8 @@ export type NavItem = {
 };
 
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/overview", labelKey: "items.overview" },
-  { href: "/users", labelKey: "items.users" },
+  { href: "/overview", labelKey: "items.overview", icon: LUCIDE.layoutDashboard },
+  { href: "/users", labelKey: "items.users", icon: ICONS.users },
   /*
    * Blog's two configuration screens sit UNDER "Posts" rather than beside it:
    * both are settings for the same section, used a few times a year. Buried
@@ -69,6 +76,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     href: "/posts",
     labelKey: "items.posts",
+    icon: LUCIDE.newspaper,
     children: [
       { href: "/posts/categories", labelKey: "items.categories" },
       { href: "/posts/slugs", labelKey: "items.slugs" },
@@ -81,17 +89,32 @@ export const NAV_ITEMS: NavItem[] = [
    * who is looking at it — the list it is gated by lives in this backend.
    */
   /*
-   * Q&A: four screens for `admin` plus one for `super_admin`. The last one is
-   * hidden — not disabled — when the account cannot generate: an `admin` has no
-   * reason to see a page that answers 403 to every request on it. Hiding is UX;
-   * the backend still refuses.
+   * Q&A is the content the learner sees: datasets, the question sets generated
+   * from them, and the bank that searches across all of it.
    */
   {
     href: "/qa/datasets",
     labelKey: "items.qa",
+    icon: LUCIDE.circleQuestionMark,
     children: [
       { href: "/qa/sets", labelKey: "items.qaSets" },
       { href: "/qa/items", labelKey: "items.qaItems" },
+    ],
+  },
+  /*
+   * Prompts and AI keys are how questions get generated, not what they are, so
+   * they are their own section instead of two more rows under Q&A. The routes
+   * stay under `/qa/*` — the screens did not move, only where the sidebar files
+   * them — which is why the breadcrumb still reads "Q&A / Prompts".
+   *
+   * The AI keys row is shown but disabled when the account cannot generate:
+   * an `admin` sees it is there and why it is locked. The backend still refuses.
+   */
+  {
+    href: "/qa/templates",
+    labelKey: "items.ai",
+    icon: LUCIDE.sparkles,
+    children: [
       { href: "/qa/templates", labelKey: "items.qaTemplates" },
       {
         href: "/qa/credentials",
@@ -100,16 +123,18 @@ export const NAV_ITEMS: NavItem[] = [
       },
     ],
   },
-  { href: "/storybook", labelKey: "items.storybook" },
+  { href: "/storybook", labelKey: "items.storybook", icon: ICONS.palette },
   {
     href: "/conversations",
     labelKey: "items.conversations",
+    icon: LUCIDE.messagesSquare,
     disabled: true,
     reasonKey: "disabled.conversations",
   },
   {
     href: "/reports",
     labelKey: "items.reports",
+    icon: LUCIDE.flag,
     disabled: true,
     reasonKey: "disabled.reports",
   },
@@ -131,7 +156,9 @@ export const FLAT_NAV_ITEMS: NavItem[] = NAV_ITEMS.flatMap((item) => [
  */
 export const SEGMENT_LABEL_KEYS: Record<string, NavLabelKey> = {
   new: "items.new",
+  edit: "items.edit",
   outlines: "items.qaOutlines",
+  items: "items.qaItems",
   /*
    * `qa` and `datasets` are here rather than resolved from the nav because the
    * sidebar's Q&A entry points at `/qa/datasets` under the label "Q&A": read

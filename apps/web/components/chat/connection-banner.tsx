@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@noalhub/ui/button";
 import { Spinner } from "@noalhub/ui/spinner";
 import { useChatRealtime } from "./chat-realtime-provider";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * Shown only while the socket is NOT online. Messages go over the socket, so a
@@ -22,12 +23,14 @@ export function ConnectionBanner() {
   return (
     <div
       role="status"
-      className="text-body-3 flex shrink-0 items-center justify-center gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-amber-800 dark:text-amber-200"
+      className="flex shrink-0 items-center justify-center gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-amber-800 dark:text-amber-200"
     >
-      {connecting ? <Spinner /> : <span aria-hidden>⚠</span>}
-      <span>
+      {connecting ? <Spinner /> : <Typography as="span" variant="body-3" aria-hidden>
+          ⚠
+        </Typography>}
+      <Typography as="span" variant="body-3">
         {connecting ? t("reconnecting") : t("offline")}
-      </span>
+      </Typography>
       {connecting ? null : (
         // `border-current` on purpose: the banner is amber, and a
         // `border-border` button inside it reads as a foreign element.

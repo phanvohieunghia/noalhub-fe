@@ -333,7 +333,9 @@ pnpm update:preview --message "mô tả thay đổi"
 `update:preview` nạp `.env.preview` vào **biến shell**, mà biến shell thắng mọi
 file `.env*` của Expo — nên `.env.local` (localhost cho dev) không bị gắn vào
 bundle. `EXPO_PUBLIC_*` được **inline lúc build**: đổi URL backend là phải chạy
-lại lệnh.
+lại lệnh. Metro cache kết quả transform mà **không tính giá trị env vào khóa
+cache**, nên script luôn kèm `--clear-cache` — thiếu nó, đổi `.env.preview`
+xong vẫn publish ra URL cũ.
 
 ### Mã QR
 

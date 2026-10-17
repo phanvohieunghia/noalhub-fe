@@ -12,7 +12,7 @@
 
 /** See the note in `apps/web/app/globals.css`. */
 @theme inline {
-  --font-sans: var(--font-open-sans);
+  --font-sans: var(--font-be-vietnam-pro);
 }
 
 body {

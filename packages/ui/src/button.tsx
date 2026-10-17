@@ -9,6 +9,8 @@ const VARIANTS = {
   primary: "bg-primary text-primary-foreground hover:bg-primary-hover",
   outline: "border border-border hover:bg-muted",
   ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",
+  /** Destructive action. `text-background` because `--danger` flips light in dark mode. */
+  danger: "bg-danger text-background hover:bg-danger/90",
   /** A filled but quiet button — used for chips and other in-content controls. */
   soft: "bg-muted text-foreground hover:bg-muted/60",
   /** "Add something that does not exist yet": the dashed border is the affordance. */
@@ -33,12 +35,18 @@ const SHAPES = {
  * decided by the stylesheet order, not by the order in the class string.
  */
 const SIZES = {
-  md: "h-10 px-4 text-body-3",
+  /** Larger than the Figma default — hero / primary call-to-action. */
+  lg: "h-12 px-6 text-title-3",
+  /** The Figma default: 40px tall, 16px padding, `title-4` text. */
+  md: "h-10 px-4 text-title-4",
   sm: "h-8 px-3 text-body-3",
   xs: "h-7 px-2.5 text-body-4",
   /** Square, icon only — always pair it with an `aria-label`. */
+  "icon-lg": "size-12",
   icon: "size-10",
+  "icon-md": "size-8",
   "icon-sm": "size-7",
+  "icon-xs": "size-6",
   /** No box at all: for `variant="link"` sitting inside a line of text. */
   inline: "h-auto p-0 text-body-4",
 } as const;

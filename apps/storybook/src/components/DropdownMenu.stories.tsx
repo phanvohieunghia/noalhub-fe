@@ -31,15 +31,15 @@ export const Default: Story = {
           </Button>
         }
       >
-        <DropdownMenuItem onSelect={() => alert(t("edit"))}>
-          <Icon icon={ICONS.edit} /> {t("edit")}
+        <DropdownMenuItem icon={ICONS.edit} onSelect={() => alert(t("edit"))}>
+          {t("edit")}
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => alert(t("copy"))}>
-          <Icon icon={ICONS.copy} /> {t("copy")}
+        <DropdownMenuItem icon={ICONS.copy} onSelect={() => alert(t("copy"))}>
+          {t("copy")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => alert(t("delete"))} className="text-danger">
-          <Icon icon={ICONS.delete} /> {t("delete")}
+        <DropdownMenuItem icon={ICONS.delete} tone="danger" onSelect={() => alert(t("delete"))}>
+          {t("delete")}
         </DropdownMenuItem>
       </DropdownMenu>
     );

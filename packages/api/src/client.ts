@@ -1,7 +1,13 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import type { ZodType } from "zod";
 
-import { API_BASE_URL, getApiBaseUrl, onApiConfigChange } from "./config";
+import {
+  API_BASE_URL,
+  NGROK_SKIP_WARNING_HEADER,
+  getApiBaseUrl,
+  isNgrokApi,
+  onApiConfigChange,
+} from "./config";
 import { ApiError, ERROR_CODES } from "./errors";
 import type { ApiErrorBody } from "./errors";
 import { tokenStore } from "./auth/token-store";
@@ -154,7 +160,15 @@ export async function ensureAccessToken(): Promise<string | null> {
 }
 
 /** Attaches `Authorization: Bearer <access>` to requests marked `authRequired`. */
+/** Dev tunnels only; see `NGROK_SKIP_WARNING_HEADER`. */
+const addTunnelHeaders = (config: InternalAxiosRequestConfig) => {
+  if (isNgrokApi()) config.headers.set(NGROK_SKIP_WARNING_HEADER, "1");
+  return config;
+};
+refreshHttp.interceptors.request.use(addTunnelHeaders);
+
 http.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  addTunnelHeaders(config);
   if (config.authRequired) {
     const accessToken = tokenStore.getAccess();
     if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;

@@ -14,6 +14,7 @@
     "composerOffline": "Mất kết nối — tin nhắn sẽ được gửi khi kết nối lại."
   },
   "sidebar": {
+    "friends": "Bạn bè",
     "empty": "Chưa có cuộc trò chuyện",
     "loading": "Đang tải danh sách hội thoại…",
     "searchPlaceholder": "Tìm hội thoại đã tải…",

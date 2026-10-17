@@ -67,6 +67,9 @@ export type AdminUserListQuery = {
   /** Fuzzy match across email + username. */
   q?: string;
   role?: UserRole;
+  /** Defaults to `createdAt` / `desc` on the server. */
+  sort?: "createdAt" | "username" | "email" | "role";
+  order?: "asc" | "desc";
 };
 
 /**

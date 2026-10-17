@@ -1,6 +1,8 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { Message } from "@noalhub/api/message";
@@ -17,11 +19,13 @@ import { useMessage } from "@noalhub/i18n/use-message";
 import { AlertError, AlertWarning } from "@noalhub/ui/alert";
 import { Badge } from "@noalhub/ui/badge";
 import { Button } from "@noalhub/ui/button";
+import { Icon, ICONS } from "@noalhub/ui/icons";
 import { Skeleton } from "@noalhub/ui/skeleton";
+import { Switch } from "@noalhub/ui/switch";
 import { Typography } from "@noalhub/ui/typography";
 
 import { AdminErrorState } from "../admin-error-state";
-import { PostContentPreview } from "./post-content-preview";
+import { QaQuestionCard } from "./qa-question-card";
 
 /**
  * One set: its questions, their order, and the publish button.
@@ -92,7 +96,7 @@ export function QaSetDetail({ setId }: { setId: string }) {
           <Typography variant="h4" as="h1">
             {data.title}
           </Typography>
-          <Typography variant="body-3" className="mt-1 opacity-70">
+          <Typography variant="body-3" className="mt-1 text-muted-foreground">
             {data.sectionTitle
               ? t("sets.fromSection", { section: data.sectionTitle })
               : t("sets.noSection")}
@@ -103,22 +107,25 @@ export function QaSetDetail({ setId }: { setId: string }) {
             {t(`sets.status.${data.status}`)}
           </Badge>
           {data.status === "draft" ? (
-            <Button
-              disabled={publish.isPending}
-              onClick={() => void run(() => publish.mutateAsync(data.version))}
-            >
-              {t("sets.publish")}
+            <Button variant="outline" asChild>
+              <Link href={`/qa/items/new?set=${setId}`}>
+                <Icon icon={ICONS.add} />
+                {t("sets.addQuestion")}
+              </Link>
             </Button>
           ) : null}
-          {data.status === "published" ? (
-            <Button
-              variant="outline"
-              disabled={archive.isPending}
-              onClick={() => void run(() => archive.mutateAsync(data.version))}
-            >
-              {t("sets.archive")}
-            </Button>
-          ) : null}
+          <Switch
+            label={t("sets.publishedSwitch")}
+            checked={data.status === "published"}
+            loading={publish.isPending || archive.isPending}
+            onCheckedChange={(next) =>
+              void run(() =>
+                next
+                  ? publish.mutateAsync(data.version)
+                  : archive.mutateAsync(data.version),
+              )
+            }
+          />
         </div>
       </div>
 
@@ -137,7 +144,7 @@ export function QaSetDetail({ setId }: { setId: string }) {
         </div>
       ) : null}
 
-      <div className="mt-6 space-y-3">
+      <div className="mt-4 space-y-3">
         {items.length === 0 ? (
           <Typography variant="body-3" className="opacity-70">
             {t("sets.noItems")}
@@ -150,6 +157,7 @@ export function QaSetDetail({ setId }: { setId: string }) {
               item={item}
               index={index}
               total={items.length}
+              locked={data.status !== "draft"}
               onMove={move}
             />
           ))
@@ -164,101 +172,36 @@ function ItemCard({
   item,
   index,
   total,
+  locked,
   onMove,
 }: {
   setId: string;
   item: QaItemFull;
   index: number;
   total: number;
+  /** Once the set has left draft its question shape is locked — no editing. */
+  locked: boolean;
   onMove: (index: number, delta: number) => void;
 }) {
-  const t = useTranslations("admin.qa");
   const remove = useDeleteQaItem(setId);
-
-  /*
-   * The correct answers are found by matching ids against `answerKey`, never by
-   * looking for a `correct` flag — `options` does not carry one, on purpose:
-   * one truth, one place to write it.
-   */
-  const correctIds =
-    item.answerKey && "optionIds" in item.answerKey ? item.answerKey.optionIds : [];
-  const accepted =
-    item.answerKey && "accepted" in item.answerKey ? item.answerKey.accepted : [];
+  const router = useRouter();
 
   return (
-    <article className="rounded-md border border-border p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge tone="info">{t(`items.kinds.${item.kind}`)}</Badge>
-            {item.difficulty ? (
-              <Badge tone="neutral">{t(`items.difficulty.${item.difficulty}`)}</Badge>
-            ) : null}
-          </div>
-          <div className="mt-2">
-            <PostContentPreview doc={item.question} />
-          </div>
-        </div>
-        <div className="flex shrink-0 gap-1">
-          <Button
-            variant="ghost"
-            aria-label={t("sets.moveUp")}
-            disabled={index === 0}
-            onClick={() => onMove(index, -1)}
-          >
-            ↑
-          </Button>
-          <Button
-            variant="ghost"
-            aria-label={t("sets.moveDown")}
-            disabled={index === total - 1}
-            onClick={() => onMove(index, 1)}
-          >
-            ↓
-          </Button>
-          <Button
-            variant="outline"
-            disabled={remove.isPending}
-            onClick={() => remove.mutate(item.id)}
-          >
-            {t("sets.removeItem")}
-          </Button>
-        </div>
-      </div>
-
-      {item.options ? (
-        <ul className="mt-3 space-y-1">
-          {item.options.map((option) => {
-            const isCorrect = correctIds.includes(option.id);
-            return (
-              <li
-                key={option.id}
-                className={`rounded-md px-2 py-1 text-body-3 ${
-                  isCorrect ? "bg-success/12 text-success" : "opacity-80"
-                }`}
-              >
-                {option.text}
-                {isCorrect ? ` · ${t("sets.correct")}` : ""}
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
-
-      {accepted.length > 0 ? (
-        <Typography variant="body-3" className="mt-3 opacity-80">
-          {t("sets.accepted", { answers: accepted.join(" · ") })}
-        </Typography>
-      ) : null}
-
-      {item.explanation ? (
-        <div className="mt-3 border-t border-border pt-3">
-          <Typography variant="body-4" className="text-muted-foreground">
-            {t("sets.explanation")}
-          </Typography>
-          <PostContentPreview doc={item.explanation} />
-        </div>
-      ) : null}
-    </article>
+    <>
+      <QaQuestionCard
+        item={item}
+        index={index}
+        isLast={index === total - 1}
+        onMoveUp={locked ? undefined : () => onMove(index, -1)}
+        onMoveDown={locked ? undefined : () => onMove(index, 1)}
+        onRemove={locked ? undefined : () => remove.mutate(item.id)}
+        removing={remove.isPending}
+        onEdit={
+          locked
+            ? undefined
+            : () => router.push(`/qa/sets/${setId}/items/${item.id}`)
+        }
+      />
+    </>
   );
 }

@@ -132,3 +132,15 @@ export function GenerationProgress({
     </div>
   );
 }
+
+/**
+ * What a finished run left behind, when it is not simply "new rows appeared": a
+ * failure or a partial result must stay on screen, because the panel alone would
+ * read as if nothing had been tried.
+ */
+export function RunOutcome({ generationId }: { generationId?: string }) {
+  const generation = useQaGeneration(generationId);
+  const status = generation.data?.status;
+  if (!generationId || (status !== "failed" && status !== "partial")) return null;
+  return <GenerationProgress generationId={generationId} />;
+}

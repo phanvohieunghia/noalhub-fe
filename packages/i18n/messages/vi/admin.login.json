@@ -1,9 +1,17 @@
 {
-  "title": "Noalhub Admin",
-  "subtitle": "Khu vực quản trị.",
-  "email": "Email",
+  "title": "Đăng nhập quản trị",
+  "subtitle": "Dùng tài khoản nhân sự để vào bảng điều khiển.",
+  "restricted": "Khu vực hạn chế. Mọi lần đăng nhập đều được ghi lại.",
+  "email": "Email công việc",
+  "emailPlaceholder": "name@noalhub.com",
   "password": "Mật khẩu",
-  "submit": "Đăng nhập",
+  "showPassword": "Hiện mật khẩu",
+  "hidePassword": "Ẩn mật khẩu",
+  "submit": "Vào bảng điều khiển",
   "submitting": "Đang đăng nhập…",
-  "notAdmin": "Tài khoản này không có quyền quản trị."
+  "notAdmin": "Tài khoản này không có quyền quản trị.",
+  "badge": "Bảng điều khiển",
+  "backToWebsite": "Về trang chủ",
+  "note": "Bảo vệ bằng xác minh hai bước",
+  "footer": "© 2026 Noalhub · Bảng điều khiển · Chỉ dành cho nhân sự được cấp quyền"
 }

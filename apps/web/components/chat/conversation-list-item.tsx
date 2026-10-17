@@ -58,18 +58,19 @@ export function ConversationListItem({
             <Typography variant="title-4" as="span" className="truncate">
               {name}
             </Typography>
-            <span className="shrink-0 text-[11px] opacity-50">
+            <Typography as="span" variant="body-4" className="shrink-0 opacity-50">
               {cf.conversationTimestamp(last?.createdAt ?? null)}
-            </span>
+            </Typography>
           </span>
           <span className="flex items-center justify-between gap-2">
-            <span
-              className={`truncate text-body-4 ${
-                conversation.unreadCount > 0 ? "font-medium" : "opacity-60"
-              }`}
+            <Typography
+              as="span"
+              variant="body-4"
+              weight={conversation.unreadCount > 0 ? 500 : 400}
+              className={`truncate ${conversation.unreadCount > 0 ? "" : "opacity-60"}`}
             >
               {preview}
-            </span>
+            </Typography>
             <UnreadBadge count={conversation.unreadCount} />
           </span>
         </span>

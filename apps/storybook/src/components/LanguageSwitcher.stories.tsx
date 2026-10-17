@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import React, { useState } from "react";
 import { LanguageSwitcher } from "@noalhub/ui/language-switcher";
 import { QueryProvider } from "@noalhub/ui/query-provider";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * The active language comes from `NextIntlClientProvider` — use the globe in
@@ -42,9 +43,9 @@ export const WithCallback: Story = {
     return (
       <div className="flex flex-col items-center gap-3">
         <LanguageSwitcher onSwitch={(locale) => setPicked(locale)} />
-        <p className="text-body-3 text-muted-foreground">
+        <Typography variant="body-3" className="text-muted-foreground">
           onSwitch: {picked ?? "—"}
-        </p>
+        </Typography>
       </div>
     );
   },

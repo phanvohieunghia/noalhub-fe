@@ -10,8 +10,12 @@ import {
   TableCell,
   TableEmptyRow,
   TableSortHeaderCell,
+  TableActionsHeaderCell,
+  TableRowActions,
   type SortDirection,
 } from "@noalhub/ui/table";
+import { DropdownMenuItem } from "@noalhub/ui/dropdown-menu";
+import { Icon, ICONS } from "@noalhub/ui/icons";
 import { Badge } from "@noalhub/ui/badge";
 import { Skeleton } from "@noalhub/ui/skeleton";
 
@@ -55,7 +59,7 @@ export const Default: Story = {
         {sampleUsers.map((user) => (
           <TableRow key={user.id}>
             <TableCell>{user.id}</TableCell>
-            <TableCell className="font-medium">{t(user.nameKey)}</TableCell>
+            <TableCell weight={500}>{t(user.nameKey)}</TableCell>
             <TableCell>{user.email}</TableCell>
             <TableCell>{user.role}</TableCell>
             <TableCell>
@@ -161,7 +165,7 @@ export const Sortable: Story = {
           <TableBody>
             {rows.map((row) => (
               <TableRow key={row.id}>
-                <TableCell className="font-medium">{row.name}</TableCell>
+                <TableCell weight={500}>{row.name}</TableCell>
                 <TableCell>{`user${row.id}@gmail.com`}</TableCell>
                 <TableCell className="whitespace-nowrap">{row.createdAt}</TableCell>
               </TableRow>
@@ -242,7 +246,7 @@ export const Scrollable: Story = {
             {sampleUsers.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>{user.id}</TableCell>
-                <TableCell className="font-medium whitespace-nowrap">{t(user.nameKey)}</TableCell>
+                <TableCell weight={500} className="whitespace-nowrap">{t(user.nameKey)}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.role}</TableCell>
                 <TableCell>
@@ -308,6 +312,55 @@ export const EmptyState: Story = {
           <TableEmptyRow colSpan={3}>{t("noResults")}</TableEmptyRow>
         </TableBody>
       </TableRoot>
+    );
+  },
+};
+
+/**
+ * A row with an actions column. The row itself is the primary action (open /
+ * edit) via `onActivate`, so the menu only carries the secondary ones —
+ * duplicate and delete. Picking from the menu does not trigger the row.
+ */
+export const RowActions: Story = {
+  render: function RowActionsStory() {
+    const t = useTranslations("sb.table");
+    const [last, setLast] = useState<string | null>(null);
+
+    return (
+      <div className="flex flex-col gap-3">
+        <code className="text-body-4 text-muted-foreground">{last ?? "—"}</code>
+        <TableRoot caption={t("caption")}>
+          <TableHead>
+            <TableRow>
+              <TableHeaderCell>{t("columns.name")}</TableHeaderCell>
+              <TableHeaderCell>{t("columns.email")}</TableHeaderCell>
+              <TableHeaderCell>{t("columns.role")}</TableHeaderCell>
+              <TableActionsHeaderCell label={t("actions.column")} />
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {sampleUsers.map((user) => (
+              <TableRow key={user.id} onActivate={() => setLast(`open #${user.id}`)}>
+                <TableCell weight={500}>{t(user.nameKey)}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.role}</TableCell>
+                <TableRowActions label={t("actions.label")}>
+                  <DropdownMenuItem icon={ICONS.copy} onSelect={() => setLast(`duplicate #${user.id}`)}>
+                    {t("actions.duplicate")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    icon={ICONS.delete}
+                    tone="danger"
+                    onSelect={() => setLast(`delete #${user.id}`)}
+                  >
+                    {t("actions.delete")}
+                  </DropdownMenuItem>
+                </TableRowActions>
+              </TableRow>
+            ))}
+          </TableBody>
+        </TableRoot>
+      </div>
     );
   },
 };

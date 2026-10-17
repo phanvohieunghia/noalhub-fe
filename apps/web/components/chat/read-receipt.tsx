@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import type { ConversationMember } from "@noalhub/api/chat";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * `✓` sent · `✓✓` read by someone.
@@ -30,9 +31,9 @@ export function ReadReceipt({
   );
 
   return (
-    <span className="text-[11px] leading-none opacity-70">
+    <Typography as="span" variant="body-4" className="leading-none opacity-70">
       <span aria-hidden>{readByOther ? "✓✓" : "✓"}</span>
       <span className="sr-only">{t(readByOther ? "read" : "sent")}</span>
-    </span>
+    </Typography>
   );
 }

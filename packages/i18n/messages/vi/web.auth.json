@@ -52,5 +52,13 @@
     "processing": "Đang xử lý…",
     "backToLogin": "Quay lại đăng nhập",
     "pageTitle": "Đang đăng nhập…"
+  },
+  "shell": {
+    "tagline": "Học, trò chuyện và viết — gói gọn trong một nơi.",
+    "features": {
+      "chat": "Trò chuyện thời gian thực với bạn bè",
+      "practice": "Luyện tập với bộ câu hỏi và theo dõi tiến độ",
+      "blog": "Ghi chép về sản phẩm và kỹ thuật, viết trong lúc xây dựng"
+    }
   }
 }

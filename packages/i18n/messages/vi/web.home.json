@@ -1,0 +1,37 @@
+{
+  "title": "Trang chủ",
+  "hero": {
+    "line1": "Sống chậm.",
+    "line2": "Học sâu. Giữ mọi thứ đơn giản."
+  },
+  "readingTime": "{minutes} phút đọc",
+  "empty": "Chưa có bài viết nào. Hãy quay lại sau nhé.",
+  "topics": {
+    "heading": "Chủ đề nổi bật",
+    "learning": "Bài học về học tập: nhìn lại một năm",
+    "productLead": "Trải nghiệm sản phẩm:",
+    "product": "Khi UX gặp cảm xúc",
+    "slowLead": "Sống chậm:",
+    "slow": "Không gian số tối giản"
+  },
+  "quote": {
+    "text": "Công nghệ tốt nhất là thứ khiến cuộc sống của chúng ta chậm hơn, sâu hơn và nhẹ hơn.",
+    "author": "Noah",
+    "role": "Kỹ sư & người học"
+  },
+  "latest": {
+    "heading": "Bài viết mới nhất",
+    "filters": "Lọc theo danh mục",
+    "all": "Tất cả"
+  },
+  "footer": {
+    "tagline": "Không gian blog và trò chuyện của Noalhub. Những ghi chép khi xây dựng sản phẩm, và nơi để tiếp tục trao đổi về nó.",
+    "posts": "Bài viết",
+    "categories": "Danh mục",
+    "practice": "Luyện tập",
+    "messages": "Tin nhắn",
+    "friends": "Bạn bè",
+    "rss": "RSS",
+    "sitemap": "Sơ đồ trang"
+  }
+}

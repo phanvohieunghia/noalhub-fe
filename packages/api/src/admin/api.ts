@@ -54,6 +54,8 @@ export async function listAdminUsers(
   if (query.limit !== undefined) params.limit = query.limit;
   if (query.q) params.q = query.q;
   if (query.role) params.role = query.role;
+  if (query.sort) params.sort = query.sort;
+  if (query.order) params.order = query.order;
 
   const { data } = await http.get<AdminUserList>("/admin/users", {
     params,

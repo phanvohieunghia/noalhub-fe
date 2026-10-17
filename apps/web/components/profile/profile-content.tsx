@@ -1,6 +1,5 @@
 "use client";
 
-import { Link } from "@noalhub/i18n/navigation";
 import { useDateFormat } from "@noalhub/i18n/use-date-format";
 import { useTranslations } from "next-intl";
 
@@ -33,7 +32,7 @@ export function ProfileContent() {
       return (
         <main
           role="status"
-          className="flex flex-1 items-center justify-center gap-2 p-8 text-body-3 opacity-70"
+          className="flex flex-1 items-center justify-center gap-2 p-4 md:p-8 text-body-3 opacity-70"
         >
           <Spinner />
           {t("loading")}
@@ -41,14 +40,14 @@ export function ProfileContent() {
       );
     }
     return (
-      <main className="mx-auto w-full max-w-3xl p-8">
+      <main className="mx-auto w-full max-w-3xl p-4 md:p-8">
         <AlertError message={error ? t("loadFailed") : t("noData")} />
       </main>
     );
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 p-8">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 p-4 md:p-8">
       <header className="flex items-center gap-4">
         <Avatar name={user.displayName ?? user.username} src={user.avatarUrl} size="lg" />
         <div className="min-w-0">
@@ -59,12 +58,6 @@ export function ProfileContent() {
             @{user.username}
           </Typography>
         </div>
-        <Link
-          href="/dashboard"
-          className="ml-auto inline-flex h-10 items-center rounded-md border border-black/15 px-4 text-body-3 font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
-        >
-          {t("dashboard")}
-        </Link>
       </header>
 
       <ProfileFacts user={user} />
@@ -86,11 +79,17 @@ function ProfileFacts({ user }: { user: User }) {
   return (
     <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-body-3 dark:border-white/15">
       <Fact label={t("email")}>
-        <span className="font-mono">{user.email}</span>{" "}
+        <Typography as="span" variant="body-3" className="font-mono">
+          {user.email}
+        </Typography>{" "}
         {user.emailVerified ? (
-          <span className="text-green-700 dark:text-green-400">{t("verified")}</span>
+          <Typography as="span" variant="body-3" className="text-green-700 dark:text-green-400">
+            {t("verified")}
+          </Typography>
         ) : (
-          <span className="text-amber-700 dark:text-amber-400">{t("unverified")}</span>
+          <Typography as="span" variant="body-3" className="text-amber-700 dark:text-amber-400">
+            {t("unverified")}
+          </Typography>
         )}
       </Fact>
       {/* `isAdmin` covers both admin roles; `role` alone would call a
@@ -101,7 +100,9 @@ function ProfileFacts({ user }: { user: User }) {
         {user.usernameChangedAt ? df.date(user.usernameChangedAt) : t("neverChanged")}
       </Fact>
       <Fact label={t("userId")}>
-        <span className="font-mono">{user.id}</span>
+        <Typography as="span" variant="body-3" className="font-mono">
+          {user.id}
+        </Typography>
       </Fact>
     </dl>
   );
@@ -110,8 +111,12 @@ function ProfileFacts({ user }: { user: User }) {
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex justify-between gap-4">
-      <dt className="opacity-70">{label}</dt>
-      <dd className="text-right">{children}</dd>
+      <Typography as="dt" variant="body-3" className="opacity-70">
+        {label}
+      </Typography>
+      <Typography as="dd" variant="body-3" className="text-right">
+        {children}
+      </Typography>
     </div>
   );
 }

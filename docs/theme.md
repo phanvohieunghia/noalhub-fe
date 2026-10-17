@@ -315,7 +315,7 @@ mới, không phải sửa. Chỉ ba nhóm thật sự phải đổi:
 `pagination-links.tsx`, `dashboard-content.tsx`, hai header → `border-border`; popover của
 `admin-header.tsx` từ `bg-white dark:bg-neutral-900` → `bg-surface`.
 
-`packages/ui/src/blog/post-content.css` **không cần sửa** — đã dùng
+`packages/ui/src/blog/post-prose.css` **không cần sửa** — đã dùng
 `color-mix(in srgb, currentColor …)` nên tự đổi theo màu chữ. Đây là mẫu nên nhân rộng.
 
 ## 6. UI chọn theme
@@ -417,7 +417,7 @@ Bước 1–4 là một PR chạy được (dark mode bật được nhưng còn
 
 ### 11.1 Font
 
-**Open Sans**, nạp bằng `next/font/google` chứ **không** bằng `<link>` tới
+**Be Vietnam Pro** (đúng font trong Figma), nạp bằng `next/font/google` chứ **không** bằng `<link>` tới
 `fonts.googleapis.com`. Cùng là "lấy từ Google Fonts", nhưng `next/font` tải file font **lúc
 build** rồi tự host cùng static assets: trình duyệt người dùng không gọi sang Google (đỡ một
 RTT tới domain lạ, và không rò referrer), Next chèn sẵn `@font-face` + preload nên không nháy
@@ -426,17 +426,18 @@ chữ, và không có request nào có thể hỏng lúc runtime.
 Hai điểm bắt buộc, khai giống hệt nhau ở cả hai app:
 
 ```ts
-const openSans = Open_Sans({
-  variable: "--font-open-sans",
+const beVietnamPro = Be_Vietnam_Pro({
+  variable: "--font-be-vietnam-pro",
   subsets: ["latin", "vietnamese"], // thiếu `vietnamese` → chữ có dấu rơi sang
+  weight: ["300", "400", "500", "600"],
   display: "swap",                  // font hệ điều hành, cùng dòng hai kiểu chữ
 });
 ```
 
-Không khai `weight`: Open Sans là font **biến thiên** (300–800), mọi độ đậm nằm trong một file.
+Phải khai `weight`: Be Vietnam Pro **không** phải font biến thiên nên mỗi độ đậm là một file. Dùng 300 (hero trang Home), 400, 500, 600; admin chỉ cần 400/500/600.
 
-Biến do `next/font` sinh ra tên `--font-open-sans`, rồi mới nối vào namespace Tailwind trong
-`globals.css`: `@theme inline { --font-sans: var(--font-open-sans) }`. Hai tên phải **khác**
+Biến do `next/font` sinh ra tên `--font-be-vietnam-pro`, rồi mới nối vào namespace Tailwind trong
+`globals.css`: `@theme inline { --font-sans: var(--font-be-vietnam-pro) }`. Hai tên phải **khác**
 nhau — đặt cả hai là `--font-sans` thì `var()` trỏ vào chính nó và font im lặng không áp.
 
 `apps/web` giữ `Geist_Mono` cho `--font-mono` (code block trong bài blog).
@@ -484,15 +485,15 @@ Năm quyết định đáng nhớ:
 
 ### 11.3 Bản nghiêng phải nạp riêng
 
-`next/font/google` **không nhận mảng `style`** cho font biến thiên, nên phải gọi `Open_Sans`
-lần thứ hai với `style: "italic"`. Không có nó thì trình duyệt **tự bóp nghiêng** chữ đứng
+`next/font/google` phải gọi `Be_Vietnam_Pro`
+lần thứ hai (kèm `weight: "400"`) với `style: "italic"`. Không có nó thì trình duyệt **tự bóp nghiêng** chữ đứng
 (synthetic oblique) — nét dày mỏng sai hẳn so với bản italic thật, thấy rõ nhất ở `a`, `e`, `g`.
 
-Hai lần gọi cùng sinh ra `font-family: "Open Sans"`, chỉ khác `font-style`, nên utility
+Hai lần gọi cùng sinh ra `font-family: "Be Vietnam Pro"`, chỉ khác `font-style`, nên utility
 `italic` tự chọn đúng bản — không phải khai gì thêm ở chỗ dùng. Đã kiểm chứng trên CSS đã
 build: 10 khối `@font-face` với `font-style: italic` cùng tên family.
 
-Biến `--font-open-sans-italic` không ai đọc, nhưng vẫn phải gắn `.variable` lên `<html>`, nếu
+Biến `--font-be-vietnam-pro-italic` không ai đọc, nhưng vẫn phải gắn `.variable` lên `<html>`, nếu
 không Next coi instance đó là không dùng và bỏ luôn `@font-face`.
 
 ### 11.4 Ghi chú triển khai

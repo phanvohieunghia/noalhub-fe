@@ -56,6 +56,9 @@
     "coupon": "Coupon code",
     "couponPlaceholder": "Enter the code...",
     "emailTakenError": "That email is already in use.",
+    "search": "Search",
+    "searchPlaceholder": "Search...",
+    "password": "Password",
     "username": "Username",
     "emailError": "That email address is not valid."
   },
@@ -100,6 +103,12 @@
     "personB": "Kim Tran",
     "personC": "Leo Le",
     "personD": "Dana Pham",
+    "actions": {
+      "column": "Actions",
+      "label": "Row actions",
+      "duplicate": "Duplicate",
+      "delete": "Delete"
+    },
     "sortHint": "Sort by {column}",
     "asc": "Ascending",
     "desc": "Descending",

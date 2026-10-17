@@ -9,6 +9,7 @@ import { FindFriendDialog } from "./find-friend-dialog";
 import { FriendRequestsDialog } from "./friend-requests-dialog";
 import { Avatar } from "@noalhub/ui/avatar";
 import { Button } from "@noalhub/ui/button";
+import { Icon, ICONS } from "@noalhub/ui/icons";
 import { AlertError } from "@noalhub/ui/alert";
 import { Spinner } from "@noalhub/ui/spinner";
 import { useFriendRequests, useFriends } from "@noalhub/api/friends";
@@ -34,9 +35,16 @@ export function FriendListContent() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <Typography variant="h3" as="h1">
-          {t("title")}
-        </Typography>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon-sm" asChild>
+            <Link href="/chat" aria-label={t("back")}>
+              <Icon icon={ICONS.arrowLeft} />
+            </Link>
+          </Button>
+          <Typography variant="h3" as="h1">
+            {t("title")}
+          </Typography>
+        </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" onClick={() => setRequestsOpen(true)}>
@@ -52,12 +60,6 @@ export function FriendListContent() {
             ) : null}
           </Button>
           <Button onClick={() => setFindOpen(true)}>{t("find")}</Button>
-          <Link
-            href="/chat"
-            className="inline-flex h-10 items-center rounded-md border border-black/15 px-4 text-body-3 font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10"
-          >
-            {t("messages")}
-          </Link>
         </div>
       </header>
 
@@ -69,9 +71,13 @@ export function FriendListContent() {
       ) : error ? (
         <AlertError message={t("loadFailed")} />
       ) : data.items.length === 0 ? (
-        <div className="text-body-3 rounded-lg border border-dashed border-black/15 p-8 text-center opacity-70 dark:border-white/20">
+        <Typography
+          as="div"
+          variant="body-3"
+          className="rounded-lg border border-dashed border-black/15 p-8 text-center opacity-70 dark:border-white/20"
+        >
           {t("empty")}
-        </div>
+        </Typography>
       ) : (
         <ul className="flex flex-col divide-y divide-black/10 rounded-lg border border-black/10 dark:divide-white/10 dark:border-white/15">
           {data.items.map((friend) => {

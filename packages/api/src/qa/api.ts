@@ -6,9 +6,15 @@ import {
   aiModelListSchema,
   qaDatasetListSchema,
   qaDatasetSchema,
+  qaActiveGenerationsSchema,
   qaGenerationSchema,
   qaItemFullSchema,
   qaItemListSchema,
+  addToFinalSetResultSchema,
+  qaFinalOverviewSchema,
+  qaQuestionTypeListSchema,
+  updateSourceSchema,
+  qaQuestionTypeSchema,
   qaOutlineListSchema,
   qaOutlineSchema,
   qaOutlineSummarySchema,
@@ -23,10 +29,11 @@ import {
   qaAnswerResultSchema,
   qaAnswerReviewListSchema,
   qaAttemptListSchema,
+  qaAttemptPlaySchema,
   qaAttemptSchema,
   qaItemListPlaySchema,
-  qaSetListPlaySchema,
-  qaSetPlaySchema,
+  qaDatasetListPlaySchema,
+  qaDatasetPlaySchema,
   qaStatsSchema,
   startGenerationSchema,
   type AddSourceInput,
@@ -48,21 +55,26 @@ import {
 import type {
   AiCredential,
   BrowseItemsQuery,
-  BrowseSetsQuery,
   QaAnswerResult,
   QaAnswerReview,
   QaAttempt,
   QaItemPlay,
-  QaSetPlay,
-  QaSetSummary,
+  QaAttemptPlay,
+  QaDatasetPlay,
+  QaDatasetSummary,
   QaStatsRow,
   AiModel,
   QaDataset,
   QaDatasetSource,
   QaDatasetSourceFull,
+  QaActiveGenerations,
   QaGeneration,
   QaItemFull,
   QaItemList,
+  QaFinalOverview,
+  QaQuestionType,
+  UpdateSourceInput,
+  UpdateQuestionTypeInput,
   QaItemsQuery,
   QaOutline,
   QaOutlineList,
@@ -141,7 +153,9 @@ export async function disableCredential(id: string): Promise<AiCredential> {
  * A used key answers 409 `AI_CREDENTIAL_IN_USE`.
  */
 export async function deleteCredential(id: string): Promise<void> {
-  await http.delete(`/admin/ai/credentials/${id}/permanent`, { authRequired: true });
+  await http.delete(`/admin/ai/credentials/${id}/permanent`, {
+    authRequired: true,
+  });
 }
 
 /* -------------------------------- templates -------------------------------- */
@@ -268,6 +282,18 @@ export async function addSource(
   return data;
 }
 
+export async function updateSource(
+  id: string,
+  input: UpdateSourceInput,
+): Promise<QaDatasetSourceFull> {
+  const { data } = await http.patch<QaDatasetSourceFull>(
+    `/admin/qa/sources/${id}`,
+    updateSourceSchema.parse(input),
+    { authRequired: true, schema: qaSourceFullSchema },
+  );
+  return data;
+}
+
 export async function deleteSource(id: string): Promise<void> {
   await http.delete(`/admin/qa/sources/${id}`, { authRequired: true });
 }
@@ -295,6 +321,17 @@ export async function generateSets(
     "/admin/qa/generate-sets",
     input,
     { authRequired: true, schema: startGenerationSchema },
+  );
+  return data;
+}
+
+export async function getActiveGenerations(
+  datasetId: string,
+  signal?: AbortSignal,
+): Promise<QaActiveGenerations> {
+  const { data } = await http.get<QaActiveGenerations>(
+    `/admin/qa/datasets/${datasetId}/generations/active`,
+    { authRequired: true, schema: qaActiveGenerationsSchema, signal },
   );
   return data;
 }
@@ -415,6 +452,11 @@ export async function archiveSet(id: string, version: number): Promise<QaSet> {
   return data;
 }
 
+/** Hard delete; 409 `QA_SET_IN_USE` once learners have attempted the set. */
+export async function deleteSet(id: string): Promise<void> {
+  await http.delete(`/admin/qa/sets/${id}`, { authRequired: true });
+}
+
 export async function addItem(
   setId: string,
   input: WriteItemInput,
@@ -455,6 +497,53 @@ export async function reorderItems(
   return data;
 }
 
+export async function getFinalSet(
+  datasetId: string,
+  signal?: AbortSignal,
+): Promise<QaFinalOverview> {
+  const { data } = await http.get<QaFinalOverview>(
+    `/admin/qa/datasets/${datasetId}/final-set`,
+    { authRequired: true, schema: qaFinalOverviewSchema, signal },
+  );
+  return data;
+}
+
+/** Copies approved questions into the final set; `itemIds` limits it to a few. */
+export async function addToFinalSet(
+  datasetId: string,
+  itemIds?: string[],
+): Promise<{ createdSets: number; addedItems: number }> {
+  const { data } = await http.post<{ createdSets: number; addedItems: number }>(
+    `/admin/qa/datasets/${datasetId}/final-set`,
+    itemIds ? { itemIds } : {},
+    { authRequired: true, schema: addToFinalSetResultSchema },
+  );
+  return data;
+}
+
+export async function listQuestionTypes(
+  signal?: AbortSignal,
+): Promise<QaQuestionType[]> {
+  const { data } = await http.get<QaQuestionType[]>("/admin/qa/question-types", {
+    authRequired: true,
+    schema: qaQuestionTypeListSchema,
+    signal,
+  });
+  return data;
+}
+
+export async function updateQuestionType(
+  id: string,
+  input: UpdateQuestionTypeInput,
+): Promise<QaQuestionType> {
+  const { data } = await http.patch<QaQuestionType>(
+    `/admin/qa/question-types/${id}`,
+    input,
+    { authRequired: true, schema: qaQuestionTypeSchema },
+  );
+  return data;
+}
+
 export async function searchItems(
   query: QaItemsQuery = {},
   signal?: AbortSignal,
@@ -471,48 +560,60 @@ export async function searchItems(
 /* ------------------------------ learner surface ---------------------------- */
 
 /**
- * The way in. Without it a learner only reaches a set through a link someone
- * sent them — `getPlaySet` needs an id and nothing hands one out.
+ * The way in. A learner takes a **dataset** — its published questions as one
+ * bank — so this lists only the datasets that have at least one. Sets stay on
+ * the admin side.
  */
-export async function browseSets(
-  query: BrowseSetsQuery = {},
+export async function browseDatasets(
   signal?: AbortSignal,
-): Promise<{ items: QaSetSummary[]; total: number }> {
-  const { data } = await http.get<{ items: QaSetSummary[]; total: number }>(
-    "/qa/sets",
-    { params: query, authRequired: true, schema: qaSetListPlaySchema, signal },
-  );
-  return data;
-}
-
-export async function getPlaySet(
-  id: string,
-  signal?: AbortSignal,
-): Promise<QaSetPlay> {
-  const { data } = await http.get<QaSetPlay>(`/qa/sets/${id}`, {
+): Promise<{ items: QaDatasetSummary[]; total: number }> {
+  const { data } = await http.get<{ items: QaDatasetSummary[]; total: number }>("/qa/datasets", {
     authRequired: true,
-    schema: qaSetPlaySchema,
+    schema: qaDatasetListPlaySchema,
     signal,
   });
   return data;
 }
 
-/** Idempotent per (user, set): an open attempt comes back instead of a new row. */
-export async function startAttempt(setId: string): Promise<QaAttempt> {
+export async function getPlayDataset(id: string, signal?: AbortSignal): Promise<QaDatasetPlay> {
+  const { data } = await http.get<QaDatasetPlay>(`/qa/datasets/${id}`, {
+    authRequired: true,
+    schema: qaDatasetPlaySchema,
+    signal,
+  });
+  return data;
+}
+
+/**
+ * Idempotent per (user, dataset): an open attempt comes back instead of a new row
+ * (and then `count` is ignored — it already has its questions). `count` is how many
+ * questions the learner wants; absent means all.
+ */
+export async function startAttempt(datasetId: string, count?: number): Promise<QaAttempt> {
   const { data } = await http.post<QaAttempt>(
-    `/qa/sets/${setId}/attempts`,
-    undefined,
+    `/qa/datasets/${datasetId}/attempts`,
+    count === undefined ? {} : { count },
     { authRequired: true, schema: qaAttemptSchema },
   );
   return data;
 }
 
-export async function listAttempts(
-  setId?: string,
+/** The attempt's own questions, in the order fixed when it started. */
+export async function getAttemptPlay(
+  attemptId: string,
   signal?: AbortSignal,
-): Promise<QaAttempt[]> {
+): Promise<QaAttemptPlay> {
+  const { data } = await http.get<QaAttemptPlay>(`/qa/attempts/${attemptId}`, {
+    authRequired: true,
+    schema: qaAttemptPlaySchema,
+    signal,
+  });
+  return data;
+}
+
+export async function listAttempts(datasetId?: string, signal?: AbortSignal): Promise<QaAttempt[]> {
   const { data } = await http.get<QaAttempt[]>("/qa/attempts", {
-    params: setId ? { setId } : undefined,
+    params: datasetId ? { datasetId } : undefined,
     authRequired: true,
     schema: qaAttemptListSchema,
     signal,
@@ -553,7 +654,7 @@ export async function reviewAttempt(
   return data;
 }
 
-/** Cuts across every set and every shape — "give me all the application questions". */
+/** Cuts across every dataset and every shape — "give me all the application questions". */
 export async function browseItems(
   query: BrowseItemsQuery = {},
   signal?: AbortSignal,

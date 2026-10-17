@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 import * as qaApi from "./api";
 import type {
@@ -22,12 +23,13 @@ import type {
 } from "./schemas";
 import type {
   BrowseItemsQuery,
-  BrowseSetsQuery,
   QaGeneration,
   QaItemsQuery,
   QaPromptKind,
   QaSetsQuery,
   UpdateQaOutlineInput,
+  UpdateQuestionTypeInput,
+  UpdateSourceInput,
 } from "./types";
 
 /**
@@ -51,26 +53,32 @@ export const qaKeys = {
 
   generations: () => [...qaKeys.all, "generations"] as const,
   generation: (id: string) => [...qaKeys.generations(), id] as const,
+  activeGenerations: (datasetId: string) =>
+    [...qaKeys.generations(), "active", datasetId] as const,
 
   outlines: () => [...qaKeys.all, "outlines"] as const,
   outlineList: (datasetId: string) => [...qaKeys.outlines(), "list", datasetId] as const,
   outline: (id: string) => [...qaKeys.outlines(), id] as const,
+
+  finalSet: (datasetId: string) => [...qaKeys.all, "final-set", datasetId] as const,
 
   sets: () => [...qaKeys.all, "sets"] as const,
   setList: (query: QaSetsQuery) => [...qaKeys.sets(), "list", query] as const,
   set: (id: string) => [...qaKeys.sets(), id] as const,
 
   items: () => [...qaKeys.all, "items"] as const,
+  questionTypes: () => [...qaKeys.all, "question-types"] as const,
   itemSearch: (query: QaItemsQuery) => [...qaKeys.items(), query] as const,
 
   /* The learner surface reads different rows than admin does, so it keeps its
      own subtree — invalidating "sets" after publishing must not wipe a
      learner's open attempt out of the cache. */
   play: () => [...qaKeys.all, "play"] as const,
-  playSets: (query: BrowseSetsQuery) => [...qaKeys.play(), "sets", query] as const,
-  playSet: (id: string) => [...qaKeys.play(), "set", id] as const,
+  playDatasets: () => [...qaKeys.play(), "datasets"] as const,
+  playDataset: (id: string) => [...qaKeys.play(), "dataset", id] as const,
   playItems: (query: BrowseItemsQuery) => [...qaKeys.play(), "items", query] as const,
-  attempts: (setId?: string) => [...qaKeys.play(), "attempts", setId ?? "all"] as const,
+  attemptPlay: (id: string) => [...qaKeys.play(), "attempt", id] as const,
+  attempts: (datasetId?: string) => [...qaKeys.play(), "attempts", datasetId ?? "all"] as const,
   attemptReview: (id: string) => [...qaKeys.play(), "review", id] as const,
   stats: () => [...qaKeys.play(), "stats"] as const,
 };
@@ -169,6 +177,22 @@ export function useDisableQaTemplate() {
   });
 }
 
+/**
+ * Bulk disable. The backend has no batch route, so this fans out one request per
+ * id and uses `allSettled`: one refused row must not hide that the others went
+ * through. Resolves to the ids that failed so the caller can keep them selected.
+ */
+export function useDisableQaTemplates() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.allSettled(ids.map((id) => qaApi.disableTemplate(id)));
+      return ids.filter((_, index) => results[index].status === "rejected");
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: qaKeys.templates() }),
+  });
+}
+
 /* --------------------------------- datasets -------------------------------- */
 
 export function useQaDatasets() {
@@ -236,6 +260,19 @@ export function useAddQaSource(datasetId: string) {
   });
 }
 
+export function useUpdateQaSource(datasetId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: UpdateSourceInput }) =>
+      qaApi.updateSource(id, input),
+    onSuccess: (source) => {
+      queryClient.setQueryData(qaKeys.source(source.id), source);
+      queryClient.invalidateQueries({ queryKey: qaKeys.sources(datasetId) });
+      queryClient.invalidateQueries({ queryKey: qaKeys.datasets() });
+    },
+  });
+}
+
 export function useDeleteQaSource(datasetId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -263,7 +300,8 @@ export function isGenerationRunning(status: QaGeneration["status"]): boolean {
  * open for a few minutes.
  */
 export function useQaGeneration(id: string | undefined) {
-  return useQuery({
+  const queryClient = useQueryClient();
+  const query = useQuery({
     queryKey: qaKeys.generation(id ?? ""),
     queryFn: ({ signal }) => qaApi.getGeneration(id!, signal),
     enabled: Boolean(id),
@@ -272,6 +310,34 @@ export function useQaGeneration(id: string | undefined) {
       return status && isGenerationRunning(status) ? 3000 : false;
     },
     // The point of this query is to see the state change, so nothing is fresh.
+    staleTime: 0,
+  });
+
+  // A finished run has written sets that no list knows about yet — without this
+  // the new section only shows up after a reload. An outline run writes a new
+  // outline version instead, so its lists are refreshed the same way.
+  const status = query.data?.status;
+  const kind = query.data?.kind;
+  const finished = status !== undefined && !isGenerationRunning(status);
+  useEffect(() => {
+    if (!finished) return;
+    void queryClient.invalidateQueries({
+      queryKey: kind === "outline" ? qaKeys.outlines() : qaKeys.sets(),
+    });
+  }, [finished, kind, queryClient]);
+
+  return query;
+}
+
+/**
+ * The runs still going on a dataset. The page only knows the id of a run it started
+ * itself; this is how a reload (or a second tab) still shows one in progress. Read
+ * once on mount — `useQaGeneration` takes over the polling from the id it returns.
+ */
+export function useQaActiveGenerations(datasetId: string) {
+  return useQuery({
+    queryKey: qaKeys.activeGenerations(datasetId),
+    queryFn: ({ signal }) => qaApi.getActiveGenerations(datasetId, signal),
     staleTime: 0,
   });
 }
@@ -317,7 +383,9 @@ export function useUpdateQaOutline(id: string, datasetId: string) {
     onSuccess: (outline) => {
       queryClient.setQueryData(qaKeys.outline(id), outline);
       // `sectionCount` on the summary changes with the content.
-      queryClient.invalidateQueries({ queryKey: qaKeys.outlineList(datasetId) });
+      queryClient.invalidateQueries({
+        queryKey: qaKeys.outlineList(datasetId),
+      });
     },
   });
 }
@@ -373,6 +441,85 @@ export function useArchiveQaSet(id: string) {
   });
 }
 
+/**
+ * Removes a whole section: the backend has no delete for a set, so each one is
+ * archived (and the review screen hides archived sets). Same contract as
+ * `useDisableQaTemplates` — resolves to the set ids that failed, and one failure
+ * does not stop the rest.
+ */
+export function useArchiveQaSets() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (sets: { id: string; version: number }[]) => {
+      const results = await Promise.allSettled(
+        sets.map((set) => qaApi.archiveSet(set.id, set.version)),
+      );
+      return sets.filter((_, index) => results[index].status === "rejected").map((set) => set.id);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: qaKeys.sets() });
+      queryClient.invalidateQueries({ queryKey: qaKeys.items() });
+      queryClient.invalidateQueries({ queryKey: [...qaKeys.all, "final-set"] });
+    },
+  });
+}
+
+/**
+ * Approves every still-pending question of the given sets (rejected ones stay
+ * rejected). Resolves to how many updates failed; one failure does not stop the rest.
+ */
+export function useApproveQaSets() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (setIds: string[]) => {
+      const details = await Promise.all(setIds.map((id) => qaApi.getSet(id)));
+      const pending = details.flatMap((detail) =>
+        detail.items.filter((item) => item.reviewStatus === "pending"),
+      );
+      const results = await Promise.allSettled(
+        pending.map((item) => qaApi.updateItem(item.id, { reviewStatus: "approved" })),
+      );
+      return results.filter((result) => result.status === "rejected").length;
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: qaKeys.sets() });
+      queryClient.invalidateQueries({ queryKey: qaKeys.items() });
+      queryClient.invalidateQueries({ queryKey: [...qaKeys.all, "final-set"] });
+    },
+  });
+}
+
+export function useDeleteQaSet() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => qaApi.deleteSet(id),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: qaKeys.sets() });
+      queryClient.invalidateQueries({ queryKey: qaKeys.items() });
+      queryClient.invalidateQueries({ queryKey: [...qaKeys.all, "final-set"] });
+    },
+  });
+}
+
+/**
+ * Hard-deletes several sets at once. Resolves to the ids that failed (typically a
+ * 409 `QA_SET_IN_USE`); one failure does not stop the rest.
+ */
+export function useDeleteQaSets() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.allSettled(ids.map((id) => qaApi.deleteSet(id)));
+      return ids.filter((_, index) => results[index].status === "rejected");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: qaKeys.sets() });
+      queryClient.invalidateQueries({ queryKey: qaKeys.items() });
+      queryClient.invalidateQueries({ queryKey: [...qaKeys.all, "final-set"] });
+    },
+  });
+}
+
 export function useAddQaItem(setId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -420,6 +567,63 @@ export function useQaItemSearch(query: QaItemsQuery, enabled = true) {
   });
 }
 
+/** Approved questions grouped by section, and which are already in the final set. */
+export function useQaFinalSet(datasetId: string) {
+  return useQuery({
+    queryKey: qaKeys.finalSet(datasetId),
+    queryFn: ({ signal }) => qaApi.getFinalSet(datasetId, signal),
+  });
+}
+
+export function useAddToQaFinalSet(datasetId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (itemIds?: string[]) => qaApi.addToFinalSet(datasetId, itemIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qaKeys.finalSet(datasetId) });
+      queryClient.invalidateQueries({ queryKey: qaKeys.sets() });
+    },
+  });
+}
+
+/** The question-type catalogue, with how many questions each type holds. */
+export function useQaQuestionTypes() {
+  return useQuery({
+    queryKey: qaKeys.questionTypes(),
+    queryFn: ({ signal }) => qaApi.listQuestionTypes(signal),
+  });
+}
+
+export function useUpdateQaQuestionType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: UpdateQuestionTypeInput }) =>
+      qaApi.updateQuestionType(id, input),
+    // Publishing a type rewrites its questions, so the question lists go stale too.
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qaKeys.questionTypes() });
+      queryClient.invalidateQueries({ queryKey: qaKeys.items() });
+    },
+  });
+}
+
+/**
+ * Flips one question's `published` flag from the question-type screens, where no single
+ * set is open — so it refreshes the bank and the sets, not one set's detail.
+ */
+export function useSetQaItemPublished() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, published }: { id: string; published: boolean }) =>
+      qaApi.updateItem(id, { published }),
+    onSuccess: (item) => {
+      queryClient.invalidateQueries({ queryKey: qaKeys.set(item.setId) });
+      queryClient.invalidateQueries({ queryKey: qaKeys.items() });
+      queryClient.invalidateQueries({ queryKey: qaKeys.questionTypes() });
+    },
+  });
+}
+
 /** Every write to a set changes both the detail (items, version) and the list. */
 function invalidateSet(
   queryClient: ReturnType<typeof useQueryClient>,
@@ -428,34 +632,44 @@ function invalidateSet(
   queryClient.invalidateQueries({ queryKey: qaKeys.set(setId) });
   queryClient.invalidateQueries({ queryKey: qaKeys.sets() });
   queryClient.invalidateQueries({ queryKey: qaKeys.items() });
+  // Review state and the final set's copies both hang off the same rows.
+  queryClient.invalidateQueries({ queryKey: [...qaKeys.all, "final-set"] });
 }
 
 /* ------------------------------ learner surface ---------------------------- */
 
-export function useBrowseQaSets(query: BrowseSetsQuery = {}) {
+export function useBrowseQaDatasets() {
   return useQuery({
-    queryKey: qaKeys.playSets(query),
-    queryFn: ({ signal }) => qaApi.browseSets(query, signal),
+    queryKey: qaKeys.playDatasets(),
+    queryFn: ({ signal }) => qaApi.browseDatasets(signal),
   });
 }
 
-export function usePlayQaSet(id: string | undefined) {
+export function usePlayQaDataset(id: string | undefined) {
   return useQuery({
-    queryKey: qaKeys.playSet(id ?? ""),
-    queryFn: ({ signal }) => qaApi.getPlaySet(id!, signal),
+    queryKey: qaKeys.playDataset(id ?? ""),
+    queryFn: ({ signal }) => qaApi.getPlayDataset(id!, signal),
     enabled: Boolean(id),
   });
 }
 
-export function useQaAttempts(setId?: string) {
+export function useQaAttemptPlay(attemptId: string | undefined) {
   return useQuery({
-    queryKey: qaKeys.attempts(setId),
-    queryFn: ({ signal }) => qaApi.listAttempts(setId, signal),
+    queryKey: qaKeys.attemptPlay(attemptId ?? ""),
+    queryFn: ({ signal }) => qaApi.getAttemptPlay(attemptId!, signal),
+    enabled: Boolean(attemptId),
+  });
+}
+
+export function useQaAttempts(datasetId?: string) {
+  return useQuery({
+    queryKey: qaKeys.attempts(datasetId),
+    queryFn: ({ signal }) => qaApi.listAttempts(datasetId, signal),
   });
 }
 
 /**
- * Idempotent per (user, set): calling it with an attempt already open returns
+ * Idempotent per (user, dataset): calling it with an attempt already open returns
  * that same attempt. So the button says "Continue", and a double click cannot
  * strand the first attempt — which matters, because `(attempt_id, item_id)` is
  * unique and an abandoned attempt can never be retaken.
@@ -463,7 +677,8 @@ export function useQaAttempts(setId?: string) {
 export function useStartQaAttempt() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (setId: string) => qaApi.startAttempt(setId),
+    mutationFn: ({ datasetId, count }: { datasetId: string; count?: number }) =>
+      qaApi.startAttempt(datasetId, count),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qaKeys.play() });
     },
@@ -478,7 +693,9 @@ export function useSubmitQaAnswer(attemptId: string) {
       // `wrongOnly` and the stats both change with every answer.
       queryClient.invalidateQueries({ queryKey: qaKeys.playItems({}) });
       queryClient.invalidateQueries({ queryKey: qaKeys.stats() });
-      queryClient.invalidateQueries({ queryKey: qaKeys.attemptReview(attemptId) });
+      queryClient.invalidateQueries({
+        queryKey: qaKeys.attemptReview(attemptId),
+      });
     },
   });
 }

@@ -460,10 +460,12 @@ export const TagIndex: Story = {
               key={name}
               className="border-border bg-surface flex items-baseline gap-2 rounded-lg border px-3 py-2"
             >
-              <span className="text-body-3 underline underline-offset-4">#{name}</span>
-              <span className="text-body-4 opacity-60">
+              <Typography as="span" variant="body-3" className="underline underline-offset-4">
+                #{name}
+              </Typography>
+              <Typography as="span" variant="body-4" className="opacity-60">
                 {s("tagCount", { count })}
-              </span>
+              </Typography>
             </li>
           ))}
         </ul>
@@ -498,9 +500,9 @@ export const NotFound: Story = {
           <Typography variant="body-3" className="opacity-70">
             {t("notFound.message")}
           </Typography>
-          <span className="text-body-3 w-fit underline underline-offset-4">
+          <Typography as="span" variant="body-3" className="w-fit underline underline-offset-4">
             {t("notFound.backToList")}
-          </span>
+          </Typography>
         </header>
 
         <section aria-labelledby="latest-heading" className="flex flex-col gap-4">
@@ -546,9 +548,9 @@ export const ErrorState: Story = {
           </Typography>
           <div className="flex flex-wrap items-center gap-3">
             <Button>{t("retry")}</Button>
-            <span className="text-body-3 underline underline-offset-4">
+            <Typography as="span" variant="body-3" className="underline underline-offset-4">
               {t("backToList")}
-            </span>
+            </Typography>
           </div>
         </div>
       </BlogScreen>

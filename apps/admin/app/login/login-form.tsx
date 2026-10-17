@@ -12,9 +12,9 @@ import { useMessage } from "@noalhub/i18n/use-message";
 import { safeRedirect } from "@noalhub/core/auth/redirect";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { Button } from "@noalhub/ui/button";
-import { AlertError } from "@noalhub/ui/alert";
+import { AlertError, AlertWarning } from "@noalhub/ui/alert";
+import { Icon, ICONS, LUCIDE } from "@noalhub/ui/icons";
 import { Input } from "@noalhub/ui/input";
-import { Logo } from "@noalhub/ui/logo";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
@@ -30,6 +30,7 @@ export function AdminLoginForm() {
   const login = useLogin();
   const logout = useAuthStore((s) => s.logout);
   const [formError, setFormError] = useState<Message | string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -66,33 +67,52 @@ export function AdminLoginForm() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <Logo className="mb-2 size-10" />
-        <Typography variant="h3" as="h1">
-          {t("title")}
-        </Typography>
-        <Typography variant="body-3" className="opacity-70">
-          {t("subtitle")}
-        </Typography>
+      <header className="flex flex-col gap-3">
+        <span className="grid size-12 place-items-center rounded-lg bg-accent text-primary-foreground">
+          <Icon icon={LUCIDE.shieldCheck} className="size-6" />
+        </span>
+        <div className="flex flex-col gap-1">
+          <Typography variant="h4" as="h1">
+            {t("title")}
+          </Typography>
+          <Typography variant="body-3" className="text-muted-foreground">
+            {t("subtitle")}
+          </Typography>
+        </div>
       </header>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
+        <AlertWarning message={t("restricted")} />
         <AlertError message={m(formError)} />
         <Input
+          size="lg"
           label={t("email")}
           type="email"
           autoComplete="email"
+          placeholder={t("emailPlaceholder")}
           error={m(errors.email?.message)}
           {...register("email")}
         />
         <Input
+          size="lg"
           label={t("password")}
-          type="password"
+          type={showPassword ? "text" : "password"}
           autoComplete="current-password"
           error={m(errors.password?.message)}
+          trailing={
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? t("hidePassword") : t("showPassword")}
+              aria-pressed={showPassword}
+              className="rounded p-0.5 text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
+            >
+              <Icon icon={showPassword ? ICONS.eyeOff : ICONS.eye} className="size-5" />
+            </button>
+          }
           {...register("password")}
         />
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" size="lg" disabled={isSubmitting}>
           {isSubmitting ? t("submitting") : t("submit")}
         </Button>
       </form>

@@ -143,7 +143,9 @@ function PostRow({ post }: { post: BlogPost }) {
       </TableCell>
       <TableCell className="whitespace-nowrap">
         {/* `null` is only valid for drafts — publishing requires a category (§2.6). */}
-        {post.category?.name ?? <span className="opacity-40">{t("table.noCategory")}</span>}
+        {post.category?.name ?? <Typography variant="body-3" as="span" className="opacity-40">
+            {t("table.noCategory")}
+          </Typography>}
       </TableCell>
       <TableCell className="whitespace-nowrap">{post.author.displayName}</TableCell>
       {/* This table sorts by `updatedAt DESC`, unlike the public list

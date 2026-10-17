@@ -1,8 +1,8 @@
 import { keysOf } from "./variants";
 
 /**
- * Three weights only. Open Sans is a variable font so 300–800 technically
- * exist, but exposing all of them means everyone picks a different number and
+ * Three weights only. Be Vietnam Pro is loaded in 300–600 (300 only for the Home
+ * hero), but exposing all of them means everyone picks a different number and
  * the interface stops being consistent.
  */
 export const TYPOGRAPHY_WEIGHTS = [400, 500, 600] as const;
@@ -114,6 +114,11 @@ type TypographyProps = {
   children: React.ReactNode;
   /** For `as="label"` — `htmlFor` is not part of the generic `HTMLAttributes`. */
   htmlFor?: string;
+  /** For `as="time"`. */
+  dateTime?: string;
+  /** For `as="td"` / `as="th"`. */
+  colSpan?: number;
+  scope?: string;
 } & Omit<React.HTMLAttributes<HTMLElement>, "className" | "children">;
 
 export function Typography({

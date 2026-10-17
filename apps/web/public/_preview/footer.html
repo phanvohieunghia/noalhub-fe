@@ -1,0 +1,20 @@
+<!doctype html>
+<meta charset="utf-8"><title>Footer preview</title>
+<style>
+  body{margin:0;padding:24px;background:#e5e5e5;font:13px system-ui;color:#333}
+  .row{display:flex;gap:24px;align-items:flex-start;width:max-content}
+  figure{margin:0}
+  figcaption{margin-bottom:8px;font-weight:600}
+  iframe{border:0;background:#fff;border-radius:8px;display:block;height:560px}
+</style>
+<div class="row">
+  <figure><figcaption>Mobile · 375</figcaption><iframe id="m" width="375" src="/vi#footer"></iframe></figure>
+  <figure><figcaption>Tablet · 768</figcaption><iframe id="t" width="768" src="/vi#footer"></iframe></figure>
+  <figure><figcaption>Laptop · 1280</figcaption><iframe id="l" width="1280" src="/vi#footer"></iframe></figure>
+</div>
+<script>
+  // Scroll every frame to the bottom once loaded so the footer is in view.
+  document.querySelectorAll("iframe").forEach(f=>f.addEventListener("load",()=>{
+    const go=()=>f.contentWindow.scrollTo(0,1e6); go(); setTimeout(go,800);
+  }));
+</script>

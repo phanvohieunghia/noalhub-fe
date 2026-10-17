@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import {
   useCreateQaDataset,
+  useDeleteQaDataset,
   useQaDatasets,
   type QaDataset,
   type QaDatasetStatus,
@@ -18,22 +19,26 @@ import { AlertError } from "@noalhub/ui/alert";
 import { Badge, type BadgeTone } from "@noalhub/ui/badge";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
+import { DropdownMenuItem } from "@noalhub/ui/dropdown-menu";
+import { ICONS } from "@noalhub/ui/icons";
 import { Input } from "@noalhub/ui/input";
 import { Skeleton } from "@noalhub/ui/skeleton";
 import {
   TableBody,
   TableCell,
+  TableActionsHeaderCell,
   TableEmptyRow,
   TableHead,
   TableHeaderCell,
   TableRoot,
   TableRow,
+  TableRowActions,
 } from "@noalhub/ui/table";
 import { Typography } from "@noalhub/ui/typography";
 
 import { AdminErrorState } from "../admin-error-state";
 
-const COLUMN_COUNT = 5;
+const COLUMN_COUNT = 6;
 
 /**
  * `status` is the FURTHEST STAGE REACHED, not the current state, and it only
@@ -52,6 +57,7 @@ export function QaDatasetsContent() {
   const t = useTranslations("admin.qa");
   const datasets = useQaDatasets();
   const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState<QaDataset | null>(null);
 
   const rows = datasets.data ?? [];
 
@@ -83,8 +89,9 @@ export function QaDatasetsContent() {
                 <TableHeaderCell>{t("datasets.columns.chars")}</TableHeaderCell>
                 <TableHeaderCell>{t("datasets.columns.updated")}</TableHeaderCell>
                 <TableHeaderCell>
-                  <span className="sr-only">{t("actionsColumn")}</span>
+                  <span className="sr-only">{t("datasets.open")}</span>
                 </TableHeaderCell>
+                <TableActionsHeaderCell label={t("actionsColumn")} />
               </TableRow>
             </TableHead>
             <TableBody>
@@ -95,7 +102,9 @@ export function QaDatasetsContent() {
                   {t("datasets.empty")}
                 </TableEmptyRow>
               ) : (
-                rows.map((row) => <DatasetRow key={row.id} row={row} />)
+                rows.map((row) => (
+                  <DatasetRow key={row.id} row={row} onDelete={() => setDeleting(row)} />
+                ))
               )}
             </TableBody>
           </TableRoot>
@@ -103,22 +112,27 @@ export function QaDatasetsContent() {
       )}
 
       {creating ? <CreateDialog onClose={() => setCreating(false)} /> : null}
+      {deleting ? (
+        <DeleteDialog row={deleting} onClose={() => setDeleting(null)} />
+      ) : null}
     </main>
   );
 }
 
-function DatasetRow({ row }: { row: QaDataset }) {
+function DatasetRow({ row, onDelete }: { row: QaDataset; onDelete: () => void }) {
   const t = useTranslations("admin.qa");
   const df = useDateFormat();
 
   return (
     <TableRow>
-      <TableCell className="font-medium">
+      <TableCell weight={500}>
         <Link href={`/qa/datasets/${row.id}`} className="hover:underline">
           {row.title}
         </Link>
         {row.description ? (
-          <span className="block text-body-4 opacity-60">{row.description}</span>
+          <Typography variant="body-4" as="span" className="block opacity-60">
+            {row.description}
+          </Typography>
         ) : null}
       </TableCell>
       <TableCell>
@@ -146,6 +160,11 @@ function DatasetRow({ row }: { row: QaDataset }) {
           </Button>
         </div>
       </TableCell>
+      <TableRowActions label={t("actionsColumn")}>
+        <DropdownMenuItem icon={ICONS.delete} tone="danger" onSelect={onDelete}>
+          {t("datasets.delete")}
+        </DropdownMenuItem>
+      </TableRowActions>
     </TableRow>
   );
 }
@@ -200,6 +219,52 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
             disabled={create.isPending || title === ""}
           >
             {tc("actions.save")}
+          </Button>
+        </div>
+      </div>
+    </Dialog>
+  );
+}
+
+function DeleteDialog({ row, onClose }: { row: QaDataset; onClose: () => void }) {
+  const t = useTranslations("admin.qa");
+  const tc = useTranslations("common");
+  const m = useMessage();
+  const remove = useDeleteQaDataset();
+  const [formError, setFormError] = useState<Message | string | null>(null);
+
+  const confirm = async () => {
+    setFormError(null);
+    try {
+      await remove.mutateAsync(row.id);
+      onClose();
+    } catch (error) {
+      // Once a set has been generated the backend answers 409
+      // QA_DATASET_IN_USE; its message is shown as-is.
+      setFormError(applyApiError(error, () => undefined, []));
+    }
+  };
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={t("datasets.deleteTitle", { title: row.title })}
+    >
+      <div className="space-y-4">
+        <Typography variant="body-3">{t("datasets.deleteBody")}</Typography>
+        {formError ? <AlertError message={m(formError)} /> : null}
+
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>
+            {tc("actions.cancel")}
+          </Button>
+          <Button
+            variant="danger"
+            onClick={() => void confirm()}
+            disabled={remove.isPending}
+          >
+            {t("datasets.delete")}
           </Button>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 
 import type { BlogDoc } from "@noalhub/api/blog";
 import type { Message } from "@noalhub/api/message";
@@ -30,9 +30,12 @@ import { Typography } from "@noalhub/ui/typography";
 
 import { AdminErrorState } from "../admin-error-state";
 import { GenerateSetsButton } from "./generate-sets-button";
+import { TableOfContents } from "./table-of-contents";
+import { QaResizeHandle } from "./qa-resize-handle";
 
 const FORMATS: readonly QaContentFormat[] = ["doc", "markdown"];
 const EMPTY_DOC: BlogDoc = { type: "doc", content: [{ type: "paragraph" }] };
+const OUTLINE_WIDTH = { initial: 320, min: 240, max: 560 } as const;
 const EDITOR_SURFACE = "max-h-[calc(100vh-22rem)] overflow-y-auto";
 
 /**
@@ -111,6 +114,7 @@ function Loaded({
   // Raw markdown in a textarea — the way to paste markdown in as text rather
   // than have the editor treat it as literal characters.
   const [showSource, setShowSource] = useState(false);
+  const [outlineWidth, setOutlineWidth] = useState<number>(OUTLINE_WIDTH.initial);
   // Bumped whenever the editor must re-read its value: both editors read
   // `value` on mount only.
   const [editorKey, setEditorKey] = useState(0);
@@ -129,6 +133,24 @@ function Loaded({
   const toggleSource = () => {
     setShowSource((shown) => !shown);
     setEditorKey((key) => key + 1);
+  };
+
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * The outline is derived from the last save, so the document may have moved
+   * on: match the heading by title first and fall back to its position among
+   * the h2–h4 headings, which is the order the backend derives it in.
+   */
+  const scrollToSection = (index: number, title: string) => {
+    const headings = Array.from(
+      editorRef.current?.querySelectorAll<HTMLElement>(
+        ".ProseMirror h2, .ProseMirror h3, .ProseMirror h4",
+      ) ?? [],
+    );
+    const target =
+      headings.find((node) => node.textContent?.trim() === title.trim()) ?? headings[index];
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const save = async () => {
@@ -196,8 +218,11 @@ function Loaded({
         </div>
       ) : null}
 
-      <div className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <div className="space-y-3">
+      <div
+        className="mt-4 flex flex-col gap-6 lg:flex-row lg:gap-0"
+        style={{ "--outline-w": `${outlineWidth}px` } as CSSProperties}
+      >
+        <div ref={editorRef} className="min-w-0 flex-1 space-y-3">
           <Input
             label={t("outlines.label")}
             hint={t("outlines.labelHint")}
@@ -261,34 +286,21 @@ function Loaded({
           )}
         </div>
 
-        <aside className="space-y-2">
-          <Typography variant="title-3" as="h2">
-            {t("outlines.sectionsTitle")}
-          </Typography>
-          <Typography variant="body-4" className="text-muted-foreground">
-            {t("outlines.sectionsHint")}
-          </Typography>
-          <ol className="space-y-1">
-            {initial.outline.map((entry) => (
-              <li
-                key={entry.anchor}
-                className={
-                  entry.level === 4 ? "pl-8" : entry.level === 3 ? "pl-4" : undefined
-                }
-              >
-                <Typography variant="body-3">{entry.title}</Typography>
-                <Typography variant="body-4" className="text-muted-foreground">
-                  <code>{entry.anchor}</code> ·{" "}
-                  {t("datasets.chars", { count: entry.charCount })}
-                </Typography>
-              </li>
-            ))}
-          </ol>
-          {initial.outline.length === 0 ? (
-            <Typography variant="body-3" className="opacity-70">
-              {t("outlines.noSections")}
-            </Typography>
-          ) : null}
+        <aside className="relative lg:ml-6 lg:w-[var(--outline-w)] lg:shrink-0">
+          <QaResizeHandle
+            width={outlineWidth}
+            min={OUTLINE_WIDTH.min}
+            max={OUTLINE_WIDTH.max}
+            label={t("outlines.resize")}
+            onChange={setOutlineWidth}
+          />
+
+          <TableOfContents
+            entries={initial.outline}
+            version={initial.version}
+            isCurrent={initial.isCurrent}
+            onSelect={scrollToSection}
+          />
         </aside>
       </div>
     </main>

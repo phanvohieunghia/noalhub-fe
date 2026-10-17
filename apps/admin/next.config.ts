@@ -9,6 +9,13 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
   /**
+   * Dev only: lets a phone reach `next dev` through an ngrok tunnel. Without it
+   * Next blocks `/_next/*` dev resources from a non-localhost origin and the page
+   * never hydrates. Wildcards cover the random URL ngrok free hands out per run.
+   */
+  allowedDevOrigins: ["*.ngrok-free.app", "*.ngrok-free.dev"],
+
+  /**
    * Docker: `standalone` emits `.next/standalone` — a pre-traced copy of the
    * server plus exactly the `node_modules` files actually needed, so the runtime
    * image never runs `pnpm install` again.

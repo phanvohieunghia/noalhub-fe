@@ -62,6 +62,25 @@ export function getApiBaseUrl(): string {
   return apiBaseUrlFrom(raw);
 }
 
+/**
+ * ngrok's free tier answers a browser request with an HTML warning page (status
+ * 200, no CORS headers) instead of forwarding it, which the browser reports as
+ * a CORS error. Any value of this header makes ngrok pass the request through.
+ *
+ * Sent ONLY when the API origin is an ngrok host: on any other backend it would
+ * be an extra non-simple header that forces a preflight and has to be
+ * allowlisted in the backend's CORS `allowedHeaders`.
+ */
+export const NGROK_SKIP_WARNING_HEADER = "ngrok-skip-browser-warning";
+
+export function isNgrokApi(): boolean {
+  try {
+    return /(^|\.)ngrok(-free)?\.(app|dev|io)$/i.test(new URL(getApiOrigin()).hostname);
+  } catch {
+    return false;
+  }
+}
+
 export function getWsUrl(): string {
   if (customWsUrl) return customWsUrl;
   return process.env.NEXT_PUBLIC_WS_URL ?? getApiOrigin().replace(/^http/, "ws");

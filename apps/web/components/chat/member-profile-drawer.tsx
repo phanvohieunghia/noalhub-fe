@@ -86,12 +86,18 @@ export function MemberProfileDrawer({
 
           <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-body-3 dark:border-white/15">
             <div className="flex justify-between gap-4">
-              <dt className="opacity-70">{t("profile.role")}</dt>
-              <dd>{t(member.role === "owner" ? "profile.owner" : "profile.member")}</dd>
+              <Typography as="dt" variant="body-3" className="opacity-70">
+                {t("profile.role")}
+              </Typography>
+              <Typography as="dd" variant="body-3">
+                {t(member.role === "owner" ? "profile.owner" : "profile.member")}
+              </Typography>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="opacity-70">{t("profile.joined")}</dt>
-              <dd>
+              <Typography as="dt" variant="body-3" className="opacity-70">
+                {t("profile.joined")}
+              </Typography>
+              <Typography as="dd" variant="body-3">
                 {isPending && !data ? (
                   <span className="inline-flex items-center gap-2 opacity-60">
                     <Spinner />
@@ -100,7 +106,7 @@ export function MemberProfileDrawer({
                 ) : (
                   df.date(data?.createdAt)
                 )}
-              </dd>
+              </Typography>
             </div>
           </dl>
 

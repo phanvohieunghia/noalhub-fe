@@ -1,5 +1,6 @@
 import { IntlProvider } from "@noalhub/i18n/provider";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 
 import { QaDatasetDetail } from "@/components/qa/qa-dataset-detail";
@@ -14,7 +15,9 @@ export default async function QaDatasetDetailPage({ params }: PageProps<"/qa/dat
 
   return (
     <IntlProvider namespace="admin.qa">
-      <QaDatasetDetail datasetId={id} />
+      <Suspense>
+        <QaDatasetDetail datasetId={id} />
+      </Suspense>
     </IntlProvider>
   );
 }

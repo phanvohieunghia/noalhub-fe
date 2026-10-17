@@ -1,6 +1,8 @@
 {
   "siteDescription": "Noalhub — messaging, friends, and our writing about product and engineering.",
   "adminTitle": "Noalhub Admin",
+  "adminBrand": "Noalhub",
+  "adminSubtitle": "Admin console",
   "adminDescription": "Noalhub admin dashboard",
   "blogBrand": "Noalhub Blog",
   "categoriesNav": "Categories",
@@ -13,21 +15,14 @@
   "language": "Language",
   "role": "Role: {role}",
   "footer": {
-    "tagline": "Noalhub's blog and chat space. Notes on what we learn building the product, and a place to keep talking about it.",
-    "latestPosts": "Latest posts",
-    "noPosts": "No posts yet.",
-    "categories": "Categories",
-    "noCategories": "No categories yet.",
-    "allCategories": "All categories",
-    "explore": "Explore",
-    "allPosts": "All posts",
-    "tags": "Tags",
-    "rss": "RSS",
-    "sitemap": "Sitemap",
     "nav": "Footer links",
     "chat": "Messages",
     "friends": "Friends",
-    "learn": "Practice"
+    "learn": "Practice",
+    "about": "About",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "contact": "Contact"
   },
   "admin": {
     "mainNav": "Main navigation",
@@ -46,21 +41,35 @@
       "qa": "Q&A",
       "qaDatasets": "Datasets",
       "qaSets": "Question sets",
-      "qaItems": "Question bank",
+      "qaItems": "Question types",
       "qaTemplates": "Prompts",
       "qaCredentials": "AI keys",
-      "qaOutlines": "Outlines"
+      "qaOutlines": "Outlines",
+      "ai": "AI",
+      "edit": "Edit"
     },
     "disabled": {
       "conversations": "Waiting on backend: no /admin/conversations endpoint yet (admin-plan §3)",
-      "reports": "Waiting on backend: no report flow yet (admin-plan §3.1)"
+      "reports": "Waiting on backend: no report flow yet (admin-plan §3.1)",
+      "requiresSuperAdmin": "Only super admins can use this"
     },
     "expandGroup": "Expand {section}",
-    "collapseGroup": "Collapse {section}"
+    "collapseGroup": "Collapse {section}",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar"
   },
   "languageSwitcher": {
     "label": "Change language",
     "vi": "Tiếng Việt",
     "en": "English"
+  },
+  "header": {
+    "search": "Search",
+    "mainLinks": "Main links",
+    "home": "Home",
+    "posts": "Posts",
+    "practice": "Practice",
+    "chat": "Chat",
+    "profile": "Profile"
   }
 }

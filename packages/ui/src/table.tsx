@@ -1,6 +1,10 @@
 "use client";
 
+import { Button } from "./button";
+import { DropdownMenu } from "./dropdown-menu";
 import { Icon, ICONS } from "./icons";
+import { Tooltip } from "./tooltip";
+import { Typography, type Weight } from "./typography";
 
 /**
  * A "bare" table: styling and a11y only — no state, no knowledge of pagination
@@ -14,11 +18,17 @@ import { Icon, ICONS } from "./icons";
 export function TableRoot({
   caption,
   className = "",
+  scrollClassName = "",
+  footer,
   children,
 }: {
   /** A description for screen readers; visually hidden since the page title already says it. */
   caption: string;
   className?: string;
+  /** On the scroll region: a `max-h-*` here makes the rows scroll under a sticky header. */
+  scrollClassName?: string;
+  /** Drawn inside the frame under the rows, behind a divider: the count and pager. */
+  footer?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -36,37 +46,63 @@ export function TableRoot({
         tabIndex={0}
         role="region"
         aria-label={caption}
-        className="w-full overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+        className={`w-full overflow-x-auto ${scrollClassName} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset`}
       >
         <table className="w-full border-collapse text-left text-body-3">
           <caption className="sr-only">{caption}</caption>
           {children}
         </table>
       </div>
+      {footer ? <div className="border-t border-border">{footer}</div> : null}
     </div>
   );
 }
 
 /**
- * The header band is tinted (`bg-muted`) rather than separated by a rule alone:
- * at a glance the eye needs to find where the data starts, and one hairline
- * across a wide table does not carry that far.
+ * The header row sits on the same surface as the rows, split off by one rule —
+ * what the Figma `Table` does. The column names are `title-4` in the foreground
+ * colour, so they stand out from the data without a tinted band.
  */
 export function TableHead({ children }: { children: React.ReactNode }) {
-  return <thead className="border-b border-border bg-muted">{children}</thead>;
+  return <thead className="sticky top-0 z-10 border-b border-border bg-surface">{children}</thead>;
 }
 
 export function TableBody({ children }: { children: React.ReactNode }) {
   return <tbody className="divide-y divide-border">{children}</tbody>;
 }
 
+/**
+ * Pass `onActivate` to make the whole row the primary action (open / edit):
+ * the row gets a pointer, becomes focusable and answers `Enter`. Secondary
+ * actions (duplicate, delete) live in a `TableRowActions` cell instead.
+ */
 export function TableRow({
   className = "",
   children,
+  onActivate,
   ...props
-}: React.ComponentPropsWithoutRef<"tr">) {
+}: React.ComponentPropsWithoutRef<"tr"> & { onActivate?: () => void }) {
+  const interactive = onActivate
+    ? {
+        tabIndex: 0,
+        onClick: onActivate,
+        onKeyDown: (event: React.KeyboardEvent<HTMLTableRowElement>) => {
+          // Only the row itself: Enter on a link or button inside must keep its own meaning.
+          if (event.key === "Enter" && event.target === event.currentTarget) onActivate();
+        },
+      }
+    : {};
+
   return (
-    <tr className={`transition-colors hover:bg-muted/60 ${className}`} {...props}>
+    <tr
+      className={`transition-colors hover:bg-muted/60 ${
+        onActivate
+          ? "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+          : ""
+      } ${className}`}
+      {...interactive}
+      {...props}
+    >
       {children}
     </tr>
   );
@@ -78,25 +114,35 @@ export function TableHeaderCell({
   ...props
 }: React.ComponentPropsWithoutRef<"th">) {
   return (
-    <th
+    <Typography
+      as="th"
+      variant="title-4"
+      weight={600}
       scope="col"
-      className={`px-4 py-3 text-body-4 font-semibold tracking-wide whitespace-nowrap text-muted-foreground uppercase ${className}`}
+      className={`px-4 py-[18px] whitespace-nowrap text-foreground ${className}`}
       {...props}
     >
       {children}
-    </th>
+    </Typography>
   );
 }
 
 export function TableCell({
+  weight,
   className = "",
   children,
   ...props
-}: React.ComponentPropsWithoutRef<"td">) {
+}: React.ComponentPropsWithoutRef<"td"> & { weight?: Weight }) {
   return (
-    <td className={`px-4 py-3 align-middle ${className}`} {...props}>
+    <Typography
+      as="td"
+      variant="body-3"
+      weight={weight}
+      className={`px-4 py-3 align-middle ${className}`}
+      {...(props as React.HTMLAttributes<HTMLElement>)}
+    >
       {children}
-    </td>
+    </Typography>
   );
 }
 
@@ -114,12 +160,14 @@ export function TableEmptyRow({
 }) {
   return (
     <tr>
-      <td
+      <Typography
+        as="td"
+        variant="body-3"
         colSpan={colSpan}
-        className="px-4 py-12 text-center text-body-3 text-muted-foreground"
+        className="px-4 py-12 text-center text-muted-foreground"
       >
         {children}
-      </td>
+      </Typography>
     </tr>
   );
 }
@@ -148,14 +196,15 @@ export type SortDirection = "asc" | "desc" | false;
  * must not pin an app's i18n namespace.
  */
 export function TableSortHeaderCell({
-  direction,
+  direction = false,
   onToggle,
   sortHint,
   className = "",
   children,
   ...props
 }: Omit<React.ComponentPropsWithoutRef<"th">, "onToggle"> & {
-  direction: SortDirection;
+  /** Omitted or `false` = not sorted on: the neutral up-down icon. Only `asc` / `desc` change the variant. */
+  direction?: SortDirection;
   onToggle: () => void;
   sortHint: string;
 }) {
@@ -167,7 +216,8 @@ export function TableSortHeaderCell({
       // `aria-sort` is what tells a screen reader the table is sorted at all;
       // the icon alone says nothing to it.
       aria-sort={direction === "asc" ? "ascending" : direction === "desc" ? "descending" : "none"}
-      className={`p-0 ${className}`}
+      // `!`: the base header padding has the same specificity, and the button owns the padding here.
+      className={`p-0! ${className}`}
       {...props}
     >
       <button
@@ -177,9 +227,7 @@ export function TableSortHeaderCell({
         // A `group` so the neutral icon can come forward on hover: at rest it
         // must stay quiet, or every unsorted header shouts as loudly as the one
         // column actually being sorted on.
-        className={`group flex w-full items-center gap-1.5 px-4 py-3 text-left uppercase transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset ${
-          direction ? "text-foreground" : ""
-        }`}
+        className="group flex w-full items-center gap-2 px-4 py-[18px] text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
       >
         {children}
         <Icon
@@ -191,5 +239,116 @@ export function TableSortHeaderCell({
         <span className="sr-only">{sortHint}</span>
       </button>
     </TableHeaderCell>
+  );
+}
+
+/**
+ * The header cell above a `TableRowActions` column: no visible text, but the
+ * column still needs a name for screen readers.
+ */
+export function TableActionsHeaderCell({ label }: { label: string }) {
+  return (
+    <TableHeaderCell className="w-12">
+      <span className="sr-only">{label}</span>
+    </TableHeaderCell>
+  );
+}
+
+/**
+ * The last cell of a row: a "more" button that opens the secondary actions
+ * (`DropdownMenuItem`s passed as `children`).
+ *
+ * Clicks and keys stop here on purpose. React events bubble through portals, so
+ * without this a pick from the menu would also fire the row's `onActivate`.
+ */
+export function TableRowActions({
+  label,
+  children,
+}: {
+  /** Accessible name of the trigger, e.g. "Row actions". */
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <TableCell
+      className="w-12 text-right"
+      onClick={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
+    >
+      <DropdownMenu
+        compact
+        trigger={
+          <Button variant="ghost" size="icon-sm" aria-label={label}>
+            <Icon icon={ICONS.more} />
+          </Button>
+        }
+      >
+        {children}
+      </DropdownMenu>
+    </TableCell>
+  );
+}
+
+/**
+ * The floating bar shown while one or more rows are selected: the count, then
+ * the actions on that selection. Bare on purpose — where it sits (usually
+ * sticky under the table) is the screen's call, passed as `className`.
+ *
+ * Children are `TableBulkAction`s; put the destructive one last.
+ */
+export function TableBulkBar({
+  label,
+  toolbarLabel,
+  className = "",
+  children,
+}: {
+  /** The count, already translated: "4 selected". */
+  label: string;
+  /** Accessible name of the toolbar, e.g. "Actions on selected rows". */
+  toolbarLabel: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      role="toolbar"
+      aria-label={toolbarLabel}
+      className={`flex w-fit items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 shadow-lg ${className}`}
+    >
+      <Typography
+        as="span"
+        variant="title-4"
+        role="status"
+        className="text-foreground tabular-nums"
+      >
+        {label}
+      </Typography>
+      <div role="separator" aria-orientation="vertical" className="h-6 w-px bg-border" />
+      {children}
+    </div>
+  );
+}
+
+/**
+ * One action in a `TableBulkBar`: an icon with a tooltip carrying its name.
+ * `label` is both the tooltip text and the `aria-label`, since the icon alone
+ * says nothing to a screen reader.
+ */
+export function TableBulkAction({
+  label,
+  icon,
+  variant = "ghost",
+  ...props
+}: Omit<React.ComponentPropsWithoutRef<typeof Button>, "children" | "variant" | "size"> & {
+  label: string;
+  icon: string;
+  variant?: "ghost" | "danger";
+}) {
+  return (
+    <Tooltip label={label}>
+      <Button variant={variant} size="icon" aria-label={label} {...props}>
+        <Icon icon={icon} className="size-5" />
+      </Button>
+    </Tooltip>
   );
 }

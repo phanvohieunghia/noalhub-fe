@@ -111,6 +111,7 @@ export type QaPromptKind = "outline" | "qa";
 /** Must match a shape in the backend registry when `kind === "qa"`. */
 export type QaTemplateKey =
   | "multiple_choice"
+  | "single_choice"
   | "true_false"
   | "short_answer"
   | "fill_blank"
@@ -138,12 +139,16 @@ export type QaPromptTemplate = {
   defaults: QaPromptDefaults | null;
   enabled: boolean;
   order: number;
+  /** Not in the OpenAPI DTO yet — present only once the backend sends it. */
+  createdAt?: string;
   updatedAt: string;
 };
 
 /** Variables the template may use. The three source ones are **not** here. */
 export const PROMPT_VARIABLES = [
   "count",
+  "minCount",
+  "maxCount",
   "language",
   "difficulty",
   "itemKinds",
@@ -174,6 +179,12 @@ export type QaGenerationStatus =
   | "succeeded"
   | "partial"
   | "failed";
+
+/** What is still running on a dataset — survives a reload, unlike the page's own state. */
+export type QaActiveGenerations = {
+  outline: QaGeneration | null;
+  qa: QaGeneration | null;
+};
 
 export type QaGeneration = {
   id: string;
@@ -280,6 +291,8 @@ export type QaAnswerKey = { optionIds: string[] } | { accepted: string[] };
 export type QaItemFull = {
   id: string;
   setId: string;
+  /** Dataset of the set holding this question — always equals the set's `datasetId`. */
+  datasetId: string;
   order: number;
   kind: QaItemKind;
   question: BlogDoc;
@@ -290,7 +303,15 @@ export type QaItemFull = {
   explanation: BlogDoc | null;
   sectionAnchor: string | null;
   difficulty: QaDifficulty | null;
+  /** Whether learners see this question (once its set is published). */
+  published: boolean;
+  /** The reviewer's verdict on an AI-drafted question. */
+  reviewStatus: QaReviewStatus;
+  /** The draft this question was copied from, for a question in a final set. */
+  sourceItemId: string | null;
 };
+
+export type QaReviewStatus = "pending" | "approved" | "rejected";
 
 export type QaSet = {
   id: string;
@@ -300,6 +321,8 @@ export type QaSet = {
   /** The section title as it read when the set was generated. */
   sectionTitle: string | null;
   templateId: string;
+  /** The set's shape (one registry key), not the prompt's — a prompt can make several. */
+  questionType: string;
   /** `null` = written by hand. */
   generationId: string | null;
   title: string;
@@ -309,6 +332,10 @@ export type QaSet = {
   /** A generated set is ALWAYS `draft` — the model never publishes. */
   status: QaSetStatus;
   itemCount: number;
+  /** A final set: copies of approved questions — the only sets learners see. */
+  isFinal: boolean;
+  /** How many of its questions are approved. */
+  approvedCount: number;
   /** Optimistic lock. Send it back on every write or you get a 409. */
   version: number;
   publishedAt: string | null;
@@ -317,7 +344,56 @@ export type QaSet = {
 
 export type QaSetDetail = QaSet & { items: QaItemFull[] };
 
-export type QaItemList = { items: QaItemFull[]; total: number };
+/** A search hit: the question plus the shape (template key) of its set. */
+export type QaItemSearchRow = QaItemFull & { type: string };
+
+/**
+ * One entry of the question-type catalogue. `key` is fixed by the backend (it
+ * matches a shape in its registry); `label`, `description` and `position` are
+ * editable. `total` / `published` count the questions of that type.
+ */
+export type QaQuestionType = {
+  id: string;
+  key: string;
+  label: string;
+  description: string | null;
+  position: number;
+  total: number;
+  published: number;
+};
+
+export type UpdateQuestionTypeInput = {
+  label?: string;
+  description?: string | null;
+  position?: number;
+  /** Publishes or hides every question of the type in one go. */
+  published?: boolean;
+};
+
+/** A question on the Final set step: already copied in, or approved and waiting. */
+export type QaFinalEntry = {
+  item: QaItemFull;
+  state: "added" | "new";
+  /** The question's shape, e.g. `multiple_choice`. */
+  templateKey: string;
+};
+
+export type QaFinalGroup = {
+  sectionAnchor: string | null;
+  sectionTitle: string | null;
+  inFinalSet: boolean;
+  entries: QaFinalEntry[];
+};
+
+export type QaFinalOverview = {
+  approved: number;
+  added: number;
+  groups: QaFinalGroup[];
+};
+
+export type UpdateSourceInput = { title?: string | null; content?: string };
+
+export type QaItemList = { items: QaItemSearchRow[]; total: number };
 
 /* --------------------------------- queries --------------------------------- */
 
@@ -333,6 +409,9 @@ export type QaItemsQuery = {
   q?: string;
   datasetId?: string;
   kind?: QaItemKind;
+  /** Question shape — a template key such as `multiple_choice`. */
+  type?: string;
+  published?: boolean;
   limit?: number;
   offset?: number;
 };
@@ -353,43 +432,65 @@ export type QaItemPlay = {
   /** `{ id, text }` only. Nothing here says which one is right. */
   options: QaItemOption[] | null;
   difficulty: QaDifficulty | null;
+  /**
+   * Which input to render. Not inferable from `options`: a flashcard has none
+   * either, yet it needs two buttons rather than a text box. It lives on the
+   * item because a dataset mixes shapes.
+   */
+  templateKey: QaTemplateKey;
 };
 
-export type QaSetPlay = {
+/**
+ * What a learner takes: a dataset's **published** questions, as one bank. Sets
+ * and outlines are admin plumbing and never reach this side.
+ */
+export type QaDatasetPlay = {
   id: string;
   title: string;
   description: string | null;
-  intro: BlogDoc | null;
-  difficulty: QaDifficulty | null;
-  /** The denominator of progress. Read from the set, not a snapshot. */
+  /** The denominator of progress: the published questions in the bank. */
   itemCount: number;
-  /**
-   * Which input to render. Not inferable from `options`: a flashcard has none
-   * either, yet it needs two buttons rather than a text box.
-   */
-  templateKey: QaTemplateKey;
   items: QaItemPlay[];
 };
 
-export type QaSetSummary = {
+/** A dataset with at least one published question — the learner's catalogue entry. */
+export type QaDatasetSummary = {
   id: string;
   title: string;
   description: string | null;
-  difficulty: QaDifficulty | null;
+  /** Published questions only; never the draft count. */
   itemCount: number;
-  templateKey: QaTemplateKey;
-  /** The kinds present IN the set — for "I want to drill application questions". */
+  /** The kinds present IN the bank — for "I want to drill application questions". */
   itemKinds: QaItemKind[];
+  /** The shapes present in the bank (one dataset mixes several). */
+  templateKeys: QaTemplateKey[];
+  /** The difficulties present in the bank. */
+  difficulties: QaDifficulty[];
   /** Your own open attempt. Present means the button says "Continue". */
   openAttemptId: string | null;
-  publishedAt: string | null;
+  updatedAt: string | null;
+};
+
+/** How many questions a learner can pick before starting; "all" is the fourth option. */
+export const QA_COUNT_OPTIONS = [5, 10, 20] as const;
+
+/** An attempt with its own questions (answers hidden) — what the taking screen renders. */
+export type QaAttemptPlay = {
+  attempt: QaAttempt;
+  datasetTitle: string;
+  items: QaItemPlay[];
 };
 
 export type QaAttemptStatus = "in_progress" | "finished" | "abandoned";
 
 export type QaAttempt = {
   id: string;
-  setId: string;
+  datasetId: string;
+  /**
+   * The denominator of progress: how many questions this attempt has, fixed when it
+   * started (the learner picks 5 / 10 / 20 / all). Not the dataset's current count.
+   */
+  itemCount: number;
   status: QaAttemptStatus;
   /** Counts what HAPPENED. Never decremented, even if a question is deleted. */
   answeredCount: number;
@@ -433,12 +534,6 @@ export type QaStatsRow = {
   kind: QaItemKind;
   answered: number;
   correct: number;
-};
-
-export type BrowseSetsQuery = {
-  datasetId?: string;
-  limit?: number;
-  offset?: number;
 };
 
 export type BrowseItemsQuery = {

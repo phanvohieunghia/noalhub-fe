@@ -16,11 +16,14 @@ import { useDateFormat } from "@noalhub/i18n/use-date-format";
 import { useMessage } from "@noalhub/i18n/use-message";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
+import { DropdownMenuItem } from "@noalhub/ui/dropdown-menu";
+import { ICONS } from "@noalhub/ui/icons";
 import { AlertError } from "@noalhub/ui/alert";
 import { Input } from "@noalhub/ui/input";
 import { Pagination } from "@noalhub/ui/pagination";
 import { Skeleton } from "@noalhub/ui/skeleton";
 import {
+  TableActionsHeaderCell,
   TableBody,
   TableCell,
   TableEmptyRow,
@@ -28,6 +31,7 @@ import {
   TableHeaderCell,
   TableRoot,
   TableRow,
+  TableRowActions,
   TableSortHeaderCell,
 } from "@noalhub/ui/table";
 import { Typography } from "@noalhub/ui/typography";
@@ -124,7 +128,7 @@ export function SlugTable() {
                 >
                   {t("columns.createdAt")}
                 </TableSortHeaderCell>
-                <TableHeaderCell>{t("columns.actions")}</TableHeaderCell>
+                <TableActionsHeaderCell label={t("columns.actions")} />
               </TableRow>
             </TableHead>
             <TableBody>
@@ -183,7 +187,7 @@ function SlugRow({
 
   return (
     <TableRow>
-      <TableCell className="font-medium">/blogs/{row.slug}</TableCell>
+      <TableCell weight={500}>/blogs/{row.slug}</TableCell>
       <TableCell>
         <Link href={`/posts/${row.post.id}`} className="hover:underline">
           {row.post.title}
@@ -198,16 +202,14 @@ function SlugRow({
       <TableCell className="whitespace-nowrap opacity-70">
         {df.dateTime(row.createdAt)}
       </TableCell>
-      <TableCell>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={onEdit}>
-            {t("actions.edit")}
-          </Button>
-          <Button variant="outline" size="sm" onClick={onDelete}>
-            {t("actions.delete")}
-          </Button>
-        </div>
-      </TableCell>
+      <TableRowActions label={t("columns.actions")}>
+        <DropdownMenuItem icon={ICONS.edit} onSelect={onEdit}>
+          {t("actions.edit")}
+        </DropdownMenuItem>
+        <DropdownMenuItem icon={ICONS.delete} tone="danger" onSelect={onDelete}>
+          {t("actions.delete")}
+        </DropdownMenuItem>
+      </TableRowActions>
     </TableRow>
   );
 }

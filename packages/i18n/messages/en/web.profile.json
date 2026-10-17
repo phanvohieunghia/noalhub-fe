@@ -3,7 +3,6 @@
   "loading": "Loading profile…",
   "loadFailed": "Could not load this profile.",
   "noData": "No profile data.",
-  "dashboard": "Dashboard",
   "facts": {
     "email": "Email",
     "verified": "· verified",

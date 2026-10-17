@@ -78,9 +78,15 @@ function Step({ variant, values }: { variant: Variant; values: Record<string, st
     <div className="flex flex-col gap-1 border-b border-border py-4 last:border-0">
       <div className="flex flex-wrap items-baseline gap-x-3 text-body-4 text-muted-foreground">
         <code className="text-foreground">{variant}</code>
-        <span>{values[`--text-${variant}`] || "—"}</span>
-        <span>line-height {values[`--text-${variant}--line-height`] || "1"}</span>
-        <span>tracking {values[`--text-${variant}--letter-spacing`] || "0"}</span>
+        <Typography variant="body-4" as="span">
+          {values[`--text-${variant}`] || "—"}
+        </Typography>
+        <Typography variant="body-4" as="span">
+          line-height {values[`--text-${variant}--line-height`] || "1"}
+        </Typography>
+        <Typography variant="body-4" as="span">
+          tracking {values[`--text-${variant}--letter-spacing`] || "0"}
+        </Typography>
       </div>
       <Typography variant={variant}>{t("sample")}</Typography>
     </div>
@@ -94,16 +100,22 @@ function Scale() {
   return (
     <div className="flex flex-col gap-10 bg-background p-8 text-foreground">
       <div className="flex flex-col gap-2">
-        <h1 className="text-h3">{t("typeScale")}</h1>
-        <p className="max-w-2xl text-body-3 text-muted-foreground">
+        <Typography variant="h3" as="h1">
+          {t("typeScale")}
+        </Typography>
+        <Typography variant="body-3" className="max-w-2xl text-muted-foreground">
           {t("typeScaleNote")}
-        </p>
+        </Typography>
       </div>
 
       {GROUPED.map((group) => (
         <section key={group.title} className="flex flex-col gap-1">
-          <h2 className="text-title-2">{group.title}</h2>
-          <p className="max-w-2xl text-body-4 text-muted-foreground">{group.note}</p>
+          <Typography variant="title-2" as="h2">
+            {group.title}
+          </Typography>
+          <Typography variant="body-4" className="max-w-2xl text-muted-foreground">
+            {group.note}
+          </Typography>
           <div className="mt-2">
             {group.variants.map((variant) => (
               <Step key={variant} variant={variant} values={values} />

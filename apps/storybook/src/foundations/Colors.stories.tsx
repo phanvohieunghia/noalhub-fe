@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 import React from "react";
 
 import { useTokens } from "./use-token";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * The color system of `packages/config/theme.css`.
@@ -129,8 +130,14 @@ function Section({
   return (
     <section className="flex flex-col gap-3">
       <div>
-        <h2 className="text-title-2">{title}</h2>
-        {note ? <p className="max-w-2xl text-body-4 text-muted-foreground">{note}</p> : null}
+        <Typography variant="title-2" as="h2">
+          {title}
+        </Typography>
+        {note ? (
+          <Typography variant="body-4" className="max-w-2xl text-muted-foreground">
+            {note}
+          </Typography>
+        ) : null}
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
         {tokens.map((name) => (
@@ -148,20 +155,24 @@ function Palette() {
   return (
     <div className="flex flex-col gap-10 bg-background p-8 text-foreground">
       <div className="flex flex-col gap-2">
-        <h1 className="text-h3">{t("colorsTitle")}</h1>
-        <p className="max-w-2xl text-body-3 text-muted-foreground">
+        <Typography variant="h3" as="h1">
+          {t("colorsTitle")}
+        </Typography>
+        <Typography variant="body-3" className="max-w-2xl text-muted-foreground">
           {/* `t.rich` plus the `<file>…</file>` tag syntax inside the message: that
               is how next-intl injects a React element into the middle of a sentence
               while preserving each language's own word order. */}
           {t.rich("colorsNote", { file: (chunks) => <code>{chunks}</code> })}
-        </p>
+        </Typography>
       </div>
 
       <div>
-        <h2 className="text-title-1">{t("colorsSemantic")}</h2>
-        <p className="text-body-4 text-muted-foreground">
+        <Typography variant="title-1" as="h2">
+          {t("colorsSemantic")}
+        </Typography>
+        <Typography variant="body-4" className="text-muted-foreground">
           {t("colorsSemanticHint")}
-        </p>
+        </Typography>
       </div>
       {GROUPED.map((group) => (
         <Section key={group.title} {...group} values={values} />

@@ -11,6 +11,7 @@ import { OAuthButtons } from "./oauth-buttons";
 import { Button } from "@noalhub/ui/button";
 import { AlertError } from "@noalhub/ui/alert";
 import { Input } from "@noalhub/ui/input";
+import { PasswordInput } from "@noalhub/ui/password-input";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { DEFAULT_REDIRECT } from "@noalhub/core/auth/redirect";
 import type { Message } from "@noalhub/api/message";
@@ -20,6 +21,7 @@ import { Typography } from "@noalhub/ui/typography";
 
 export function RegisterForm() {
   const t = useTranslations("web.auth.register");
+  const tc = useTranslations("common");
   const m = useMessage();
   const router = useRouter();
   const registerUser = useRegister();
@@ -69,16 +71,18 @@ export function RegisterForm() {
           error={m(errors.email?.message)}
           {...register("email")}
         />
-        <Input
+        <PasswordInput
           label={t("password")}
-          type="password"
+          showPasswordLabel={tc("actions.showPassword")}
+          hidePasswordLabel={tc("actions.hidePassword")}
           autoComplete="new-password"
           error={m(errors.password?.message)}
           {...register("password")}
         />
-        <Input
+        <PasswordInput
           label={t("confirmPassword")}
-          type="password"
+          showPasswordLabel={tc("actions.showPassword")}
+          hidePasswordLabel={tc("actions.hidePassword")}
           autoComplete="new-password"
           error={m(errors.confirmPassword?.message)}
           {...register("confirmPassword")}

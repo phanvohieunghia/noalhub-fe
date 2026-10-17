@@ -52,12 +52,20 @@ export function DashboardContent() {
 
       <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-body-3 dark:border-white/15">
         <div className="flex justify-between gap-4">
-          <dt className="opacity-70">{t("email")}</dt>
-          <dd className="font-mono">{user?.email ?? "—"}</dd>
+          <Typography as="dt" variant="body-3" className="opacity-70">
+            {t("email")}
+          </Typography>
+          <Typography as="dd" variant="body-3" className="font-mono">
+            {user?.email ?? "—"}
+          </Typography>
         </div>
         <div className="flex justify-between gap-4">
-          <dt className="opacity-70">{t("userId")}</dt>
-          <dd className="font-mono">{user?.id ?? "—"}</dd>
+          <Typography as="dt" variant="body-3" className="opacity-70">
+            {t("userId")}
+          </Typography>
+          <Typography as="dd" variant="body-3" className="font-mono">
+            {user?.id ?? "—"}
+          </Typography>
         </div>
       </dl>
     </main>

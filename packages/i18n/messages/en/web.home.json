@@ -1,0 +1,37 @@
+{
+  "title": "Home",
+  "hero": {
+    "line1": "Live slowly.",
+    "line2": "Learn deeply. Keep it simple."
+  },
+  "readingTime": "{minutes} min read",
+  "empty": "No posts published yet. Check back soon.",
+  "topics": {
+    "heading": "Featured topics",
+    "learning": "Lessons in learning: a year in review",
+    "productLead": "Product experience:",
+    "product": "When UX meets emotion",
+    "slowLead": "Slow living:",
+    "slow": "Minimal digital spaces"
+  },
+  "quote": {
+    "text": "The best technology is the kind that makes our lives slower, deeper and lighter.",
+    "author": "Noah",
+    "role": "Engineer & Learner"
+  },
+  "latest": {
+    "heading": "Latest posts",
+    "filters": "Filter by category",
+    "all": "All"
+  },
+  "footer": {
+    "tagline": "Noalhub's blog and chat space. Notes on what we learn building the product, and a place to keep talking about it.",
+    "posts": "Posts",
+    "categories": "Categories",
+    "practice": "Practice",
+    "messages": "Messages",
+    "friends": "Friends",
+    "rss": "RSS",
+    "sitemap": "Sitemap"
+  }
+}

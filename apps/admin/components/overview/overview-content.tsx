@@ -42,7 +42,9 @@ export function OverviewContent() {
           {/* dataUpdatedAt is when the response arrived, not when the backend
               computed it. Accurate enough for "how stale is this number?". */}
           {stats.dataUpdatedAt ? (
-            <span>{t("updatedAt", { date: df.dateTime(new Date(stats.dataUpdatedAt).toISOString()) })}</span>
+            <Typography variant="body-4" as="span">
+              {t("updatedAt", { date: df.dateTime(new Date(stats.dataUpdatedAt).toISOString()) })}
+            </Typography>
           ) : null}
           <Button variant="outline" onClick={() => stats.refetch()} disabled={stats.isFetching}>
             {stats.isFetching ? t("refreshing") : t("refresh")}

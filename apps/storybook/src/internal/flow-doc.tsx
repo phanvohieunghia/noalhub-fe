@@ -113,9 +113,9 @@ export function DocSection({
     <section className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <div className="flex items-baseline gap-3">
-          <span className="text-primary text-body-4 font-semibold tabular-nums">
+          <Typography as="span" variant="body-4" weight={600} className="text-primary tabular-nums">
             {String(step).padStart(2, "0")}
-          </span>
+          </Typography>
           <Typography variant="h4" as="h2">
             {title}
           </Typography>
@@ -291,9 +291,13 @@ function DiagramViewer({
             >
               <Icon icon={LUCIDE.zoomOut} />
             </Button>
-            <span className="text-muted-foreground text-body-4 w-12 text-center tabular-nums">
+            <Typography
+              as="span"
+              variant="body-4"
+              className="text-muted-foreground w-12 text-center tabular-nums"
+            >
               {Math.round(zoom * 100)}%
-            </span>
+            </Typography>
             <Button
               variant="ghost"
               size="icon-sm"
@@ -353,9 +357,9 @@ export function Figure({
       <DiagramViewer width={width} title={title}>
         {children}
       </DiagramViewer>
-      <figcaption className="text-muted-foreground text-body-4 max-w-3xl">
+      <Typography as="figcaption" variant="body-4" className="text-muted-foreground max-w-3xl">
         <RichText>{caption}</RichText>
-      </figcaption>
+      </Typography>
     </figure>
   );
 }
@@ -431,9 +435,14 @@ export function NoteList({ notes }: { notes: string[] }) {
           key={index}
           className="border-border bg-surface flex gap-3 rounded-lg border p-4"
         >
-          <span className="bg-muted text-muted-foreground text-body-4 flex size-6 shrink-0 items-center justify-center rounded-full font-medium">
+          <Typography
+            as="span"
+            variant="body-4"
+            weight={500}
+            className="bg-muted text-muted-foreground flex size-6 shrink-0 items-center justify-center rounded-full"
+          >
             {index + 1}
-          </span>
+          </Typography>
           <Typography variant="body-3" className="text-muted-foreground">
             <RichText>{note}</RichText>
           </Typography>
@@ -794,9 +803,9 @@ export function SourceNote({
 
   return (
     <section className="border-border text-muted-foreground flex flex-col gap-2 rounded-lg border border-dashed p-4">
-      <span className="text-body-4 font-medium tracking-[0.14em] uppercase">
+      <Typography as="span" variant="body-4" weight={500} className="tracking-[0.14em] uppercase">
         {t(sectionKey)}
-      </span>
+      </Typography>
       <Typography variant="body-4" className="text-muted-foreground">
         <RichText>{t(textKey)}</RichText>
       </Typography>

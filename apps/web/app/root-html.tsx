@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Open_Sans } from "next/font/google";
+import { Be_Vietnam_Pro, Geist_Mono } from "next/font/google";
 
 /*
  * ⚠️ `globals.css` must be imported HERE, not in the two layout files.
@@ -42,30 +42,30 @@ import { ThemeProvider } from "@noalhub/ui/theme/theme-provider";
  * `subsets` MUST include `vietnamese`: without it, accented characters fall back
  * to the OS font and a single line shows two different typefaces.
  *
- * Open Sans is a variable font (300–800), so no `weight` is declared — every
- * weight is in one file, and `typography.tsx` only uses 400/500/600.
+ * Be Vietnam Pro (the Figma face) is NOT a variable font, so every weight in use
+ * has to be listed: 300 for the Home hero, 400 body, 500 for `font-medium`,
+ * 600 for headings — `typography.tsx` itself only uses 400/500/600.
  */
-const openSans = Open_Sans({
-  variable: "--font-open-sans",
+const beVietnamPro = Be_Vietnam_Pro({
+  variable: "--font-be-vietnam-pro",
   subsets: ["latin", "vietnamese"],
+  weight: ["300", "400", "500", "600"],
   display: "swap",
 });
 
 /**
- * The ITALIC face has to be loaded separately. `next/font/google` does not take
- * a `style` array for variable fonts, and without it the browser **slants the
- * upright face itself** (synthetic oblique) — the stroke weights come out quite
- * wrong compared with Open Sans' real italic, most visibly on `a`, `e`, `g`.
- *
- * Both calls produce `font-family: "Open Sans"` and differ only in
- * `font-style`, so the `italic` utility picks the right face on its own — no
- * extra declaration at the call site. Nobody reads the
- * `--font-open-sans-italic` variable, but `.variable` must be on `<html>` for
- * Next to keep this `@font-face` at all.
+ * The ITALIC face has to be loaded separately, or the browser **slants the
+ * upright face itself** (synthetic oblique) with visibly wrong stroke weights.
+ * Only the `caption` variant is italic, so one weight is enough. Both calls
+ * produce `font-family: "Be Vietnam Pro"` and differ only in `font-style`, so
+ * the `italic` utility picks the right face with no extra declaration at the
+ * call site. Nobody reads `--font-be-vietnam-pro-italic`, but `.variable` must be
+ * on `<html>` for Next to keep this `@font-face` at all.
  */
-const openSansItalic = Open_Sans({
-  variable: "--font-open-sans-italic",
+const beVietnamProItalic = Be_Vietnam_Pro({
+  variable: "--font-be-vietnam-pro-italic",
   subsets: ["latin", "vietnamese"],
+  weight: "400",
   style: "italic",
   display: "swap",
 });
@@ -115,7 +115,7 @@ export function RootHtml({
     <html
       lang={lang}
       suppressHydrationWarning
-      className={`${openSans.variable} ${openSansItalic.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${beVietnamPro.variable} ${beVietnamProItalic.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
         {/* Synchronous, no `defer`/`async`, and it must come before everything

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { FLAT_NAV_ITEMS, NON_ROUTE_SEGMENTS, SEGMENT_LABEL_KEYS } from "./nav-items";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * The breadcrumb is derived from the pathname, not from separate state — so
@@ -49,12 +50,14 @@ export function AdminBreadcrumb() {
         {crumbs.map((crumb) => (
           <li key={crumb.href} className="flex items-center gap-1.5">
             {crumb.isLast ? (
-              <span aria-current="page" className="font-medium">
+              <Typography variant="body-3" as="span" weight={500} aria-current="page">
                 {crumb.label}
-              </span>
+              </Typography>
             ) : !crumb.isRoute ? (
               <>
-                <span className="opacity-70">{crumb.label}</span>
+                <Typography variant="body-3" as="span" className="opacity-70">
+                  {crumb.label}
+                </Typography>
                 <span aria-hidden className="opacity-40">
                   /
                 </span>

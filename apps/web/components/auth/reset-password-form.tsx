@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 
 import { Button } from "@noalhub/ui/button";
 import { AlertError, AlertSuccess } from "@noalhub/ui/alert";
-import { Input } from "@noalhub/ui/input";
+import { PasswordInput } from "@noalhub/ui/password-input";
 import { useResetPassword } from "@noalhub/api/auth";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { Typography } from "@noalhub/ui/typography";
@@ -18,6 +18,7 @@ import { resetPasswordSchema, type ResetPasswordInput } from "@noalhub/api/auth"
 
 export function ResetPasswordForm({ token }: { token: string }) {
   const t = useTranslations("web.auth.resetPassword");
+  const tc = useTranslations("common");
   const m = useMessage();
   const router = useRouter();
   const [formError, setFormError] = useState<Message | string | null>(null);
@@ -73,16 +74,18 @@ export function ResetPasswordForm({ token }: { token: string }) {
         <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
           <AlertError message={m(formError)} />
 
-          <Input
+          <PasswordInput
             label={t("newPassword")}
-            type="password"
+            showPasswordLabel={tc("actions.showPassword")}
+            hidePasswordLabel={tc("actions.hidePassword")}
             autoComplete="new-password"
             error={m(errors.newPassword?.message)}
             {...register("newPassword")}
           />
-          <Input
+          <PasswordInput
             label={t("confirmPassword")}
-            type="password"
+            showPasswordLabel={tc("actions.showPassword")}
+            hidePasswordLabel={tc("actions.hidePassword")}
             autoComplete="new-password"
             error={m(errors.confirmPassword?.message)}
             {...register("confirmPassword")}

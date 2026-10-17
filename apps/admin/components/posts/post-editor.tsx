@@ -267,10 +267,10 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
             role="alert"
             className="text-body-3 flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300"
           >
-            <span className="flex items-center gap-2">
+            <Typography variant="body-3" as="span" className="flex items-center gap-2">
               <Icon icon={ICONS.warning} className="size-4 shrink-0" />
               {t("editor.conflict")}
-            </span>
+            </Typography>
             <Button variant="outline" onClick={async () => applyFresh(await onReloadPost())}>
               <Icon icon={LUCIDE.refreshCw} className="size-4" />
               {t("editor.reload")}

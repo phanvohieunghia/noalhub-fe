@@ -5,21 +5,19 @@ import { useState } from "react";
 
 import { useMe } from "@noalhub/api/auth";
 import type { Message } from "@noalhub/api/message";
-import {
-  useQaTemplates,
-  useStartAnalyze,
-} from "@noalhub/api/qa";
+import { useQaTemplates, useStartAnalyze } from "@noalhub/api/qa";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { useMessage } from "@noalhub/i18n/use-message";
 import { AlertError, AlertInfo } from "@noalhub/ui/alert";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
+import { Icon, LUCIDE } from "@noalhub/ui/icons";
 import { Input } from "@noalhub/ui/input";
 import { Select } from "@noalhub/ui/select";
+import { Tooltip } from "@noalhub/ui/tooltip";
 import { Typography } from "@noalhub/ui/typography";
 
 import { useAiRunChoice } from "./ai-run-picker";
-import { GenerationProgress } from "./generation-progress";
 
 /**
  * One of the two buttons that spend money.
@@ -34,9 +32,19 @@ import { GenerationProgress } from "./generation-progress";
 export function AnalyzeButton({
   datasetId,
   disabled,
+  compact,
+  onStarted,
 }: {
   datasetId: string;
   disabled?: boolean;
+  /** Icon-only, for the editor toolbar: another version, not the first one. */
+  compact?: boolean;
+  /**
+   * Called once the run is accepted. The dialog closes right after, and the
+   * caller shows the progress in place — the outline panel itself turns into a
+   * "generating" state.
+   */
+  onStarted: (generationId: string) => void;
 }) {
   const t = useTranslations("admin.qa");
   const me = useMe();
@@ -46,11 +54,32 @@ export function AnalyzeButton({
 
   return (
     <>
-      <Button disabled={disabled} onClick={() => setOpen(true)}>
-        {t("analyze.button")}
-      </Button>
+      {compact ? (
+        <Tooltip label={t("analyze.another")}>
+          {/* The span takes the hover: a disabled button swallows pointer events. */}
+          <span className="inline-flex">
+            <Button
+              size="icon-md"
+              variant="outline"
+              disabled={disabled}
+              aria-label={t("analyze.another")}
+              onClick={() => setOpen(true)}
+            >
+              <Icon icon={LUCIDE.sparkles} />
+            </Button>
+          </span>
+        </Tooltip>
+      ) : (
+        <Button disabled={disabled} onClick={() => setOpen(true)}>
+          {t("analyze.button")}
+        </Button>
+      )}
       {open ? (
-        <AnalyzeDialog datasetId={datasetId} onClose={() => setOpen(false)} />
+        <AnalyzeDialog
+          datasetId={datasetId}
+          onStarted={onStarted}
+          onClose={() => setOpen(false)}
+        />
       ) : null}
     </>
   );
@@ -58,9 +87,11 @@ export function AnalyzeButton({
 
 function AnalyzeDialog({
   datasetId,
+  onStarted,
   onClose,
 }: {
   datasetId: string;
+  onStarted: (generationId: string) => void;
   onClose: () => void;
 }) {
   const t = useTranslations("admin.qa");
@@ -73,10 +104,6 @@ function AnalyzeDialog({
   const [templateId, setTemplateId] = useState("");
   const [label, setLabel] = useState("");
   const [formError, setFormError] = useState<Message | string | null>(null);
-  const [started, setStarted] = useState<{
-    id: string;
-    reused: boolean;
-  } | null>(null);
 
   const usableTemplates = (templates.data ?? []).filter((row) => row.enabled);
 
@@ -90,7 +117,8 @@ function AnalyzeDialog({
         model: aiRun.model,
         label: label === "" ? undefined : label,
       });
-      setStarted({ id: result.generationId, reused: result.reused });
+      onStarted(result.generationId);
+      onClose();
     } catch (error) {
       // The backend's messages already carry the numbers (how many sections fit,
       // which anchors are stale) — show them rather than a generic sentence.
@@ -100,72 +128,62 @@ function AnalyzeDialog({
 
   return (
     <Dialog open onClose={onClose} title={t("analyze.title")}>
-      {started ? (
-        <GenerationProgress generationId={started.id} reused={started.reused} />
-      ) : (
-        <div className="space-y-4">
-          <Typography variant="body-3" className="opacity-80">
-            {t("analyze.intro")}
-          </Typography>
+      <div className="space-y-4">
+        <Typography variant="body-3" className="opacity-80">
+          {t("analyze.intro")}
+        </Typography>
 
-          <Select
-            label={t("analyze.template")}
-            value={templateId}
-            onChange={(event) => setTemplateId(event.target.value)}
-            placeholder={
-              usableTemplates.length === 0
-                ? t("analyze.noTemplate")
-                : t("analyze.pickTemplate")
-            }
-            options={usableTemplates.map((row) => ({
-              value: row.id,
-              label: row.name,
-            }))}
+        <Select
+          label={t("analyze.template")}
+          value={templateId}
+          onChange={(event) => setTemplateId(event.target.value)}
+          placeholder={
+            usableTemplates.length === 0
+              ? t("analyze.noTemplate")
+              : t("analyze.pickTemplate")
+          }
+          options={usableTemplates.map((row) => ({
+            value: row.id,
+            label: row.name,
+          }))}
+        />
+
+        {aiRun.fields}
+
+        <Input
+          label={t("analyze.label")}
+          hint={t("analyze.labelHint")}
+          value={label}
+          onChange={(event) => setLabel(event.target.value)}
+        />
+
+        {/* State the price before the click: which key, which model. */}
+        {aiRun.empty ? (
+          <AlertError message={t("run.noCredentialHint")} />
+        ) : aiRun.credential && aiRun.ready ? (
+          <AlertInfo
+            message={t("analyze.cost", {
+              key: aiRun.credential.label,
+              model: aiRun.model,
+            })}
           />
+        ) : null}
 
-          {aiRun.fields}
-
-          <Input
-            label={t("analyze.label")}
-            hint={t("analyze.labelHint")}
-            value={label}
-            onChange={(event) => setLabel(event.target.value)}
-          />
-
-          {/* State the price before the click: which key, which model. */}
-          {aiRun.empty ? (
-            <AlertError message={t("run.noCredentialHint")} />
-          ) : aiRun.credential && aiRun.ready ? (
-            <AlertInfo
-              message={t("analyze.cost", {
-                key: aiRun.credential.label,
-                model: aiRun.model,
-              })}
-            />
-          ) : null}
-
-          {formError ? <AlertError message={m(formError)} /> : null}
-        </div>
-      )}
+        {formError ? <AlertError message={m(formError)} /> : null}
+      </div>
 
       {/* Nút ở CUỐI nội dung, không phải ở `actions` — `actions` của Dialog là
           thanh công cụ cạnh nút đóng trên header. */}
       <div className="mt-4 flex justify-end gap-2">
-        {started ? (
-          <Button onClick={onClose}>{tc("actions.close")}</Button>
-        ) : (
-          <>
-            <Button variant="outline" onClick={onClose}>
-              {tc("actions.cancel")}
-            </Button>
-            <Button
-              onClick={() => void run()}
-              disabled={templateId === "" || !aiRun.ready || start.isPending}
-            >
-              {t("analyze.confirm")}
-            </Button>
-          </>
-        )}
+        <Button variant="outline" onClick={onClose}>
+          {tc("actions.cancel")}
+        </Button>
+        <Button
+          onClick={() => void run()}
+          disabled={templateId === "" || !aiRun.ready || start.isPending}
+        >
+          {t("analyze.confirm")}
+        </Button>
       </div>
     </Dialog>
   );

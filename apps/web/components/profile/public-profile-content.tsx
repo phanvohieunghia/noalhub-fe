@@ -35,7 +35,7 @@ export function PublicProfileContent({ username }: { username: string }) {
     return (
       <main
         role="status"
-        className="flex flex-1 items-center justify-center gap-2 p-8 text-body-3 opacity-70"
+        className="flex flex-1 items-center justify-center gap-2 p-4 md:p-8 text-body-3 opacity-70"
       >
         <Spinner />
         {t("loading")}
@@ -46,7 +46,7 @@ export function PublicProfileContent({ username }: { username: string }) {
   if (error) {
     const notFound = error instanceof ApiError && error.code === ERROR_CODES.userNotFound;
     return (
-      <main className="mx-auto w-full max-w-3xl p-8">
+      <main className="mx-auto w-full max-w-3xl p-4 md:p-8">
         <AlertError
           message={notFound ? t("public.notFound", { username }) : t("loadFailed")}
         />
@@ -55,7 +55,7 @@ export function PublicProfileContent({ username }: { username: string }) {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 p-8">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 p-4 md:p-8">
       <header className="flex items-center gap-4">
         <Avatar name={data.displayName ?? data.username} src={data.avatarUrl} size="lg" />
         <div className="min-w-0">
@@ -71,13 +71,21 @@ export function PublicProfileContent({ username }: { username: string }) {
 
       <dl className="grid gap-3 rounded-lg border border-black/10 p-4 text-body-3 dark:border-white/15">
         <div className="flex justify-between gap-4">
-          <dt className="opacity-70">{t("facts.joined")}</dt>
-          <dd>{df.date(data.createdAt)}</dd>
+          <Typography as="dt" variant="body-3" className="opacity-70">
+            {t("facts.joined")}
+          </Typography>
+          <Typography as="dd" variant="body-3">
+            {df.date(data.createdAt)}
+          </Typography>
         </div>
         <div className="flex justify-between gap-4">
-          <dt className="opacity-70">{t("facts.lastSeen")}</dt>
+          <Typography as="dt" variant="body-3" className="opacity-70">
+            {t("facts.lastSeen")}
+          </Typography>
           {/* When they last went offline, NOT the current online state. */}
-          <dd>{cf.lastSeenLabel(data.lastSeenAt) ?? t("facts.neverOnline")}</dd>
+          <Typography as="dd" variant="body-3">
+            {cf.lastSeenLabel(data.lastSeenAt) ?? t("facts.neverOnline")}
+          </Typography>
         </div>
       </dl>
     </main>

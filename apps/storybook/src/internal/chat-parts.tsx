@@ -102,7 +102,9 @@ export function ConnectionBanner({ connecting = false }: { connecting?: boolean 
       className="text-body-3 bg-warning/15 text-warning border-warning/30 flex shrink-0 items-center justify-center gap-3 border-b px-4 py-2"
     >
       {connecting ? <Spinner /> : <span aria-hidden>⚠</span>}
-      <span>{connecting ? t("reconnecting") : t("offline")}</span>
+      <Typography as="span" variant="body-3">
+        {connecting ? t("reconnecting") : t("offline")}
+      </Typography>
       {connecting ? null : (
         // `border-current` on purpose: the banner is amber, and a `border-border`
         // button inside it reads as a foreign element.
@@ -142,13 +144,10 @@ export function ConversationList({ activeIndex = 0 }: { activeIndex?: number }) 
     <aside className="border-border flex w-80 shrink-0 flex-col border-r">
       <div className="flex shrink-0 items-center gap-2 px-4 py-3">
         {/*
-          `ChatUserMenu` sits here in the app — a dropdown that needs the auth
-          store, so only its trigger is drawn. There is deliberately NO "New"
-          button: creating a DM needs a `userId` and the backend has no user
-          search endpoint yet, and a disabled button is an empty promise
-          (`docs/chat.md` §0 #2).
+          There is deliberately NO "New" button: creating a DM needs a `userId`
+          and the backend has no user search endpoint yet, and a disabled
+          button is an empty promise (`docs/chat.md` §0 #2).
         */}
-        <Avatar name={PEERS[0]!.name} size="sm" />
         <Typography variant="h6" as="h1">
           {t("title")}
         </Typography>
@@ -192,27 +191,33 @@ export function ConversationList({ activeIndex = 0 }: { activeIndex?: number }) 
                   <Typography variant="title-4" as="span" className="truncate">
                     {peer.name}
                   </Typography>
-                  <span className="text-muted-foreground shrink-0 text-[11px]">
+                  <Typography as="span" variant="body-4" className="text-muted-foreground shrink-0">
                     {peer.time}
-                  </span>
+                  </Typography>
                 </span>
                 <span className="flex items-center justify-between gap-2">
-                  <span
-                    className={`text-body-4 truncate ${
-                      peer.unread ? "font-medium" : "text-muted-foreground"
-                    }`}
+                  <Typography
+                    as="span"
+                    variant="body-4"
+                    weight={peer.unread ? 500 : 400}
+                    className={`truncate ${peer.unread ? "" : "text-muted-foreground"}`}
                   >
                     {peer.preview || t("noMessages")}
-                  </span>
+                  </Typography>
                   {peer.unread ? (
                     // `bg-foreground`, not `bg-primary`: the unread pill is the
                     // plain high-contrast one, and it caps its label at `99+`.
-                    <span className="bg-foreground text-background inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold">
+                    <Typography
+                      as="span"
+                      variant="body-4"
+                      weight={600}
+                      className="bg-foreground text-background inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5"
+                    >
                       <span aria-hidden>{peer.unread > 99 ? "99+" : peer.unread}</span>
                       <span className="sr-only">
                         {t("unread", { count: peer.unread })}
                       </span>
-                    </span>
+                    </Typography>
                   ) : null}
                 </span>
               </span>
@@ -376,7 +381,9 @@ export function MessageGroup({
       {mine ? null : <Avatar name={peer?.name ?? ""} size="sm" />}
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         {mine ? null : (
-          <span className="text-body-4 px-1 opacity-60">{peer?.name}</span>
+          <Typography as="span" variant="body-4" className="px-1 opacity-60">
+            {peer?.name}
+          </Typography>
         )}
         {children}
       </div>
@@ -417,10 +424,10 @@ export function ReadReceipt({ read }: { read: boolean }) {
   const t = useTranslations("web.chat.messages");
 
   return (
-    <span className="text-[11px] leading-none opacity-70">
+    <Typography as="span" variant="body-4" className="leading-none opacity-70">
       <span aria-hidden>{read ? "✓✓" : "✓"}</span>
       <span className="sr-only">{t(read ? "read" : "sent")}</span>
-    </span>
+    </Typography>
   );
 }
 

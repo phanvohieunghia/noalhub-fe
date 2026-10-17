@@ -77,8 +77,12 @@ export default async function TagIndexPage({ params }: PageProps<"/[locale]/blog
                 href={`/blogs/tag/${tag.slug}`}
                 className="flex items-center gap-1.5 rounded-full bg-black/8 px-3 py-1.5 text-body-3 transition-opacity hover:opacity-80 dark:bg-white/12"
               >
-                <span>#{tag.name}</span>
-                <span className="tabular-nums opacity-50">{tag.postCount}</span>
+                <Typography as="span" variant="body-3">
+                  #{tag.name}
+                </Typography>
+                <Typography as="span" variant="body-3" className="tabular-nums opacity-50">
+                  {tag.postCount}
+                </Typography>
               </Link>
             </li>
           ))}

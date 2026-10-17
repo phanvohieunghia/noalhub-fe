@@ -114,6 +114,22 @@ export const qaPromptDefaultsSchema = z.object({
   itemKinds: z.array(z.string().max(32)).optional(),
 });
 
+/**
+ * Question shapes, in registry order — `TEMPLATES` in the backend's `qa-templates.ts`.
+ * Picked when a run starts, not stored on the prompt: each pick pulls that shape's
+ * own rules into the prompt, and the model chooses a shape per question.
+ */
+export const QA_TEMPLATE_KEYS = [
+  "multiple_choice",
+  "single_choice",
+  "true_false",
+  "short_answer",
+  "fill_blank",
+  "flashcard",
+] as const;
+
+const questionTypesField = z.array(z.enum(QA_TEMPLATE_KEYS)).min(1);
+
 export const qaTemplateSchema = z.object({
   id: z.string(),
   kind: z.enum(["outline", "qa"]),
@@ -124,6 +140,9 @@ export const qaTemplateSchema = z.object({
   defaults: qaPromptDefaultsSchema.nullish().transform((v) => v ?? null),
   enabled: z.boolean(),
   order: z.number(),
+  // Not in the OpenAPI DTO yet: read when the backend sends it, so the list can
+  // be ordered by creation date; absent until then.
+  createdAt: z.string().optional(),
   updatedAt: z.string(),
 });
 
@@ -131,6 +150,29 @@ export const qaTemplateListSchema = z.array(qaTemplateSchema);
 
 /** `MAX_ITEMS_PER_SET` on the backend. Kept here so the form can clamp too. */
 export const MAX_ITEMS_PER_SET = 50;
+
+/**
+ * `MAX_RUN_ITEMS` on the backend: a sanity bound on a run's question count. The real
+ * ceiling is the chosen model's output limit, checked in `qa-run-fit.ts`.
+ */
+export const MAX_RUN_ITEMS = 1000;
+
+/**
+ * Mirrors of `EST_TOKENS_PER_ITEM` and `CHARS_PER_TOKEN` on the backend. Together
+ * with a model's `contextWindow` / `maxOutputTokens` they let the generate dialog
+ * refuse a run before the click instead of after the 400. Estimates lean towards
+ * blocking early — Vietnamese tokenizes badly.
+ */
+export const EST_TOKENS_PER_ITEM = 400;
+export const CHARS_PER_TOKEN = 2;
+
+/**
+ * Characters in the outline editor past which a warning shows. About 100k tokens at
+ * `CHARS_PER_TOKEN`, i.e. already close to the smallest context window in the
+ * registry (128k) once the prompt is added. A warning only — the real block is the
+ * generate dialog, which knows the model.
+ */
+export const OUTLINE_CHAR_WARN = 200_000;
 
 const promptField = z
   .string()
@@ -141,11 +183,13 @@ const promptField = z
 
 export const createTemplateSchema = z.object({
   kind: z.enum(["outline", "qa"]),
+  /** Omit it on a `qa` prompt: the server derives one from the name. */
   key: z
     .string()
     .min(1)
     .max(64)
-    .regex(/^[a-z0-9_]+$/, "template.keyFormat"),
+    .regex(/^[a-z0-9_]+$/, "template.keyFormat")
+    .optional(),
   name: z.string().min(1).max(120),
   description: z.string().max(320).nullable().optional(),
   prompt: promptField,
@@ -164,7 +208,7 @@ export const updateTemplateSchema = createTemplateSchema
   .partial()
   .extend({ enabled: z.boolean().optional() });
 
-/** Duplicate asks only for what must differ: `key` is unique within a `kind`. */
+/** Duplicate asks only for what must differ; `key` can be left out on a `qa` prompt. */
 export const duplicateTemplateSchema = createTemplateSchema.pick({
   key: true,
   name: true,
@@ -257,6 +301,12 @@ export const qaGenerationSchema = z.object({
   createdAt: z.string(),
 });
 
+/** The running (`queued`/`running`) run of each kind, or `null`. */
+export const qaActiveGenerationsSchema = z.object({
+  outline: qaGenerationSchema.nullable(),
+  qa: qaGenerationSchema.nullable(),
+});
+
 export const startGenerationSchema = z.object({
   generationId: z.string(),
   reused: z.boolean(),
@@ -288,7 +338,10 @@ export const generateSetsSchema = z
     sectionAnchors: z.array(z.string()).optional(),
     allSections: z.boolean().optional(),
     templateId: z.string().uuid(),
-    count: z.number().int().min(1).max(MAX_ITEMS_PER_SET),
+    /** The shapes this run may produce — chosen here, not on the prompt. */
+    questionTypes: questionTypesField,
+    minCount: z.number().int().min(1).max(MAX_RUN_ITEMS),
+    maxCount: z.number().int().min(1).max(MAX_RUN_ITEMS),
     itemKinds: z
       .array(z.enum(["theory", "practice", "recall", "analysis"]))
       .min(1),
@@ -299,7 +352,11 @@ export const generateSetsSchema = z
     (value) =>
       value.allSections === true || (value.sectionAnchors?.length ?? 0) > 0,
     { message: "generate.pickSections", path: ["sectionAnchors"] },
-  );
+  )
+  .refine((value) => value.minCount <= value.maxCount, {
+    message: "generate.countRange",
+    path: ["maxCount"],
+  });
 
 export type StartAnalyzeInput = z.infer<typeof startAnalyzeSchema>;
 export type GenerateSetsInput = z.infer<typeof generateSetsSchema>;
@@ -366,6 +423,7 @@ export const qaAnswerKeySchema = z.union([
 export const qaItemFullSchema = z.object({
   id: z.string(),
   setId: z.string(),
+  datasetId: z.string(),
   order: z.number(),
   kind: qaItemKind,
   question: richDoc,
@@ -384,6 +442,13 @@ export const qaItemFullSchema = z.object({
     .transform((v) => (v == null ? null : sanitizeBlogDoc(v))),
   sectionAnchor: nullableString,
   difficulty: qaDifficulty.nullish().transform((v) => v ?? null),
+  published: z.boolean().default(true),
+  reviewStatus: z.enum(["pending", "approved", "rejected"]).default("pending"),
+  sourceItemId: nullableString,
+});
+
+export const qaItemSearchRowSchema = qaItemFullSchema.extend({
+  type: z.string().default(""),
 });
 
 export const qaSetSchema = z.object({
@@ -393,6 +458,8 @@ export const qaSetSchema = z.object({
   sectionAnchor: nullableString,
   sectionTitle: nullableString,
   templateId: z.string(),
+  /** The set's shape — one registry key. One set, one shape. */
+  questionType: z.string(),
   generationId: nullableString,
   title: z.string(),
   description: nullableString,
@@ -403,6 +470,8 @@ export const qaSetSchema = z.object({
   difficulty: qaDifficulty.nullish().transform((v) => v ?? null),
   status: z.enum(["draft", "published", "archived"]),
   itemCount: z.number(),
+  isFinal: z.boolean().default(false),
+  approvedCount: z.number().default(0),
   version: z.number(),
   publishedAt: nullableString,
   createdAt: z.string(),
@@ -414,8 +483,56 @@ export const qaSetDetailSchema = qaSetSchema.extend({
   items: z.array(qaItemFullSchema),
 });
 
+export const qaFinalOverviewSchema = z.object({
+  approved: z.number(),
+  added: z.number(),
+  groups: z.array(
+    z.object({
+      sectionAnchor: nullableString,
+      sectionTitle: nullableString,
+      inFinalSet: z.boolean(),
+      entries: z.array(
+        z.object({
+          item: qaItemFullSchema,
+          state: z.enum(["added", "new"]),
+          templateKey: z.string(),
+        }),
+      ),
+    }),
+  ),
+});
+
+export const addToFinalSetResultSchema = z.object({
+  createdSets: z.number(),
+  addedItems: z.number(),
+});
+
+export const updateSourceSchema = z.object({
+  title: z.string().max(200).nullable().optional(),
+  content: z.string().min(1).max(MAX_SOURCE_CHARS).optional(),
+});
+
+export const qaQuestionTypeSchema = z.object({
+  id: z.string(),
+  key: z.string(),
+  label: z.string(),
+  description: nullableString,
+  position: z.number(),
+  total: z.number(),
+  published: z.number(),
+});
+
+export const qaQuestionTypeListSchema = z.array(qaQuestionTypeSchema);
+
+export const updateQuestionTypeSchema = z.object({
+  label: z.string().min(1).max(120).optional(),
+  description: z.string().max(320).nullable().optional(),
+  position: z.number().int().min(0).max(1000).optional(),
+  published: z.boolean().optional(),
+});
+
 export const qaItemListSchema = z.object({
-  items: z.array(qaItemFullSchema),
+  items: z.array(qaItemSearchRowSchema),
   total: z.number(),
 });
 
@@ -441,7 +558,11 @@ export const writeItemSchema = z.object({
 
 export const patchItemSchema = writeItemSchema
   .partial()
-  .omit({ sectionAnchor: true });
+  .omit({ sectionAnchor: true })
+  .extend({
+    published: z.boolean().optional(),
+    reviewStatus: z.enum(["pending", "approved", "rejected"]).optional(),
+  });
 
 export const reorderItemsSchema = z.object({
   version: z.number().int().min(1),
@@ -456,13 +577,7 @@ export type ReorderItemsInput = z.infer<typeof reorderItemsSchema>;
 
 /* ------------------------------ learner surface ---------------------------- */
 
-const qaTemplateKey = z.enum([
-  "multiple_choice",
-  "true_false",
-  "short_answer",
-  "fill_blank",
-  "flashcard",
-]);
+const qaTemplateKey = z.enum(QA_TEMPLATE_KEYS);
 
 /**
  * The learner's view of a question. Written as its own object, NOT
@@ -480,36 +595,31 @@ export const qaItemPlaySchema = z.object({
     .nullish()
     .transform((v) => v ?? null),
   difficulty: qaDifficulty.nullish().transform((v) => v ?? null),
+  templateKey: qaTemplateKey,
 });
 
-export const qaSetPlaySchema = z.object({
+export const qaDatasetPlaySchema = z.object({
   id: z.string(),
   title: z.string(),
   description: nullableString,
-  intro: z
-    .unknown()
-    .nullish()
-    .transform((v) => (v == null ? null : sanitizeBlogDoc(v))),
-  difficulty: qaDifficulty.nullish().transform((v) => v ?? null),
   itemCount: z.number(),
-  templateKey: qaTemplateKey,
   items: z.array(qaItemPlaySchema),
 });
 
-export const qaSetSummarySchema = z.object({
+export const qaDatasetSummarySchema = z.object({
   id: z.string(),
   title: z.string(),
   description: nullableString,
-  difficulty: qaDifficulty.nullish().transform((v) => v ?? null),
   itemCount: z.number(),
-  templateKey: qaTemplateKey,
   itemKinds: z.array(qaItemKind),
+  templateKeys: z.array(qaTemplateKey),
+  difficulties: z.array(qaDifficulty),
   openAttemptId: nullableString,
-  publishedAt: nullableString,
+  updatedAt: nullableString,
 });
 
-export const qaSetListPlaySchema = z.object({
-  items: z.array(qaSetSummarySchema),
+export const qaDatasetListPlaySchema = z.object({
+  items: z.array(qaDatasetSummarySchema),
   total: z.number(),
 });
 
@@ -520,12 +630,19 @@ export const qaItemListPlaySchema = z.object({
 
 export const qaAttemptSchema = z.object({
   id: z.string(),
-  setId: z.string(),
+  datasetId: z.string(),
+  itemCount: z.number(),
   status: z.enum(["in_progress", "finished", "abandoned"]),
   answeredCount: z.number(),
   correctCount: z.number(),
   startedAt: z.string(),
   finishedAt: nullableString,
+});
+
+export const qaAttemptPlaySchema = z.object({
+  attempt: qaAttemptSchema,
+  datasetTitle: z.string(),
+  items: z.array(qaItemPlaySchema),
 });
 
 export const qaAttemptListSchema = z.array(qaAttemptSchema);

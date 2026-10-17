@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * The unread-count pill. A bare number tells a screen reader nothing → it is
@@ -12,9 +13,14 @@ export function UnreadBadge({ count }: { count: number }) {
   if (count <= 0) return null;
 
   return (
-    <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-foreground px-1.5 py-0.5 text-[11px] font-semibold text-background">
+    <Typography
+      as="span"
+      variant="body-4"
+      weight={600}
+      className="inline-flex min-w-5 items-center justify-center rounded-full bg-foreground px-1.5 py-0.5 text-background"
+    >
       <span aria-hidden>{count > 99 ? "99+" : count}</span>
       <span className="sr-only">{t("unread", { count })}</span>
-    </span>
+    </Typography>
   );
 }

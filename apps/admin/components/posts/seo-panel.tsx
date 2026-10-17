@@ -170,7 +170,9 @@ export function SeoPanel({
       <Typography variant="body-3" as="label" className="flex items-start gap-2">
         <input type="checkbox" {...register("noindex")} className="mt-1" />
         <span>
-          <span className="font-medium">{t("noindex")}</span>
+          <Typography variant="body-3" as="span" weight={500}>
+            {t("noindex")}
+          </Typography>
           <Typography variant="body-4" as="span" className="block opacity-60">
             {t("noindexHint")}
           </Typography>
@@ -216,9 +218,13 @@ function OgPreview({
         // eslint-disable-next-line @next/next/no-img-element
         <img src={image} alt="" className="aspect-[1200/630] w-full object-cover" />
       ) : (
-        <div className="text-body-4 flex aspect-[1200/630] w-full items-center justify-center bg-black/5 opacity-50 dark:bg-white/5">
+        <Typography
+          variant="body-4"
+          as="div"
+          className="flex aspect-[1200/630] w-full items-center justify-center bg-black/5 opacity-50 dark:bg-white/5"
+        >
           {t("ogEmpty")}
-        </div>
+        </Typography>
       )}
       <div className="border-t border-black/10 p-2.5 dark:border-white/15">
         <Typography variant="title-4" className="truncate">
@@ -247,7 +253,9 @@ function SlugHistory({ postId }: { postId: string }) {
 
   if (isPending) {
     return (
-      <div className="text-body-4 animate-pulse opacity-60">{t("loading")}</div>
+      <Typography variant="body-4" as="div" className="animate-pulse opacity-60">
+        {t("loading")}
+      </Typography>
     );
   }
 

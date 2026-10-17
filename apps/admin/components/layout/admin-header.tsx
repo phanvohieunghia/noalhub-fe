@@ -9,7 +9,9 @@ import { useAuthStore, useMe } from "@noalhub/api/auth";
 import { Avatar } from "@noalhub/ui/avatar";
 import { Button } from "@noalhub/ui/button";
 import { DropdownMenu } from "@noalhub/ui/dropdown-menu";
+import { Icon, ICONS } from "@noalhub/ui/icons";
 import { ThemeToggle } from "@noalhub/ui/theme/theme-toggle";
+import { Tooltip } from "@noalhub/ui/tooltip";
 import { Typography } from "@noalhub/ui/typography";
 
 import { AdminBreadcrumb } from "./admin-breadcrumb";
@@ -55,7 +57,7 @@ export function AdminHeader() {
         >
           <div className="flex items-center gap-3">
             <Avatar name={name} src={user?.avatarUrl} size="md" />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <Typography variant="title-4" className="truncate">
                 {name || "—"}
               </Typography>
@@ -63,6 +65,20 @@ export function AdminHeader() {
                 {user?.email}
               </Typography>
             </div>
+            <Tooltip label={pending ? t("loggingOut") : t("logout")} side="bottom">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                shape="circle"
+                onClick={onLogout}
+                disabled={pending}
+                aria-busy={pending}
+                aria-label={t("logout")}
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+              >
+                <Icon icon={ICONS.logout} className="size-4" />
+              </Button>
+            </Tooltip>
           </div>
           <Typography variant="body-4" className="mt-2 opacity-70">
             {t("role", { role: user?.role ?? "—" })}
@@ -81,10 +97,6 @@ export function AdminHeader() {
             </Typography>
             <AdminLanguageSwitcher />
           </div>
-
-          <Button variant="outline" onClick={onLogout} disabled={pending} className="mt-3 w-full">
-            {pending ? t("loggingOut") : t("logout")}
-          </Button>
         </DropdownMenu>
       </div>
     </header>

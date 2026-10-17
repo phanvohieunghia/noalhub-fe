@@ -1,9 +1,17 @@
 {
-  "title": "Noalhub Admin",
-  "subtitle": "Admin area.",
-  "email": "Email",
+  "title": "Admin sign in",
+  "subtitle": "Use your staff account to access the console.",
+  "restricted": "Restricted area. Every sign-in is logged.",
+  "email": "Work email",
+  "emailPlaceholder": "name@noalhub.com",
   "password": "Password",
-  "submit": "Sign in",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "submit": "Sign in to console",
   "submitting": "Signing in…",
-  "notAdmin": "This account does not have admin access."
+  "notAdmin": "This account does not have admin access.",
+  "badge": "Admin console",
+  "backToWebsite": "Back to website",
+  "note": "Protected by two-step verification",
+  "footer": "© 2026 Noalhub · Admin console · Authorised staff only"
 }

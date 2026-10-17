@@ -25,24 +25,28 @@ import { AlertError, AlertWarning } from "@noalhub/ui/alert";
 import { Badge } from "@noalhub/ui/badge";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
+import { DropdownMenuItem } from "@noalhub/ui/dropdown-menu";
+import { ICONS, LUCIDE } from "@noalhub/ui/icons";
 import { Input } from "@noalhub/ui/input";
 import { Select } from "@noalhub/ui/select";
 import { Skeleton } from "@noalhub/ui/skeleton";
 import {
   TableBody,
   TableCell,
+  TableActionsHeaderCell,
   TableEmptyRow,
   TableHead,
   TableHeaderCell,
   TableRoot,
   TableRow,
+  TableRowActions,
 } from "@noalhub/ui/table";
 import { Typography } from "@noalhub/ui/typography";
 
 import { AdminErrorState } from "../admin-error-state";
 
 const FIELDS = ["label", "apiKey", "defaultModel", "monthlyTokenLimit"] as const;
-const COLUMN_COUNT = 6;
+const COLUMN_COUNT = 5;
 
 /**
  * The API keys the generate calls run on.
@@ -108,13 +112,10 @@ export function AiCredentialsContent() {
             <TableHead>
               <TableRow>
                 <TableHeaderCell>{t("credentials.columns.label")}</TableHeaderCell>
-                <TableHeaderCell>{t("credentials.columns.provider")}</TableHeaderCell>
-                <TableHeaderCell>{t("credentials.columns.key")}</TableHeaderCell>
+                <TableHeaderCell>{t("credentials.columns.providerKey")}</TableHeaderCell>
                 <TableHeaderCell>{t("credentials.columns.model")}</TableHeaderCell>
                 <TableHeaderCell>{t("credentials.columns.budget")}</TableHeaderCell>
-                <TableHeaderCell>
-                  <span className="sr-only">{t("actionsColumn")}</span>
-                </TableHeaderCell>
+                <TableActionsHeaderCell label={t("actionsColumn")} />
               </TableRow>
             </TableHead>
             <TableBody>
@@ -165,8 +166,11 @@ function CredentialRow({
   const enable = useUpdateAiCredential(row.id);
 
   return (
-    <TableRow className={row.enabled ? undefined : "opacity-50"}>
-      <TableCell className="font-medium">
+    <TableRow
+      className={row.enabled ? undefined : "opacity-50"}
+      onActivate={onEdit}
+    >
+      <TableCell weight={500}>
         <div className="flex items-center gap-2">
           {row.label}
           {row.isDefault ? (
@@ -176,49 +180,52 @@ function CredentialRow({
             <Badge tone="neutral">{t("credentials.disabled")}</Badge>
           )}
         </div>
-        <span className="text-body-4 opacity-60">{df.date(row.createdAt)}</span>
+        <Typography variant="body-4" as="span" className="opacity-60">
+          {df.date(row.createdAt)}
+        </Typography>
       </TableCell>
-      <TableCell className="opacity-70">{row.provider}</TableCell>
       {/* Four characters, never more — this is recognition, not recovery. */}
-      <TableCell className="font-mono opacity-70">••••{row.keyLast4}</TableCell>
+      <TableCell className="opacity-70">
+        {row.provider} · <Typography variant="body-3" as="span" className="font-mono">
+          …{row.keyLast4}
+        </Typography>
+      </TableCell>
       <TableCell className="opacity-70">{row.defaultModel}</TableCell>
       <TableCell className="opacity-70">
         {row.monthlyTokenLimit === null
           ? t("credentials.unlimited")
           : t("credentials.tokensPerMonth", { count: row.monthlyTokenLimit })}
       </TableCell>
-      <TableCell>
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onEdit}>
-            {t("credentials.edit")}
-          </Button>
-          {row.enabled ? (
-            <Button
-              variant="outline"
-              disabled={disable.isPending}
-              onClick={() => disable.mutate(row.id)}
-            >
-              {t("credentials.disable")}
-            </Button>
-          ) : (
-            // PATCH, not a dedicated route: `enabled` is a plain field there, and
-            // the default flag stays off — making it default again is a choice.
-            <Button
-              variant="outline"
-              disabled={enable.isPending}
-              onClick={() => enable.mutate({ enabled: true })}
-            >
-              {t("credentials.enable")}
-            </Button>
-          )}
-          {/* Only a key no run points at — a used one has nothing left but disable. */}
-          {row.inUse ? null : (
-            <Button variant="outline" className="text-danger" onClick={onDelete}>
-              {t("credentials.delete")}
-            </Button>
-          )}
-        </div>
-      </TableCell>
+      <TableRowActions label={t("actionsColumn")}>
+        <DropdownMenuItem icon={ICONS.edit} onSelect={onEdit}>
+          {t("credentials.edit")}
+        </DropdownMenuItem>
+        {row.enabled ? (
+          <DropdownMenuItem
+            icon={LUCIDE.ban}
+            disabled={disable.isPending}
+            onSelect={() => disable.mutate(row.id)}
+          >
+            {t("credentials.disable")}
+          </DropdownMenuItem>
+        ) : (
+          // PATCH, not a dedicated route: `enabled` is a plain field there, and
+          // the default flag stays off — making it default again is a choice.
+          <DropdownMenuItem
+            icon={LUCIDE.circleCheck}
+            disabled={enable.isPending}
+            onSelect={() => enable.mutate({ enabled: true })}
+          >
+            {t("credentials.enable")}
+          </DropdownMenuItem>
+        )}
+        {/* Only a key no run points at — a used one has nothing left but disable. */}
+        {row.inUse ? null : (
+          <DropdownMenuItem icon={ICONS.delete} tone="danger" onSelect={onDelete}>
+            {t("credentials.delete")}
+          </DropdownMenuItem>
+        )}
+      </TableRowActions>
     </TableRow>
   );
 }
@@ -312,10 +319,10 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
           error={errors.monthlyTokenLimit ? t("credentials.fields.budgetInvalid") : undefined}
           {...register("monthlyTokenLimit", { setValueAs: parseBudget })}
         />
-        <label className="flex items-center gap-2 text-body-3">
+        <Typography variant="body-3" as="label" className="flex items-center gap-2">
           <input type="checkbox" {...register("isDefault")} />
           {t("credentials.fields.isDefault")}
-        </label>
+        </Typography>
         {/* `useMessage` turns the error KEY into text at render time — the api
             layer returns a key so the sentence follows the reader's locale. */}
         {formError ? <AlertError message={m(formError)} /> : null}
@@ -419,14 +426,14 @@ function EditDialog({ row, onClose }: { row: AiCredential; onClose: () => void }
           value={budget}
           onChange={(event) => setBudget(event.target.value)}
         />
-        <label className="flex items-center gap-2 text-body-3">
+        <Typography variant="body-3" as="label" className="flex items-center gap-2">
           <input
             type="checkbox"
             checked={isDefault}
             onChange={(event) => setIsDefault(event.target.checked)}
           />
           {t("credentials.fields.isDefault")}
-        </label>
+        </Typography>
         {/* `useMessage` turns the error KEY into text at render time — the api
             layer returns a key so the sentence follows the reader's locale. */}
         {formError ? <AlertError message={m(formError)} /> : null}

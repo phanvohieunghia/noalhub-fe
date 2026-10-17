@@ -11,7 +11,7 @@ import type {
 } from "@noalhub/api/blog";
 import { collectHeadings } from "@noalhub/core/blog/headings";
 
-import "./post-content.css";
+import "./post-prose.css";
 
 /**
  * The Tiptap JSON → React renderer. **One code path** for `apps/web` (the real
@@ -41,7 +41,7 @@ export function PostContent({ doc }: { doc: BlogDoc }) {
   let headingCursor = 0;
 
   return (
-    <div className="blog-content">
+    <div className="post-prose">
       {doc.content.map((node, index) => {
         const headingId =
           node.type === "heading" ? headings[headingCursor++]?.id : undefined;
@@ -94,7 +94,7 @@ function Block({
 
     case "codeBlock":
       return (
-        // `tabIndex` because the block scrolls sideways (`post-content.css`):
+        // `tabIndex` because the block scrolls sideways (`post-prose.css`):
         // a scrollable region a keyboard cannot reach hides the end of every
         // long line from anyone not using a mouse (axe
         // `scrollable-region-focusable`).
@@ -113,7 +113,7 @@ function Block({
      */
     case "table":
       return (
-        <div className="blog-table-scroll">
+        <div className="post-prose-table-scroll">
           <table>
             <tbody>
               {node.content.map((row, index) => (

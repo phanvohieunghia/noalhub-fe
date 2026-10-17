@@ -356,9 +356,9 @@ export const MessageFailed: Story = {
                 time="09:42"
                 error={
                   <>
-                    <span role="alert" className="text-danger text-[11px]">
+                    <Typography as="span" variant="body-4" role="alert" className="text-danger">
                       {m("common.errors.generic")}
-                    </span>
+                    </Typography>
                     <Button variant="link" size="inline">
                       {t("resend")}
                     </Button>
@@ -439,9 +439,9 @@ export const ConversationNotFound: Story = {
       <ChatScreen className="h-[16rem] w-[min(30rem,90vw)]">
         <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
           <Typography variant="title-4">{t("notFound")}</Typography>
-          <span className="text-body-3 underline underline-offset-2">
+          <Typography as="span" variant="body-3" className="underline underline-offset-2">
             {t("backToList")}
-          </span>
+          </Typography>
         </div>
       </ChatScreen>
     );

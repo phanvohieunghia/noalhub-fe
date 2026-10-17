@@ -2,6 +2,7 @@ import { Link } from "@noalhub/i18n/navigation";
 import { useTranslations } from "next-intl";
 
 import { Icon, ICONS } from "./icons";
+import { Typography } from "./typography";
 
 /**
  * Pagination made of **real `<a href>`s**, for public pages.
@@ -61,9 +62,9 @@ export function PaginationLinks({
         {t("previous")}
       </PageLink>
 
-      <span className="text-muted-foreground tabular-nums">
+      <Typography as="span" variant="body-3" className="text-muted-foreground tabular-nums">
         {t("current", { page, total: pageCount })}
-      </span>
+      </Typography>
 
       <PageLink href={hrefFor(page + 1)} rel="next" disabled={page >= pageCount}>
         {t("next")}
@@ -96,9 +97,13 @@ function PageLink({
     // what "present but inactive" is supposed to look like here, and it holds
     // 5.8:1.
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-muted-foreground">
+      <Typography
+        as="span"
+        variant="body-3"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-muted-foreground"
+      >
         {children}
-      </span>
+      </Typography>
     );
   }
 

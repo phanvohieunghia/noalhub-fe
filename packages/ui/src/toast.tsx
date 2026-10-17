@@ -1,6 +1,7 @@
 "use client";
 
-import hotToast, { Toaster, resolveValue, type ToastOptions } from "react-hot-toast";
+import { useEffect } from "react";
+import hotToast, { Toaster, type ToastOptions } from "react-hot-toast";
 
 import type { AlertTone } from "./alert";
 import { Button } from "./button";
@@ -26,27 +27,67 @@ import { Typography } from "./typography";
 export type ToastTone = AlertTone;
 
 /**
- * `live` overrides what `react-hot-toast` puts in `ariaProps` (always polite):
- * an error interrupts, the rest wait for a pause in what the screen reader is
- * already saying.
+ * The tinted disc behind each icon. Spelled out in full (no string building) so
+ * Tailwind sees every class. `info` uses `text-accent` for the same reason as in
+ * `Alert`: `--primary` is too light for text on its own tint.
  */
 const TONES = {
-  error: { icon: ICONS.error, className: "text-danger", role: "alert", live: "assertive" },
-  success: { icon: ICONS.success, className: "text-success", role: "status", live: "polite" },
-  info: { icon: ICONS.info, className: "text-accent", role: "status", live: "polite" },
-  warning: { icon: ICONS.warning, className: "text-warning", role: "status", live: "polite" },
+  error: { icon: ICONS.error, className: "bg-danger/10 text-danger", role: "alert", live: "assertive" },
+  success: { icon: ICONS.success, className: "bg-success/10 text-success", role: "status", live: "polite" },
+  info: { icon: ICONS.info, className: "bg-primary/10 text-accent", role: "status", live: "polite" },
+  warning: { icon: ICONS.warning, className: "bg-warning/10 text-warning", role: "status", live: "polite" },
 } as const satisfies Record<
   ToastTone,
   { icon: string; className: string; role: string; live: "polite" | "assertive" }
 >;
 
 /**
- * `react-hot-toast` carries no tone of its own (its API is success/error/
- * loading/blank), so the tone rides along in `className` — the one free-form
- * string it passes through to the renderer untouched. Read back in `ToastHost`.
+ * Set by `<ToastHost />`. The close button is built inside the message, which is
+ * created at call time, so the label has to be reachable from module scope.
+ */
+let closeLabelText = "";
+
+/**
+ * Uses the library's own API: `hotToast.success` / `hotToast.error` for the two
+ * types it has, and a plain `hotToast` with a custom `icon` for the two it does
+ * not (info, warning). The tone's disc goes in as the toast's `icon`, and
+ * `ariaProps` is how an error gets to interrupt the screen reader while the rest
+ * wait for a pause. The message is a render function so it can carry the close
+ * button, since the library's default bar has none.
  */
 function notify(tone: ToastTone, message: string, options?: ToastOptions) {
-  return hotToast(message, { ...options, className: tone });
+  const { icon, className, role, live } = TONES[tone];
+  const render = (instance: { id: string }) => (
+    <div className="flex w-full items-center gap-3">
+      <Typography as="span" variant="body-3" className="min-w-0 flex-1 py-1 text-left">
+        {message}
+      </Typography>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={() => hotToast.dismiss(instance.id)}
+        aria-label={closeLabelText}
+        className="shrink-0"
+      >
+        <Icon icon={ICONS.close} className="size-4" />
+      </Button>
+    </div>
+  );
+  const merged: ToastOptions = {
+    icon: (
+      <span
+        aria-hidden="true"
+        className={`flex size-8 shrink-0 items-center justify-center rounded-full ${className}`}
+      >
+        <Icon icon={icon} className="size-4" />
+      </span>
+    ),
+    ariaProps: { role, "aria-live": live },
+    ...options,
+  };
+  if (tone === "error") return hotToast.error(render, merged);
+  if (tone === "success") return hotToast.success(render, merged);
+  return hotToast(render, merged);
 }
 
 /**
@@ -77,6 +118,10 @@ const DURATION = { default: 4000, error: 6000 } as const;
  * namespace layout (see AGENTS.md).
  */
 export function ToastHost({ closeLabel }: { closeLabel: string }) {
+  useEffect(() => {
+    closeLabelText = closeLabel;
+  }, [closeLabel]);
+
   return (
     <Toaster
       position="top-center"
@@ -85,43 +130,21 @@ export function ToastHost({ closeLabel }: { closeLabel: string }) {
       toastOptions={{
         duration: DURATION.default,
         error: { duration: DURATION.error },
+        className: "text-body-3",
+        // The library paints these inline, so the theme tokens go in as inline
+        // CSS variables too — a class would lose to them.
+        style: {
+          width: "min(28rem, calc(100vw - 2rem))",
+          maxWidth: "none",
+          padding: "0.75rem",
+          borderRadius: "var(--radius-xl)",
+          border: "1px solid var(--border)",
+          background: "var(--surface)",
+          color: "var(--surface-foreground)",
+          boxShadow: "var(--shadow-lg)",
+          pointerEvents: "auto",
+        },
       }}
-    >
-      {(instance) => {
-        const tone = (instance.className as ToastTone) ?? "info";
-        const { icon, className, role, live } = TONES[tone] ?? TONES.info;
-
-        return (
-          <Typography
-            variant="body-3"
-            {...instance.ariaProps}
-            role={role}
-            aria-live={live}
-            className={`pointer-events-auto flex w-[min(28rem,calc(100vw-2rem))] items-start gap-2
-              rounded-lg border px-3 py-2.5 shadow-lg
-              border-border bg-surface text-surface-foreground
-              ${
-                instance.visible
-                  ? "motion-safe:animate-slide-in-top"
-                  : "motion-safe:animate-slide-out-top opacity-0"
-              }`}
-          >
-            <Icon icon={icon} className={`mt-0.5 size-4 shrink-0 ${className}`} />
-            {/* `resolveValue` unwraps the message: it may be a render function
-                (react-hot-toast lets a caller pass one), not just a string. */}
-            <span className="flex-1">{resolveValue(instance.message, instance)}</span>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => hotToast.dismiss(instance.id)}
-              aria-label={closeLabel}
-              className="-mr-1 shrink-0"
-            >
-              <Icon icon={ICONS.close} className="size-4" />
-            </Button>
-          </Typography>
-        );
-      }}
-    </Toaster>
+    />
   );
 }

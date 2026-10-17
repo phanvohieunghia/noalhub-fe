@@ -61,37 +61,51 @@ export function UserDetailContent({ userId }: { userId: string }) {
       </div>
 
       <dl className="mt-6 grid grid-cols-[12rem_1fr] gap-y-3 text-body-3">
-        <dt className="opacity-60">{t("columns.email")}</dt>
-        <dd className="flex items-center gap-2">
+        <Typography variant="body-3" as="dt" className="opacity-60">
+          {t("columns.email")}
+        </Typography>
+        <Typography variant="body-3" as="dd" className="flex items-center gap-2">
           {data.email}
           {data.emailVerifiedAt ? (
             <Badge tone="success">{t("verifiedAt", { date: df.date(data.emailVerifiedAt) })}</Badge>
           ) : (
             <Badge tone="warning">{t("unverified")}</Badge>
           )}
-        </dd>
+        </Typography>
 
-        <dt className="opacity-60">{t("detail.id")}</dt>
+        <Typography variant="body-3" as="dt" className="opacity-60">
+          {t("detail.id")}
+        </Typography>
         <Typography variant="body-4" as="dd" className="font-mono opacity-70">
           {data.id}
         </Typography>
 
-        <dt className="opacity-60">{t("columns.joined")}</dt>
-        <dd>{df.dateTime(data.createdAt)}</dd>
+        <Typography variant="body-3" as="dt" className="opacity-60">
+          {t("columns.joined")}
+        </Typography>
+        <Typography variant="body-3" as="dd">
+          {df.dateTime(data.createdAt)}
+        </Typography>
 
-        <dt className="opacity-60">{t("detail.usernameChangedAt")}</dt>
-        <dd>{data.usernameChangedAt ? df.dateTime(data.usernameChangedAt) : t("neverChanged")}</dd>
+        <Typography variant="body-3" as="dt" className="opacity-60">
+          {t("detail.usernameChangedAt")}
+        </Typography>
+        <Typography variant="body-3" as="dd">
+          {data.usernameChangedAt ? df.dateTime(data.usernameChangedAt) : t("neverChanged")}
+        </Typography>
 
         {/* ⚠️ NOT an online state: this endpoint does not read presence (the
             spec says so outright). The label is "last active", and there is
             deliberately no green/gray dot here — see `docs/admin-plan.md` §2. */}
-        <dt className="opacity-60">{t("columns.lastSeen")}</dt>
-        <dd>
+        <Typography variant="body-3" as="dt" className="opacity-60">
+          {t("columns.lastSeen")}
+        </Typography>
+        <Typography variant="body-3" as="dd">
           {data.lastSeenAt ? df.dateTime(data.lastSeenAt) : t("neverOnline")}
           <Typography variant="body-4" as="span" className="block opacity-50">
             {t("detail.lastSeenNote")}
           </Typography>
-        </dd>
+        </Typography>
       </dl>
 
       {/* Having no action buttons reflects reality: the backend has no ban/lock,

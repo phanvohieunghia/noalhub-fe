@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useRouter } from "@noalhub/i18n/navigation";
+import { LOCALES } from "@noalhub/i18n/config";
 import { useMessage } from "@noalhub/i18n/use-message";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
@@ -12,6 +13,7 @@ import { OAuthButtons } from "./oauth-buttons";
 import { Button } from "@noalhub/ui/button";
 import { AlertError } from "@noalhub/ui/alert";
 import { Input } from "@noalhub/ui/input";
+import { PasswordInput } from "@noalhub/ui/password-input";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { safeRedirect } from "@noalhub/core/auth/redirect";
 import type { Message } from "@noalhub/api/message";
@@ -19,13 +21,27 @@ import { loginSchema, type LoginInput } from "@noalhub/api/auth";
 import { useLogin } from "@noalhub/api/auth";
 import { Typography } from "@noalhub/ui/typography";
 
+/**
+ * `AuthGuard` builds `?next=` from the raw pathname (`/en/learn`), but this
+ * form navigates with the locale-aware router, which prepends the locale again
+ * (`/en/en/learn`). Drop the locale segment so it is added exactly once.
+ */
+function stripLocalePrefix(path: string): string {
+  for (const locale of LOCALES) {
+    if (path === `/${locale}`) return "/";
+    if (path.startsWith(`/${locale}/`)) return path.slice(locale.length + 1);
+  }
+  return path;
+}
+
 export function LoginForm() {
   const t = useTranslations("web.auth.login");
+  const tc = useTranslations("common");
   // zod's and the backend's messages are KEYS, translated here (`docs/i18n.md` §7.3).
   const m = useMessage();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = safeRedirect(searchParams.get("next"));
+  const next = stripLocalePrefix(safeRedirect(searchParams.get("next")));
   const login = useLogin();
 
   const [formError, setFormError] = useState<Message | string | null>(null);
@@ -67,9 +83,10 @@ export function LoginForm() {
           error={m(errors.email?.message)}
           {...register("email")}
         />
-        <Input
+        <PasswordInput
           label={t("password")}
-          type="password"
+          showPasswordLabel={tc("actions.showPassword")}
+          hidePasswordLabel={tc("actions.hidePassword")}
           autoComplete="current-password"
           error={m(errors.password?.message)}
           {...register("password")}

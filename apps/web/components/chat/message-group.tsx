@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Avatar } from "@noalhub/ui/avatar";
 import { MessageBubble } from "./message-bubble";
 import type { ConversationMember, Message } from "@noalhub/api/chat";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
  * A run of consecutive messages from one person: the avatar and name appear
@@ -43,9 +44,13 @@ export function MessageGroup({
 
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         {mine ? null : (
-          <span className={`px-1 text-body-4 opacity-60 ${senderId === null ? "italic" : ""}`}>
+          <Typography
+            as="span"
+            variant="body-4"
+            className={`px-1 opacity-60 ${senderId === null ? "italic" : ""}`}
+          >
             {name}
-          </span>
+          </Typography>
         )}
         {messages.map((message) => (
           <MessageBubble

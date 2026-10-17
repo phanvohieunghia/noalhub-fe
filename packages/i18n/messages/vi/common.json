@@ -16,6 +16,8 @@
     "copied": "Đã sao chép",
     "continue": "Tiếp tục",
     "show": "Hiện",
+    "showPassword": "Hiện mật khẩu",
+    "hidePassword": "Ẩn mật khẩu",
     "hide": "Ẩn",
     "logout": "Đăng xuất"
   },
@@ -92,6 +94,7 @@
     "italic": "Nghiêng",
     "strike": "Gạch ngang",
     "code": "Mã inline",
+    "h1": "Tiêu đề mức 1",
     "h2": "Tiêu đề mức 2",
     "h3": "Tiêu đề mức 3",
     "h4": "Tiêu đề mức 4",
@@ -127,7 +130,9 @@
     "close": "Đóng",
     "linkHint": "Để trống rồi bấm Áp dụng để gỡ liên kết. Link ra ngoài tự động mang <code>rel=\"nofollow noopener\"</code> khi hiển thị.",
     "linkUrl": "URL",
-    "uploading": "Đang tải ảnh lên… {percent}%"
+    "uploading": "Đang tải ảnh lên… {percent}%",
+    "fullscreen": "Toàn màn hình",
+    "exitFullscreen": "Thoát toàn màn hình"
   },
   "upload": {
     "label": "Tải ảnh lên",

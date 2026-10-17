@@ -50,7 +50,7 @@ export function AnswerInput({
   const locked = result !== null || disabled === true;
   const flashcard = templateKey === "flashcard";
   const options = flashcard ? [] : (item.options ?? []);
-  const single = templateKey === "true_false";
+  const single = templateKey === "true_false" || templateKey === "single_choice";
 
   const send = (response: QaResponse) =>
     onSubmit(response, Math.max(0, Date.now() - shownAt.current));
