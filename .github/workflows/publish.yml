@@ -292,7 +292,11 @@ jobs:
               esac
             done
 
-            docker image prune -f
+            # Cleanup only: the storybook and production jobs deploy to the same host in
+            # parallel (separate concurrency groups), so the other one may already be
+            # pruning — the daemon then answers "a prune operation is already running".
+            # That must not fail a deploy that has already succeeded.
+            docker image prune -f || true
 
       - name: Post-deploy health check
         # From the public internet, through the same nginx/TLS path a real reader
@@ -426,7 +430,11 @@ jobs:
 
             # Old images pile up on every deploy and a small VPS runs out of disk fast.
             # `-f` only removes images no container references.
-            docker image prune -f
+            # Cleanup only: the storybook and production jobs deploy to the same host in
+            # parallel (separate concurrency groups), so the other one may already be
+            # pruning — the daemon then answers "a prune operation is already running".
+            # That must not fail a deploy that has already succeeded.
+            docker image prune -f || true
 
       - name: Post-deploy health check
         # Called from the public internet, through the same nginx/TLS path real clients
