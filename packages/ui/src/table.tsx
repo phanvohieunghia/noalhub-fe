@@ -1,5 +1,7 @@
 "use client";
 
+import { useLayoutEffect, useRef } from "react";
+
 import { Button } from "./button";
 import { DropdownMenu } from "./dropdown-menu";
 import { Icon, ICONS } from "./icons";
@@ -14,12 +16,18 @@ import { Typography, type Weight } from "./typography";
  * `TableRoot` draws the frame (border + surface + rounded corners) and puts the
  * table in its own horizontal scroller, so a wide table scrolls inside that
  * frame rather than making the whole page slide sideways on small screens.
+ *
+ * By default the frame also ends at the bottom of the viewport: the rows scroll
+ * under the sticky header and the footer (count + pager) stays put, so the page
+ * itself never scrolls because of a long table. Pass `fit={false}` for a table
+ * that should simply grow with the page.
  */
 export function TableRoot({
   caption,
   className = "",
   scrollClassName = "",
   footer,
+  fit = true,
   children,
 }: {
   /** A description for screen readers; visually hidden since the page title already says it. */
@@ -29,11 +37,31 @@ export function TableRoot({
   scrollClassName?: string;
   /** Drawn inside the frame under the rows, behind a divider: the count and pager. */
   footer?: React.ReactNode;
+  /** Cap the frame at the viewport's bottom edge so only the rows scroll. Default `true`. */
+  fit?: boolean;
   children: React.ReactNode;
 }) {
+  const frameRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const frame = frameRef.current;
+    if (!fit || !frame) return;
+    const resize = () => {
+      const height = window.innerHeight - frame.getBoundingClientRect().top - 24;
+      frame.style.maxHeight = `${Math.max(height, 240)}px`;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    return () => {
+      window.removeEventListener("resize", resize);
+      frame.style.maxHeight = "";
+    };
+  });
+
   return (
     <div
-      className={`overflow-hidden rounded-lg border border-border bg-surface ${className}`}
+      ref={frameRef}
+      className={`flex flex-col overflow-hidden rounded-lg border border-border bg-surface ${className}`}
     >
       {/*
         `tabIndex` because this element scrolls: a scrollable region a keyboard
@@ -46,14 +74,14 @@ export function TableRoot({
         tabIndex={0}
         role="region"
         aria-label={caption}
-        className={`w-full overflow-x-auto ${scrollClassName} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset`}
+        className={`min-h-0 w-full flex-1 overflow-auto overscroll-contain ${scrollClassName} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset`}
       >
         <table className="w-full border-collapse text-left text-body-3">
           <caption className="sr-only">{caption}</caption>
           {children}
         </table>
       </div>
-      {footer ? <div className="border-t border-border">{footer}</div> : null}
+      {footer ? <div className="shrink-0 border-t border-border">{footer}</div> : null}
     </div>
   );
 }
@@ -71,10 +99,38 @@ export function TableBody({ children }: { children: React.ReactNode }) {
   return <tbody className="divide-y divide-border">{children}</tbody>;
 }
 
+/** Anything inside a row that has its own click meaning; a click on it must not also activate the row. */
+const INTERACTIVE =
+  'a, button, input, select, textarea, label, summary, [role="button"], [role="checkbox"], [role="switch"], [role="menuitem"], [data-no-row-activate]';
+
+/**
+ * Props that make a `<tr>` the primary action. For the rare row that cannot be a
+ * `TableRow` (dnd-kit needs its own `<tr>` ref); `TableRow` itself uses this too.
+ *
+ * A click activates only when it lands on the row's plain area: not on a link,
+ * button or field inside it, and not at the end of a text selection.
+ */
+export function rowActivateProps(onActivate?: () => void) {
+  if (!onActivate) return {};
+  return {
+    tabIndex: 0,
+    onClick: (event: React.MouseEvent<HTMLTableRowElement>) => {
+      if ((event.target as HTMLElement).closest(INTERACTIVE)) return;
+      if (window.getSelection()?.toString()) return;
+      onActivate();
+    },
+    onKeyDown: (event: React.KeyboardEvent<HTMLTableRowElement>) => {
+      // Only the row itself: Enter on a link or button inside must keep its own meaning.
+      if (event.key === "Enter" && event.target === event.currentTarget) onActivate();
+    },
+  };
+}
+
 /**
  * Pass `onActivate` to make the whole row the primary action (open / edit):
- * the row gets a pointer, becomes focusable and answers `Enter`. Secondary
- * actions (duplicate, delete) live in a `TableRowActions` cell instead.
+ * the row gets a pointer, becomes focusable and answers `Enter`. Clicks on a
+ * link, button or checkbox inside keep their own meaning and do not activate it.
+ * Secondary actions (duplicate, delete) live in a `TableRowActions` cell instead.
  */
 export function TableRow({
   className = "",
@@ -82,17 +138,6 @@ export function TableRow({
   onActivate,
   ...props
 }: React.ComponentPropsWithoutRef<"tr"> & { onActivate?: () => void }) {
-  const interactive = onActivate
-    ? {
-        tabIndex: 0,
-        onClick: onActivate,
-        onKeyDown: (event: React.KeyboardEvent<HTMLTableRowElement>) => {
-          // Only the row itself: Enter on a link or button inside must keep its own meaning.
-          if (event.key === "Enter" && event.target === event.currentTarget) onActivate();
-        },
-      }
-    : {};
-
   return (
     <tr
       className={`transition-colors hover:bg-muted/60 ${
@@ -100,7 +145,7 @@ export function TableRow({
           ? "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
           : ""
       } ${className}`}
-      {...interactive}
+      {...rowActivateProps(onActivate)}
       {...props}
     >
       {children}

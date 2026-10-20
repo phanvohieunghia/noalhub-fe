@@ -1,5 +1,8 @@
 import { useLayoutEffect, useRef } from "react";
 
+/** The `p-6` under the page content: the element ends here, so `main` ends at the viewport bottom. */
+const PAGE_PADDING_BOTTOM = 24;
+
 /**
  * Sizes an element to end at the bottom of the viewport, whatever sits above it:
  * sets `--fit-h` on it, to be read as `max-h-[var(--fit-h,70vh)]`. The page then
@@ -12,15 +15,14 @@ export function useFitHeight<T extends HTMLElement>() {
     const fit = () => {
       const element = ref.current;
       if (!element) return;
-      const height = window.innerHeight - element.getBoundingClientRect().top - 56;
+      const height =
+        window.innerHeight - element.getBoundingClientRect().top - PAGE_PADDING_BOTTOM;
       element.style.setProperty("--fit-h", `${Math.max(height, 240)}px`);
     };
     fit();
     window.addEventListener("resize", fit);
-    window.addEventListener("scroll", fit, true);
     return () => {
       window.removeEventListener("resize", fit);
-      window.removeEventListener("scroll", fit, true);
     };
   });
 

@@ -6,7 +6,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { loginSchema, useAuthStore, useLogin, type LoginInput } from "@noalhub/api/auth";
+import {
+  loginSchema,
+  useAuthStore,
+  useLogin,
+  type LoginInput,
+} from "@noalhub/api/auth";
 import type { Message } from "@noalhub/api/message";
 import { useMessage } from "@noalhub/i18n/use-message";
 import { safeRedirect } from "@noalhub/core/auth/redirect";
@@ -107,7 +112,10 @@ export function AdminLoginForm() {
               aria-pressed={showPassword}
               className="rounded p-0.5 text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
             >
-              <Icon icon={showPassword ? ICONS.eyeOff : ICONS.eye} className="size-5" />
+              <Icon
+                icon={showPassword ? ICONS.eyeOff : ICONS.eye}
+                className="size-5"
+              />
             </button>
           }
           {...register("password")}

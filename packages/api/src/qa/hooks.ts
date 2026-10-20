@@ -7,6 +7,8 @@ import * as qaApi from "./api";
 import type {
   AddSourceInput,
   CreateCredentialInput,
+  CreateItemTagInput,
+  CreateModelInput,
   CreateDatasetInput,
   CreateTemplateInput,
   DuplicateTemplateInput,
@@ -16,6 +18,8 @@ import type {
   StartAnalyzeInput,
   SubmitAnswerInput,
   UpdateCredentialInput,
+  UpdateItemTagInput,
+  UpdateModelInput,
   UpdateDatasetInput,
   UpdateSetInput,
   UpdateTemplateInput,
@@ -25,6 +29,7 @@ import type {
   BrowseItemsQuery,
   QaGeneration,
   QaItemsQuery,
+  QaOutline,
   QaPromptKind,
   QaSetsQuery,
   UpdateQaOutlineInput,
@@ -42,6 +47,7 @@ export const qaKeys = {
 
   credentials: () => [...qaKeys.all, "credentials"] as const,
   models: () => [...qaKeys.all, "models"] as const,
+  itemTags: () => [...qaKeys.all, "item-tags"] as const,
 
   templates: () => [...qaKeys.all, "templates"] as const,
   templateList: (kind?: QaPromptKind) => [...qaKeys.templates(), kind ?? "all"] as const,
@@ -81,6 +87,7 @@ export const qaKeys = {
   attempts: (datasetId?: string) => [...qaKeys.play(), "attempts", datasetId ?? "all"] as const,
   attemptReview: (id: string) => [...qaKeys.play(), "review", id] as const,
   stats: () => [...qaKeys.play(), "stats"] as const,
+  playTags: () => [...qaKeys.play(), "item-tags"] as const,
 };
 
 /* ------------------------------ AI credentials ----------------------------- */
@@ -96,8 +103,39 @@ export function useAiModels() {
   return useQuery({
     queryKey: qaKeys.models(),
     queryFn: ({ signal }) => qaApi.listModels(signal),
-    // The registry is code on the backend — it changes on deploy, not on the hour.
-    staleTime: 60 * 60 * 1000,
+  });
+}
+
+// A model's limits and `enabled` are embedded in every credential row, so a model
+// change must refresh both lists.
+function invalidateModels(queryClient: ReturnType<typeof useQueryClient>) {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: qaKeys.models() }),
+    queryClient.invalidateQueries({ queryKey: qaKeys.credentials() }),
+  ]);
+}
+
+export function useCreateAiModel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateModelInput) => qaApi.createModel(input),
+    onSuccess: () => invalidateModels(queryClient),
+  });
+}
+
+export function useUpdateAiModel(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: UpdateModelInput) => qaApi.updateModel(id, input),
+    onSuccess: () => invalidateModels(queryClient),
+  });
+}
+
+export function useDeleteAiModel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => qaApi.deleteModel(id),
+    onSuccess: () => invalidateModels(queryClient),
   });
 }
 
@@ -390,13 +428,19 @@ export function useUpdateQaOutline(id: string, datasetId: string) {
   });
 }
 
-export function useSetCurrentOutline(datasetId: string) {
+export function useUpdateQaOutlineLabel(id: string, datasetId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (outlineId: string) => qaApi.setCurrentOutline(datasetId, outlineId),
-    // Two rows move: the new current one on, the old one off.
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: qaKeys.outlineList(datasetId) }),
+    mutationFn: (label: string | null) => qaApi.updateOutlineLabel(id, label),
+    onSuccess: (summary) => {
+      // Bản tóm tắt không có `content`, nên vá nhãn vào cache thay vì ghi đè cả bản.
+      queryClient.setQueryData<QaOutline>(qaKeys.outline(id), (old) =>
+        old ? { ...old, label: summary.label } : old,
+      );
+      queryClient.invalidateQueries({
+        queryKey: qaKeys.outlineList(datasetId),
+      });
+    },
   });
 }
 
@@ -438,6 +482,31 @@ export function useArchiveQaSet(id: string) {
   return useMutation({
     mutationFn: (version: number) => qaApi.archiveSet(id, version),
     onSuccess: () => invalidateSet(queryClient, id),
+  });
+}
+
+/**
+ * Renames a whole section: the backend has no section title to write, so the new
+ * name goes onto every set's own `title`. Rejects with the ids that failed so the
+ * caller can say so; one failure does not stop the rest.
+ */
+export function useRenameQaSets() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      sets,
+      title,
+    }: {
+      sets: { id: string; version: number }[];
+      title: string;
+    }) => {
+      const results = await Promise.allSettled(
+        sets.map((set) => qaApi.updateSet(set.id, { version: set.version, title })),
+      );
+      const failed = sets.filter((_, index) => results[index].status === "rejected");
+      if (failed.length > 0) throw new Error(`rename failed for ${failed.length} set(s)`);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: qaKeys.sets() }),
   });
 }
 
@@ -727,5 +796,42 @@ export function useQaStats() {
   return useQuery({
     queryKey: qaKeys.stats(),
     queryFn: ({ signal }) => qaApi.getStats(signal),
+  });
+}
+
+/* ------------------------------- Item tags ------------------------------- */
+
+export function useQaItemTags() {
+  return useQuery({
+    queryKey: qaKeys.itemTags(),
+    queryFn: ({ signal }) => qaApi.listItemTags(signal),
+  });
+}
+
+export function useCreateQaItemTag() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateItemTagInput) => qaApi.createItemTag(input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.itemTags() }),
+  });
+}
+
+export function useUpdateQaItemTag(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: UpdateItemTagInput) => qaApi.updateItemTag(id, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.itemTags() }),
+  });
+}
+
+/**
+ * The catalogue that turns a question's `tagIds` into something drawable. Rarely
+ * changes, so it is cached long: each question reads it, none should refetch it.
+ */
+export function usePlayItemTags() {
+  return useQuery({
+    queryKey: qaKeys.playTags(),
+    queryFn: ({ signal }) => qaApi.listPlayItemTags(signal),
+    staleTime: 5 * 60 * 1000,
   });
 }

@@ -52,6 +52,9 @@
     "title": "Taking a set",
     "progress": "Answered {answered}/{total} · {correct} correct",
     "correct": "Correct.",
+    "celebrate": "Nicely done! Keep it going.",
+    "tapNext": "Tap anywhere to continue",
+    "tapSeeResult": "Tap anywhere to see your result",
     "wrong": "Not quite.",
     "answer": "Answer",
     "explanation": "Explanation",
@@ -85,8 +88,7 @@
     "selfPrompt": "Recall the answer in your head first, then say honestly whether you knew it. The back of the card shows after you choose.",
     "singleHint": "Pick one answer.",
     "multiHint": "More than one answer may be correct — pick all that apply.",
-    "shortcuts": "Press 1–{max} to pick, Enter to answer",
-    "doubleClickHint": "Click to select · double-click (or Enter) to answer"
+    "shortcuts": "Press 1–{max} to pick, Enter to answer"
   },
   "review": {
     "title": "Attempt review",

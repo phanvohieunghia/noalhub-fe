@@ -43,6 +43,19 @@ const TITLE_TONES = {
   danger: "text-danger",
 } as const;
 
+/** A result dialog wears its verdict: a tone-coloured border and a faint tint over the surface. */
+const CARD_TONES = {
+  default: "",
+  success: "border border-success",
+  danger: "border border-danger",
+} as const;
+
+const BODY_TONES = {
+  default: "",
+  success: "rounded-[inherit] bg-success/8",
+  danger: "rounded-[inherit] bg-danger/8",
+} as const;
+
 const CONTENT_SIZES = {
   md: "top-1/2 left-1/2 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-xl shadow-xl",
   lg: "top-1/2 left-1/2 max-h-[calc(100dvh-2rem)] w-[min(45rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border shadow-xl",
@@ -129,9 +142,9 @@ export function Dialog({
       <RadixDialog.Portal>
         <RadixDialog.Overlay className="fixed inset-0 z-50 bg-black/40 data-[state=open]:animate-overlay-in data-[state=closed]:animate-overlay-out" />
         <RadixDialog.Content
-          className={`fixed z-50 bg-background text-foreground focus:outline-none data-[state=open]:animate-popup-in data-[state=closed]:animate-popup-out ${CONTENT_SIZES[size]}`}
+          className={`fixed z-50 ${tone === "default" ? "bg-background" : "bg-surface"} text-foreground focus:outline-none data-[state=open]:animate-popup-in data-[state=closed]:animate-popup-out ${CONTENT_SIZES[size]} ${CARD_TONES[tone]}`}
         >
-          <div className={BODY_SIZES[size]}>
+          <div className={`${BODY_SIZES[size]} ${BODY_TONES[tone]}`}>
             <div
               className={
                 size === "inset"

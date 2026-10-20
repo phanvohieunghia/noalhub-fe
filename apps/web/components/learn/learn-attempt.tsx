@@ -19,8 +19,8 @@ import {
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { useMessage } from "@noalhub/i18n/use-message";
 import { AlertError } from "@noalhub/ui/alert";
-import { Badge } from "@noalhub/ui/badge";
-import { PostContent } from "@noalhub/ui/blog/post-content";
+import { QaContent } from "@noalhub/ui/blog/qa-content";
+import { QaQuestion } from "@noalhub/ui/blog/qa-question";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
 import { Icon, LUCIDE } from "@noalhub/ui/icons";
@@ -30,9 +30,6 @@ import { Typography } from "@noalhub/ui/typography";
 
 import { AnswerInput } from "./answer-input";
 import { playCorrect, playWrong } from "./sounds";
-
-/** How long a right answer's celebration shows before the next question. */
-const ADVANCE_MS = 1000;
 
 /** Questions per progress segment. */
 const SEGMENT_SIZE = 10;
@@ -130,6 +127,21 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
     }
   };
 
+  const wrapUp = async () => {
+    setError(null);
+    try {
+      // A finished attempt answers 409 to a second finish; there is nothing to
+      // close, so go straight to the review.
+      if (attempt?.status === "in_progress") await finish.mutateAsync(attemptId);
+      router.push(`/learn/attempts/${attemptId}/review`);
+    } catch (err) {
+      setError(applyApiError(err, () => undefined, []));
+    }
+  };
+
+  // On the last question moving on clears the verdict, and `done` then turns
+  // true: the summary takes over — the same step for a right and a wrong answer.
+  const isLast = remaining.length === 0;
   const next = () => {
     setShown(null);
     setError(null);
@@ -143,24 +155,11 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
       const target = event.target as HTMLElement | null;
       if (target?.closest("button, textarea, [contenteditable]")) return;
       event.preventDefault();
-      setShown(null);
-      setError(null);
+      next();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [shown]);
-
-  const wrapUp = async () => {
-    setError(null);
-    try {
-      // A finished attempt answers 409 to a second finish; there is nothing to
-      // close, so go straight to the review.
-      if (attempt?.status === "in_progress") await finish.mutateAsync(attemptId);
-      router.push(`/learn/attempts/${attemptId}/review`);
-    } catch (err) {
-      setError(applyApiError(err, () => undefined, []));
-    }
-  };
 
   if (set.isPending || answered.isPending) {
     return (
@@ -183,7 +182,9 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
   }
 
   const total = attempt.itemCount;
-  const done = attempt.status !== "in_progress" || !current;
+  // Not while a verdict is showing: the last answer closes the attempt, and
+  // that must not swap the question (and its explanation) for the summary.
+  const done = !shown && (attempt.status !== "in_progress" || !current);
   const position = Math.min(total, attempt.answeredCount + (shown ? 0 : 1));
   // Past ten questions the bar is cut into sittings of ten, one segment each.
   const segments = Array.from({ length: Math.max(1, Math.ceil(total / SEGMENT_SIZE)) }, (_, i) => ({
@@ -216,11 +217,6 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
             <Typography variant="h4" as="h1" className="min-w-0 flex-1 break-words">
               {set.data.datasetTitle}
             </Typography>
-            <Badge tone="success" className="shrink-0">
-              {t(selfGraded ? "attempt.knownSoFar" : "attempt.correctSoFar", {
-                count: attempt.correctCount,
-              })}
-            </Badge>
           </div>
 
           <Tooltip
@@ -270,15 +266,8 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
         />
       ) : current ? (
         <article className="flex flex-1 flex-col gap-5">
-          <div className="flex flex-wrap gap-2">
-            <Badge tone="neutral">{t(`kinds.${current.kind}`)}</Badge>
-            {current.difficulty ? (
-              <Badge tone="info">{t(`difficulty.${current.difficulty}`)}</Badge>
-            ) : null}
-          </div>
-
           <div className="text-body-1 font-semibold">
-            <PostContent doc={current.question} />
+            <QaQuestion doc={current.question} tagIds={current.tagIds} />
           </div>
 
           <AnswerInput
@@ -290,7 +279,7 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
           />
 
           {shown ? (
-            <Feedback result={shown.result} onNext={next} last={remaining.length === 0} />
+            <Feedback result={shown.result} onNext={next} last={isLast} />
           ) : null}
 
           {error ? <AlertError message={m(error)} /> : null}
@@ -344,9 +333,32 @@ function Feedback({
     ? t(good ? "attempt.selfKnown" : "attempt.selfUnknown")
     : t(good ? "attempt.correct" : "attempt.wrong");
 
-  // Right answer: no modal, just a short celebration — then on to the next
-  // question after a second, or sooner on a click anywhere / Enter.
-  if (good) return <Celebration verdict={verdict} onNext={onNext} />;
+  // A machine-graded right answer is a moment to enjoy, not to study: the
+  // explanation only earns its space when the learner got it wrong.
+  if (good && !self) {
+    return (
+      <Dialog open onClose={onNext} title={verdict} icon={LUCIDE.circleCheck} tone="success" hideClose>
+        {/* No button: the whole card is one — and the overlay and X already mean "next". */}
+        <button
+          type="button"
+          onClick={onNext}
+          autoFocus
+          className="relative flex w-full cursor-pointer flex-col items-center gap-2 rounded-md py-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Confetti />
+          <span className="flex size-16 items-center justify-center rounded-full bg-success/15 text-success">
+            <Icon icon={LUCIDE.circleCheck} className="size-10" />
+          </span>
+          <Typography variant="title-3" as="p">
+            {t("attempt.celebrate")}
+          </Typography>
+          <Typography variant="body-4" as="p" className="text-muted-foreground">
+            {t(last ? "attempt.tapSeeResult" : "attempt.tapNext")}
+          </Typography>
+        </button>
+      </Dialog>
+    );
+  }
 
   return (
     // Closing the modal (X, Esc, overlay) is the same as "next": the verdict
@@ -357,13 +369,14 @@ function Feedback({
       title={verdict}
       icon={good ? LUCIDE.circleCheck : LUCIDE.circleX}
       tone={good ? "success" : "danger"}
+      hideClose
     >
       {result.answer ? (
         <div className="space-y-1">
           <Typography variant="title-4" as="h3">
             {t("attempt.answer")}
           </Typography>
-          <PostContent doc={result.answer} />
+          <QaContent doc={result.answer} />
         </div>
       ) : null}
 
@@ -372,7 +385,7 @@ function Feedback({
           <Typography variant="title-4" as="h3">
             {t("attempt.explanation")}
           </Typography>
-          <PostContent doc={result.explanation} />
+          <QaContent doc={result.explanation} />
         </div>
       ) : null}
 
@@ -386,38 +399,30 @@ function Feedback({
   );
 }
 
-/** Full-screen, click-through-to-next burst shown for a right answer. */
-function Celebration({ verdict, onNext }: { verdict: string; onNext: () => void }) {
-  useEffect(() => {
-    const timer = window.setTimeout(onNext, ADVANCE_MS);
-    return () => window.clearTimeout(timer);
-    // `onNext` is recreated every render; the timer must run once per answer.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+const CONFETTI_COLORS = ["bg-success", "bg-primary", "bg-warning", "bg-brand-300", "bg-danger"];
 
+/** A one-off burst from the centre of its parent; decorative, so hidden from assistive tech. */
+function Confetti() {
   return (
-    <div
-      role="status"
-      onClick={onNext}
-      className="fixed inset-0 z-50 flex cursor-pointer items-center justify-center bg-success/10"
-    >
-      <div className="flex flex-col items-center gap-3 motion-safe:animate-popup-in">
-        <span className="relative flex size-24 items-center justify-center rounded-full bg-success text-background">
+    <div aria-hidden className="pointer-events-none absolute inset-x-0 top-8 flex justify-center">
+      {Array.from({ length: 18 }, (_, i) => {
+        const angle = (i / 18) * Math.PI * 2;
+        const reach = 90 + (i % 3) * 30;
+        return (
           <span
-            aria-hidden
-            className="absolute inset-0 rounded-full bg-success opacity-40 motion-safe:animate-ping"
+            key={i}
+            className={`confetti-piece absolute h-2.5 w-1.5 rounded-[1px] ${CONFETTI_COLORS[i % CONFETTI_COLORS.length]}`}
+            style={
+              {
+                "--x": `${Math.round(Math.cos(angle) * reach)}px`,
+                "--y": `${Math.round(Math.sin(angle) * reach - 10)}px`,
+                "--r": `${(i % 2 ? 1 : -1) * (180 + i * 40)}deg`,
+                "--d": `${(i % 4) * 40}ms`,
+              } as React.CSSProperties
+            }
           />
-          <Icon icon={LUCIDE.check} className="relative size-14" />
-        </span>
-        <Typography variant="h5" as="p" className="text-success">
-          {verdict}
-        </Typography>
-        <Icon
-          icon={LUCIDE.sparkles}
-          aria-hidden
-          className="size-6 text-warning motion-safe:animate-bounce"
-        />
-      </div>
+        );
+      })}
     </div>
   );
 }

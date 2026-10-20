@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslations } from "use-intl";
 
 import type { QaAnswerResult } from "@noalhub/api/qa";
-import { NativePostContent } from "../post-content";
+import { NativeQaContent } from "../post-content";
 
 export const EXPLANATION_AUTO_CLOSE_MS = 3000;
 
@@ -98,7 +98,7 @@ export function ExplanationSheet({
                 <Text className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {t("attempt.answer")}
                 </Text>
-                <NativePostContent doc={result.answer} />
+                <NativeQaContent doc={result.answer} />
               </View>
             ) : null}
 
@@ -107,7 +107,7 @@ export function ExplanationSheet({
                 <Text className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {t("attempt.explanation")}
                 </Text>
-                <NativePostContent doc={result.explanation} />
+                <NativeQaContent doc={result.explanation} />
               </View>
             ) : null}
 

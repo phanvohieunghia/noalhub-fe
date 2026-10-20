@@ -145,9 +145,22 @@
   margin-block: 1.75rem;
 }
 
+/*
+ * Never wider than the column nor taller than the screen. `object-fit` is what
+ * makes the two caps safe: the editor writes both `width` and `height` in px
+ * (resize), so when one cap bites the box shrinks on one axis only — without
+ * `contain` the picture would stretch to fill it.
+ */
 .post-prose img {
   border-radius: 0.5rem;
   height: auto;
+  max-width: 100%;
+  max-height: 100vh;
+  object-fit: contain;
+}
+
+/* The editor's resize wrapper hugs the image, so it must obey the same cap. */
+.post-prose [data-resize-wrapper] {
   max-width: 100%;
 }
 
@@ -187,4 +200,115 @@
 .post-prose td > * + *,
 .post-prose th > * + * {
   margin-top: 0.5rem;
+}
+
+/*
+ * Image resize (editor only — the renderer never emits these attributes).
+ * Tiptap adds the handles as bare absolutely-positioned divs; without this
+ * they have no size, so they exist but cannot be seen or grabbed. They show
+ * only while the image is selected.
+ */
+.post-prose [data-resize-container].ProseMirror-selectednode [data-resize-wrapper] {
+  outline: 2px solid var(--color-primary);
+}
+
+.post-prose [data-resize-handle] {
+  display: none;
+  z-index: 1;
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 2px solid var(--color-primary);
+  border-radius: 2px;
+  background: var(--color-surface);
+}
+
+.post-prose [data-resize-container].ProseMirror-selectednode [data-resize-handle] {
+  display: block;
+}
+
+.post-prose [data-resize-handle="top-left"] {
+  transform: translate(-50%, -50%);
+  cursor: nwse-resize;
+}
+
+.post-prose [data-resize-handle="bottom-right"] {
+  transform: translate(50%, 50%);
+  cursor: nwse-resize;
+}
+
+.post-prose [data-resize-handle="top-right"] {
+  transform: translate(50%, -50%);
+  cursor: nesw-resize;
+}
+
+.post-prose [data-resize-handle="bottom-left"] {
+  transform: translate(-50%, 50%);
+  cursor: nesw-resize;
+}
+
+/* Block alignment (`align-markdown.ts`); left is the default and has no class. */
+.post-prose .post-prose-align-center {
+  text-align: center;
+}
+
+.post-prose .post-prose-align-right {
+  text-align: right;
+}
+
+.post-prose .post-prose-align-justify {
+  text-align: justify;
+}
+
+/*
+ * Image alignment. In the published page the wrapper is a block holding an
+ * inline image, so `text-align` is enough; in the editor the resize view's
+ * container is a flex row, so it is `justify-content` there.
+ */
+.post-prose [data-image-align="center"] {
+  text-align: center;
+}
+
+.post-prose [data-image-align="right"] {
+  text-align: right;
+}
+
+/*
+ * Tailwind's preflight makes every `img` a block, and `text-align` does not move a
+ * block — so the image itself takes the auto margin that does.
+ */
+.post-prose [data-image-align="center"] > img {
+  margin-inline: auto;
+}
+
+.post-prose [data-image-align="right"] > img {
+  margin-inline-start: auto;
+}
+
+.post-prose [data-resize-container]:has(img[data-image-align="center"]) {
+  justify-content: center;
+}
+
+.post-prose [data-resize-container]:has(img[data-image-align="right"]) {
+  justify-content: flex-end;
+}
+
+/*
+ * An image inside a text selection gets the same tint as the text around it —
+ * the system selection colour, so it matches whatever the browser paints.
+ */
+.post-prose [data-resize-container].image-in-selection [data-resize-wrapper]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, Highlight 40%, transparent);
+  pointer-events: none;
+}
+
+/*
+ * A share-of-column image: the wrapper takes the share (so the selection frame
+ * and the resize handles sit on the picture) and the picture fills the wrapper.
+ */
+.post-prose [data-resize-container].image-sized [data-resize-wrapper] {
+  width: var(--image-width);
 }

@@ -24,6 +24,7 @@ import { Select } from "@noalhub/ui/select";
 import { Textarea } from "@noalhub/ui/textarea";
 import { Typography } from "@noalhub/ui/typography";
 
+import { QaItemTagPicker } from "./qa-item-tag-picker";
 import { PostContentPreview } from "./post-content-preview";
 import { docToText, textToDoc } from "./qa-plain-doc";
 
@@ -75,6 +76,7 @@ export function QaItemForm({ setId, item }: { setId: string; item?: QaItemFull }
   const [correct, setCorrect] = useState<string[]>(initialCorrect);
   const [accepted, setAccepted] = useState(initialAccepted.join("\n"));
   const [explanation, setExplanation] = useState(initialExplanation ?? "");
+  const [tagIds, setTagIds] = useState<string[]>(item?.tagIds ?? []);
   const [error, setError] = useState<Message | string | null>(null);
 
   const pending = add.isPending || update.isPending;
@@ -99,6 +101,7 @@ export function QaItemForm({ setId, item }: { setId: string; item?: QaItemFull }
     const input: PatchItemInput = {
       kind,
       difficulty: difficulty === "" ? null : difficulty,
+      tagIds,
       ...(initialQuestion !== null ? { question: textToDoc(question) } : {}),
       ...(initialExplanation !== null
         ? { explanation: explanation.trim() === "" ? null : textToDoc(explanation) }
@@ -157,6 +160,8 @@ export function QaItemForm({ setId, item }: { setId: string; item?: QaItemFull }
           }))}
         />
       </div>
+
+      <QaItemTagPicker value={tagIds} onChange={setTagIds} />
 
       {initialQuestion === null && item ? (
         <RichTextNotice label={t("form.question")} doc={item.question} note={t("form.richNote")} />

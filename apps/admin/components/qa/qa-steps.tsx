@@ -14,9 +14,8 @@ const STEPS: readonly WorkbenchStep[] = ["sources", "outline", "sets", "final"];
 
 /**
  * The dataset's four steps on one line: sources → outline → question sets → final
- * set. The tile of the open step is outlined in the primary colour and every step
- * before it carries a check (done), so progress reads left to right; steps are not
- * numbered. Below 640px the tiles collapse into one dropdown with a
+ * set. The tile of the open step is outlined in the primary colour; steps are not
+ * numbered and carry no icon. Below 640px the tiles collapse into one dropdown with a
  * progress bar. From 640px they hug their content and sit centred on one row; once
  * they no longer fit the row becomes a swipeable snap ribbon with the open step
  * scrolled into view (the auto margins on the ends keep the centring from clipping). Each tile switches the workbench below, and says what that stage holds
@@ -188,13 +187,6 @@ export function QaSteps({
                 onClick={() => onSelect(step)}
                 className="absolute inset-0 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
               />
-              {index < activeIndex ? (
-                <Icon
-                  icon={ICONS.check}
-                  aria-hidden="true"
-                  className="pointer-events-none size-5 shrink-0 text-primary"
-                />
-              ) : null}
               <div className="pointer-events-none flex min-w-0 items-center gap-6">
                 <Typography
                   variant="title-3"

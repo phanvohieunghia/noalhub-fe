@@ -82,10 +82,9 @@ export function TableOfContentsItem(props: ItemProps) {
           }`}
         >
           <Icon
-            icon={ICONS.chevronRight}
-            className={`size-4 transition-transform duration-200 motion-reduce:transition-none ${
-              open ? "rotate-90" : ""
-            }`}
+            icon={open ? ICONS.chevronDown : ICONS.chevronRight}
+            animate="snappy"
+            className="size-4"
           />
         </button>
       ) : (

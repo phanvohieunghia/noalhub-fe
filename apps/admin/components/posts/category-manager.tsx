@@ -53,6 +53,7 @@ import {
   TableHeaderCell,
   TableRoot,
   TableRow,
+  rowActivateProps,
   TableRowActions,
 } from "@noalhub/ui/table";
 import { Textarea } from "@noalhub/ui/textarea";
@@ -405,7 +406,8 @@ function CategoryRow({
     <tr
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`transition-colors hover:bg-black/3 dark:hover:bg-white/5 ${
+      {...rowActivateProps(onEdit)}
+      className={`cursor-pointer transition-colors hover:bg-black/3 dark:hover:bg-white/5 ${
         isDragging ? "relative z-10 bg-black/5 shadow-sm dark:bg-white/10" : ""
       }`}
     >

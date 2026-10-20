@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useBrowseQaItems, useQaAttempts } from "@noalhub/api/qa";
 import { Badge } from "@noalhub/ui/badge";
 import { Button } from "@noalhub/ui/button";
-import { PostContent } from "@noalhub/ui/blog/post-content";
+import { QaQuestion } from "@noalhub/ui/blog/qa-question";
 import { Skeleton } from "@noalhub/ui/skeleton";
 import { Typography } from "@noalhub/ui/typography";
 
@@ -54,7 +54,7 @@ export function LearnPractice() {
             <article key={item.id} className="rounded-lg border border-border p-4">
               <Badge tone="neutral">{t(`kinds.${item.kind}`)}</Badge>
               <div className="mt-2">
-                <PostContent doc={item.question} />
+                <QaQuestion doc={item.question} tagIds={item.tagIds} />
               </div>
               {/* No answer here: this list is questions to retry, and showing
                   the key would defeat the point of retrying. */}

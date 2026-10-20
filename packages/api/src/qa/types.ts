@@ -13,11 +13,26 @@ import type { BlogDoc } from "../blog/types";
 /* ------------------------------ AI credentials ----------------------------- */
 
 /** Mirrors the backend enum — see the note on `aiProviderNameSchema`. */
-export type AiProviderName =
-  | "openrouter"
-  | "openai"
-  | "anthropic"
-  | "vilao";
+export type AiProviderName = "openrouter" | "openai" | "anthropic" | "vilao";
+
+/** `AiModelDto` — a row of the backend's `ai_models` table. */
+export type AiModel = {
+  id: string;
+  provider: AiProviderName;
+  /** The provider's own id for the model — what the API call sends. */
+  name: string;
+  label: string;
+  contextWindow: number;
+  maxOutputTokens: number;
+  /**
+   * A model without this cannot be forced into a JSON schema. Picking one is
+   * rejected **before the call**, so the UI disables it with the reason rather
+   * than hiding it — hidden, the user goes looking for their model.
+   */
+  supportsStructuredOutput: boolean;
+  /** Off ⇒ cannot be assigned to a key, and keys on it stop running. */
+  enabled: boolean;
+};
 
 /**
  * `AiCredentialDto`. There is no field carrying the key — not an omission: the
@@ -29,7 +44,9 @@ export type AiCredential = {
   label: string;
   /** The last four characters, in the clear — enough to recognise which key. */
   keyLast4: string;
-  defaultModel: string;
+  modelId: string;
+  /** The model this key runs; generate calls pick the key, never the model. */
+  model: AiModel;
   enabled: boolean;
   /** Used when a generate call names no key. Exactly one row may hold it. */
   isDefault: boolean;
@@ -41,21 +58,6 @@ export type AiCredential = {
    */
   inUse: boolean;
   createdAt: string;
-};
-
-/** `AiModelDto` — from the backend's registry (code), never from a table. */
-export type AiModel = {
-  id: string;
-  provider: AiProviderName;
-  label: string;
-  contextWindow: number;
-  maxOutputTokens: number;
-  /**
-   * A model without this cannot be forced into a JSON schema. Picking one is
-   * rejected **before the call**, so the UI disables it with the reason rather
-   * than hiding it — hidden, the user goes looking for their model.
-   */
-  supportsStructuredOutput: boolean;
 };
 
 /* --------------------------------- datasets -------------------------------- */
@@ -174,11 +176,7 @@ export const FORBIDDEN_PROMPT_VARIABLES = [
  * closes the only window there is onto that.
  */
 export type QaGenerationStatus =
-  | "queued"
-  | "running"
-  | "succeeded"
-  | "partial"
-  | "failed";
+  "queued" | "running" | "succeeded" | "partial" | "failed";
 
 /** What is still running on a dataset — survives a reload, unlike the page's own state. */
 export type QaActiveGenerations = {
@@ -257,12 +255,14 @@ export type QaOutlineContent =
   | { contentFormat: "doc"; content: BlogDoc }
   | { contentFormat: "markdown"; content: string };
 
-export type QaOutline = QaOutlineSummary & QaOutlineContent & {
-  /** Derived from `content` on every write. Read-only — the backend recomputes it. */
-  outline: QaOutlineEntry[];
-};
+export type QaOutline = QaOutlineSummary &
+  QaOutlineContent & {
+    /** Derived from `content` on every write. Read-only — the backend recomputes it. */
+    outline: QaOutlineEntry[];
+  };
 
-export type UpdateQaOutlineInput = QaOutlineContent & { label?: string | null };
+/** Chỉ nội dung. Đổi nhãn đi route riêng (`updateOutlineLabel`). */
+export type UpdateQaOutlineInput = QaOutlineContent;
 
 export type QaOutlineList = {
   items: QaOutlineSummary[];
@@ -303,6 +303,11 @@ export type QaItemFull = {
   explanation: BlogDoc | null;
   sectionAnchor: string | null;
   difficulty: QaDifficulty | null;
+  /**
+   * Tag ids on the question. How a tag is drawn comes from the tag's own `meta`,
+   * never from the question text — `question` carries no marker.
+   */
+  tagIds: string[];
   /** Whether learners see this question (once its set is published). */
   published: boolean;
   /** The reviewer's verdict on an AI-drafted question. */
@@ -340,6 +345,8 @@ export type QaSet = {
   version: number;
   publishedAt: string | null;
   createdAt: string;
+  /** Absent from a backend that predates the field: fall back to `createdAt`. */
+  updatedAt?: string;
 };
 
 export type QaSetDetail = QaSet & { items: QaItemFull[] };
@@ -432,6 +439,8 @@ export type QaItemPlay = {
   /** `{ id, text }` only. Nothing here says which one is right. */
   options: QaItemOption[] | null;
   difficulty: QaDifficulty | null;
+  /** Tag ids shown on the question — look them up with `usePlayItemTags`. */
+  tagIds: string[];
   /**
    * Which input to render. Not inferable from `options`: a flashcard has none
    * either, yet it needs two buttons rather than a text box. It lives on the
@@ -503,9 +512,7 @@ export type QaAttempt = {
 export type QaGradingMode = "auto" | "self";
 
 export type QaResponse =
-  | { optionIds: string[] }
-  | { text: string }
-  | { known: boolean };
+  { optionIds: string[] } | { text: string } | { known: boolean };
 
 export type QaAnswerResult = {
   isCorrect: boolean;
@@ -521,6 +528,8 @@ export type QaAnswerReview = {
   kind: QaItemKind;
   question: BlogDoc;
   options: QaItemOption[] | null;
+  /** Tag ids on the question, as on `QaItemPlay`. */
+  tagIds: string[];
   response: QaResponse;
   isCorrect: boolean;
   grading: QaGradingMode;
@@ -544,3 +553,29 @@ export type BrowseItemsQuery = {
   limit?: number;
   offset?: number;
 };
+
+/* ------------------------------- Item tags ------------------------------- */
+
+/** Theme token names (`text-danger`…), never colour values — dark mode follows. */
+export const QA_TAG_TONES = ["danger", "warning", "success", "primary"] as const;
+export type QaTagTone = (typeof QA_TAG_TONES)[number];
+
+/** `QaItemTagDto` — a row of the backend's `qa_item_tags` catalogue. */
+export type QaItemTag = {
+  id: string;
+  /** The name the prompt gives the AI. Renamable; items reference the tag by `id`. */
+  key: string;
+  /** The definition the AI is given: when to attach this tag. */
+  description: string;
+  meta: {
+    /** A lucide icon, `lucide:name` — the only set the UI bundles. */
+    icon: string;
+    tone: string;
+    label: Record<string, string>;
+  };
+  /** Off ⇒ the AI stops attaching it; items already tagged keep the id. */
+  active: boolean;
+};
+
+/** `QaItemTagPlayDto` — a tag as a learner sees it (no `description`). */
+export type QaItemTagPlay = Pick<QaItemTag, "id" | "key" | "meta">;

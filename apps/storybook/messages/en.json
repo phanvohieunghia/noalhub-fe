@@ -72,7 +72,16 @@
     "admin": "Administrator (Admin)",
     "editor": "Editor",
     "viewer": "Viewer",
-    "error": "Pick a valid role."
+    "error": "Pick a valid role.",
+    "hint": "Decides what this person can change.",
+    "owner": "Owner (unavailable)",
+    "statusFilter": "Status",
+    "statusAll": "All statuses",
+    "statusActive": "Active",
+    "statusArchived": "Archived",
+    "searchLabel": "Search",
+    "searchPlaceholder": "Search users...",
+    "apply": "Apply"
   },
   "statCard": {
     "visits": "Visits",

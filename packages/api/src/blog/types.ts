@@ -50,14 +50,22 @@ export type BlogHardBreakNode = { type: "hardBreak" };
 
 export type BlogInlineNode = BlogTextNode | BlogHardBreakNode;
 
+/**
+ * Block alignment. Left is the default and is never stored: a missing
+ * `textAlign` IS left, so every post written before alignment existed reads the
+ * same.
+ */
+export type BlogTextAlign = "center" | "right" | "justify";
+
 export type BlogParagraphNode = {
   type: "paragraph";
+  attrs?: { textAlign?: BlogTextAlign };
   content?: BlogInlineNode[];
 };
 
 export type BlogHeadingNode = {
   type: "heading";
-  attrs: { level: BlogHeadingLevel };
+  attrs: { level: BlogHeadingLevel; textAlign?: BlogTextAlign };
   content?: BlogInlineNode[];
 };
 
@@ -82,6 +90,14 @@ export type BlogImageNode = {
     alt: string;
     width: number | null;
     height: number | null;
+    /** Left is the default and is never stored, like `textAlign`. */
+    align?: "center" | "right";
+    /**
+     * Display width as a share of the column (1–100). `width`/`height` stay the
+     * real pixel size — `next/image` needs them for the ratio (§3.1b) — and
+     * this only says how much of the column to fill, so it is responsive.
+     */
+    widthPercent?: number;
   };
 };
 

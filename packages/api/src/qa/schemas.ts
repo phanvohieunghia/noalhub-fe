@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { sanitizeBlogDoc } from "../blog/schemas";
-import { FORBIDDEN_PROMPT_VARIABLES } from "./types";
+import { FORBIDDEN_PROMPT_VARIABLES, QA_TAG_TONES } from "./types";
 
 /**
  * Response schemas validate what the backend sent; input schemas are shared by
@@ -33,8 +33,8 @@ const nullableNumber = z
 /**
  * Mirrors the backend `AiProviderName` enum (`src/ai/entities/ai-credential.entity.ts`).
  *
- * Every value the backend can emit must be here. `/admin/ai/credentials/models`
- * returns the WHOLE registry in one array, so a single unknown `provider`
+ * Every value the backend can emit must be here. `/admin/ai/models`
+ * returns the WHOLE catalogue in one array, so a single unknown `provider`
  * fails `aiModelListSchema` and the model dropdown comes back empty for every
  * provider — the symptom reads as "the models endpoint is broken", not as a
  * missing enum member. Adding a provider on the backend means adding it here in
@@ -48,12 +48,29 @@ export const aiProviderNameSchema = z.enum([
   "vilao",
 ]);
 
+export const aiModelSchema = z.object({
+  id: z.string(),
+  provider: aiProviderNameSchema,
+  /** The provider's own id for the model — what the API call sends. */
+  name: z.string(),
+  label: z.string(),
+  contextWindow: z.number(),
+  maxOutputTokens: z.number(),
+  supportsStructuredOutput: z.boolean(),
+  /** A disabled model cannot be assigned, and keys already on it stop running. */
+  enabled: z.boolean(),
+});
+
+export const aiModelListSchema = z.array(aiModelSchema);
+
 export const aiCredentialSchema = z.object({
   id: z.string(),
   provider: aiProviderNameSchema,
   label: z.string(),
   keyLast4: z.string(),
-  defaultModel: z.string(),
+  modelId: z.string(),
+  /** The model this key runs. Generate calls pick the key, never the model. */
+  model: aiModelSchema,
   enabled: z.boolean(),
   isDefault: z.boolean(),
   monthlyTokenLimit: nullableNumber,
@@ -64,23 +81,12 @@ export const aiCredentialSchema = z.object({
 
 export const aiCredentialListSchema = z.array(aiCredentialSchema);
 
-export const aiModelSchema = z.object({
-  id: z.string(),
-  provider: aiProviderNameSchema,
-  label: z.string(),
-  contextWindow: z.number(),
-  maxOutputTokens: z.number(),
-  supportsStructuredOutput: z.boolean(),
-});
-
-export const aiModelListSchema = z.array(aiModelSchema);
-
 export const createCredentialSchema = z.object({
   provider: aiProviderNameSchema,
   label: z.string().min(1).max(120),
   /** Accepted ONCE. There is no endpoint that reads it back. */
   apiKey: z.string().min(8).max(400),
-  defaultModel: z.string().min(1).max(64),
+  modelId: z.string().uuid(),
   isDefault: z.boolean().optional(),
   monthlyTokenLimit: z.number().int().min(1).nullable().optional(),
 });
@@ -92,6 +98,29 @@ export const updateCredentialSchema = createCredentialSchema
   .omit({ provider: true })
   .extend({ enabled: z.boolean().optional() });
 
+export const createModelSchema = z.object({
+  provider: aiProviderNameSchema,
+  /** The provider's own id; the same model via two providers is two rows. */
+  name: z.string().min(1).max(64),
+  label: z.string().min(1).max(120),
+  contextWindow: z.number().int().min(1),
+  /** Must not exceed `contextWindow` — the form checks, the backend enforces. */
+  maxOutputTokens: z.number().int().min(1),
+  supportsStructuredOutput: z.boolean().optional(),
+  enabled: z.boolean().optional(),
+});
+
+// `provider` and `name` are fixed: changing either is a different model.
+export const updateModelSchema = z.object({
+  label: z.string().min(1).max(120).optional(),
+  contextWindow: z.number().int().min(1).optional(),
+  maxOutputTokens: z.number().int().min(1).optional(),
+  supportsStructuredOutput: z.boolean().optional(),
+  enabled: z.boolean().optional(),
+});
+
+export type CreateModelInput = z.infer<typeof createModelSchema>;
+export type UpdateModelInput = z.infer<typeof updateModelSchema>;
 export type CreateCredentialInput = z.infer<typeof createCredentialSchema>;
 export type UpdateCredentialInput = z.infer<typeof updateCredentialSchema>;
 
@@ -313,18 +342,20 @@ export const startGenerationSchema = z.object({
 });
 
 /**
- * `credentialId` and `model` are required on both billed calls: the backend no
- * longer falls back to the `isDefault` key, so the person clicking picks both.
+ * `credentialId` is required on both billed calls: the backend no longer falls
+ * back to the `isDefault` key, so the person clicking picks the key. The model
+ * is not sent — it is whatever model the key is assigned.
  */
 const aiRunFields = {
   credentialId: z.string().uuid(),
-  model: z.string().min(1).max(64),
 };
 
 export const startAnalyzeSchema = z.object({
   templateId: z.string().uuid(),
   ...aiRunFields,
   label: z.string().max(120).optional(),
+  /** Omitted = every source of the dataset. */
+  sourceIds: z.array(z.string().uuid()).min(1).optional(),
 });
 
 /**
@@ -340,11 +371,14 @@ export const generateSetsSchema = z
     templateId: z.string().uuid(),
     /** The shapes this run may produce — chosen here, not on the prompt. */
     questionTypes: questionTypesField,
-    minCount: z.number().int().min(1).max(MAX_RUN_ITEMS),
-    maxCount: z.number().int().min(1).max(MAX_RUN_ITEMS),
+    /** Either bound may be left out: the model then decides that side. */
+    minCount: z.number().int().min(1).max(MAX_RUN_ITEMS).optional(),
+    maxCount: z.number().int().min(1).max(MAX_RUN_ITEMS).optional(),
+    /** Optional: none ticked means no restriction on the kinds. */
     itemKinds: z
       .array(z.enum(["theory", "practice", "recall", "analysis"]))
-      .min(1),
+      .min(1)
+      .optional(),
     difficulty: z.enum(["easy", "medium", "hard"]).optional(),
     ...aiRunFields,
   })
@@ -353,10 +387,16 @@ export const generateSetsSchema = z
       value.allSections === true || (value.sectionAnchors?.length ?? 0) > 0,
     { message: "generate.pickSections", path: ["sectionAnchors"] },
   )
-  .refine((value) => value.minCount <= value.maxCount, {
-    message: "generate.countRange",
-    path: ["maxCount"],
-  });
+  .refine(
+    (value) =>
+      value.minCount === undefined ||
+      value.maxCount === undefined ||
+      value.minCount <= value.maxCount,
+    {
+      message: "generate.countRange",
+      path: ["maxCount"],
+    },
+  );
 
 export type StartAnalyzeInput = z.infer<typeof startAnalyzeSchema>;
 export type GenerateSetsInput = z.infer<typeof generateSetsSchema>;
@@ -442,6 +482,7 @@ export const qaItemFullSchema = z.object({
     .transform((v) => (v == null ? null : sanitizeBlogDoc(v))),
   sectionAnchor: nullableString,
   difficulty: qaDifficulty.nullish().transform((v) => v ?? null),
+  tagIds: z.array(z.string()).default([]),
   published: z.boolean().default(true),
   reviewStatus: z.enum(["pending", "approved", "rejected"]).default("pending"),
   sourceItemId: nullableString,
@@ -475,6 +516,8 @@ export const qaSetSchema = z.object({
   version: z.number(),
   publishedAt: nullableString,
   createdAt: z.string(),
+  // Optional for a backend that predates the field; readers fall back to `createdAt`.
+  updatedAt: z.string().optional(),
 });
 
 export const qaSetListSchema = z.array(qaSetSchema);
@@ -554,6 +597,8 @@ export const writeItemSchema = z.object({
   explanation: z.unknown().nullable().optional(),
   difficulty: qaDifficulty.nullable().optional(),
   sectionAnchor: z.string().max(160).nullable().optional(),
+  /** The WHOLE list of tag ids — replaces, never merges. */
+  tagIds: z.array(z.string().uuid()).max(20).optional(),
 });
 
 export const patchItemSchema = writeItemSchema
@@ -577,6 +622,14 @@ export type ReorderItemsInput = z.infer<typeof reorderItemsSchema>;
 
 /* ------------------------------ learner surface ---------------------------- */
 
+// `tone` stays a plain string on the way IN: a value the backend adds
+// later must not fail the whole list and blank the screen (cf. the provider note).
+const qaItemTagMetaSchema = z.object({
+  icon: z.string(),
+  tone: z.string(),
+  label: z.record(z.string(), z.string()),
+});
+
 const qaTemplateKey = z.enum(QA_TEMPLATE_KEYS);
 
 /**
@@ -595,8 +648,19 @@ export const qaItemPlaySchema = z.object({
     .nullish()
     .transform((v) => v ?? null),
   difficulty: qaDifficulty.nullish().transform((v) => v ?? null),
+  /** Tag ids shown on the question — look them up in `qaItemTagPlayListSchema`. */
+  tagIds: z.array(z.string()).default([]),
   templateKey: qaTemplateKey,
 });
+
+/** A tag as the learner sees it: enough to draw, no `description` (that is for the AI). */
+export const qaItemTagPlaySchema = z.object({
+  id: z.string(),
+  key: z.string(),
+  meta: qaItemTagMetaSchema,
+});
+
+export const qaItemTagPlayListSchema = z.array(qaItemTagPlaySchema);
 
 export const qaDatasetPlaySchema = z.object({
   id: z.string(),
@@ -678,6 +742,7 @@ export const qaAnswerReviewListSchema = z.array(
       .array(qaItemOptionSchema)
       .nullish()
       .transform((v) => v ?? null),
+    tagIds: z.array(z.string()).default([]),
     response: qaResponseSchema,
     isCorrect: z.boolean(),
     grading: qaGrading,
@@ -712,3 +777,44 @@ export const submitAnswerSchema = z.object({
 });
 
 export type SubmitAnswerInput = z.infer<typeof submitAnswerSchema>;
+
+/* ------------------------------- Item tags ------------------------------- */
+
+export const qaItemTagSchema = z.object({
+  id: z.string(),
+  key: z.string(),
+  description: z.string(),
+  meta: qaItemTagMetaSchema,
+  active: z.boolean(),
+});
+
+export const qaItemTagListSchema = z.array(qaItemTagSchema);
+
+// On the way OUT the enums are strict — the form only offers these.
+const qaItemTagMetaInputSchema = z.object({
+  icon: z.string().regex(/^lucide:[a-z0-9-]+$/),
+  tone: z.enum(QA_TAG_TONES),
+  label: z.object({
+    vi: z.string().trim().min(1).max(80),
+    en: z.string().trim().min(1).max(80),
+  }),
+});
+
+export const createItemTagSchema = z.object({
+  key: z.string().min(1).max(32).regex(/^[a-z][a-z0-9_]*$/),
+  description: z.string().trim().min(1).max(640),
+  meta: qaItemTagMetaInputSchema,
+  active: z.boolean().optional(),
+});
+
+// `key` can change: items store the tag's id, so renaming touches no question. Only
+// saved prompts that still name the old key go stale.
+export const updateItemTagSchema = z.object({
+  key: z.string().min(1).max(32).regex(/^[a-z][a-z0-9_]*$/).optional(),
+  description: z.string().trim().min(1).max(640).optional(),
+  meta: qaItemTagMetaInputSchema.optional(),
+  active: z.boolean().optional(),
+});
+
+export type CreateItemTagInput = z.infer<typeof createItemTagSchema>;
+export type UpdateItemTagInput = z.infer<typeof updateItemTagSchema>;

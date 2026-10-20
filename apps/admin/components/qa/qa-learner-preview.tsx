@@ -1,14 +1,22 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
 
-import { useQaItemSearch, useQaSet, type QaItemSearchRow } from "@noalhub/api/qa";
+import {
+  useQaItemSearch,
+  useQaItemTags,
+  useQaSet,
+  type QaItemSearchRow,
+} from "@noalhub/api/qa";
 import { Badge } from "@noalhub/ui/badge";
 import { Button } from "@noalhub/ui/button";
+import { Checkbox } from "@noalhub/ui/checkbox";
 import { Dialog } from "@noalhub/ui/dialog";
 import { Icon, LUCIDE } from "@noalhub/ui/icons";
 import { Input } from "@noalhub/ui/input";
 import { Skeleton } from "@noalhub/ui/skeleton";
+import { TaggedFrame, pickTagLabel } from "@noalhub/ui/tag-mark";
 import { Typography } from "@noalhub/ui/typography";
 
 import { PostContentPreview } from "./post-content-preview";
@@ -32,6 +40,13 @@ export function QaLearnerPreview({
 }) {
   const t = useTranslations("admin.qa");
   const set = useQaSet(item.setId);
+  const locale = useLocale();
+  const tags = useQaItemTags();
+  // Starts from the tags the question really carries. Ticking more is what-if only —
+  // nothing here is saved; it lets an admin see how another tag would sit on the question.
+  const [picked, setPicked] = useState<readonly string[]>(item.tagIds);
+  const activeTags = (tags.data ?? []).filter((tag) => tag.active);
+  const shown = activeTags.filter((tag) => picked.includes(tag.id));
 
   const shape = t(`templates.shapes.${item.type}` as `templates.shapes.${ShapeKey}`);
   const isChoice = Boolean(item.options);
@@ -59,6 +74,29 @@ export function QaLearnerPreview({
           </Typography>
         </header>
 
+        {activeTags.length > 0 ? (
+          <fieldset className="flex flex-col gap-2">
+            <Typography variant="body-4" as="legend" className="text-muted-foreground">
+              {t("items.previewTags")}
+            </Typography>
+            <div className="flex flex-wrap gap-x-5 gap-y-2">
+              {activeTags.map((tag) => (
+                <Checkbox
+                  key={tag.id}
+                  size="sm"
+                  label={pickTagLabel(tag.meta.label, locale, tag.key)}
+                  checked={picked.includes(tag.id)}
+                  onCheckedChange={(on) =>
+                    setPicked((now) =>
+                      on === true ? [...now, tag.id] : now.filter((id) => id !== tag.id),
+                    )
+                  }
+                />
+              ))}
+            </div>
+          </fieldset>
+        ) : null}
+
         <article className="flex flex-col gap-5 rounded-xl border border-border bg-surface p-6">
           <div className="flex flex-wrap gap-2">
             <Badge>{t(`items.kinds.${item.kind}`)}</Badge>
@@ -67,9 +105,11 @@ export function QaLearnerPreview({
             ) : null}
           </div>
 
-          <div className="text-body-1">
-            <PostContentPreview doc={item.question} />
-          </div>
+          <TaggedFrame tags={shown} locale={locale}>
+            <div className="text-body-1">
+              <PostContentPreview doc={item.question} />
+            </div>
+          </TaggedFrame>
 
           {isChoice ? (
             <>

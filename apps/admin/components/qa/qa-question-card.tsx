@@ -104,7 +104,7 @@ export function QaQuestionCard({
           {index + 1}.
         </Typography>
         <div className="min-w-0 flex-1">
-          <PostContentPreview doc={item.question} />
+          <PostContentPreview doc={item.question} tagIds={item.tagIds} />
         </div>
       </div>
 

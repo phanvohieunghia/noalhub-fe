@@ -2,7 +2,13 @@ import Image from "next/image";
 import Markdown, { type Components, type UrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import { isSafeImageSrc, isSafeLinkHref } from "@noalhub/api/blog";
+import {
+  isSafeImageSrc,
+  isSafeLinkHref,
+  parseImageTitle,
+} from "@noalhub/api/blog";
+
+import { alignClassName, parseAlignMarker } from "./align-markdown";
 
 import "./post-prose.css";
 
@@ -22,7 +28,7 @@ export function MarkdownContent({ markdown }: { markdown: string }) {
   return (
     <div className="post-prose">
       <Markdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkAlign]}
         skipHtml
         allowedElements={ALLOWED}
         unwrapDisallowed
@@ -33,6 +39,38 @@ export function MarkdownContent({ markdown }: { markdown: string }) {
       </Markdown>
     </div>
   );
+}
+
+type MdNode = {
+  type: string;
+  value?: string;
+  children?: MdNode[];
+  data?: { hProperties?: Record<string, unknown> };
+};
+
+/**
+ * Turns the `<!--align:…-->` marker at the end of a paragraph or heading into
+ * a class on that block (`align-markdown.ts`). Runs before `skipHtml` drops the
+ * comment, so a reader that has no such plugin still shows plain text.
+ */
+function remarkAlign() {
+  const walk = (node: MdNode) => {
+    if ((node.type === "paragraph" || node.type === "heading") && node.children) {
+      const last = node.children[node.children.length - 1];
+      const align = last?.type === "html" ? parseAlignMarker(last.value) : null;
+      if (align) {
+        node.children.pop();
+        const tail = node.children[node.children.length - 1];
+        if (tail?.type === "text" && tail.value) tail.value = tail.value.replace(/\s+$/, "");
+        node.data = {
+          ...node.data,
+          hProperties: { ...node.data?.hProperties, className: alignClassName(align) },
+        };
+      }
+    }
+    node.children?.forEach(walk);
+  };
+  return (tree: MdNode) => walk(tree);
 }
 
 const ALLOWED = [
@@ -56,9 +94,9 @@ const safeUrl: UrlTransform = (url, key) => {
 const COMPONENTS: Components = {
   // `<h1>` is the page title and the editor stops at h4 — clamp to h2…h4 so a
   // pasted `#` or `#####` lands on a level the outline understands.
-  h1: ({ children }) => <h2>{children}</h2>,
-  h5: ({ children }) => <h4>{children}</h4>,
-  h6: ({ children }) => <h4>{children}</h4>,
+  h1: ({ children, className }) => <h2 className={className}>{children}</h2>,
+  h5: ({ children, className }) => <h4 className={className}>{children}</h4>,
+  h6: ({ children, className }) => <h4 className={className}>{children}</h4>,
 
   // `<s>` rather than GFM's `<del>`, matching what `PostContent` emits.
   del: ({ children }) => <s>{children}</s>,
@@ -78,12 +116,28 @@ const COMPONENTS: Components = {
   },
 
   /*
-   * Markdown has no dimensions, so always the `aspect-video` + `fill` frame
-   * `PostContent` falls back to (no CLS). A `<span>`, not `<figure>`: markdown
+   * Without a stored size, the `aspect-video` + `fill` frame `PostContent`
+   * falls back to (no CLS). A `<span>`, not `<figure>`: markdown
    * images sit inside a `<p>`, where a block element breaks hydration.
    */
-  img: ({ src, alt }) => {
+  img: ({ src, alt, title }) => {
     if (typeof src !== "string" || !src) return null;
+    // A size the editor stored in the title (`image-size-title.ts`).
+    const { width, height, align, widthPercent } = parseImageTitle(title);
+    if (width && height) {
+      return (
+        <span className="block" data-image-align={align ?? undefined}>
+          <Image
+            src={src}
+            alt={alt ?? ""}
+            width={width}
+            height={height}
+            style={widthPercent ? { width: `${widthPercent}%`, height: "auto" } : undefined}
+            sizes="(max-width: 768px) 100vw, 768px"
+          />
+        </span>
+      );
+    }
     return (
       <span className="relative block aspect-video w-full">
         <Image

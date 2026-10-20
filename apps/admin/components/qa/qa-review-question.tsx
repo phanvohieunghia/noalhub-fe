@@ -78,8 +78,21 @@ export function QaReviewQuestion({
       onPointerLeave={revealOnHover ? onPointerLeave : undefined}
       className="group flex flex-col rounded-lg border border-border bg-surface p-4"
     >
-      <div className="flex items-center gap-2 pb-2.5">
+      <div className="flex flex-wrap items-center gap-2 pb-2.5">
+        <Typography
+          variant="title-3"
+          as="span"
+          weight={600}
+          aria-hidden="true"
+          className="shrink-0"
+        >
+          {index + 1}.
+        </Typography>
         <Badge size="sm">{shapeLabel}</Badge>
+        <Badge size="sm">{t(`items.kinds.${item.kind}`)}</Badge>
+        {item.difficulty ? (
+          <Badge size="sm">{t(`items.difficulty.${item.difficulty}`)}</Badge>
+        ) : null}
         {tags?.map((tag) => (
           <Badge key={tag} size="sm">
             {tag}
@@ -90,14 +103,11 @@ export function QaReviewQuestion({
       </div>
 
       <div
-        className={`flex gap-1 ${revealOnHover ? "cursor-pointer" : ""}`}
+        className={`flex ${revealOnHover ? "cursor-pointer" : ""}`}
         onClick={revealOnHover ? () => setPinned((value) => !value) : undefined}
       >
-        <Typography variant="title-3" as="span" weight={600} aria-hidden="true">
-          {index + 1}.
-        </Typography>
         <div className="min-w-0 flex-1">
-          <PostContentPreview doc={item.question} />
+          <PostContentPreview doc={item.question} tagIds={item.tagIds} />
         </div>
       </div>
 

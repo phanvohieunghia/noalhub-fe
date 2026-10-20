@@ -32,8 +32,10 @@ export type NavLabelKey =
   | "items.qaDatasets"
   | "items.qaSets"
   | "items.qaItems"
+  | "items.qaTags"
   | "items.qaTemplates"
   | "items.qaCredentials"
+  | "items.qaModels"
   | "items.qaOutlines"
   | "items.ai"
   | "items.edit";
@@ -99,6 +101,7 @@ export const NAV_ITEMS: NavItem[] = [
     children: [
       { href: "/qa/sets", labelKey: "items.qaSets" },
       { href: "/qa/items", labelKey: "items.qaItems" },
+      { href: "/qa/tags", labelKey: "items.qaTags" },
     ],
   },
   /*
@@ -119,6 +122,11 @@ export const NAV_ITEMS: NavItem[] = [
       {
         href: "/qa/credentials",
         labelKey: "items.qaCredentials",
+        requires: "canGenerateAi",
+      },
+      {
+        href: "/qa/models",
+        labelKey: "items.qaModels",
         requires: "canGenerateAi",
       },
     ],

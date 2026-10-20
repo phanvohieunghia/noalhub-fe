@@ -72,7 +72,16 @@
     "admin": "Quản trị viên (Admin)",
     "editor": "Biên tập viên (Editor)",
     "viewer": "Người xem (Viewer)",
-    "error": "Vui lòng chọn vai trò hợp lệ."
+    "error": "Vui lòng chọn vai trò hợp lệ.",
+    "hint": "Quyết định người này được thay đổi những gì.",
+    "owner": "Chủ sở hữu (không khả dụng)",
+    "statusFilter": "Trạng thái",
+    "statusAll": "Tất cả trạng thái",
+    "statusActive": "Đang hoạt động",
+    "statusArchived": "Đã lưu trữ",
+    "searchLabel": "Tìm kiếm",
+    "searchPlaceholder": "Tìm người dùng...",
+    "apply": "Áp dụng"
   },
   "statCard": {
     "visits": "Lượt truy cập",

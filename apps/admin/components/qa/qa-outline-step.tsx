@@ -14,9 +14,7 @@ import {
   CHARS_PER_TOKEN,
   OUTLINE_CHAR_WARN,
   useQaOutline,
-  useQaOutlines,
   useQaSources,
-  useSetCurrentOutline,
   useUpdateQaOutline,
   type QaOutline,
 } from "@noalhub/api/qa";
@@ -29,7 +27,6 @@ import {
   markdownToBlogDoc,
 } from "@noalhub/ui/blog/markdown-editor";
 import { TiptapEditor } from "@noalhub/ui/blog/tiptap-editor";
-import { Select } from "@noalhub/ui/select";
 import { Skeleton } from "@noalhub/ui/skeleton";
 import { Spinner } from "@noalhub/ui/spinner";
 import { toast } from "@noalhub/ui/toast";
@@ -39,10 +36,17 @@ import { Typography } from "@noalhub/ui/typography";
 import { AnalyzeButton } from "./analyze-button";
 import { RunOutcome } from "./generation-progress";
 import { EditorShell } from "./qa-editor-shell";
+import { OutlineLabelField } from "./outline-label-field";
 import { docStats } from "./qa-plain-doc";
 import { QaOutlineDrawer } from "./qa-outline-drawer";
 import { QaResizeHandle } from "./qa-resize-handle";
+import {
+  OutlineVersionSelect,
+  PENDING_VERSION,
+  useOutlineVersion,
+} from "./use-outline-version";
 import { TableOfContents } from "./table-of-contents";
+import { useOutlineScrollSpy } from "./use-outline-scroll-spy";
 
 /**
  * Runs `done` once the smooth scroll has settled. A fixed delay cannot work: the
@@ -110,21 +114,46 @@ export function OutlineStep({
   onStarted: (generationId: string) => void;
 }) {
   const t = useTranslations("admin.qa");
-  const outlines = useQaOutlines(datasetId);
   const sources = useQaSources(datasetId);
-  const current = outlines.data?.items.find((outline) => outline.isCurrent);
-  const detail = useQaOutline(current?.id);
-  const setCurrent = useSetCurrentOutline(datasetId);
+  // Opens on the newest version; the picker only changes which one is on screen.
+  const { outlines, latest, selected, picked, select } =
+    useOutlineVersion(datasetId);
+  const detail = useQaOutline(selected?.id);
 
-  if (generating) {
-    return <OutlineGenerating chapters={sources.data?.length} />;
+  // A run in flight is one more entry in the picker, not a takeover of the step: the
+  // finished versions stay reachable, and only the pending one shows the placeholders.
+  const viewingPending =
+    generating && (picked === null || picked === PENDING_VERSION);
+  const pendingVersion = generating ? (latest?.version ?? 0) + 1 : undefined;
+  const handleStarted = (id: string) => {
+    select(PENDING_VERSION);
+    onStarted(id);
+  };
+
+  if (viewingPending) {
+    return (
+      <OutlineGenerating
+        chapters={sources.data?.length}
+        versionPicker={
+          <OutlineVersionSelect
+            items={outlines.data?.items ?? []}
+            value={PENDING_VERSION}
+            pendingVersion={pendingVersion}
+            onChange={select}
+            className="w-28"
+          />
+        }
+      />
+    );
   }
 
-  if (outlines.isPending || (!!current && detail.isPending)) {
+  if (outlines.isPending) {
     return <Skeleton className="h-96 w-full" />;
   }
 
-  if (!current || !detail.data) {
+  // Empty only when there is nothing to show at all: a version that is still loading
+  // keeps the workbench on screen.
+  if (!selected || (!detail.data && !detail.isPending)) {
     return (
       <section className="flex flex-col items-center gap-3 rounded-lg border border-border bg-surface p-10">
         <Typography variant="body-3" className="text-muted-foreground">
@@ -133,7 +162,7 @@ export function OutlineStep({
         <AnalyzeButton
           datasetId={datasetId}
           disabled={(sources.data?.length ?? 0) === 0}
-          onStarted={onStarted}
+          onStarted={handleStarted}
         />
         <RunOutcome generationId={generationId} />
       </section>
@@ -151,27 +180,22 @@ export function OutlineStep({
       ) : null}
       <RunOutcome generationId={generationId} />
       <OutlineWorkbench
-        key={detail.data.id}
         datasetId={datasetId}
-        outline={detail.data}
-        onStarted={onStarted}
+        // The badge in the section list marks the newest version.
+        outline={
+          detail.data
+            ? { ...detail.data, isCurrent: detail.data.id === latest?.id }
+            : undefined
+        }
+        onStarted={handleStarted}
         versionPicker={
-          <div className="w-36">
-            <Select
-              label={t("ws.meta.versionLabel")}
-              hideLabel
-              size="sm"
-              value={current.id}
-              disabled={setCurrent.isPending}
-              onChange={(event) => setCurrent.mutate(event.target.value)}
-              options={(outlines.data?.items ?? []).map((outline) => ({
-                value: outline.id,
-                label: outline.isCurrent
-                  ? `${t("outlines.versionShort", { version: outline.version })} · ${t("ws.outline.active")}`
-                  : t("outlines.versionShort", { version: outline.version }),
-              }))}
-            />
-          </div>
+          <OutlineVersionSelect
+            items={outlines.data?.items ?? []}
+            pendingVersion={pendingVersion}
+            value={selected.id}
+            onChange={select}
+            className="w-28"
+          />
         }
       />
     </div>
@@ -199,7 +223,13 @@ const SKELETON_ROWS = [
  * frame as the workbench, with the content swapped for placeholders, so the
  * layout does not jump when the real editor takes its place.
  */
-function OutlineGenerating({ chapters }: { chapters?: number }) {
+function OutlineGenerating({
+  chapters,
+  versionPicker,
+}: {
+  chapters?: number;
+  versionPicker: React.ReactNode;
+}) {
   const t = useTranslations("admin.qa");
   return (
     <div
@@ -207,9 +237,12 @@ function OutlineGenerating({ chapters }: { chapters?: number }) {
       aria-busy="true"
     >
       <section className="flex flex-col gap-4 self-start rounded-lg border border-border bg-surface p-4">
-        <Typography variant="title-3" as="h2">
-          {t("ws.outline.editor")}
-        </Typography>
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-2">
+          <Typography variant="title-3" as="h2">
+            {t("ws.outline.editor")}
+          </Typography>
+          {versionPicker}
+        </div>
         <div
           role="status"
           className="flex items-center gap-2.5 rounded-md bg-muted px-3 py-2.5 text-primary"
@@ -253,6 +286,41 @@ function OutlineGenerating({ chapters }: { chapters?: number }) {
   );
 }
 
+function toDoc(outline: QaOutline | undefined): BlogDoc {
+  if (!outline) return markdownToBlogDoc("");
+  return outline.contentFormat === "markdown"
+    ? markdownToBlogDoc(outline.content)
+    : outline.content;
+}
+
+/** Placeholder for the editor while a version loads; same box as the real one. */
+function EditorSkeleton({ className = "" }: { className?: string }) {
+  return (
+    <div aria-busy="true" className={`flex flex-col gap-3 p-4 ${className}`}>
+      <Skeleton className="h-8 w-2/3" />
+      {SKELETON_BLOCKS.map((block, index) => (
+        <div key={index} className="mt-3 flex flex-col gap-2">
+          <Skeleton className={`h-5 ${block.title}`} />
+          {block.lines.map((width, line) => (
+            <Skeleton key={line} className={`h-3.5 ${width}`} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Placeholder for the section list while a version loads. */
+function TocSkeleton() {
+  return (
+    <div aria-busy="true" className="flex flex-col gap-3 p-3">
+      {SKELETON_ROWS.map((width, index) => (
+        <Skeleton key={index} className={`h-4 ${width}`} />
+      ))}
+    </div>
+  );
+}
+
 function OutlineWorkbench({
   datasetId,
   outline,
@@ -260,20 +328,27 @@ function OutlineWorkbench({
   versionPicker,
 }: {
   datasetId: string;
-  outline: QaOutline;
+  /** `undefined` while a version is loading: the editor and section list show placeholders. */
+  outline: QaOutline | undefined;
   onStarted: (generationId: string) => void;
   /** The version switcher, shown beside the editor title. */
   versionPicker: React.ReactNode;
 }) {
   const t = useTranslations("admin.qa");
-  const update = useUpdateQaOutline(outline.id, datasetId);
+  const [loadedId, setLoadedId] = useState<string | undefined>(outline?.id);
+  const update = useUpdateQaOutline(loadedId ?? "", datasetId);
   // The outline is edited as rich text and converted back to markdown on Save.
-  const [doc, setDoc] = useState<BlogDoc>(() =>
-    outline.contentFormat === "markdown"
-      ? markdownToBlogDoc(outline.content)
-      : outline.content,
-  );
+  const [doc, setDoc] = useState<BlogDoc>(() => toDoc(outline));
   const [dirty, setDirty] = useState(false);
+  // A different version arrived: swap the document in place. Adjusting state while
+  // rendering (rather than remounting the workbench) is what keeps the header, the
+  // picker and the layout on screen across a switch.
+  if (outline && outline.id !== loadedId) {
+    setLoadedId(outline.id);
+    setDoc(toDoc(outline));
+    setDirty(false);
+  }
+  const loading = !outline || outline.id !== loadedId;
   const [outlineWidth, setOutlineWidth] = useState<number>(
     OUTLINE_WIDTH.initial,
   );
@@ -281,62 +356,7 @@ function OutlineWorkbench({
   const rootRef = useRef<HTMLDivElement>(null);
   const stats = useMemo(() => docStats(doc), [doc]);
 
-  // The sidebar lists the last saved outline while the document may have moved
-  // on, so match by title first and fall back to position among the headings.
-  // Scroll-spy: the entry whose heading last crossed the top of the editor's
-  // scroller. `scroll` does not bubble, so one capturing listener on the document
-  // covers the page, the inline editor and the full-screen one alike.
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const outlineRef = useRef(outline.outline);
-  useEffect(() => {
-    outlineRef.current = outline.outline;
-  }, [outline.outline]);
-  useEffect(() => {
-    let frame = 0;
-    const measure = (scroller: Element | Document) => {
-      const editor =
-        scroller instanceof Element
-          ? scroller.querySelector(".ProseMirror")
-          : document.querySelector(".ProseMirror");
-      if (!editor) return;
-      const headings = Array.from(
-        editor.querySelectorAll<HTMLElement>("h2, h3, h4"),
-      );
-      if (headings.length === 0) return;
-      const top =
-        scroller instanceof Element ? scroller.getBoundingClientRect().top : 0;
-      const atEnd =
-        scroller instanceof Element
-          ? scroller.scrollTop + scroller.clientHeight >=
-            scroller.scrollHeight - 2
-          : false;
-      let current = 0;
-      headings.forEach((node, position) => {
-        if (node.getBoundingClientRect().top - top <= 80) current = position;
-      });
-      if (atEnd) current = headings.length - 1;
-      const title = headings[current].textContent?.trim();
-      const entries = outlineRef.current;
-      const byTitle = entries.findIndex(
-        (entry) => entry.title.trim() === title,
-      );
-      const index =
-        byTitle >= 0 ? byTitle : current < entries.length ? current : null;
-      setActiveIndex(index);
-    };
-    const onScroll = (event: Event) => {
-      const target = event.target;
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() =>
-        measure(target instanceof Element ? target : document),
-      );
-    };
-    document.addEventListener("scroll", onScroll, true);
-    return () => {
-      cancelAnimationFrame(frame);
-      document.removeEventListener("scroll", onScroll, true);
-    };
-  }, []);
+  const activeIndex = useOutlineScrollSpy(outline?.outline);
 
   const scrollToEntry = (index: number, title: string) => {
     const headings = Array.from(
@@ -356,6 +376,7 @@ function OutlineWorkbench({
   };
 
   const save = async () => {
+    if (loading) return;
     setError(null);
     try {
       // The editor works on a Tiptap doc, but the outline is stored as markdown.
@@ -395,28 +416,28 @@ function OutlineWorkbench({
       key: "words",
       icon: LUCIDE.fileText,
       iconClass: "text-primary",
-      value: wordsValue,
+      value: loading ? "—" : wordsValue,
       label: t("ws.outline.metrics.words"),
     },
     {
       key: "characters",
       icon: LUCIDE.type,
       iconClass: "text-brand-500",
-      value: charsValue,
+      value: loading ? "—" : charsValue,
       label: t("ws.outline.metrics.characters"),
     },
     {
       key: "tokens",
       icon: LUCIDE.zap,
       iconClass: "text-success",
-      value: tokensValue,
+      value: loading ? "—" : tokensValue,
       label: t("ws.outline.metrics.tokens"),
     },
     {
       key: "readTime",
       icon: LUCIDE.clock,
       iconClass: "text-warning",
-      value: `~${readMinutes}`,
+      value: loading ? "—" : `~${readMinutes}`,
       label: t("ws.outline.metrics.readTime"),
       detail: t("ws.outline.metrics.minutes", { count: readMinutes }),
     },
@@ -433,7 +454,7 @@ function OutlineWorkbench({
       className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_var(--outline-w)]"
       style={{ "--outline-w": `${outlineWidth}px` } as CSSProperties}
     >
-      {stats.characters > OUTLINE_CHAR_WARN ? (
+      {!loading && stats.characters > OUTLINE_CHAR_WARN ? (
         <div className="lg:col-span-2">
           <AlertWarning
             message={t("ws.outline.longWarning", {
@@ -444,12 +465,20 @@ function OutlineWorkbench({
         </div>
       ) : null}
       <EditorShell
-        fullscreenTitle={t("ws.outline.editor")}
+        fullscreenTitle={outline?.label ?? t("ws.outline.editor")}
         title={
           <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-2">
-            <Typography variant="title-3" as="h2">
-              {t("ws.outline.editor")}
-            </Typography>
+            {outline ? (
+              <OutlineLabelField
+                datasetId={datasetId}
+                outlineId={outline.id}
+                label={outline.label}
+              />
+            ) : (
+              <Typography variant="title-3" as="h2">
+                {t("ws.outline.editor")}
+              </Typography>
+            )}
             {versionPicker}
             <Tooltip label={statusLabel}>
               <span
@@ -470,7 +499,7 @@ function OutlineWorkbench({
         }
         onSave={() => void save()}
         saving={update.isPending}
-        canSave={dirty}
+        canSave={dirty && !loading}
         error={error}
         fill
         meta={
@@ -503,17 +532,24 @@ function OutlineWorkbench({
             </Tooltip>
           </div>
         }
-        renderEditor={({ className, fullscreen }) => (
-          <TiptapEditor
-            value={doc}
-            onChange={(value) => {
-              setDoc(value);
-              setDirty(true);
-            }}
-            contentClassName={className}
-            fullscreen={fullscreen}
-          />
-        )}
+        renderEditor={({ className, fullscreen }) =>
+          loading ? (
+            <EditorSkeleton className={className} />
+          ) : (
+            <TiptapEditor
+              // The editor reads `value` on mount only; a cached version swaps in
+              // without passing through the skeleton, so remount per version.
+              key={loadedId}
+              value={doc}
+              onChange={(value) => {
+                setDoc(value);
+                setDirty(true);
+              }}
+              contentClassName={className}
+              fullscreen={fullscreen}
+            />
+          )
+        }
       />
 
       <QaOutlineDrawer label={t("ws.outline.openDrawer")}>
@@ -524,14 +560,18 @@ function OutlineWorkbench({
           label={t("outlines.resize")}
           onChange={setOutlineWidth}
         />
-        <TableOfContents
-          entries={outline.outline}
-          version={outline.version}
-          isCurrent={outline.isCurrent}
-          onSelect={scrollToEntry}
-          activeIndex={activeIndex}
-          className="h-full overflow-y-auto"
-        />
+        {outline && !loading ? (
+          <TableOfContents
+            entries={outline.outline}
+            version={outline.version}
+            isCurrent={outline.isCurrent}
+            onSelect={scrollToEntry}
+            activeIndex={activeIndex}
+            className="h-full overflow-y-auto"
+          />
+        ) : (
+          <TocSkeleton />
+        )}
       </QaOutlineDrawer>
       {update.isError ? (
         <AlertError message={t("ws.outline.saveFailed")} />

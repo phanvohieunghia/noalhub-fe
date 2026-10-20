@@ -19,6 +19,7 @@ import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import type { Message } from "@noalhub/api/message";
 import { useMessage } from "@noalhub/i18n/use-message";
 import { AlertError, AlertWarning } from "@noalhub/ui/alert";
+import { toast } from "@noalhub/ui/toast";
 import { MarkdownEditor, type Editor } from "@noalhub/ui/blog/markdown-editor";
 import { Badge } from "@noalhub/ui/badge";
 import { Button } from "@noalhub/ui/button";
@@ -335,7 +336,15 @@ function TemplateRow({
           aria-label={t("templates.toggleRow", { name: row.name })}
           checked={row.enabled}
           loading={update.isPending}
-          onCheckedChange={(enabled) => update.mutate({ enabled })}
+          onCheckedChange={(enabled) =>
+            update.mutate(
+              { enabled },
+              {
+                onSuccess: () => toast.success(t("templates.saved")),
+                onError: () => toast.error(t("templates.saveFailed")),
+              },
+            )
+          }
         />
       </TableCell>
       <TableRowActions label={t("actionsColumn")}>
@@ -450,11 +459,14 @@ function TemplateDialog({
     try {
       if (row) {
         await update.mutateAsync({ name, prompt });
+        toast.success(t("templates.saved"));
       } else if (kind === "qa") {
         // No key: the server derives one from the name — it no longer names a shape.
         await create.mutateAsync({ kind, name, prompt });
+        toast.success(t("templates.created"));
       } else {
         await create.mutateAsync({ kind, key, name, prompt });
+        toast.success(t("templates.created"));
       }
       onClose();
     } catch (error) {
@@ -642,6 +654,7 @@ function DuplicateDialog({
         id: row.id,
         input: row.kind === "qa" ? { name } : { key, name },
       });
+      toast.success(t("templates.duplicated"));
       onClose();
     } catch (error) {
       setFormError(applyApiError(error, () => undefined, []));

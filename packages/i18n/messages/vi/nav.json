@@ -46,7 +46,9 @@
       "qaCredentials": "Khoá AI",
       "qaOutlines": "Dàn ý",
       "ai": "AI",
-      "edit": "Sửa"
+      "edit": "Sửa",
+      "qaModels": "Model AI",
+      "qaTags": "Nhãn câu hỏi"
     },
     "disabled": {
       "conversations": "Chờ backend: chưa có endpoint /admin/conversations (admin-plan §3)",

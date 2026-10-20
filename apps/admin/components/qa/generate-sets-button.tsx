@@ -8,15 +8,16 @@ import type { Message } from "@noalhub/api/message";
 import {
   MAX_RUN_ITEMS,
   QA_TEMPLATE_KEYS,
-  useAiModels,
   useGenerateSets,
+  useQaOutline,
+  useQaOutlines,
   useQaTemplates,
   type QaItemKind,
   type QaOutlineEntry,
 } from "@noalhub/api/qa";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { useMessage } from "@noalhub/i18n/use-message";
-import { AlertError, AlertInfo } from "@noalhub/ui/alert";
+import { AlertError } from "@noalhub/ui/alert";
 import { Button } from "@noalhub/ui/button";
 import { Checkbox } from "@noalhub/ui/checkbox";
 import { Dialog } from "@noalhub/ui/dialog";
@@ -30,6 +31,15 @@ import { GenerationProgress } from "./generation-progress";
 import { checkRunFit } from "./qa-run-fit";
 import { Typography } from "@noalhub/ui/typography";
 
+const SHAPE_ICONS = {
+  multiple_choice: LUCIDE.listChecks,
+  single_choice: LUCIDE.circleDot,
+  true_false: LUCIDE.toggleLeft,
+  short_answer: LUCIDE.messageSquareText,
+  fill_blank: LUCIDE.textCursorInput,
+  flashcard: LUCIDE.layers,
+} as const;
+
 const ITEM_KINDS = ["theory", "practice", "recall", "analysis"] as const;
 
 /**
@@ -41,6 +51,7 @@ const ITEM_KINDS = ["theory", "practice", "recall", "analysis"] as const;
  * a field.
  */
 export function GenerateSetsButton({
+  datasetId,
   outlineId,
   sections,
   defaultAnchor,
@@ -48,6 +59,8 @@ export function GenerateSetsButton({
   iconOnly = false,
   onStarted,
 }: {
+  /** With it, the dialog lets the author pick which outline version to generate from. */
+  datasetId?: string;
   outlineId: string;
   sections: QaOutlineEntry[];
   /** Section ticked when the dialog opens; the rest stay pickable. */
@@ -76,19 +89,19 @@ export function GenerateSetsButton({
             variant="outline"
             size="icon-md"
             aria-label={label}
-            disabled={sections.length === 0}
             onClick={() => setOpen(true)}
           >
             <Icon icon={LUCIDE.sparkles} />
           </Button>
         </Tooltip>
       ) : (
-        <Button disabled={sections.length === 0} onClick={() => setOpen(true)}>
+        <Button onClick={() => setOpen(true)}>
           {label ?? t("generate.button")}
         </Button>
       )}
       {open ? (
         <GenerateDialog
+          datasetId={datasetId}
           outlineId={outlineId}
           sections={sections}
           defaultAnchor={defaultAnchor}
@@ -101,12 +114,14 @@ export function GenerateSetsButton({
 }
 
 function GenerateDialog({
-  outlineId,
-  sections,
+  datasetId,
+  outlineId: initialOutlineId,
+  sections: initialSections,
   defaultAnchor,
   onStarted,
   onClose,
 }: {
+  datasetId?: string;
   outlineId: string;
   sections: QaOutlineEntry[];
   defaultAnchor?: string;
@@ -120,6 +135,19 @@ function GenerateDialog({
   const aiRun = useAiRunChoice();
   const generate = useGenerateSets();
 
+  // Versions are only listed when the caller names the dataset; otherwise the dialog
+  // is tied to the outline it was opened from.
+  const versions = useQaOutlines(datasetId);
+  const [outlineId, setOutlineId] = useState(initialOutlineId);
+  const other = useQaOutline(
+    outlineId === initialOutlineId ? undefined : outlineId,
+  );
+  const sections =
+    outlineId === initialOutlineId
+      ? initialSections
+      : (other.data?.outline ?? []);
+  const loadingSections = outlineId !== initialOutlineId && other.isPending;
+
   const [templateId, setTemplateId] = useState("");
   // The shapes this run may produce. Chosen here rather than on the prompt: the same
   // prompt can be run for flashcards today and a mixed set tomorrow. Each one pulls
@@ -130,9 +158,18 @@ function GenerateDialog({
   const [picked, setPicked] = useState<string[]>(
     defaultAnchor ? [defaultAnchor] : [],
   );
+  const switchOutline = (id: string) => {
+    setOutlineId(id);
+    // Anchors belong to one version's headings.
+    setPicked([]);
+    setCollapsed([]);
+  };
   const [collapsed, setCollapsed] = useState<string[]>([]);
   const [allSections, setAllSections] = useState(false);
-  const [kinds, setKinds] = useState<QaItemKind[]>(["theory", "practice"]);
+  const [kinds, setKinds] = useState<QaItemKind[]>([]);
+  // The price is stated in a second dialog on Run, not inline: it is the last thing
+  // read before money is spent.
+  const [confirming, setConfirming] = useState(false);
   const [formError, setFormError] = useState<Message | string | null>(null);
   const [started, setStarted] = useState<{
     id: string;
@@ -141,14 +178,31 @@ function GenerateDialog({
 
   const usableTemplates = (templates.data ?? []).filter((row) => row.enabled);
 
-  const chosenCount = allSections ? sections.length : picked.length;
-  const minValue = Number(minCount) || 0;
-  const maxValue = Number(maxCount) || 0;
+  // An outline without headings has no sections to pick: the only run left is the
+  // whole document, which the backend takes as `allSections`.
+  const noSections = sections.length === 0 && !loadingSections;
+  const wholeOutline = allSections || noSections;
+  const chosenCount = wholeOutline ? sections.length : picked.length;
+  // A blank bound means "no limit on this side"; the model decides.
+  const minValue = minCount.trim() === "" ? undefined : Number(minCount);
+  const maxValue = maxCount.trim() === "" ? undefined : Number(maxCount);
+  const inBounds = (value: number | undefined) =>
+    value === undefined ||
+    (Number.isInteger(value) && value >= 1 && value <= MAX_RUN_ITEMS);
   const rangeValid =
-    minValue >= 1 && maxValue >= minValue && maxValue <= MAX_RUN_ITEMS;
-  const models = useAiModels();
-  const modelInfo = (models.data ?? []).find((row) => row.id === aiRun.model);
-  const pickedAnchors = allSections
+    inBounds(minValue) &&
+    inBounds(maxValue) &&
+    (minValue === undefined || maxValue === undefined || minValue <= maxValue);
+  const countText =
+    minValue !== undefined && maxValue !== undefined
+      ? t("generate.countBoth", { min: minValue, max: maxValue })
+      : minValue !== undefined
+        ? t("generate.countMin", { min: minValue })
+        : maxValue !== undefined
+          ? t("generate.countMax", { max: maxValue })
+          : t("generate.countAny");
+  const modelInfo = aiRun.modelInfo;
+  const pickedAnchors = wholeOutline
     ? sections.map((section) => section.anchor)
     : picked;
   // Blocked here rather than after the click: the sections' size and the model's
@@ -166,9 +220,9 @@ function GenerateDialog({
     fit.ok &&
     templateId !== "" &&
     types.length > 0 &&
-    chosenCount > 0 &&
+    (chosenCount > 0 || noSections) &&
     rangeValid &&
-    kinds.length > 0 &&
+    !loadingSections &&
     aiRun.ready;
 
   // `sections` arrive flat, in outline order, so a section's children are the run of
@@ -205,8 +259,23 @@ function GenerateDialog({
         : [...current, anchor],
     );
 
+  // Pointer-only: the field is cleared from the keyboard by deleting its text.
+  const clearButton = (value: string, clear: () => void) =>
+    value === "" ? null : (
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-label={tc("actions.clear")}
+        onClick={clear}
+        className="flex size-5 items-center justify-center rounded hover:bg-muted"
+      >
+        <Icon icon={ICONS.close} className="size-4" />
+      </button>
+    );
+
   const run = async () => {
     if (!aiRun.credential) return;
+    setConfirming(false);
     setFormError(null);
     try {
       const result = await generate.mutateAsync({
@@ -216,11 +285,10 @@ function GenerateDialog({
           types.includes(shape),
         ),
         credentialId: aiRun.credential.id,
-        model: aiRun.model,
-        minCount: minValue,
-        maxCount: maxValue,
-        itemKinds: kinds,
-        ...(allSections ? { allSections: true } : { sectionAnchors: picked }),
+        ...(minValue !== undefined ? { minCount: minValue } : {}),
+        ...(maxValue !== undefined ? { maxCount: maxValue } : {}),
+        ...(kinds.length > 0 ? { itemKinds: kinds } : {}),
+        ...(wholeOutline ? { allSections: true } : { sectionAnchors: picked }),
       });
       if (onStarted) {
         onStarted(result.generationId);
@@ -242,40 +310,69 @@ function GenerateDialog({
         <GenerationProgress generationId={started.id} reused={started.reused} />
       ) : (
         <div className="space-y-4">
-          <Select
-            label={t("generate.template")}
-            value={templateId}
-            onChange={(event) => setTemplateId(event.target.value)}
-            placeholder={
-              usableTemplates.length === 0
-                ? t("generate.noTemplate")
-                : t("generate.pickTemplate")
-            }
-            options={usableTemplates.map((row) => ({
-              value: row.id,
-              label: row.name,
-            }))}
-          />
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+            {datasetId && (versions.data?.items.length ?? 0) > 1 ? (
+              <div className="sm:w-40 sm:shrink-0">
+                <Select
+                  label={t("ws.meta.versionLabel")}
+                  value={outlineId}
+                  onChange={(event) => switchOutline(event.target.value)}
+                  options={(versions.data?.items ?? []).map((outline) => ({
+                    value: outline.id,
+                    label: t("outlines.versionShort", {
+                      version: outline.version,
+                    }),
+                  }))}
+                />
+              </div>
+            ) : null}
+            <div className="min-w-0 flex-1">
+              <Select
+                label={t("generate.template")}
+                value={templateId}
+                onChange={(event) => setTemplateId(event.target.value)}
+                placeholder={
+                  usableTemplates.length === 0
+                    ? t("generate.noTemplate")
+                    : t("generate.pickTemplate")
+                }
+                options={usableTemplates.map((row) => ({
+                  value: row.id,
+                  label: row.name,
+                }))}
+              />
+            </div>
+          </div>
 
           <fieldset className="space-y-2">
             <Typography variant="title-4" as="legend">
               {t("generate.questionTypes")}
             </Typography>
             <div className="flex flex-wrap gap-3">
-              {QA_TEMPLATE_KEYS.map((shape) => (
-                <Checkbox
-                  key={shape}
-                  label={t(`templates.shapes.${shape}`)}
-                  checked={types.includes(shape)}
-                  onCheckedChange={(checked) =>
-                    setTypes((current) =>
-                      checked === true
-                        ? [...current, shape]
-                        : current.filter((value) => value !== shape),
-                    )
-                  }
-                />
-              ))}
+              {QA_TEMPLATE_KEYS.map((shape) => {
+                const on = types.includes(shape);
+                const name = t(`templates.shapes.${shape}`);
+                return (
+                  <Tooltip key={shape} label={name}>
+                    <Button
+                      type="button"
+                      size="icon-md"
+                      variant={on ? "primary" : "outline"}
+                      aria-label={name}
+                      aria-pressed={on}
+                      onClick={() =>
+                        setTypes((current) =>
+                          on
+                            ? current.filter((value) => value !== shape)
+                            : [...current, shape],
+                        )
+                      }
+                    >
+                      <Icon icon={SHAPE_ICONS[shape]} />
+                    </Button>
+                  </Tooltip>
+                );
+              })}
             </div>
             <Typography variant="body-4" className="text-muted-foreground">
               {t("generate.questionTypesHint")}
@@ -289,6 +386,7 @@ function GenerateDialog({
               min={1}
               value={minCount}
               onChange={(event) => setMinCount(event.target.value)}
+              trailing={clearButton(minCount, () => setMinCount(""))}
             />
             <Input
               label={t("generate.maxCount")}
@@ -296,6 +394,7 @@ function GenerateDialog({
               min={1}
               value={maxCount}
               onChange={(event) => setMaxCount(event.target.value)}
+              trailing={clearButton(maxCount, () => setMaxCount(""))}
             />
           </div>
           <Typography variant="body-4" className="-mt-2 text-muted-foreground">
@@ -326,86 +425,94 @@ function GenerateDialog({
             </div>
           </fieldset>
 
-          <fieldset className="space-y-2">
-            <Typography variant="title-4" as="legend">
-              {t("generate.sections")}
-            </Typography>
-            {/* Spelled out, never a default: "no sections given" would be the
+          {/* No headings means nothing to pick: the run is the whole document and
+              the cost confirmation says so. */}
+          {noSections ? null : (
+            <fieldset className="space-y-2">
+              <Typography variant="title-4" as="legend">
+                {t("generate.sections")}
+              </Typography>
+              {/* Spelled out, never a default: "no sections given" would be the
                 most expensive request in the feature. */}
-            <Checkbox
-              label={t("generate.allSections", { count: sections.length })}
-              checked={allSections}
-              onCheckedChange={(checked) => setAllSections(checked === true)}
-            />
-            {!allSections ? (
-              <ul className="max-h-64 space-y-1 overflow-y-auto rounded-md border border-border p-2">
-                {sections.map((section, index) => {
-                  // Hidden while any ancestor is collapsed.
-                  let hidden = false;
-                  let ceiling = section.level;
-                  for (let i = index - 1; i >= 0 && !hidden; i -= 1) {
-                    if (sections[i].level < ceiling) {
-                      ceiling = sections[i].level;
-                      hidden = collapsed.includes(sections[i].anchor);
+              <Checkbox
+                label={t("generate.allSections", { count: sections.length })}
+                checked={allSections}
+                onCheckedChange={(checked) => setAllSections(checked === true)}
+              />
+              {!wholeOutline ? (
+                <ul className="max-h-64 space-y-1 overflow-y-auto rounded-md border border-border p-2">
+                  {sections.map((section, index) => {
+                    // Hidden while any ancestor is collapsed.
+                    let hidden = false;
+                    let ceiling = section.level;
+                    for (let i = index - 1; i >= 0 && !hidden; i -= 1) {
+                      if (sections[i].level < ceiling) {
+                        ceiling = sections[i].level;
+                        hidden = collapsed.includes(sections[i].anchor);
+                      }
                     }
-                  }
-                  if (hidden) return null;
+                    if (hidden) return null;
 
-                  const subtree = subtreeOf(index);
-                  const hasChildren = subtree.length > 1;
-                  const pickedCount = subtree.filter((anchor) =>
-                    picked.includes(anchor),
-                  ).length;
-                  const state =
-                    pickedCount === subtree.length
-                      ? true
-                      : pickedCount > 0
-                        ? "indeterminate"
-                        : false;
-                  const isCollapsed = collapsed.includes(section.anchor);
-                  return (
-                    <li
-                      key={section.anchor}
-                      className="flex items-center gap-1"
-                      style={{
-                        paddingInlineStart: `${(section.level - 2) * 1.5}rem`,
-                      }}
-                    >
-                      {hasChildren ? (
-                        <button
-                          type="button"
-                          aria-expanded={!isCollapsed}
-                          aria-label={t(
-                            isCollapsed
-                              ? "generate.expandChildren"
-                              : "generate.collapseChildren",
-                          )}
-                          onClick={() => toggleCollapsed(section.anchor)}
-                          className="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted"
-                        >
-                          <Icon
-                            icon={
+                    const subtree = subtreeOf(index);
+                    const hasChildren = subtree.length > 1;
+                    const pickedCount = subtree.filter((anchor) =>
+                      picked.includes(anchor),
+                    ).length;
+                    const state =
+                      pickedCount === subtree.length
+                        ? true
+                        : pickedCount > 0
+                          ? "indeterminate"
+                          : false;
+                    const isCollapsed = collapsed.includes(section.anchor);
+                    return (
+                      <li
+                        key={section.anchor}
+                        className="flex items-center gap-1"
+                        style={{
+                          paddingInlineStart: `${(section.level - 2) * 1.5}rem`,
+                        }}
+                      >
+                        {hasChildren ? (
+                          <button
+                            type="button"
+                            aria-expanded={!isCollapsed}
+                            aria-label={t(
                               isCollapsed
-                                ? ICONS.chevronRight
-                                : ICONS.chevronDown
-                            }
-                            className="size-4"
+                                ? "generate.expandChildren"
+                                : "generate.collapseChildren",
+                            )}
+                            onClick={() => toggleCollapsed(section.anchor)}
+                            className="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted"
+                          >
+                            <Icon
+                              icon={
+                                isCollapsed
+                                  ? ICONS.chevronRight
+                                  : ICONS.chevronDown
+                              }
+                              animate="snappy"
+                              className="size-4"
+                            />
+                          </button>
+                        ) : (
+                          <span
+                            className="size-5 shrink-0"
+                            aria-hidden="true"
                           />
-                        </button>
-                      ) : (
-                        <span className="size-5 shrink-0" aria-hidden="true" />
-                      )}
-                      <Checkbox
-                        label={section.title}
-                        checked={state}
-                        onCheckedChange={() => toggleSubtree(index)}
-                      />
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : null}
-          </fieldset>
+                        )}
+                        <Checkbox
+                          label={section.title}
+                          checked={state}
+                          onCheckedChange={() => toggleSubtree(index)}
+                        />
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : null}
+            </fieldset>
+          )}
 
           {/* State the price before the click: how many sections × how many
               questions, on which key and model. */}
@@ -428,16 +535,6 @@ function GenerateDialog({
                     })
               }
             />
-          ) : aiRun.credential && aiRun.ready ? (
-            <AlertInfo
-              message={t("generate.cost", {
-                sections: chosenCount,
-                min: minValue,
-                max: maxValue,
-                key: aiRun.credential.label,
-                model: aiRun.model,
-              })}
-            />
           ) : null}
 
           {formError ? <AlertError message={m(formError)} /> : null}
@@ -455,7 +552,7 @@ function GenerateDialog({
               {tc("actions.cancel")}
             </Button>
             <Button
-              onClick={() => void run()}
+              onClick={() => setConfirming(true)}
               disabled={!canRun || generate.isPending}
             >
               {t("generate.confirm")}
@@ -463,6 +560,29 @@ function GenerateDialog({
           </>
         )}
       </div>
+      {confirming && aiRun.credential ? (
+        <Dialog
+          open
+          onClose={() => setConfirming(false)}
+          size="md"
+          title={t("generate.confirmTitle")}
+        >
+          <Typography variant="body-3">
+            {t(noSections ? "generate.costWhole" : "generate.cost", {
+              sections: chosenCount,
+              count: countText,
+              key: aiRun.credential.label,
+              model: aiRun.model,
+            })}
+          </Typography>
+          <div className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setConfirming(false)}>
+              {tc("actions.cancel")}
+            </Button>
+            <Button onClick={() => void run()}>{t("generate.confirm")}</Button>
+          </div>
+        </Dialog>
+      ) : null}
     </Dialog>
   );
 }

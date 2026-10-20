@@ -63,7 +63,7 @@ export function LearnStats() {
                 {t(`stats.groupHints.${mode}`)}
               </Typography>
               <div className="mt-3">
-                <TableRoot caption={t(`stats.groups.${mode}`)}>
+                <TableRoot caption={t(`stats.groups.${mode}`)} fit={false}>
                   <TableHead>
                     <TableRow>
                       <TableHeaderCell>{t("stats.columns.kind")}</TableHeaderCell>

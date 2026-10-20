@@ -4,11 +4,15 @@ import {
   aiCredentialListSchema,
   aiCredentialSchema,
   aiModelListSchema,
+  aiModelSchema,
   qaDatasetListSchema,
   qaDatasetSchema,
   qaActiveGenerationsSchema,
   qaGenerationSchema,
   qaItemFullSchema,
+  qaItemTagListSchema,
+  qaItemTagPlayListSchema,
+  qaItemTagSchema,
   qaItemListSchema,
   addToFinalSetResultSchema,
   qaFinalOverviewSchema,
@@ -38,6 +42,8 @@ import {
   startGenerationSchema,
   type AddSourceInput,
   type CreateCredentialInput,
+  type CreateItemTagInput,
+  type CreateModelInput,
   type CreateDatasetInput,
   type CreateTemplateInput,
   type DuplicateTemplateInput,
@@ -47,6 +53,8 @@ import {
   type StartAnalyzeInput,
   type SubmitAnswerInput,
   type UpdateCredentialInput,
+  type UpdateItemTagInput,
+  type UpdateModelInput,
   type UpdateDatasetInput,
   type UpdateSetInput,
   type UpdateTemplateInput,
@@ -59,6 +67,8 @@ import type {
   QaAnswerReview,
   QaAttempt,
   QaItemPlay,
+  QaItemTag,
+  QaItemTagPlay,
   QaAttemptPlay,
   QaDatasetPlay,
   QaDatasetSummary,
@@ -109,12 +119,32 @@ export async function listCredentials(signal?: AbortSignal): Promise<AiCredentia
 }
 
 export async function listModels(signal?: AbortSignal): Promise<AiModel[]> {
-  const { data } = await http.get<AiModel[]>("/admin/ai/credentials/models", {
+  const { data } = await http.get<AiModel[]>("/admin/ai/models", {
     authRequired: true,
     schema: aiModelListSchema,
     signal,
   });
   return data;
+}
+
+export async function createModel(input: CreateModelInput): Promise<AiModel> {
+  const { data } = await http.post<AiModel>("/admin/ai/models", input, {
+    authRequired: true,
+    schema: aiModelSchema,
+  });
+  return data;
+}
+
+export async function updateModel(id: string, input: UpdateModelInput): Promise<AiModel> {
+  const { data } = await http.patch<AiModel>(`/admin/ai/models/${id}`, input, {
+    authRequired: true,
+    schema: aiModelSchema,
+  });
+  return data;
+}
+
+export async function deleteModel(id: string): Promise<void> {
+  await http.delete(`/admin/ai/models/${id}`, { authRequired: true });
 }
 
 export async function createCredential(
@@ -390,13 +420,17 @@ export async function updateOutline(
   return data;
 }
 
-export async function setCurrentOutline(
-  datasetId: string,
-  outlineId: string,
+/**
+ * Route riêng: `PATCH /outlines/:id` bắt buộc `content` (tới 2 MB) và từ chối field
+ * `label`, nên đổi tên phải đi đường `/label`. Trả bản tóm tắt, không kèm `content`.
+ */
+export async function updateOutlineLabel(
+  id: string,
+  label: string | null,
 ): Promise<QaOutlineSummary> {
-  const { data } = await http.put<QaOutlineSummary>(
-    `/admin/qa/datasets/${datasetId}/current-outline`,
-    { outlineId },
+  const { data } = await http.patch<QaOutlineSummary>(
+    `/admin/qa/outlines/${id}/label`,
+    { label },
     { authRequired: true, schema: qaOutlineSummarySchema },
   );
   return data;
@@ -673,4 +707,41 @@ export async function getStats(signal?: AbortSignal): Promise<QaStatsRow[]> {
     signal,
   });
   return data.rows;
+}
+
+/* ------------------------------- Item tags ------------------------------- */
+
+export async function listItemTags(signal?: AbortSignal): Promise<QaItemTag[]> {
+  const { data } = await http.get<QaItemTag[]>("/admin/qa/item-tags", {
+    authRequired: true,
+    schema: qaItemTagListSchema,
+    signal,
+  });
+  return data;
+}
+
+export async function createItemTag(input: CreateItemTagInput): Promise<QaItemTag> {
+  const { data } = await http.post<QaItemTag>("/admin/qa/item-tags", input, {
+    authRequired: true,
+    schema: qaItemTagSchema,
+  });
+  return data;
+}
+
+export async function updateItemTag(id: string, input: UpdateItemTagInput): Promise<QaItemTag> {
+  const { data } = await http.patch<QaItemTag>(`/admin/qa/item-tags/${id}`, input, {
+    authRequired: true,
+    schema: qaItemTagSchema,
+  });
+  return data;
+}
+
+/** The active tags a learner can see — small and rarely changing, fetched once. */
+export async function listPlayItemTags(signal?: AbortSignal): Promise<QaItemTagPlay[]> {
+  const { data } = await http.get<QaItemTagPlay[]>("/qa/item-tags", {
+    authRequired: true,
+    schema: qaItemTagPlayListSchema,
+    signal,
+  });
+  return data;
 }

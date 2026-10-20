@@ -37,7 +37,6 @@ import { TablePagination } from "@noalhub/ui/table-pagination";
 import { Typography } from "@noalhub/ui/typography";
 
 import { AdminErrorState } from "../admin-error-state";
-import { useFitHeight } from "./use-fit-height";
 
 const COLUMN_COUNT = 6;
 const PAGE_SIZES = [10, 25, 50] as const;
@@ -105,7 +104,6 @@ export function QaSetsContent() {
   };
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(25);
-  const listRef = useFitHeight<HTMLDivElement>();
   // Client-side: the list endpoint returns every set. A shrinking list (a delete, a
   // filter) can leave `page` past the end, so it is clamped rather than reset.
   const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
@@ -154,10 +152,9 @@ export function QaSetsContent() {
           <AdminErrorState error={sets.error} onRetry={() => sets.refetch()} />
         </div>
       ) : (
-        <div ref={listRef} className="mt-4">
+        <div className="mt-4">
           <TableRoot
             caption={t("sets.caption")}
-            scrollClassName="max-h-[calc(var(--fit-h,70vh)-4.5rem)] overflow-y-auto"
             footer={
               sets.data && rows.length > 0 ? (
                 <TablePagination

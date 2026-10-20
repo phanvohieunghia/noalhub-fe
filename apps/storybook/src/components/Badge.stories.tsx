@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { Badge, BADGE_SIZES, BADGE_TONES } from "@noalhub/ui/badge";
+import { LUCIDE } from "@noalhub/ui/icons";
 
 const meta: Meta<typeof Badge> = {
   title: "UI/Elements/Badge",
@@ -55,6 +56,16 @@ export const AllTones: Story = {
           {SAMPLE_LABELS[tone] ?? tone}
         </Badge>
       ))}
+    </div>
+  ),
+};
+
+/** Icon đứng trước nhãn — dùng cho số liệu ngắn như giới hạn context/output của model. */
+export const WithIcon: Story = {
+  render: () => (
+    <div className="flex gap-1">
+      <Badge icon={LUCIDE.layers}>1M context</Badge>
+      <Badge icon={LUCIDE.arrowUpFromLine}>64K output</Badge>
     </div>
   ),
 };

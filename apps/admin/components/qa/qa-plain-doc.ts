@@ -90,3 +90,12 @@ export function docStats(doc: BlogDoc): { words: number; characters: number } {
     characters: blocks.reduce((sum, block) => sum + block.length, 0),
   };
 }
+
+/** Words and characters of plain text, counted like {@link docStats} so a source and its outline compare. */
+export function textStats(text: string): { words: number; characters: number } {
+  const trimmed = text.trim();
+  return {
+    words: trimmed === "" ? 0 : trimmed.split(/\s+/).length,
+    characters: text.length,
+  };
+}

@@ -26,7 +26,7 @@
     "columns": {
       "label": "Tên khoá",
       "providerKey": "Nhà cung cấp / Khoá",
-      "model": "Model mặc định",
+      "model": "Model",
       "budget": "Ngân sách"
     },
     "fields": {
@@ -35,15 +35,20 @@
       "apiKeyHint": "Chỉ nhận một lần duy nhất. Không có đường xem lại — mất thì thay khoá mới.",
       "rotate": "Thay khoá mới",
       "rotateHint": "Để trống nếu không đổi khoá.",
-      "model": "Model mặc định",
+      "model": "Model",
       "modelPlaceholder": "Chọn model",
       "isDefault": "Dùng khoá này khi lệnh sinh không chỉ định khoá nào",
       "budget": "Ngân sách token mỗi tháng",
       "budgetHint": "Để trống là không giới hạn. Tính theo tháng dương lịch, giờ UTC.",
       "budgetInvalid": "Nhập số token nguyên, tối thiểu là 1."
-    }
+    },
+    "modelDisabled": "{label} — đã tắt, không dùng được"
   },
   "templates": {
+    "saved": "Đã lưu prompt",
+    "created": "Đã tạo prompt",
+    "duplicated": "Đã nhân bản prompt",
+    "saveFailed": "Không lưu được prompt.",
     "title": "Prompt",
     "intro": "Prompt cho hai chặng: phân tích tài liệu ra mục lục, và sinh câu hỏi. Prompt là dữ liệu bạn tự soạn — không có mẫu nào được cài sẵn.",
     "caption": "Danh sách prompt",
@@ -114,7 +119,6 @@
     "add": "Thêm bộ dữ liệu",
     "addTitle": "Thêm bộ dữ liệu",
     "empty": "Chưa có bộ dữ liệu nào.",
-    "open": "Mở",
     "large": "Nguồn lớn",
     "chars": "{count} ký tự",
     "charWarning": "Nguồn khá lớn: chặng phân tích viết lại cả tài liệu nên đầu ra xấp xỉ đầu vào, và lần gọi có thể chạm trần đầu ra của model. Cân nhắc tách thành nhiều bộ nhỏ hơn.",
@@ -134,6 +138,7 @@
       "title": "Tiêu đề",
       "description": "Mô tả"
     },
+    "saveFailed": "Không thể đổi tên dataset.",
     "delete": "Xóa",
     "deleteTitle": "Xóa “{title}”?",
     "deleteBody": "Bộ dữ liệu và các nguồn của nó sẽ bị xóa vĩnh viễn. Chỉ xóa được khi chưa sinh bộ câu hỏi nào từ nó."
@@ -170,7 +175,6 @@
     "editorTitle": "Sửa bản mục lục",
     "editorIntro": "AI ra bản nháp, bạn chốt. Mục lục bên phải do backend tính lại từ nội dung — sửa mục nghĩa là sửa tiêu đề trong trình soạn thảo.",
     "backToDataset": "Về bộ dữ liệu",
-    "makeCurrent": "Chốt bản này",
     "label": "Ghi chú cho bản này",
     "labelHint": "Ví dụ: \"chia mịn hơn\", \"prompt v3\".",
     "versionShort": "v{version}",
@@ -195,8 +199,8 @@
     "pickCredential": "Chọn khoá",
     "noCredential": "Chưa có khoá nào đang bật",
     "noCredentialHint": "Chưa có khoá AI nào đang bật. Thêm hoặc bật một khoá ở màn Khoá AI trước.",
-    "model": "Model",
-    "pickModel": "Chọn model"
+    "modelOfKey": "Chạy bằng {label} · cửa sổ {context, number, ::compact-short} · đầu ra {output, number, ::compact-short}. Muốn đổi model, vào màn Khoá AI.",
+    "modelUnavailable": "Model của khoá này ({label}) đã tắt hoặc không trả được JSON theo schema nên lần gọi sẽ bị từ chối. Gán model khác cho khoá ở màn Khoá AI."
   },
   "analyze": {
     "another": "Tạo thêm một phiên bản",
@@ -209,7 +213,12 @@
     "noTemplate": "Chưa có prompt loại phân tích nào",
     "label": "Ghi chú cho bản sắp sinh",
     "labelHint": "Để trống cũng được. Ghi chú giúp phân biệt các bản khi có nhiều lần chạy.",
-    "cost": "Chạy bằng khoá \"{key}\", model {model}. Đây là thao tác tính tiền thật."
+    "cost": "Chạy bằng khoá \"{key}\", model {model}. Đây là thao tác tính tiền thật.",
+    "sources": "Nguồn đưa vào phân tích",
+    "sourcesHint": "Đã chọn {selected}/{total}",
+    "selectAll": "Chọn tất cả",
+    "sourceUntitled": "Nguồn chưa đặt tên",
+    "sourceChars": "{count} ký tự"
   },
   "generation": {
     "queued": "Đã xếp hàng, đang chờ worker nhận…",
@@ -335,12 +344,16 @@
     "previewEmpty": "Chưa có câu hỏi nào thuộc loại này.",
     "previewFailed": "Không tải được câu hỏi của loại này.",
     "stateEmpty": "Chưa có câu hỏi",
-    "statePartial": "Xuất bản một phần ({published}/{total})"
+    "statePartial": "Xuất bản một phần ({published}/{total})",
+    "previewTags": "Nhãn (chỉ để xem thử, không lưu)",
+    "tagsLabel": "Nhãn",
+    "tagsHint": "Người học thấy câu hỏi trong một khung kèm nhãn ở viền."
   },
   "generate": {
     "button": "Sinh bộ câu hỏi",
     "title": "Sinh bộ câu hỏi",
     "confirm": "Chạy",
+    "confirmTitle": "Chạy và tính tiền?",
     "template": "Hình dạng câu hỏi",
     "pickTemplate": "Chọn prompt",
     "noTemplate": "Chưa có prompt loại sinh câu hỏi nào",
@@ -353,8 +366,13 @@
     "questionTypesHint": "Model tự chọn dạng cho từng câu trong các dạng đã tick, và mỗi dạng tự thêm luật riêng vào prompt.",
     "kinds": "Dạng câu cần sinh",
     "sections": "Mục cần sinh",
+    "countBoth": "{min}–{max} câu",
+    "countMin": "ít nhất {min} câu",
+    "countMax": "tối đa {max} câu",
+    "countAny": "số câu do model tự quyết định",
     "allSections": "Tất cả {count} mục",
-    "cost": "Sinh {min}–{max} câu từ {sections} mục, bằng khoá \"{key}\", model {model}. Đây là thao tác tính tiền thật.",
+    "costWhole": "Sinh {count} từ toàn bộ nội dung outline, bằng khoá \"{key}\", model {model}. Đây là thao tác tính tiền thật.",
+    "cost": "Sinh {count} từ {sections} mục, bằng khoá \"{key}\", model {model}. Đây là thao tác tính tiền thật.",
     "contextExceeded": "Các mục đã chọn dài {chars} ký tự (≈ {tokens} token), vượt cửa sổ {window} token của {model}. Chọn ít mục hơn hoặc chọn model có cửa sổ lớn hơn.",
     "outputExceeded": "Bạn chọn tối đa {max} câu, nhưng {model} chỉ sinh được khoảng {capacity} câu mỗi lần gọi. Giảm số câu xuống {capacity} hoặc ít hơn, hoặc chọn model có trần output lớn hơn."
   },
@@ -471,16 +489,28 @@
     },
     "source": {
       "saved": "Đã lưu nguồn",
-      "rawMarkdown": "Markdown thô",
+      "saveChanges": "Lưu thay đổi",
+      "statusSaving": "Đang lưu…",
+      "statusUnsaved": "Chưa lưu thay đổi",
+      "statusSaved": "Đã lưu tất cả",
       "actions": "Thao tác với nguồn",
       "fullscreen": "Toàn màn hình",
       "save": "Lưu",
       "add": "Thêm nguồn",
       "remove": "Xoá",
-      "pick": "Nguồn",
+      "collapse": "Thu gọn nguồn",
+      "expand": "Mở rộng nguồn",
       "empty": "Chưa có nguồn nào. Thêm một nguồn để bắt đầu.",
       "loadFailed": "Không tải được nguồn này.",
-      "saveFailed": "Không lưu được nguồn này."
+      "saveFailed": "Không lưu được nguồn này.",
+      "metrics": {
+        "title": "Chỉ số nguồn",
+        "words": "Số từ",
+        "characters": "Số ký tự",
+        "tokens": "Token ước tính",
+        "readTime": "Thời gian đọc",
+        "minutes": "~{count} phút"
+      }
     },
     "outline": {
       "editor": "Trình soạn mục lục",
@@ -493,7 +523,6 @@
       "statusSaved": "Đã lưu tất cả",
       "statusUnsaved": "Chưa lưu thay đổi",
       "statusSaving": "Đang lưu…",
-      "active": "Hiện hành",
       "readTime": "~{count} phút đọc",
       "metrics": {
         "title": "Chỉ số outline",
@@ -523,6 +552,8 @@
       "removeTitle": "Xóa \"{title}\"?",
       "removeIntro": "Các bộ câu hỏi của mục này sẽ biến mất khỏi danh sách, kể cả những câu đã duyệt. Không thể hoàn tác từ đây.",
       "removeFailed": "Không xóa được {count} bộ. Hãy thử lại.",
+      "sectionTitle": "Tên phần",
+      "renameFailed": "Không đổi được tên phần. Hãy thử lại.",
       "removeConfirm": "Xóa",
       "expandAll": "Mở tất cả mục",
       "collapseAll": "Thu gọn tất cả mục",
@@ -572,6 +603,86 @@
       "accepted": "Đáp án chấp nhận · mỗi dòng một đáp án",
       "save": "Lưu thay đổi",
       "saveFailed": "Không lưu được câu hỏi này."
+    }
+  },
+  "models": {
+    "title": "Model AI",
+    "intro": "Danh mục model có thể gán cho khoá. Cửa sổ ngữ cảnh và trần đầu ra là số của nhà cung cấp, quyết định lần gọi nào bị chặn trước khi tính tiền — chép từ trang model của họ.",
+    "caption": "Model AI",
+    "add": "Thêm model",
+    "addTitle": "Thêm model AI",
+    "editTitle": "Sửa {label}",
+    "edit": "Sửa",
+    "disable": "Tắt",
+    "enable": "Bật",
+    "disabled": "Đã tắt",
+    "delete": "Xoá",
+    "deleteTitle": "Xoá {label}?",
+    "deleteBody": "Chỉ xoá được khi chưa khoá nào dùng model này. Muốn ngừng dùng thì tắt nó đi.",
+    "empty": "Chưa có model nào. Chưa có model thì không tạo được khoá.",
+    "structured": "Có structured output",
+    "noStructured": "Không có structured output",
+    "context": "Cửa sổ {count, number, ::compact-short}",
+    "output": "Đầu ra {count, number, ::compact-short}",
+    "columns": {
+      "label": "Model",
+      "provider": "Nhà cung cấp",
+      "limits": "Giới hạn",
+      "status": "Trạng thái"
+    },
+    "fields": {
+      "provider": "Nhà cung cấp",
+      "providerPlaceholder": "Chọn nhà cung cấp",
+      "name": "Id model theo nhà cung cấp",
+      "nameHint": "Đúng như nhà cung cấp gọi (vd. anthropic/claude-sonnet-5 trên OpenRouter, claude-sonnet-5 khi gọi thẳng). Không đổi được sau này — cùng model qua nhà cung cấp khác là một dòng riêng.",
+      "label": "Tên hiển thị",
+      "contextWindow": "Cửa sổ ngữ cảnh (token)",
+      "maxOutputTokens": "Đầu ra tối đa (token)",
+      "maxOutputHint": "Được gửi đi làm max_tokens thật, nên điền mức bạn muốn cho phép chứ không phải trần kỹ thuật.",
+      "maxOutputInvalid": "Số nguyên từ 1 đến cửa sổ ngữ cảnh.",
+      "numberInvalid": "Số nguyên, tối thiểu 1.",
+      "structured": "Trả được JSON đúng schema (structured output)",
+      "enabled": "Đang bật"
+    }
+  },
+  "tags": {
+    "title": "Nhãn câu hỏi",
+    "intro": "Các nhãn gắn vào câu hỏi, ví dụ \"Câu hỏi điểm liệt\". Câu có nhãn được vẽ trong một khung kèm nhãn ở viền. Phần mô tả là thứ AI đọc để quyết định khi nào gắn nhãn.",
+    "caption": "Nhãn câu hỏi",
+    "add": "Thêm nhãn",
+    "addTitle": "Thêm nhãn câu hỏi",
+    "editTitle": "Sửa {label}",
+    "edit": "Sửa",
+    "empty": "Chưa có nhãn nào.",
+    "saved": "Đã lưu",
+    "saveFailed": "Không lưu được. Thử lại nhé.",
+    "toggleRow": "Bật hoặc tắt nhãn {name}",
+    "disabled": "Đang tắt",
+    "columns": {
+      "tag": "Nhãn",
+      "description": "Khi nào AI gắn",
+      "active": "Bật"
+    },
+    "fields": {
+      "key": "Key",
+      "keyHint": "Chữ thường, số và dấu gạch dưới. Đây là tên mà AI được đưa trong prompt.",
+      "keyInvalid": "Bắt đầu bằng chữ cái; chỉ dùng chữ thường, số và dấu gạch dưới.",
+      "description": "Mô tả cho AI",
+      "descriptionInvalid": "Hãy mô tả khi nào áp dụng nhãn này.",
+      "icon": "Icon",
+      "iconHint": "Tên icon lucide, ví dụ lucide:info.",
+      "iconInvalid": "Chọn một icon trong bộ lucide, ví dụ lucide:info.",
+      "tone": "Màu",
+      "labelVi": "Nhãn (tiếng Việt)",
+      "labelEn": "Nhãn (tiếng Anh)",
+      "labelInvalid": "Bắt buộc, tối đa 80 ký tự.",
+      "keyRenameWarning": "Câu hỏi không bị ảnh hưởng, nhưng các prompt đã lưu trước đó vẫn dùng key cũ cho đến khi bạn cập nhật."
+    },
+    "tones": {
+      "danger": "Đỏ (nguy hiểm)",
+      "warning": "Cam (cảnh báo)",
+      "success": "Xanh lá (thành công)",
+      "primary": "Màu thương hiệu"
     }
   }
 }

@@ -32,7 +32,6 @@ import {
 } from "@noalhub/ui/table";
 
 import { AdminErrorState } from "../admin-error-state";
-import { useFitHeight } from "../qa/use-fit-height";
 import { useUserFilters } from "./use-user-filters";
 import { Typography } from "@noalhub/ui/typography";
 
@@ -42,7 +41,6 @@ export function UsersContent() {
   const t = useTranslations("admin.users");
   const { query, searchInput, setSearchInput, setRole, setPage, toggleSort } = useUserFilters();
   const users = useAdminUsers(query);
-  const listRef = useFitHeight<HTMLDivElement>();
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const rows = users.data?.items ?? [];
@@ -88,10 +86,9 @@ export function UsersContent() {
           <AdminErrorState error={users.error} onRetry={() => users.refetch()} />
         </div>
       ) : (
-        <div ref={listRef} className="mt-4">
+        <div className="mt-4">
           <TableRoot
             caption={t("tableCaption")}
-            scrollClassName="max-h-[calc(var(--fit-h,70vh)-4.5rem)] overflow-y-auto"
           >
             <TableHead>
               <TableRow>

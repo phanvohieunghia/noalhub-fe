@@ -5,11 +5,12 @@ import { useState } from "react";
 
 import { useMe } from "@noalhub/api/auth";
 import type { Message } from "@noalhub/api/message";
-import { useQaTemplates, useStartAnalyze } from "@noalhub/api/qa";
+import { useQaSources, useQaTemplates, useStartAnalyze } from "@noalhub/api/qa";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { useMessage } from "@noalhub/i18n/use-message";
 import { AlertError, AlertInfo } from "@noalhub/ui/alert";
 import { Button } from "@noalhub/ui/button";
+import { Checkbox } from "@noalhub/ui/checkbox";
 import { Dialog } from "@noalhub/ui/dialog";
 import { Icon, LUCIDE } from "@noalhub/ui/icons";
 import { Input } from "@noalhub/ui/input";
@@ -103,6 +104,19 @@ function AnalyzeDialog({
 
   const [templateId, setTemplateId] = useState("");
   const [label, setLabel] = useState("");
+  const sources = useQaSources(datasetId);
+  const sourceRows = sources.data ?? [];
+  // Excluded ids rather than included: new sources default to "in".
+  const [excluded, setExcluded] = useState<ReadonlySet<string>>(new Set());
+  const selected = sourceRows.filter((row) => !excluded.has(row.id));
+  const pickable = sourceRows.length >= 2;
+  const toggle = (id: string, on: boolean) =>
+    setExcluded((prev) => {
+      const next = new Set(prev);
+      if (on) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   const [formError, setFormError] = useState<Message | string | null>(null);
 
   const usableTemplates = (templates.data ?? []).filter((row) => row.enabled);
@@ -114,8 +128,11 @@ function AnalyzeDialog({
       const result = await start.mutateAsync({
         templateId,
         credentialId: aiRun.credential.id,
-        model: aiRun.model,
         label: label === "" ? undefined : label,
+        sourceIds:
+          pickable && selected.length < sourceRows.length
+            ? selected.map((row) => row.id)
+            : undefined,
       });
       onStarted(result.generationId);
       onClose();
@@ -147,6 +164,48 @@ function AnalyzeDialog({
             label: row.name,
           }))}
         />
+
+        {pickable ? (
+          <fieldset className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Typography as="legend" variant="body-3" className="font-semibold">
+                {t("analyze.sources")}
+              </Typography>
+              <Typography variant="body-4" className="text-muted-foreground">
+                {t("analyze.sourcesHint", {
+                  selected: selected.length,
+                  total: sourceRows.length,
+                })}
+              </Typography>
+            </div>
+            <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-border p-2">
+              <Checkbox
+                label={t("analyze.selectAll")}
+                checked={
+                  selected.length === sourceRows.length
+                    ? true
+                    : selected.length === 0
+                      ? false
+                      : "indeterminate"
+                }
+                onCheckedChange={(v) =>
+                  setExcluded(
+                    v === true ? new Set() : new Set(sourceRows.map((r) => r.id)),
+                  )
+                }
+              />
+              {sourceRows.map((row) => (
+                <Checkbox
+                  key={row.id}
+                  label={row.title ?? t("analyze.sourceUntitled")}
+                  hint={t("analyze.sourceChars", { count: row.charCount })}
+                  checked={!excluded.has(row.id)}
+                  onCheckedChange={(v) => toggle(row.id, v === true)}
+                />
+              ))}
+            </div>
+          </fieldset>
+        ) : null}
 
         {aiRun.fields}
 
@@ -180,7 +239,12 @@ function AnalyzeDialog({
         </Button>
         <Button
           onClick={() => void run()}
-          disabled={templateId === "" || !aiRun.ready || start.isPending}
+          disabled={
+            templateId === "" ||
+            !aiRun.ready ||
+            start.isPending ||
+            (pickable && selected.length === 0)
+          }
         >
           {t("analyze.confirm")}
         </Button>

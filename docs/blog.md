@@ -340,9 +340,12 @@ Nên attrs phải được allowlist **theo giá trị**, ở cả ba chỗ (zod
 | `image` | `src` | Chỉ `https:`, và host phải nằm trong `images.remotePatterns` (§6.2) — ngoài danh sách thì `next/image` chết ở production, thà chặn ngay lúc ghi |
 | `image` | `alt` | string, cho phép rỗng (ảnh trang trí), **không** cho `null` |
 | `image` | `width`, `height` | `number \| null` — xem §3.1b |
+| `image` | `widthPercent` | Số nguyên 1–100 (phần trăm bề rộng cột), tuỳ chọn. `width`/`height` vẫn là kích thước px thật (cần cho `next/image`, §3.1b); trường này chỉ nói ảnh chiếm bao nhiêu cột, nên responsive. Kéo resize ghi lại px và xoá trường này. Trong markdown: `![alt](url "=300x200 =50% ~center")` |
+| `image` | `align` | Chỉ `"center" \| "right"`; căn trái là mặc định nên không lưu. Trong markdown đi theo title của ảnh: `![alt](url "=300x200 ~center")` |
 | `heading` | `level` | Chỉ `2 \| 3`. Đây là ràng buộc **giá trị**, khác với việc cho phép node `heading` |
+| `paragraph`, `heading` | `textAlign` | Chỉ `"center" \| "right" \| "justify"`; căn trái là mặc định nên **không lưu** (thiếu attr = căn trái, bài cũ đọc y nguyên). Giá trị khác bị bỏ. Trong markdown lưu bằng comment cuối khối: `Đoạn văn <!--align:center-->` — comment là thứ duy nhất reader markdown nào cũng ẩn, nên reader không biết đến nó vẫn hiện một đoạn căn trái bình thường |
 | `codeBlock` | `language` | `string \| null`, trong danh sách cố định — xem §3.1c |
-| Mọi node | attr khác | **Loại bỏ khi ghi.** Tiptap tự thêm attr theo bản (`textAlign`, `class`, `style`…); `style`/`class` đi thẳng vào DOM là một lối defacement/XSS khác |
+| Mọi node | attr khác | **Loại bỏ khi ghi.** Tiptap tự thêm attr theo bản (`class`, `style`…; riêng `textAlign` trên paragraph/heading đã được cho phép ở trên); `style`/`class` đi thẳng vào DOM là một lối defacement/XSS khác |
 
 Renderer gặp attr sai ràng buộc thì **không render thẻ đó nhưng giữ text con** (link hỏng
 thành chữ thường, ảnh hỏng thì bỏ) — cùng tinh thần "bỏ qua im lặng" ở §3.1, không throw.

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { useAdminBlogPosts, type BlogPost } from "@noalhub/api/blog";
 import { useDateFormat } from "@noalhub/i18n/use-date-format";
@@ -127,9 +128,10 @@ export function PostTable() {
 function PostRow({ post }: { post: BlogPost }) {
   const t = useTranslations("admin.posts");
   const df = useDateFormat();
+  const router = useRouter();
 
   return (
-    <TableRow>
+    <TableRow onActivate={() => router.push(`/posts/${post.id}`)}>
       <TableCell>
         <Link href={`/posts/${post.id}`} className="font-medium hover:underline">
           {post.title}

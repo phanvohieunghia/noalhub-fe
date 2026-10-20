@@ -7,7 +7,7 @@ import { useTranslations } from "use-intl";
 import { useQaAttemptReview, type QaAnswerReview } from "@noalhub/api/qa";
 import { Badge, Spinner } from "@noalhub/ui-native";
 import { LearnHeader } from "../../../../components/learn/screen-header";
-import { NativePostContent } from "../../../../components/post-content";
+import { NativeQaContent } from "../../../../components/post-content";
 
 /**
  * Looking back at an attempt already taken. Only answered questions appear —
@@ -59,7 +59,7 @@ function ReviewCard({ row }: { row: QaAnswerReview }) {
         ) : null}
       </View>
 
-      <NativePostContent doc={row.question} />
+      <NativeQaContent doc={row.question} />
 
       {row.options ? (
         <View className="gap-1">
@@ -88,7 +88,7 @@ function ReviewCard({ row }: { row: QaAnswerReview }) {
       {row.answer ? (
         <View className="gap-1 border-t border-border pt-3">
           <Text className="text-sm font-semibold text-foreground">{t("attempt.answer")}</Text>
-          <NativePostContent doc={row.answer} />
+          <NativeQaContent doc={row.answer} />
         </View>
       ) : null}
 
@@ -97,7 +97,7 @@ function ReviewCard({ row }: { row: QaAnswerReview }) {
           <Text className="text-sm font-semibold text-foreground">
             {t("attempt.explanation")}
           </Text>
-          <NativePostContent doc={row.explanation} />
+          <NativeQaContent doc={row.explanation} />
         </View>
       ) : null}
     </View>

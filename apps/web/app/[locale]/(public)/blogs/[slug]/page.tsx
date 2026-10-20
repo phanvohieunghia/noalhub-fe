@@ -185,9 +185,17 @@ export default async function BlogPostPage({ params }: Props) {
         ) : null}
       </header>
 
-      <TableOfContents doc={post.content} />
-
-      <PostContent doc={post.content} />
+      {/* From `lg` the contents sit beside the post and stay on screen while it
+          scrolls (`self-start` + `sticky`); below that they stack above it. */}
+      <div className="flex flex-col gap-8 lg:flex-row-reverse lg:items-start">
+        <TableOfContents
+          doc={post.content}
+          className="lg:sticky lg:top-6 lg:max-h-[calc(100dvh-3rem)] lg:w-64 lg:shrink-0 lg:overflow-y-auto"
+        />
+        <div className="min-w-0 flex-1">
+          <PostContent doc={post.content} />
+        </div>
+      </div>
 
       {post.tags.length > 0 ? (
         <section aria-labelledby="tags-heading" className="flex flex-wrap items-center gap-2">

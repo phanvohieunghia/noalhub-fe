@@ -1,6 +1,9 @@
 "use client";
 
+import Heading from "@tiptap/extension-heading";
 import Image from "@tiptap/extension-image";
+import Paragraph from "@tiptap/extension-paragraph";
+import TextAlign from "@tiptap/extension-text-align";
 import {
   EditorContent,
   useEditor,
@@ -14,6 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from "@tiptap/extension-table";
+import { NodeSelection, Plugin } from "@tiptap/pm/state";
+import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import StarterKit from "@tiptap/starter-kit";
 // Type-only: `contentType` on the editor options is declared by this package's
 // module augmentation. Nothing is bundled — `MarkdownEditor` adds the runtime.
@@ -22,8 +27,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   BLOG_CODE_LANGUAGES,
+  formatImageTitle,
   isSafeImageSrc,
   isSafeLinkHref,
+  parseImageTitle,
   sanitizeBlogDoc,
   type BlogDoc,
 } from "@noalhub/api/blog";
@@ -37,9 +44,15 @@ import { useMessage } from "@noalhub/i18n/use-message";
 import { useTranslations } from "next-intl";
 import { Button } from "../button";
 import { Dialog } from "../dialog";
+import {
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "../dropdown-menu";
 import { Alert, AlertError } from "../alert";
 import { Icon, ICONS, LUCIDE, type IconName } from "../icons";
 import { Input } from "../input";
+import { Select } from "../select";
 import { Tooltip } from "../tooltip";
 
 import { ImageUploadButton } from "../media/image-upload-button";
@@ -48,6 +61,7 @@ import { Typography } from "../typography";
 // The editor writes into a `.post-prose` element, so it needs the very same
 // stylesheet the renderer uses — otherwise what is typed and what is published
 // look different.
+import { formatAlignMarker, takeAlignMarker } from "./align-markdown";
 import "./post-prose.css";
 
 /**
@@ -59,14 +73,214 @@ import "./post-prose.css";
  * optimization), or takes a **CLS** hit — a Core Web Vitals metric, and
  * therefore squarely inside this plan's SEO goal (`docs/blog.md` §3.1b).
  */
+type ImageAttrs = {
+  width?: number | null;
+  height?: number | null;
+  widthPercent?: number | null;
+  align?: string | null;
+};
+
+/** The pixel size as a style — only while no share-of-column size overrides it. */
+function pixelStyle(attributes: ImageAttrs) {
+  return !attributes.widthPercent && attributes.width && attributes.height
+    ? { style: `width:${attributes.width}px;height:${attributes.height}px` }
+    : {};
+}
+
 const BlogImage = Image.extend({
   addAttributes() {
     return {
       ...this.parent?.(),
-      width: { default: null },
-      height: { default: null },
+      /*
+       * How the size reaches the picture: as an inline `style`, because the
+       * resize view reads `width`/`height` once and then leaves the element
+       * alone. `style` is what its `onUpdate` re-applies, so the pixel size and
+       * the share-of-column size both go through it (and exclude each other).
+       */
+      width: {
+        default: null,
+        renderHTML: (attributes: ImageAttrs) => ({
+          ...(attributes.width ? { width: attributes.width } : {}),
+          ...pixelStyle(attributes),
+        }),
+      },
+      height: {
+        default: null,
+        renderHTML: (attributes: ImageAttrs) =>
+          attributes.height ? { height: attributes.height } : {},
+      },
+      widthPercent: {
+        default: null,
+        parseHTML: () => null,
+        renderHTML: (attributes: ImageAttrs) =>
+          attributes.widthPercent
+            ? { style: "width:100%;height:auto" }
+            : {},
+      },
+      // Shown through a data attribute (not `style`): the resize view writes
+      // `style.width/height` on the same element and a `style` here would wipe it.
+      align: {
+        default: null,
+        parseHTML: (element: HTMLElement) =>
+          element.getAttribute("data-image-align"),
+        renderHTML: (attributes: ImageAttrs) =>
+          attributes.align ? { "data-image-align": attributes.align } : {},
+      },
     };
   },
+  /*
+   * The resize view applies the pixel size once, on creation, and would paint
+   * over the size. Put it back right after. A share of the column is carried by
+   * the wrapper (see the decoration below), so the picture itself just fills it
+   * — that way the selection frame hugs the picture instead of the whole row.
+   */
+  addNodeView() {
+    const make = this.parent?.();
+    if (!make) return null;
+    return (props) => {
+      const view = make(props);
+      const percent = props.node.attrs.widthPercent;
+      const img = view.dom.querySelector("img");
+      if (percent && img) img.style.cssText = "width:100%;height:auto";
+      return view;
+    };
+  },
+  /*
+   * Dragging a corner commits pixels; a stale share would then win over them
+   * on the next paint, so the drag clears it.
+   */
+  addProseMirrorPlugins() {
+    return [
+      // The share of the column, as a custom property on the node view's
+      // container; `post-prose.css` turns it into the wrapper's width.
+      new Plugin({
+        props: {
+          decorations: ({ doc }) => {
+            const found: Decoration[] = [];
+            doc.descendants((node, pos) => {
+              if (node.type.name === "image" && node.attrs.widthPercent) {
+                found.push(
+                  Decoration.node(pos, pos + node.nodeSize, {
+                    class: "image-sized",
+                    style: `--image-width:${node.attrs.widthPercent}%`,
+                  }),
+                );
+              }
+            });
+            return found.length ? DecorationSet.create(doc, found) : null;
+          },
+        },
+      }),
+      /*
+       * A text selection that sweeps over an image paints the text but leaves
+       * the picture untouched, so the highlight looks full of holes. Tag the
+       * images inside the range; `post-prose.css` tints them like the text.
+       * (A selection of the image alone already has `ProseMirror-selectednode`.)
+       */
+      new Plugin({
+        props: {
+          decorations: (state) => {
+            const { selection, doc } = state;
+            if (selection.empty || selection instanceof NodeSelection) return null;
+            const found: Decoration[] = [];
+            doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+              if (node.type.name === "image") {
+                found.push(
+                  Decoration.node(pos, pos + node.nodeSize, {
+                    class: "image-in-selection",
+                  }),
+                );
+              }
+            });
+            return found.length ? DecorationSet.create(doc, found) : null;
+          },
+        },
+      }),
+      new Plugin({
+        appendTransaction: (transactions, oldState, newState) => {
+          if (!transactions.some((tr) => tr.docChanged)) return null;
+          // Attribute-only edits keep the document size; anything else (typing,
+          // pasting) shifts positions and is not a resize.
+          if (oldState.doc.content.size !== newState.doc.content.size) return null;
+          let tr = newState.tr;
+          let changed = false;
+          newState.doc.descendants((node, pos) => {
+            if (node.type.name !== "image" || !node.attrs.widthPercent) return;
+            const before = oldState.doc.nodeAt(pos);
+            if (
+              before?.type.name === "image" &&
+              before.attrs.src === node.attrs.src &&
+              before.attrs.widthPercent === node.attrs.widthPercent &&
+              (before.attrs.width !== node.attrs.width ||
+                before.attrs.height !== node.attrs.height)
+            ) {
+              tr = tr.setNodeMarkup(pos, undefined, { ...node.attrs, widthPercent: null });
+              changed = true;
+            }
+          });
+          return changed ? tr : null;
+        },
+      }),
+    ];
+  },
+  /*
+   * The size rides in the image's title (`"=300x200"`) — see
+   * `image-size-title.ts`. Without these two the markdown round trip would
+   * drop `width`/`height`, so a resize would be lost on the next load.
+   */
+  parseMarkdown: (token, helpers) => {
+    const { title, width, height, align, widthPercent } = parseImageTitle(token.title);
+    return helpers.createNode("image", {
+      src: token.href,
+      alt: token.text,
+      title,
+      width,
+      height,
+      align,
+      widthPercent,
+    });
+  },
+  renderMarkdown: (node) => {
+    const { src = "", alt = "", title, width, height, align, widthPercent } =
+      node.attrs ?? {};
+    const text = formatImageTitle(title, width, height, align, widthPercent);
+    return text ? `![${alt}](${src} "${text}")` : `![${alt}](${src})`;
+  },
+});
+
+/*
+ * Paragraph and heading with alignment in their markdown. The attribute itself
+ * comes from `TextAlign` below; these two only teach the markdown round trip to
+ * keep it (`align-markdown.ts`), so a `MarkdownEditor` document does not lose
+ * its alignment on the next keystroke.
+ */
+const alignedParse =
+  (parse: NonNullable<typeof Paragraph.config.parseMarkdown>): NonNullable<typeof Paragraph.config.parseMarkdown> =>
+  (token, helpers) => {
+    const { align, tokens } = takeAlignMarker(token.tokens ?? []);
+    const result = parse({ ...token, tokens }, helpers);
+    if (!align || Array.isArray(result) || !("type" in result)) return result;
+    return { ...result, attrs: { ...result.attrs, textAlign: align } };
+  };
+
+const alignedRender =
+  (render: NonNullable<typeof Paragraph.config.renderMarkdown>): NonNullable<typeof Paragraph.config.renderMarkdown> =>
+  (node, helpers, ctx) => {
+    const text = render(node, helpers, ctx);
+    // An empty block has nothing to align (and `&nbsp;` is its placeholder).
+    return text && text !== "&nbsp;"
+      ? `${text}${formatAlignMarker(node.attrs?.textAlign)}`
+      : text;
+  };
+
+const AlignedParagraph = Paragraph.extend({
+  parseMarkdown: alignedParse(Paragraph.config.parseMarkdown!),
+  renderMarkdown: alignedRender(Paragraph.config.renderMarkdown!),
+});
+
+const AlignedHeading = Heading.extend({
+  parseMarkdown: alignedParse(Heading.config.parseMarkdown!),
+  renderMarkdown: alignedRender(Heading.config.renderMarkdown!),
 });
 
 /**
@@ -76,10 +290,9 @@ const BlogImage = Image.extend({
  */
 export const BLOG_EXTENSIONS: Extensions = [
   StarterKit.configure({
-    // h1 is the Q&A outline document title; h2/h3/h4 are its levels (§6.2). h4 is what the
-    // Q&A outline's third level needs — without it the backend demotes a
-    // sub-point to h2 and it reads as a chapter that was never written.
-    heading: { levels: [1, 2, 3, 4] },
+    // Replaced by the aligned versions below.
+    heading: false,
+    paragraph: false,
     // Not in the §3.1 allowlist — enabling it produces a mark the renderer
     // drops, so an author underlines something, saves, and the text comes
     // back plain.
@@ -92,7 +305,33 @@ export const BLOG_EXTENSIONS: Extensions = [
       isAllowedUri: (url) => isSafeLinkHref(url),
     },
   }),
-  BlogImage.configure({ inline: false, allowBase64: false }),
+  AlignedParagraph,
+  // h1 is the Q&A outline document title; h2/h3/h4 are its levels (§6.2). h4 is
+  // what the Q&A outline's third level needs — without it the backend demotes a
+  // sub-point to h2 and it reads as a chapter that was never written.
+  AlignedHeading.configure({ levels: [1, 2, 3, 4] }),
+  // Left is the default and is never stored (`BlogTextAlign`).
+  TextAlign.configure({
+    types: ["heading", "paragraph"],
+    alignments: ["left", "center", "right", "justify"],
+  }),
+  /*
+   * Drag a corner to resize. It writes the `width`/`height` attrs the schema
+   * already carries and the renderer already honours, so the size survives a
+   * save with no new field. Corners only, ratio locked: dragging one edge
+   * would stretch the picture.
+   */
+  BlogImage.configure({
+    inline: false,
+    allowBase64: false,
+    resize: {
+      enabled: true,
+      directions: ["top-left", "top-right", "bottom-left", "bottom-right"],
+      minWidth: 80,
+      minHeight: 40,
+      alwaysPreserveAspectRatio: true,
+    },
+  }),
   /*
    * `resizable: false` — column widths would be a `colwidth` attribute the
    * backend sanitizer does not keep, so the author drags a column, saves,
@@ -183,7 +422,7 @@ export function RichTextEditor({
 }) {
   const t = useTranslations("common.editor");
   const [linkOpen, setLinkOpen] = useState(false);
-  const [imageOpen, setImageOpen] = useState(false);
+  const [imageMode, setImageMode] = useState<"upload" | "url" | null>(null);
   const m = useMessage();
   const [dropError, setDropError] = useState<Message | string | null>(null);
   /*
@@ -193,6 +432,95 @@ export function RichTextEditor({
    */
   const editorRef = useRef<Editor | null>(null);
   const dropUpload = useUploadMedia({ allow: MEDIA_IMAGE_MIMES });
+  const [localImages, setLocalImages] = useState<LocalImage[]>([]);
+  const [folderBatch, setFolderBatch] = useState<{
+    done: number;
+    total: number;
+  } | null>(null);
+  // What the last folder pick failed to match: the author may have chosen the wrong folder.
+  const [folderMiss, setFolderMiss] = useState<{ missing: number; total: number } | null>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
+
+  /**
+   * Resolves the pasted `![](/Users/…/x.jpeg)` references. A page cannot read a
+   * path off the author's disk, so the author hands over the folder once (a
+   * file input cannot be opened from the paste event itself — paste is not a
+   * user activation) and files are matched to the references by name.
+   */
+  const uploadFromFolder = useCallback(
+    async (files: File[]) => {
+      const editorInstance = editorRef.current;
+      if (!editorInstance || localImages.length === 0) return;
+      setDropError(null);
+      setFolderMiss(null);
+
+      const byName = new Map(files.map((file) => [file.name, file]));
+      const todo = localImages.filter((image) => byName.has(image.name));
+      const missing = localImages.filter((image) => !byName.has(image.name));
+      setFolderBatch({ done: 0, total: todo.length });
+
+      let done = 0;
+      let failed: LocalImage[] = [];
+      const queue = [...todo];
+      const worker = async () => {
+        for (let image = queue.shift(); image; image = queue.shift()) {
+          try {
+            const file = byName.get(image.name)!;
+            const asset = await dropUpload.mutateAsync(file);
+            const size = await measureImage(asset.url);
+            replaceToken(editorInstance, image.token, {
+              type: "image",
+              attrs: {
+                src: asset.url,
+                alt: image.alt || suggestAltFrom(image.name),
+                width: size?.width ?? null,
+                height: size?.height ?? null,
+              },
+            });
+          } catch (error) {
+            failed = [...failed, image];
+            setDropError(messageOf(error));
+          }
+          done += 1;
+          setFolderBatch({ done, total: todo.length });
+        }
+      };
+      // A few in flight at once: a pasted chapter can hold hundreds of images.
+      await Promise.all(Array.from({ length: 4 }, worker));
+
+      setFolderBatch(null);
+      setFolderMiss(missing.length > 0 ? { missing: missing.length, total: localImages.length } : null);
+      setLocalImages([...missing, ...failed]);
+    },
+    [dropUpload, localImages],
+  );
+
+  /**
+   * Gives up on uploading the pasted images. `keepText` leaves the original
+   * `![alt](path)` in the document as plain text; otherwise the reference is
+   * deleted along with its placeholder paragraph.
+   */
+  const dismissLocalImages = useCallback(
+    (keepText: boolean) => {
+      const editorInstance = editorRef.current;
+      if (editorInstance) {
+        for (const image of localImages)
+          replaceToken(
+            editorInstance,
+            image.token,
+            keepText
+              ? {
+                  type: "paragraph",
+                  content: [{ type: "text", text: image.raw }],
+                }
+              : null,
+          );
+      }
+      setLocalImages([]);
+      setFolderMiss(null);
+    },
+    [localImages],
+  );
 
   /**
    * Drag-and-drop and paste for images — the path authors actually use; the
@@ -224,7 +552,9 @@ export function RichTextEditor({
     // Required with Next's SSR: rendering on the first pass mismatches hydration.
     immediatelyRender: false,
     extensions: [...BLOG_EXTENSIONS, ...extensions],
-    content,
+    // Stored markdown can hold `- [ ]` too (see `flattenTaskLists`); an invalid item
+    // here would throw on mount and blank the editor.
+    content: contentType === "markdown" && typeof content === "string" ? flattenTaskLists(content) : content,
     contentType,
     editorProps: {
       attributes: {
@@ -248,9 +578,13 @@ export function RichTextEditor({
        */
       handlePaste: (_view, event) => {
         const file = firstImageFile(event.clipboardData?.files);
-        if (!file) return false;
-        uploadAndInsert(file);
-        return true;
+        if (file) {
+          uploadAndInsert(file);
+          return true;
+        }
+        return pasteMarkdown(editorRef.current, event, contentType, (items) =>
+          setLocalImages((prev) => [...prev, ...items]),
+        );
       },
       handleDrop: (_view, event) => {
         const file = firstImageFile((event as DragEvent).dataTransfer?.files);
@@ -291,7 +625,7 @@ export function RichTextEditor({
         fullscreen={fullscreen}
         extra={toolbarExtra}
         onLink={() => setLinkOpen(true)}
-        onImage={() => setImageOpen(true)}
+        onImage={setImageMode}
       />
       <EditorContent editor={editor} className="min-h-0 flex-1" />
 
@@ -306,15 +640,113 @@ export function RichTextEditor({
       ) : null}
       <AlertError message={m(dropError)} />
 
+      {/*
+        A modal rather than a strip above the page: the author has to decide
+        before going on (the pasted images are placeholders until then), and a
+        row of buttons wedged between the toolbar and the text looked like part
+        of the editor chrome. Closing it is the same as "Skip images", which
+        keeps the pasted text rather than deleting anything.
+      */}
+      {localImages.length > 0 ? (
+        <Dialog
+          open
+          onClose={() => {
+            if (folderBatch === null) dismissLocalImages(true);
+          }}
+          title={t("localImagesTitle")}
+        >
+          <div role="status" className="flex flex-col gap-4">
+            <Typography variant="body-3" className="text-muted-foreground">
+              {folderBatch
+                ? t("localImagesUploading", folderBatch)
+                : t("localImagesPending", { count: localImages.length })}
+            </Typography>
+            {folderMiss && folderBatch === null ? (
+              <Alert
+                tone="warning"
+                message={
+                  folderMiss.missing === folderMiss.total
+                    ? t("localImagesNoneFound")
+                    : t("localImagesSomeMissing", folderMiss)
+                }
+              />
+            ) : null}
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={folderBatch !== null}
+                onClick={() => dismissLocalImages(false)}
+              >
+                {t("localImagesRemove")}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={folderBatch !== null}
+                onClick={() => dismissLocalImages(true)}
+              >
+                {t("localImagesSkip")}
+              </Button>
+              <Button
+                type="button"
+                disabled={folderBatch !== null}
+                onClick={() => folderInputRef.current?.click()}
+              >
+                {t("localImagesPick")}
+              </Button>
+            </div>
+            <input
+              ref={folderInputRef}
+              type="file"
+              multiple
+              hidden
+              {...({ webkitdirectory: "" } as object)}
+              onChange={(event) => {
+                const files = Array.from(event.target.files ?? []);
+                event.target.value = "";
+                void uploadFromFolder(files);
+              }}
+            />
+          </div>
+        </Dialog>
+      ) : null}
+
       {linkOpen ? (
         <LinkDialog editor={editor} onClose={() => setLinkOpen(false)} />
       ) : null}
-      {imageOpen ? (
-        <ImageDialog editor={editor} onClose={() => setImageOpen(false)} />
+      {imageMode ? (
+        <ImageDialog
+          editor={editor}
+          mode={imageMode}
+          onClose={() => setImageMode(null)}
+        />
       ) : null}
     </div>
   );
 }
+
+/** The alignment every image shares (`"left"` for none), or `null` when they differ or there are none. */
+function commonImageAlign(doc: {
+  descendants: (
+    fn: (node: { type: { name: string }; attrs: Record<string, unknown> }) => void,
+  ) => void;
+}): string | null {
+  let common: string | null | undefined;
+  doc.descendants((node) => {
+    if (node.type.name !== "image") return;
+    const value = (node.attrs.align as string | null) ?? "left";
+    common = common === undefined || common === value ? value : null;
+  });
+  return common ?? null;
+}
+
+const ALIGNMENTS = [
+  { value: "left", icon: LUCIDE.alignLeft, label: "alignLeft" },
+  { value: "center", icon: LUCIDE.alignCenter, label: "alignCenter" },
+  { value: "right", icon: LUCIDE.alignRight, label: "alignRight" },
+  { value: "justify", icon: LUCIDE.alignJustify, label: "alignJustify" },
+] as const;
 
 function Toolbar({
   editor,
@@ -327,9 +759,10 @@ function Toolbar({
   fullscreen?: EditorFullscreen;
   extra?: React.ReactNode;
   onLink: () => void;
-  onImage: () => void;
+  onImage: (mode: "upload" | "url") => void;
 }) {
   const t = useTranslations("common.editor");
+  const [imagesOpen, setImagesOpen] = useState(false);
   /*
    * Tiptap v3 no longer re-renders on every transaction, so a bare
    * `editor.isActive(...)` in JSX is frozen at first render — the heading
@@ -354,6 +787,12 @@ function Toolbar({
       codeBlock: e.isActive("codeBlock"),
       table: e.isActive("table"),
       link: e.isActive("link"),
+      image: e.isActive("image"),
+      imagesAlign: commonImageAlign(e.state.doc),
+      textAlign: e.isActive("image")
+        ? ((e.getAttributes("image").align as string | null) ?? "left")
+        : (ALIGNMENTS.find((item) => e.isActive({ textAlign: item.value }))?.value ??
+          "left"),
       codeBlockLanguage:
         (e.getAttributes("codeBlock").language as string | undefined) ?? "",
     }),
@@ -426,6 +865,56 @@ function Toolbar({
       />
 
       <Divider />
+
+      {/* One button showing the current alignment; the menu is a single row of icons. */}
+      <DropdownMenu
+        align="start"
+        compact
+        // `compact` sets a min-width for text menus; a row of icons should hug them.
+        className="min-w-0!"
+        trigger={
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t("align")}
+            title={t("align")}
+          >
+            <Icon
+              icon={
+                ALIGNMENTS.find((item) => item.value === active.textAlign)?.icon ??
+                LUCIDE.alignLeft
+              }
+              className="size-4"
+            />
+          </Button>
+        }
+      >
+        <div className="flex gap-1">
+          {/* An image has no justify — it is a box, not a line of text. */}
+          {ALIGNMENTS.filter((item) => !active.image || item.value !== "justify").map((item) => (
+            <DropdownMenuItem
+              key={item.value}
+              icon={item.icon}
+              className={`size-8 justify-center px-0 ${
+                active.textAlign === item.value ? "bg-primary/10 text-primary" : ""
+              }`}
+              onSelect={() =>
+                active.image
+                  ? editor
+                      .chain()
+                      .focus()
+                      .updateAttributes("image", {
+                        align: item.value === "left" ? null : item.value,
+                      })
+                      .run()
+                  : editor.chain().focus().setTextAlign(item.value).run()
+              }
+            >
+              <span className="sr-only">{t(item.label)}</span>
+            </DropdownMenuItem>
+          ))}
+        </div>
+      </DropdownMenu>
 
       <ToolbarButton
         label={t("bulletList")}
@@ -519,12 +1008,74 @@ function Toolbar({
         onClick={onLink}
         icon={LUCIDE.link}
       />
-      <ToolbarButton
-        label={t("image")}
-        active={false}
-        onClick={onImage}
-        icon={ICONS.image}
-      />
+      {/* Like Google Docs: one button, then pick where the image comes from. */}
+      <DropdownMenu
+        align="start"
+        compact
+        trigger={
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t("image")}
+            title={t("image")}
+          >
+            <Icon icon={ICONS.image} className="size-4" />
+          </Button>
+        }
+      >
+        <DropdownMenuItem
+          icon={LUCIDE.upload}
+          onSelect={() => onImage("upload")}
+        >
+          {t("imageFromComputer")}
+        </DropdownMenuItem>
+        <DropdownMenuItem icon={LUCIDE.link} onSelect={() => onImage("url")}>
+          {t("imageByUrl")}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          icon={LUCIDE.images}
+          onSelect={() => setImagesOpen(true)}
+        >
+          {t("imagesSettings")}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <p className="px-2 pb-1 text-body-4 text-muted-foreground">
+          {t("imagesAlignAll")}
+        </p>
+        <div className="flex gap-1">
+          {ALIGNMENTS.filter((item) => item.value !== "justify").map((item) => (
+            <DropdownMenuItem
+              key={item.value}
+              icon={item.icon}
+              className={`size-8 justify-center px-0 ${
+                active.imagesAlign === item.value ? "bg-primary/10 text-primary" : ""
+              }`}
+              onSelect={() =>
+                editor
+                  .chain()
+                  .command(({ tr, state }) => {
+                    state.doc.descendants((node, pos) => {
+                      if (node.type.name !== "image") return;
+                      tr.setNodeMarkup(pos, undefined, {
+                        ...node.attrs,
+                        align: item.value === "left" ? null : item.value,
+                      });
+                    });
+                    return true;
+                  })
+                  .run()
+              }
+            >
+              <span className="sr-only">{t(item.label)}</span>
+            </DropdownMenuItem>
+          ))}
+        </div>
+      </DropdownMenu>
+
+      {imagesOpen ? (
+        <ImagesDialog editor={editor} onClose={() => setImagesOpen(false)} />
+      ) : null}
 
       {/* Shown only while the cursor is inside a code block — a select that is
           always visible but almost always inert invites misclicks. */}
@@ -554,7 +1105,9 @@ function Toolbar({
         </select>
       ) : null}
 
-      {extra ? <div className="ml-auto flex items-center gap-1">{extra}</div> : null}
+      {extra ? (
+        <div className="ml-auto flex items-center gap-1">{extra}</div>
+      ) : null}
     </div>
   );
 }
@@ -593,10 +1146,131 @@ function ToolbarButton({
   );
 }
 
-function Divider() {
+/**
+ * The width of the images — a share of the column, or pixels — for the selected
+ * image or for every image in the document. (Alignment lives in the image menu.)
+ *
+ * Pixels need the picture's real ratio to find the height; an image the editor
+ * could not measure (no `width`/`height`) is skipped for that field and still
+ * takes the share and the alignment.
+ */
+function ImagesDialog({
+  editor,
+  onClose,
+}: {
+  editor: Editor;
+  onClose: () => void;
+}) {
+  const t = useTranslations("common.editor");
+  const [value, setValue] = useState("");
+  const [unit, setUnit] = useState<"%" | "px">("%");
+
+  const { count, selectedPos } = useEditorState({
+    editor,
+    selector: ({ editor: e }) => {
+      let n = 0;
+      e.state.doc.descendants((node) => {
+        if (node.type.name === "image") n += 1;
+      });
+      // The image the author had selected when the dialog opened, if any.
+      const { selection } = e.state;
+      const picked =
+        "node" in selection &&
+        (selection as { node?: { type: { name: string } } }).node?.type.name === "image"
+          ? selection.from
+          : null;
+      return { count: n, selectedPos: picked };
+    },
+  });
+
+  const amount = Number(value);
+  const valid = value.trim() === "" || (Number.isFinite(amount) && amount >= 1 && (unit === "px" || amount <= 100));
+  const nothing = value.trim() === "";
+
+  const apply = (scope: "all" | "selected") => {
+    editor
+      .chain()
+      .command(({ tr, state }) => {
+        state.doc.descendants((node, pos) => {
+          if (node.type.name !== "image") return;
+          if (scope === "selected" && pos !== selectedPos) return;
+          const attrs = { ...node.attrs };
+          if (value.trim() !== "") {
+            if (unit === "%") {
+              attrs.widthPercent = Math.round(amount);
+            } else if (attrs.width && attrs.height) {
+              attrs.height = Math.round((amount * attrs.height) / attrs.width);
+              attrs.width = Math.round(amount);
+              attrs.widthPercent = null;
+            }
+          }
+          tr.setNodeMarkup(pos, undefined, attrs);
+        });
+        return true;
+      })
+      .run();
+    onClose();
+  };
+
   return (
-    <span aria-hidden className="mx-0.5 h-5 w-px bg-border" />
+    <Dialog open onClose={onClose} title={t("imagesDialogTitle")}>
+      <div className="flex flex-col gap-4">
+        <Typography variant="body-3" className="text-muted-foreground">
+          {t("imagesCount", { count })}
+        </Typography>
+
+        <div className="flex items-start gap-2">
+          <div className="flex-1">
+            <Input
+              label={t("imagesWidth")}
+              type="number"
+              min={1}
+              max={unit === "%" ? 100 : undefined}
+              inputMode="numeric"
+              value={value}
+              onChange={(event) => setValue(event.target.value)}
+              placeholder={t("imagesWidthPlaceholder")}
+              error={valid ? undefined : t("imagesWidthInvalid")}
+            />
+          </div>
+          <div className="w-24">
+            <Select
+              label={t("imagesUnit")}
+              value={unit}
+              onChange={(event) => setUnit(event.target.value as "%" | "px")}
+              options={[
+                { value: "%", label: "%" },
+                { value: "px", label: "px" },
+              ]}
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>
+            {t("close")}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => apply("selected")}
+            disabled={!valid || nothing || selectedPos === null}
+          >
+            {t("imagesApplySelected")}
+          </Button>
+          <Button
+            onClick={() => apply("all")}
+            disabled={!valid || nothing || count === 0}
+          >
+            {t("imagesApply")}
+          </Button>
+        </div>
+      </div>
+    </Dialog>
   );
+}
+
+function Divider() {
+  return <span aria-hidden className="mx-0.5 h-5 w-px bg-border" />;
 }
 
 /**
@@ -683,9 +1357,11 @@ function LinkDialog({
  */
 function ImageDialog({
   editor,
+  mode,
   onClose,
 }: {
   editor: Editor;
+  mode: "upload" | "url";
   onClose: () => void;
 }) {
   const t = useTranslations("common.editor");
@@ -733,25 +1409,40 @@ function ImageDialog({
   return (
     <Dialog open onClose={onClose} title={t("imageDialogTitle")}>
       <div className="flex flex-col gap-4">
-        <ImageUploadButton
-          label={t("imagePick")}
-          onUploaded={(asset) => {
-            setSrc(asset.url);
-            setError(null);
-            setNotice(null);
-            // The original filename is a better `alt` suggestion than an empty
-            // field, but only while the author has typed nothing — overwriting
-            // what they just wrote loses data.
-            setAlt((current) => current || suggestAltFrom(asset.originalName));
-          }}
-        />
-
-        <Input
-          label={t("imageUrl")}
-          value={src}
-          onChange={(event) => setSrc(event.target.value)}
-          placeholder={t("imageUrlPlaceholder")}
-        />
+        {mode === "upload" ? (
+          <ImageUploadButton
+            autoOpen
+            label={t("imagePick")}
+            onUploaded={(asset) => {
+              setSrc(asset.url);
+              setError(null);
+              setNotice(null);
+              // The original filename is a better `alt` suggestion than an empty
+              // field, but only while the author has typed nothing — overwriting
+              // what they just wrote loses data.
+              setAlt(
+                (current) => current || suggestAltFrom(asset.originalName),
+              );
+            }}
+          />
+        ) : (
+          <Input
+            label={t("imageUrl")}
+            value={src}
+            onChange={(event) => setSrc(event.target.value)}
+            placeholder={t("imageUrlPlaceholder")}
+          />
+        )}
+        {src.trim() !== "" && isSafeImageSrc(src.trim()) ? (
+          // A plain <img>: this is a preview of what is about to be inserted,
+          // not page content, so `next/image` (and its host allowlist) adds nothing.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={src.trim()}
+            alt={alt}
+            className="max-h-60 w-full rounded-md border border-border bg-muted object-contain"
+          />
+        ) : null}
         <Input
           label={t("imageAlt")}
           value={alt}
@@ -764,7 +1455,7 @@ function ImageDialog({
           <Button variant="outline" onClick={onClose}>
             {t("close")}
           </Button>
-          <Button onClick={insert} disabled={measuring}>
+          <Button onClick={insert} disabled={measuring || src.trim() === ""}>
             {measuring ? t("measuring") : t("insert")}
           </Button>
         </div>
@@ -784,6 +1475,179 @@ function measureImage(
     image.onerror = () => resolve(null);
     image.src = src;
   });
+}
+
+/**
+ * Turns task-list items (`- [ ] text`, `- [x] text`) into plain list items.
+ *
+ * Task lists are not in the §3.1 allowlist, so the editor has no TaskList/TaskItem. The
+ * Markdown extension still reads `- [ ]` as a task item and, with nothing to turn it
+ * into, builds a `listItem` holding bare text — which ProseMirror rejects with
+ * `RangeError: Invalid content for node listItem`. Pasted into a markdown editor that
+ * error aborts the whole paste, after the browser's default has already been cancelled,
+ * so the author sees nothing happen. Checklists are common in pasted prompts and notes,
+ * hence this: the item keeps its text, only the unsupported checkbox goes.
+ *
+ * Fenced code is left alone — a `- [ ]` inside a code block is literal text.
+ */
+export function flattenTaskLists(markdown: string): string {
+  let fenced = false;
+  return markdown
+    .split("\n")
+    .map((line) => {
+      if (/^\s*(```|~~~)/.test(line)) fenced = !fenced;
+      return fenced ? line : line.replace(/^(\s*(?:[-*+]|\d{1,9}[.)])\s+)\[[ xX]\]\s+/, "$1");
+    })
+    .join("\n");
+}
+
+/**
+ * Pasting Markdown source into a markdown editor should render it, not drop it
+ * in as literal `###` / `**` characters.
+ *
+ * Only plain text is taken over. Real rich content (a web page, Word) carries
+ * `text/html` and keeps ProseMirror's own HTML parsing, with one exception:
+ * code editors (VS Code) also put `text/html` on the clipboard — a monospace
+ * dump of the same source — and Tiptap's code block turns that into a code
+ * block, which is the opposite of what pasting a `.md` file means. They are
+ * recognised by `vscode-editor-data`. Inside a code block the text stays
+ * literal, since that is what the author asked for there.
+ */
+function pasteMarkdown(
+  editor: Editor | null,
+  event: ClipboardEvent,
+  contentType: "json" | "markdown" | undefined,
+  onLocalImages: (images: LocalImage[]) => void,
+): boolean {
+  if (contentType !== "markdown" || !editor) return false;
+  if (editor.isActive("codeBlock")) return false;
+
+  const data = event.clipboardData;
+  const text = data?.getData("text/plain");
+  if (!data || !text) return false;
+
+  const fromCodeEditor = data.types.includes("vscode-editor-data");
+  if (data.types.includes("text/html") && !fromCodeEditor) return false;
+
+  event.preventDefault();
+  const { markdown, images } = extractLocalImages(flattenTaskLists(text));
+  try {
+    editor.commands.insertContent(markdown, { contentType: "markdown" });
+  } catch {
+    // `preventDefault` above already cancelled the browser's own paste, so a parse
+    // failure here must not leave the author with nothing: fall back to the text.
+    editor.commands.insertContent(text);
+    return true;
+  }
+  if (images.length > 0) onLocalImages(images);
+  return true;
+}
+
+/** A pasted image reference that points at a file on the author's machine. */
+type LocalImage = {
+  token: string;
+  name: string;
+  alt: string;
+  /** The `![alt](path)` as pasted, for "skip" to put back as plain text. */
+  raw: string;
+};
+
+/**
+ * Swaps every `![alt](/local/path.jpg)` for a one-word token paragraph and
+ * reports what was swapped. The sanitizer would drop such an image on the next
+ * update (`isSafeImageSrc` wants an allowed https host), so it never reaches
+ * the document as an image; the token holds its place until the file is
+ * uploaded. Alphanumeric only, so markdown cannot read emphasis into it.
+ */
+function extractLocalImages(markdown: string): {
+  markdown: string;
+  images: LocalImage[];
+} {
+  const images: LocalImage[] = [];
+  // Only text outside code counts: an `![](…)` shown inside a code span or fence
+  // is an example, not a picture.
+  const out = markdown
+    .split(/(```[\s\S]*?```|`[^`\n]+`)/)
+    .map((part, index) =>
+      index % 2 === 1
+        ? part
+        : part.replace(
+            /!\[([^\]]*)\]\(\s*<?([^)>]*?)>?\s*\)/g,
+            (whole, alt: string, src: string) => {
+              if (
+                /^([a-z][a-z0-9+.-]*:)?\/\//i.test(src) ||
+                /^(data|blob):/i.test(src)
+              ) {
+                return whole;
+              }
+              src = src.replace(/\s+"[^"]*"$/, "");
+              const last = src.split(/[\\/]/).pop() ?? "";
+              let name = last;
+              try {
+                name = decodeURIComponent(last);
+              } catch {
+                // keep the raw name
+              }
+              // A real file reference ends in an image extension. Anything else
+              // — `![](<đường dẫn ảnh>)` in a prompt template — is a placeholder:
+              // keep it as plain text instead of asking for a folder.
+              if (!IMAGE_FILE.test(name)) return whole.replace(/^!/, "\\!").replace(/</g, "\\<");
+              const token = `NOALHUBIMG${crypto.randomUUID().replace(/-/g, "")}END`;
+              images.push({ token, name, alt, raw: whole });
+              return `\n\n${token}\n\n`;
+            },
+          ),
+    )
+    .join("");
+  return { markdown: collapseBlanksAroundImages(out), images };
+}
+
+const IMAGE_FILE = /\.(jpe?g|png|gif|webp|svg|bmp|heic|heif|avif|tiff?)$/i;
+
+const IMAGE_LINE =
+  String.raw`(?:!\[[^\]]*\]\([^)\n]*\)|NOALHUBIMG[0-9a-f]{32}END)`;
+const BLANKS_BEFORE_IMAGE = new RegExp(String.raw`\n{3,}(?=${IMAGE_LINE}[ \t]*(?:\n|$))`, "g");
+const BLANKS_AFTER_IMAGE = new RegExp(String.raw`(${IMAGE_LINE}[ \t]*)\n{3,}`, "g");
+
+/**
+ * An image sits on a line of its own with one blank line either side. Tiptap
+ * turns every extra blank line into an empty paragraph, so the wrapping that
+ * `extractLocalImages` adds (or a source that already had spacing) would leave
+ * a gap above and below each picture.
+ */
+function collapseBlanksAroundImages(markdown: string): string {
+  return markdown
+    .replace(BLANKS_BEFORE_IMAGE, "\n\n")
+    .replace(BLANKS_AFTER_IMAGE, "$1\n\n");
+}
+
+/**
+ * Replaces a placeholder token with `node` (or removes it when `node` is null).
+ *
+ * The token sits alone in a paragraph of its own, so it is that whole paragraph
+ * that goes — deleting just the text would leave an empty line behind where the
+ * skipped image was.
+ */
+function replaceToken(
+  editor: Editor,
+  token: string,
+  node: Record<string, unknown> | null,
+): void {
+  let range: { from: number; to: number } | null = null;
+  editor.state.doc.descendants((child, pos) => {
+    if (range) return false;
+    if (child.isTextblock && child.textContent === token) {
+      range = { from: pos, to: pos + child.nodeSize };
+      return false;
+    }
+    if (!child.isText) return;
+    const at = child.text?.indexOf(token) ?? -1;
+    if (at >= 0) range = { from: pos + at, to: pos + at + token.length };
+  });
+  if (!range) return;
+  const chain = editor.chain();
+  if (node) chain.insertContentAt(range, node).run();
+  else chain.deleteRange(range).run();
 }
 
 /** The first image file in a `FileList`, if any. */

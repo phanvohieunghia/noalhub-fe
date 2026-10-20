@@ -29,6 +29,8 @@ export function EditorShell({
   canSave,
   error,
   fill = false,
+  grow = false,
+  collapsed = false,
   meta,
   actions,
   renderEditor,
@@ -46,6 +48,10 @@ export function EditorShell({
   error?: string | null;
   /** Stretch the inline editor to the bottom of the viewport instead of a fixed scrollbox. */
   fill?: boolean;
+  /** Size the inline editor off the caller's `--fit-h` (a scrollbox that fits inside it, toolbar always in view) instead of the viewport. */
+  grow?: boolean;
+  /** Fold the body away (animated), leaving the header. The editor stays mounted, so nothing typed is lost. */
+  collapsed?: boolean;
   /** A quiet readout beside Save, e.g. a word count. Shown inline and in full screen. */
   meta?: React.ReactNode;
   /** Replaces the Save button in the header, e.g. an actions menu holding Save and more. */
@@ -64,9 +70,12 @@ export function EditorShell({
   const [full, setFull] = useState(false);
   const [generation, setGeneration] = useState(0);
 
-  // `fill`: the editable surface (marked `qa-fit`) is stretched to end at the
-  // bottom of the viewport, measured from wherever it actually sits — a guessed
+  // `fill`: the editable surface (marked `qa-fit`) keeps its content height and is
+  // capped at the bottom of the viewport, so it only scrolls once it would run past.
+  // The cap is measured from wherever the surface actually sits — a guessed
   // `calc(100dvh - Nrem)` drifts the moment anything above it changes height.
+  // Not re-measured on scroll (the measurement itself is scroll-independent, see
+  // below): the page could otherwise be scrolled forever.
   const inlineRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const wrapper = inlineRef.current;
@@ -74,19 +83,42 @@ export function EditorShell({
     const fit = () => {
       const surface = wrapper.querySelector<HTMLElement>(".qa-fit");
       if (!surface) return;
-      const top = surface.getBoundingClientRect().top;
-      surface.style.height = `${Math.max(window.innerHeight - top - 48, 240)}px`;
+      // Measured as if the page were scrolled to the top: `fit` also runs on layout
+      // changes, and a scrolled `top` would make the surface grow with every run.
+      let scrolled = window.scrollY;
+      for (
+        let node: HTMLElement | null = surface.parentElement;
+        node;
+        node = node.parentElement
+      ) {
+        scrolled += node.scrollTop;
+      }
+      const top = surface.getBoundingClientRect().top + scrolled;
+      surface.style.maxHeight = `${Math.max(window.innerHeight - top - 48, 240)}px`;
     };
     fit();
     // The editor mounts its surface a beat after this shell does.
     const observer = new MutationObserver(fit);
     observer.observe(wrapper, { childList: true, subtree: true });
     window.addEventListener("resize", fit);
-    window.addEventListener("scroll", fit, true);
+    // A sibling shell collapsing or expanding moves this one without re-rendering it,
+    // so its `top` changes under a stale height; the page height changes with it.
+    // The page itself may not change height (inner scroll containers), so watch every
+    // ancestor, and re-measure once a collapse transition settles.
+    const layoutObserver = new ResizeObserver(fit);
+    for (
+      let node: HTMLElement | null = wrapper.parentElement;
+      node;
+      node = node.parentElement
+    ) {
+      layoutObserver.observe(node);
+    }
+    document.addEventListener("transitionend", fit);
     return () => {
+      document.removeEventListener("transitionend", fit);
       observer.disconnect();
+      layoutObserver.disconnect();
       window.removeEventListener("resize", fit);
-      window.removeEventListener("scroll", fit, true);
     };
   });
 
@@ -125,23 +157,41 @@ export function EditorShell({
           <div className="min-w-0 flex-1">{title}</div>
           {controls}
         </div>
-        <div className="h-px bg-border" />
-        <div className="flex flex-col gap-3 p-4">
-          {error ? (
-            <Typography variant="body-4" className="text-danger" role="alert">
-              {error}
-            </Typography>
-          ) : null}
-          {full ? null : (
-            <div key={`inline-${generation}`} ref={inlineRef}>
-              {renderEditor({
-                className: fill
-                  ? "qa-fit min-h-[240px] overflow-y-auto"
-                  : "min-h-[420px] max-h-[640px] overflow-y-auto",
-                fullscreen: { active: false, onToggle: () => toggleFull(true) },
-              })}
+        {/* 0fr → 1fr animates the height without measuring it. */}
+        <div
+          className={`grid transition-[grid-template-rows] duration-250 ease-out ${
+            collapsed ? "grid-rows-[0fr]" : "grid-rows-[1fr]"
+          }`}
+        >
+          <div className="min-h-0 overflow-hidden" inert={collapsed}>
+            <div className="h-px bg-border" />
+            <div className="flex flex-col gap-3 p-4">
+              {error ? (
+                <Typography
+                  variant="body-4"
+                  className="text-danger"
+                  role="alert"
+                >
+                  {error}
+                </Typography>
+              ) : null}
+              {full ? null : (
+                <div key={`inline-${generation}`} ref={inlineRef}>
+                  {renderEditor({
+                    className: grow
+                      ? "min-h-[240px] max-h-[calc(var(--fit-h,70vh)-12rem)] overflow-y-auto overscroll-contain"
+                      : fill
+                        ? "qa-fit min-h-[240px] overflow-y-auto overscroll-contain"
+                        : "min-h-[420px] max-h-[640px] overflow-y-auto",
+                    fullscreen: {
+                      active: false,
+                      onToggle: () => toggleFull(true),
+                    },
+                  })}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </section>
 

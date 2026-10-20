@@ -9,6 +9,7 @@ import type {
   BlogListItemNode,
   BlogTextNode,
 } from "@noalhub/api/blog";
+import { alignClassName } from "./align-markdown";
 import { collectHeadings } from "@noalhub/core/blog/headings";
 
 import "./post-prose.css";
@@ -61,12 +62,20 @@ function Block({
   switch (node.type) {
     case "paragraph":
       // An empty paragraph is how an author adds a pause — keep the line height.
-      return <p>{node.content?.length ? <Inline nodes={node.content} /> : <br />}</p>;
+      return (
+        <p className={alignClassName(node.attrs?.textAlign)}>
+          {node.content?.length ? <Inline nodes={node.content} /> : <br />}
+        </p>
+      );
 
     case "heading": {
       // `<h1>` is the post title (§6.2), so content only ever has h2/h3.
       const Tag = node.attrs.level === 3 ? "h3" : "h2";
-      return <Tag id={headingId}>{<Inline nodes={node.content ?? []} />}</Tag>;
+      return (
+        <Tag id={headingId} className={alignClassName(node.attrs.textAlign)}>
+          <Inline nodes={node.content ?? []} />
+        </Tag>
+      );
     }
 
     case "bulletList":
@@ -180,14 +189,22 @@ function ContentImage({
 }: {
   node: Extract<BlogBlockNode, { type: "image" }>;
 }) {
-  const { src, alt, width, height } = node.attrs;
+  const { src, alt, width, height, align, widthPercent } = node.attrs;
   // The second line of defence — see the note at the top of this file.
   if (!isSafeImageSrc(src)) return null;
 
   if (width && height) {
     return (
-      <figure>
-        <Image src={src} alt={alt} width={width} height={height} sizes="(max-width: 768px) 100vw, 768px" />
+      <figure data-image-align={align}>
+        <Image
+          src={src}
+          alt={alt}
+          width={width}
+          height={height}
+          // A share of the column, with the height following the ratio.
+          style={widthPercent ? { width: `${widthPercent}%`, height: "auto" } : undefined}
+          sizes="(max-width: 768px) 100vw, 768px"
+        />
       </figure>
     );
   }

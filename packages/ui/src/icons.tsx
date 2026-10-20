@@ -7,6 +7,7 @@ import {
   type IconProps,
 } from "@iconify/react/offline";
 import { ICON_COLLECTIONS } from "./icon-data.generated";
+import { canMorph, MorphIcon, type SpringPreset } from "./morph-icon";
 import { LUCIDE } from "./icon-names.generated";
 
 // The project's default icon set: lucide (stroke-based, a good fit for
@@ -22,12 +23,56 @@ for (const collection of ICON_COLLECTIONS) addCollection(collection);
 
 export type { IconProps };
 
+/** Props that only make sense while the icon animates between two icons. */
+interface IconMotionProps {
+  /** Stroke width of the morphing icon (lucide default is 2). */
+  strokeWidth?: number;
+  /** Overrides the preset's spring; both are needed to take effect. */
+  stiffness?: number;
+  damping?: number;
+  /** "user" follows the OS reduced-motion setting; "never" (default) always animates. */
+  reducedMotion?: "never" | "user" | "always";
+  /** Accessible name; without it the icon stays aria-hidden. */
+  label?: string;
+}
+
+export type IconAnimate = "none" | SpringPreset;
+
+type StaticIconProps = IconProps & { animate?: "none" };
+type AnimatedIconProps = Omit<IconProps, "icon" | "strokeWidth"> &
+  IconMotionProps & { icon: string; animate: SpringPreset };
+export type IconComponentProps = StaticIconProps | AnimatedIconProps;
+
+const isAnimated = (p: IconComponentProps): p is AnimatedIconProps =>
+  !!p.animate && p.animate !== "none" && canMorph(p.icon);
+
 /**
  * A wrapper around Iconify. Defaults to 1em → scales with the parent's
  * font-size; pass className="size-4" to pin a specific size.
+ *
+ * `animate` picks how a change of `icon` is drawn: "none" (default) swaps instantly,
+ * while a spring preset ("snappy" | "smooth" | "bouncy") morphs the old icon into the
+ * new one (see morph-icon.tsx). Motion-only props (strokeWidth, stiffness, damping,
+ * reducedMotion, label) are accepted only together with an `animate` preset. Icons that
+ * are not stroke geometry (the brand icons) fall back to the instant swap.
  */
-export function Icon({ className = "size-4", ...props }: IconProps) {
-  return <IconifyIcon aria-hidden className={className} {...props} />;
+export function Icon(props: IconComponentProps) {
+  if (isAnimated(props)) {
+    const { animate, icon, className = "size-4", stiffness, damping, strokeWidth, reducedMotion, label } = props;
+    return (
+      <MorphIcon
+        icon={icon}
+        size="1em"
+        className={className}
+        strokeWidth={strokeWidth}
+        reducedMotion={reducedMotion}
+        label={label}
+        spring={stiffness !== undefined && damping !== undefined ? { stiffness, damping } : animate}
+      />
+    );
+  }
+  const { className = "size-4", animate: _animate, ...rest } = props;
+  return <IconifyIcon aria-hidden className={className} {...(rest as StaticIconProps)} />;
 }
 
 /* ---------------------------------------------------------------------------

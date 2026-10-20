@@ -15,6 +15,7 @@ import type {
   BlogMark,
   BlogPost,
   BlogTag,
+  BlogTextAlign,
   BlogTextNode,
 } from "./types";
 
@@ -175,21 +176,40 @@ function sanitizeBlocks(value: unknown, allowTable = true): BlogBlockNode[] {
   return blocks;
 }
 
+/** `left` (the default) and anything unknown come back as `undefined` — nothing to store. */
+function toTextAlign(value: unknown): BlogTextAlign | undefined {
+  return value === "center" || value === "right" || value === "justify" ? value : undefined;
+}
+
+/** A whole number in 1–100, or `undefined` — 100 is "fill the column" and is kept so it overrides a smaller `width`. */
+function toPercent(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 100
+    ? value
+    : undefined;
+}
+
 function sanitizeBlock(raw: unknown, allowTable: boolean): BlogBlockNode | null {
   if (!isRecord(raw) || typeof raw.type !== "string") return null;
   const attrs = isRecord(raw.attrs) ? raw.attrs : {};
 
   switch (raw.type) {
-    case "paragraph":
-      return { type: "paragraph", content: sanitizeInline(raw.content) };
+    case "paragraph": {
+      const textAlign = toTextAlign(attrs.textAlign);
+      return {
+        type: "paragraph",
+        ...(textAlign ? { attrs: { textAlign } } : {}),
+        content: sanitizeInline(raw.content),
+      };
+    }
 
     case "heading": {
       // A level outside [2,3,4] falls back to h2 rather than dropping the whole
       // heading: losing a TOC entry beats losing the section under it.
       const level = attrs.level === 1 || attrs.level === 3 || attrs.level === 4 ? attrs.level : 2;
+      const textAlign = toTextAlign(attrs.textAlign);
       return {
         type: "heading",
-        attrs: { level },
+        attrs: { level, ...(textAlign ? { textAlign } : {}) },
         content: sanitizeInline(raw.content),
       };
     }
@@ -240,6 +260,8 @@ function sanitizeBlock(raw: unknown, allowTable: boolean): BlogBlockNode | null 
           alt: typeof attrs.alt === "string" ? attrs.alt : "",
           width: toPositiveInt(attrs.width),
           height: toPositiveInt(attrs.height),
+          ...(attrs.align === "center" || attrs.align === "right" ? { align: attrs.align } : {}),
+          ...(toPercent(attrs.widthPercent) ? { widthPercent: toPercent(attrs.widthPercent)! } : {}),
         },
       };
     }

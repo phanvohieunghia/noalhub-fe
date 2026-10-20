@@ -46,7 +46,9 @@
       "qaCredentials": "AI keys",
       "qaOutlines": "Outlines",
       "ai": "AI",
-      "edit": "Edit"
+      "edit": "Edit",
+      "qaModels": "AI models",
+      "qaTags": "Question tags"
     },
     "disabled": {
       "conversations": "Waiting on backend: no /admin/conversations endpoint yet (admin-plan §3)",

@@ -6,7 +6,8 @@ import Link from "next/link";
 import { useQaAttemptReview } from "@noalhub/api/qa";
 import { Badge } from "@noalhub/ui/badge";
 import { Button } from "@noalhub/ui/button";
-import { PostContent } from "@noalhub/ui/blog/post-content";
+import { QaContent } from "@noalhub/ui/blog/qa-content";
+import { QaQuestion } from "@noalhub/ui/blog/qa-question";
 import { Skeleton } from "@noalhub/ui/skeleton";
 import { Typography } from "@noalhub/ui/typography";
 
@@ -65,7 +66,7 @@ export function LearnReview({ attemptId }: { attemptId: string }) {
               </div>
 
               <div className="mt-2">
-                <PostContent doc={row.question} />
+                <QaQuestion doc={row.question} tagIds={row.tagIds} />
               </div>
 
               {row.options ? (
@@ -96,14 +97,14 @@ export function LearnReview({ attemptId }: { attemptId: string }) {
               {row.answer ? (
                 <div className="mt-3 border-t border-border pt-3">
                   <Typography variant="title-4">{t("attempt.answer")}</Typography>
-                  <PostContent doc={row.answer} />
+                  <QaContent doc={row.answer} />
                 </div>
               ) : null}
 
               {row.explanation ? (
                 <div className="mt-3 border-t border-border pt-3">
                   <Typography variant="title-4">{t("attempt.explanation")}</Typography>
-                  <PostContent doc={row.explanation} />
+                  <QaContent doc={row.explanation} />
                 </div>
               ) : null}
             </article>

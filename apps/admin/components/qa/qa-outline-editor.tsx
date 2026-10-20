@@ -9,8 +9,8 @@ import type { Message } from "@noalhub/api/message";
 import {
   useQaOutline,
   useQaOutlines,
-  useSetCurrentOutline,
   useUpdateQaOutline,
+  useUpdateQaOutlineLabel,
   type QaContentFormat,
 } from "@noalhub/api/qa";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
@@ -31,6 +31,7 @@ import { Typography } from "@noalhub/ui/typography";
 import { AdminErrorState } from "../admin-error-state";
 import { GenerateSetsButton } from "./generate-sets-button";
 import { TableOfContents } from "./table-of-contents";
+import { useOutlineScrollSpy } from "./use-outline-scroll-spy";
 import { QaResizeHandle } from "./qa-resize-handle";
 
 const FORMATS: readonly QaContentFormat[] = ["doc", "markdown"];
@@ -96,7 +97,7 @@ function Loaded({
 
   const versions = useQaOutlines(datasetId);
   const update = useUpdateQaOutline(outlineId, datasetId);
-  const setCurrent = useSetCurrentOutline(datasetId);
+  const updateLabel = useUpdateQaOutlineLabel(outlineId, datasetId);
 
   /*
    * Each format keeps its own state and only the active one is saved. A switch
@@ -136,6 +137,7 @@ function Loaded({
   };
 
   const editorRef = useRef<HTMLDivElement>(null);
+  const activeIndex = useOutlineScrollSpy(initial.outline);
 
   /**
    * The outline is derived from the last save, so the document may have moved
@@ -160,8 +162,11 @@ function Loaded({
         ...(format === "markdown"
           ? { contentFormat: "markdown", content: markdown }
           : { contentFormat: "doc", content: doc }),
-        label: label === "" ? null : label,
       });
+      // Backend từ chối `label` trong body sửa nội dung; nhãn đi route riêng, và chỉ
+      // gửi khi thật sự đổi để khỏi tốn một request thừa.
+      const nextLabel = label === "" ? null : label;
+      if (nextLabel !== initial.label) await updateLabel.mutateAsync(nextLabel);
     } catch (error) {
       // Deliberately does NOT reload: the editor keeps what is on screen so the
       // author can copy it out before pulling the other version in.
@@ -184,18 +189,13 @@ function Loaded({
           <Button variant="outline" asChild>
             <Link href={`/qa/datasets/${datasetId}`}>{t("outlines.backToDataset")}</Link>
           </Button>
-          {!initial.isCurrent ? (
-            <Button
-              variant="outline"
-              disabled={setCurrent.isPending}
-              onClick={() => setCurrent.mutate(outlineId)}
-            >
-              {t("outlines.makeCurrent")}
-            </Button>
-          ) : null}
           {/* Generating questions reads the sections of THIS version, so the
               button belongs next to them rather than on the dataset screen. */}
-          <GenerateSetsButton outlineId={outlineId} sections={initial.outline} />
+          <GenerateSetsButton
+            datasetId={datasetId}
+            outlineId={outlineId}
+            sections={initial.outline}
+          />
           <Button onClick={() => void save()} disabled={update.isPending}>
             {tc("actions.save")}
           </Button>
@@ -300,6 +300,8 @@ function Loaded({
             version={initial.version}
             isCurrent={initial.isCurrent}
             onSelect={scrollToSection}
+            activeIndex={activeIndex}
+            className="lg:max-h-[calc(100vh-22rem)] lg:overflow-y-auto"
           />
         </aside>
       </div>

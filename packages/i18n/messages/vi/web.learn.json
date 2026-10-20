@@ -52,6 +52,9 @@
     "title": "Đang làm bài",
     "progress": "Đã trả lời {answered}/{total} · đúng {correct}",
     "correct": "Đúng.",
+    "celebrate": "Chính xác! Cứ thế phát huy nhé.",
+    "tapNext": "Chạm bất kỳ đâu để tiếp tục",
+    "tapSeeResult": "Chạm bất kỳ đâu để xem kết quả",
     "wrong": "Chưa đúng.",
     "answer": "Đáp án",
     "explanation": "Giải thích",
@@ -85,8 +88,7 @@
     "selfPrompt": "Nhớ lại câu trả lời trong đầu trước, rồi tự đánh giá thật lòng là bạn đã nhớ hay chưa. Mặt sau của thẻ hiện ra sau khi bạn chọn.",
     "singleHint": "Chọn một đáp án.",
     "multiHint": "Có thể có nhiều đáp án đúng — chọn tất cả các ý đúng.",
-    "shortcuts": "Nhấn 1–{max} để chọn, Enter để trả lời",
-    "doubleClickHint": "Nhấp để chọn · nhấp đúp (hoặc Enter) để trả lời"
+    "shortcuts": "Nhấn 1–{max} để chọn, Enter để trả lời"
   },
   "review": {
     "title": "Xem lại lượt làm bài",

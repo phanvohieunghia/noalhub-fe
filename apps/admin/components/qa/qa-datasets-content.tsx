@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import {
@@ -20,7 +21,7 @@ import { Badge, type BadgeTone } from "@noalhub/ui/badge";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
 import { DropdownMenuItem } from "@noalhub/ui/dropdown-menu";
-import { ICONS } from "@noalhub/ui/icons";
+import { ICONS, LUCIDE } from "@noalhub/ui/icons";
 import { Input } from "@noalhub/ui/input";
 import { Skeleton } from "@noalhub/ui/skeleton";
 import {
@@ -34,11 +35,12 @@ import {
   TableRow,
   TableRowActions,
 } from "@noalhub/ui/table";
+import { Tooltip } from "@noalhub/ui/tooltip";
 import { Typography } from "@noalhub/ui/typography";
 
 import { AdminErrorState } from "../admin-error-state";
 
-const COLUMN_COUNT = 6;
+const COLUMN_COUNT = 5;
 
 /**
  * `status` is the FURTHEST STAGE REACHED, not the current state, and it only
@@ -88,9 +90,6 @@ export function QaDatasetsContent() {
                 <TableHeaderCell>{t("datasets.columns.status")}</TableHeaderCell>
                 <TableHeaderCell>{t("datasets.columns.chars")}</TableHeaderCell>
                 <TableHeaderCell>{t("datasets.columns.updated")}</TableHeaderCell>
-                <TableHeaderCell>
-                  <span className="sr-only">{t("datasets.open")}</span>
-                </TableHeaderCell>
                 <TableActionsHeaderCell label={t("actionsColumn")} />
               </TableRow>
             </TableHead>
@@ -122,9 +121,10 @@ export function QaDatasetsContent() {
 function DatasetRow({ row, onDelete }: { row: QaDataset; onDelete: () => void }) {
   const t = useTranslations("admin.qa");
   const df = useDateFormat();
+  const router = useRouter();
 
   return (
-    <TableRow>
+    <TableRow onActivate={() => router.push(`/qa/datasets/${row.id}`)}>
       <TableCell weight={500}>
         <Link href={`/qa/datasets/${row.id}`} className="hover:underline">
           {row.title}
@@ -140,25 +140,20 @@ function DatasetRow({ row, onDelete }: { row: QaDataset; onDelete: () => void })
           {t(`datasets.status.${row.status}`)}
         </Badge>
       </TableCell>
-      <TableCell className="opacity-70">
-        {t("datasets.chars", { count: row.sourceCharCount })}
-        {row.sourceCharWarning ? (
-          <Badge tone="warning" className="ml-2">
-            {t("datasets.large")}
-          </Badge>
-        ) : null}
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <Tooltip label={t("datasets.chars", { count: row.sourceCharCount })}>
+            <Badge icon={LUCIDE.type} className="tabular-nums">
+              {row.sourceCharCount.toLocaleString("en-US")}
+            </Badge>
+          </Tooltip>
+          {row.sourceCharWarning ? (
+            <Badge tone="warning">{t("datasets.large")}</Badge>
+          ) : null}
+        </div>
       </TableCell>
       <TableCell className="whitespace-nowrap opacity-70">
         {df.date(row.updatedAt)}
-      </TableCell>
-      <TableCell>
-        <div className="flex justify-end">
-          {/* `asChild` so the anchor IS the button — a <button> wrapping an
-              <a> is invalid HTML and loses keyboard navigation. */}
-          <Button variant="outline" asChild>
-            <Link href={`/qa/datasets/${row.id}`}>{t("datasets.open")}</Link>
-          </Button>
-        </div>
       </TableCell>
       <TableRowActions label={t("actionsColumn")}>
         <DropdownMenuItem icon={ICONS.delete} tone="danger" onSelect={onDelete}>

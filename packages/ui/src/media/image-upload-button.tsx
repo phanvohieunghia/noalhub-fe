@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { ApiError, ERROR_CODES } from "@noalhub/api/errors";
 import { messageOf, type Message } from "@noalhub/api/message";
@@ -8,12 +8,14 @@ import { useMessage } from "@noalhub/i18n/use-message";
 import { useTranslations } from "next-intl";
 import {
   MEDIA_IMAGE_MIMES,
+  MEDIA_KIND_MAX_BYTES,
   isStorageUploadError,
   useUploadMedia,
   type MediaAsset,
 } from "@noalhub/api/media";
 import { Button } from "../button";
 import { AlertError } from "../alert";
+import { Icon, LUCIDE } from "../icons";
 
 /**
  * The "Upload image" button — wrapping `useUploadMedia`'s whole three-step flow
@@ -32,11 +34,17 @@ export function ImageUploadButton({
   onUploaded,
   label,
   disabled = false,
+  autoOpen = false,
+  variant = "button",
 }: {
   onUploaded: (asset: MediaAsset) => void;
   /** Left out, the generic "Upload image" label is used. */
   label?: string;
   disabled?: boolean;
+  /** Open the file picker as soon as it mounts — for a flow the author already chose ("Upload from computer"). */
+  autoOpen?: boolean;
+  /** `dropzone` is the large dashed area that also takes a dropped file; `button` is the compact default. */
+  variant?: "button" | "dropzone";
 }) {
   const t = useTranslations("common.upload");
   const tc = useTranslations("common.actions");
@@ -44,7 +52,12 @@ export function ImageUploadButton({
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
   const [error, setError] = useState<Message | string | null>(null);
+  const [dragging, setDragging] = useState(false);
   const upload = useUploadMedia({ allow: MEDIA_IMAGE_MIMES });
+
+  useEffect(() => {
+    if (autoOpen) inputRef.current?.click();
+  }, [autoOpen]);
 
   const pick = (file: File | undefined) => {
     if (!file) return;
@@ -73,22 +86,87 @@ export function ImageUploadButton({
         }}
       />
 
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          disabled={disabled || upload.isPending}
+      {variant === "dropzone" ? (
+        <div
+          role="button"
+          tabIndex={disabled || upload.isPending ? -1 : 0}
+          aria-disabled={disabled || upload.isPending}
           onClick={() => inputRef.current?.click()}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              inputRef.current?.click();
+            }
+          }}
+          onDragOver={(event) => {
+            event.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(event) => {
+            event.preventDefault();
+            setDragging(false);
+            if (!disabled && !upload.isPending)
+              pick(event.dataTransfer.files?.[0]);
+          }}
+          className={`flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed px-4 py-8 text-center transition-colors focus-visible:outline-2 focus-visible:outline-ring aria-disabled:cursor-not-allowed aria-disabled:opacity-60 ${
+            dragging
+              ? "border-primary bg-primary/10"
+              : "border-border bg-muted/40 hover:border-primary"
+          }`}
         >
-          {upload.isPending
-            ? t("uploading", { percent })
-            : (label ?? t("label"))}
-        </Button>
-        {upload.isPending ? (
-          <Button variant="outline" onClick={upload.cancel}>
-            {tc("cancel")}
+          <Icon
+            icon={LUCIDE.imageUp}
+            className="size-8 text-muted-foreground"
+          />
+          <p className="text-body-3">
+            {upload.isPending ? (
+              t("uploading", { percent })
+            ) : (
+              <>
+                <span className="font-medium text-primary underline">
+                  {t("dropzoneClick")}
+                </span>{" "}
+                {t("dropzoneOr")}
+              </>
+            )}
+          </p>
+          <p className="text-body-4 text-muted-foreground">
+            {t("dropzoneMax", {
+              size: Math.round(MEDIA_KIND_MAX_BYTES.image / (1024 * 1024)),
+            })}
+          </p>
+          {upload.isPending ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(event) => {
+                event.stopPropagation();
+                upload.cancel();
+              }}
+            >
+              {tc("cancel")}
+            </Button>
+          ) : null}
+        </div>
+      ) : (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            disabled={disabled || upload.isPending}
+            onClick={() => inputRef.current?.click()}
+          >
+            {upload.isPending
+              ? t("uploading", { percent })
+              : (label ?? t("label"))}
           </Button>
-        ) : null}
-      </div>
+          {upload.isPending ? (
+            <Button variant="outline" onClick={upload.cancel}>
+              {tc("cancel")}
+            </Button>
+          ) : null}
+        </div>
+      )}
 
       {upload.isPending ? (
         <div

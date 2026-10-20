@@ -11,9 +11,6 @@ import {
   useQaGeneration,
 } from "@noalhub/api/qa";
 import { AlertWarning } from "@noalhub/ui/alert";
-import { Badge } from "@noalhub/ui/badge";
-import { Skeleton } from "@noalhub/ui/skeleton";
-import { Typography } from "@noalhub/ui/typography";
 
 import { AdminErrorState } from "../admin-error-state";
 import { QaFinalStep } from "./qa-final-step";
@@ -73,14 +70,8 @@ export function QaDatasetDetail({ datasetId }: { datasetId: string }) {
 
   return (
     <main className="flex w-full flex-col gap-4 p-6">
-      <div className="flex flex-wrap items-center gap-2.5">
-        <Typography variant="h4" as="h1">
-          {dataset?.title ?? <Skeleton className="h-7 w-64" />}
-        </Typography>
-        {dataset ? (
-          <Badge>{t("ws.characters", { count: dataset.sourceCharCount.toLocaleString("en-US") })}</Badge>
-        ) : null}
-      </div>
+      {/* The title and its size are in the breadcrumb; the heading stays for screen readers. */}
+      <h1 className="sr-only">{dataset?.title}</h1>
 
       {dataset?.sourceCharWarning ? (
         /* A warning, not a block: the real ceiling is computed from the model

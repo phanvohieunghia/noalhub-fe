@@ -45,7 +45,7 @@ import { Typography } from "@noalhub/ui/typography";
 
 import { AdminErrorState } from "../admin-error-state";
 
-const FIELDS = ["label", "apiKey", "defaultModel", "monthlyTokenLimit"] as const;
+const FIELDS = ["label", "apiKey", "modelId", "monthlyTokenLimit"] as const;
 const COLUMN_COUNT = 5;
 
 /**
@@ -190,7 +190,7 @@ function CredentialRow({
           …{row.keyLast4}
         </Typography>
       </TableCell>
-      <TableCell className="opacity-70">{row.defaultModel}</TableCell>
+      <TableCell className="opacity-70">{row.model.label}</TableCell>
       <TableCell className="opacity-70">
         {row.monthlyTokenLimit === null
           ? t("credentials.unlimited")
@@ -251,7 +251,7 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
       provider: "openrouter",
       label: "",
       apiKey: "",
-      defaultModel: "",
+      modelId: "",
       isDefault: false,
       monthlyTokenLimit: null,
     },
@@ -261,13 +261,13 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
     setFormError(null);
     /*
      * `provider` comes from the CHOSEN MODEL, it is not a field. A model id
-     * belongs to exactly one provider (`model-registry.ts`), so asking for both
+     * belongs to exactly one provider (`ai_models`), so asking for both
      * only creates a pair that can disagree — and the disagreement surfaces as
      * the backend's `AI_MODEL_NOT_ALLOWED` on a form that looked filled in
      * correctly. This used to be hardcoded `"openrouter"`, which meant no key
      * for any other provider could be created here at all.
      */
-    const provider = models.data?.find((model) => model.id === values.defaultModel)?.provider;
+    const provider = models.data?.find((model) => model.id === values.modelId)?.provider;
     if (!provider) {
       setFormError(t("credentials.modelsLoadFailed"));
       return;
@@ -304,10 +304,10 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
           models={models.data ?? []}
           loading={models.isPending}
           error={
-            errors.defaultModel?.message ??
+            errors.modelId?.message ??
             (models.isError ? t("credentials.modelsLoadFailed") : undefined)
           }
-          registration={register("defaultModel")}
+          registration={register("modelId")}
         />
         <Input
           label={t("credentials.fields.budget")}
@@ -351,7 +351,7 @@ function EditDialog({ row, onClose }: { row: AiCredential; onClose: () => void }
   const [formError, setFormError] = useState<Message | string | null>(null);
   const [label, setLabel] = useState(row.label);
   const [apiKey, setApiKey] = useState("");
-  const [defaultModel, setDefaultModel] = useState(row.defaultModel);
+  const [modelId, setModelId] = useState(row.modelId);
   const [isDefault, setIsDefault] = useState(row.isDefault);
   const [budget, setBudget] = useState(
     row.monthlyTokenLimit === null ? "" : String(row.monthlyTokenLimit),
@@ -371,7 +371,7 @@ function EditDialog({ row, onClose }: { row: AiCredential; onClose: () => void }
     try {
       await update.mutateAsync({
         label,
-        defaultModel,
+        modelId,
         isDefault,
         monthlyTokenLimit,
         // Sending an empty string would rotate the key to "" — only send the
@@ -406,8 +406,8 @@ function EditDialog({ row, onClose }: { row: AiCredential; onClose: () => void }
         />
         <Select
           label={t("credentials.fields.model")}
-          value={defaultModel}
-          onChange={(event) => setDefaultModel(event.target.value)}
+          value={modelId}
+          onChange={(event) => setModelId(event.target.value)}
           // The key's provider is fixed, and a model of another provider is
           // refused with AI_MODEL_NOT_ALLOWED — offer only this provider's.
           options={modelOptions(
@@ -535,14 +535,16 @@ function modelOptions(
     value: model.id,
     // The two limits decide whether a long source fits before anything is
     // billed (QA_CONTEXT_EXCEEDED / QA_OUTPUT_EXCEEDED) — worth seeing at pick time.
-    label: model.supportsStructuredOutput
-      ? t("credentials.modelOption", {
-          label: model.label,
-          context: model.contextWindow,
-          output: model.maxOutputTokens,
-        })
-      : t("credentials.modelUnsupported", { label: model.label }),
-    disabled: !model.supportsStructuredOutput,
+    label: !model.enabled
+      ? t("credentials.modelDisabled", { label: model.label })
+      : model.supportsStructuredOutput
+        ? t("credentials.modelOption", {
+            label: model.label,
+            context: model.contextWindow,
+            output: model.maxOutputTokens,
+          })
+        : t("credentials.modelUnsupported", { label: model.label }),
+    disabled: !model.enabled || !model.supportsStructuredOutput,
   }));
 }
 

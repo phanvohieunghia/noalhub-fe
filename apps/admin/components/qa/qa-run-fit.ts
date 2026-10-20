@@ -41,7 +41,8 @@ export function checkRunFit({
 }: {
   entries: QaOutlineEntry[];
   anchors: string[];
-  maxCount: number;
+  /** Left out when the run has no upper bound: only the context window is checked. */
+  maxCount?: number;
   model: AiModel;
 }): RunFit {
   const chars = entries
@@ -60,7 +61,7 @@ export function checkRunFit({
   }
   // Each question costs EST_TOKENS_PER_ITEM and a call can emit `maxOutputTokens`.
   const capacity = Math.floor(model.maxOutputTokens / EST_TOKENS_PER_ITEM);
-  if (maxCount > capacity) {
+  if (maxCount !== undefined && maxCount > capacity) {
     return {
       ok: false,
       reason: "output",

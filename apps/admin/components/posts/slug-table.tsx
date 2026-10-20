@@ -186,7 +186,7 @@ function SlugRow({
   const df = useDateFormat();
 
   return (
-    <TableRow>
+    <TableRow onActivate={onEdit}>
       <TableCell weight={500}>/blogs/{row.slug}</TableCell>
       <TableCell>
         <Link href={`/posts/${row.post.id}`} className="hover:underline">

@@ -8,9 +8,9 @@ import {
   useArchiveQaSets,
   useDeleteQaItem,
   useQaOutline,
-  useQaOutlines,
   useQaSet,
   useQaSets,
+  useRenameQaSets,
   useUpdateQaItem,
   type QaItemFull,
   type QaOutlineEntry,
@@ -24,22 +24,28 @@ import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
 import { DropdownMenu, DropdownMenuItem } from "@noalhub/ui/dropdown-menu";
 import { Icon, ICONS, LUCIDE } from "@noalhub/ui/icons";
+import { InlineTextField } from "@noalhub/ui/inline-text-field";
 import { MetricsCard } from "@noalhub/ui/metrics-card";
 import { Skeleton } from "@noalhub/ui/skeleton";
 import { Spinner } from "@noalhub/ui/spinner";
 import { Toggle } from "@noalhub/ui/toggle";
+import { toast } from "@noalhub/ui/toast";
 import { Tooltip } from "@noalhub/ui/tooltip";
 import { Typography } from "@noalhub/ui/typography";
 
 import { GenerateSetsButton } from "./generate-sets-button";
 import { useFitHeight } from "./use-fit-height";
 import { RunOutcome } from "./generation-progress";
+import { useOutlineVersion } from "./use-outline-version";
+import { PostContentPreview } from "./post-content-preview";
 import { QaReviewQuestion } from "./qa-review-question";
 
 type Section = {
   key: string;
   title: string;
   entry?: QaOutlineEntry;
+  /** Version of the outline the sets came from; `null` for a hand-written set. */
+  version: number | null;
   sets: QaSet[];
 };
 
@@ -69,8 +75,10 @@ export function SetsStep({
   onStarted: (generationId: string) => void;
 }) {
   const t = useTranslations("admin.qa");
-  const outlines = useQaOutlines(datasetId);
-  const current = outlines.data?.items.find((outline) => outline.isCurrent);
+  // The outline version the sections come from and new questions are generated against.
+  // Opens on the newest; the picker only changes which one is used.
+  const { outlines, items: versions, latest } = useOutlineVersion(datasetId);
+  const current = latest;
   const detail = useQaOutline(current?.id);
   const sets = useQaSets({ datasetId });
   const [closed, setClosed] = useState<Set<string>>(new Set());
@@ -98,24 +106,44 @@ export function SetsStep({
   const ensure = (
     key: string,
     title: string,
+    version: number | null,
     entry?: QaOutlineEntry,
   ): Section => {
     let section = byKey.get(key);
     if (!section) {
-      section = { key, title, entry, sets: [] };
+      section = { key, title, entry, version, sets: [] };
       byKey.set(key, section);
       sections.push(section);
     }
     return section;
   };
   for (const entry of detail.data?.outline ?? [])
-    ensure(entry.anchor, entry.title, entry);
+    ensure(
+      `${current?.id}:${entry.anchor}`,
+      entry.title,
+      current?.version ?? null,
+      entry,
+    );
+  // Every generation stays listed: the same section drafted against two outline
+  // versions is two sections, each tagged with its version.
   for (const set of draftSets) {
-    const key = set.sectionAnchor ?? set.id;
-    ensure(key, set.sectionTitle ?? set.title).sets.push(set);
+    const key = `${set.outlineId ?? "none"}:${set.sectionAnchor ?? set.id}`;
+    const version =
+      versions.find((outline) => outline.id === set.outlineId)?.version ??
+      null;
+    ensure(key, set.sectionTitle ?? set.title, version).sets.push(set);
   }
 
-  const generated = sections.filter((section) => section.sets.length > 0);
+  // Most recently changed first: a section is as fresh as its freshest set.
+  const touchedAt = (section: Section) =>
+    Math.max(
+      ...section.sets.map((set) =>
+        Date.parse(set.updatedAt ?? set.createdAt),
+      ),
+    );
+  const generated = sections
+    .filter((section) => section.sets.length > 0)
+    .sort((a, b) => touchedAt(b) - touchedAt(a));
   const pending = sections.filter(
     (section) => section.sets.length === 0 && section.entry,
   );
@@ -124,6 +152,7 @@ export function SetsStep({
   // picked, again too. The first section without questions is only the suggestion.
   const generateNext = current ? (
     <GenerateSetsButton
+      datasetId={datasetId}
       outlineId={current.id}
       sections={detail.data?.outline ?? []}
       defaultAnchor={next?.anchor}
@@ -133,20 +162,11 @@ export function SetsStep({
     />
   ) : null;
 
-  // While a run is writing, the panel shows it in place — the run dialog has already
-  // closed — and the Generate button gives way to it so a second run cannot be started
-  // on top of the first.
-  if (generated.length === 0) {
-    if (generating) {
-      return (
-        <div className="flex flex-col gap-3">
-          <SetsGenerating />
-          {generateNext ? (
-            <div className="flex justify-center">{generateNext}</div>
-          ) : null}
-        </div>
-      );
-    }
+  // Before the first section is drafted the empty state stands in for the list; while
+  // that first run is writing, the header bar is already there with only the action —
+  // the count, view and fold controls appear once there is data to act on.
+  const firstRun = generated.length === 0 && generating;
+  if (generated.length === 0 && !generating) {
     return (
       <section className="flex flex-col items-center gap-3 rounded-lg border border-border bg-surface px-6 py-12">
         <Icon icon={LUCIDE.sparkles} className="size-6" />
@@ -156,6 +176,7 @@ export function SetsStep({
         >
           {t("ws.sets.empty")}
         </Typography>
+        {/* The outline version is picked inside the dialog. */}
         {generateNext}
         <RunOutcome generationId={generationId} />
       </section>
@@ -169,110 +190,130 @@ export function SetsStep({
           <Typography variant="title-3" as="h2">
             {t("ws.sets.heading")}
           </Typography>
-          <Badge size="sm">
-            {t("ws.sets.setCount", { count: draftSets.length })}
-          </Badge>
+          {firstRun ? null : (
+            <Badge size="sm">
+              {t("ws.sets.setCount", { count: draftSets.length })}
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2">
-          <Toggle
-            variant="outline"
-            aria-label={t("ws.sets.viewMode")}
-            value={view}
-            onValueChange={setView}
-            options={[
-              {
-                value: "full",
-                icon: LUCIDE.listChecks,
-                label: t("ws.sets.viewFull"),
-              },
-              {
-                value: "hover",
-                icon: LUCIDE.mousePointerClick,
-                label: t("ws.sets.viewHover"),
-              },
-            ]}
-          />
-          <span aria-hidden="true" className="mx-1 h-5 w-px bg-border" />
-          <div className="inline-flex divide-x divide-border overflow-hidden rounded-lg border border-border bg-surface">
-            <Tooltip label={t("ws.sets.expandAll")}>
-              <Button
-                variant="ghost"
-                size="icon-md"
-                className="size-7! rounded-none!"
-                aria-label={t("ws.sets.expandAll")}
-                onClick={() => setClosed(new Set())}
-              >
-                <Icon icon={LUCIDE.chevronsUpDown} />
-              </Button>
-            </Tooltip>
-            <Tooltip label={t("ws.sets.collapseAll")}>
-              <Button
-                variant="ghost"
-                size="icon-md"
-                className="size-7! rounded-none!"
-                aria-label={t("ws.sets.collapseAll")}
-                onClick={() =>
-                  setClosed(new Set(generated.map((section) => section.key)))
-                }
-              >
-                <Icon icon={LUCIDE.chevronsDownUp} />
-              </Button>
-            </Tooltip>
-          </div>
+          {firstRun ? null : (
+            <>
+              <Toggle
+                variant="outline"
+                aria-label={t("ws.sets.viewMode")}
+                value={view}
+                onValueChange={setView}
+                options={[
+                  {
+                    value: "full",
+                    icon: LUCIDE.listChecks,
+                    label: t("ws.sets.viewFull"),
+                  },
+                  {
+                    value: "hover",
+                    icon: LUCIDE.mousePointerClick,
+                    label: t("ws.sets.viewHover"),
+                  },
+                ]}
+              />
+              <span aria-hidden="true" className="mx-1 h-5 w-px bg-border" />
+              <div className="inline-flex divide-x divide-border overflow-hidden rounded-lg border border-border bg-surface">
+                <Tooltip label={t("ws.sets.expandAll")}>
+                  <Button
+                    variant="ghost"
+                    size="icon-md"
+                    className="size-7! rounded-none!"
+                    aria-label={t("ws.sets.expandAll")}
+                    onClick={() => setClosed(new Set())}
+                  >
+                    <Icon icon={LUCIDE.chevronsUpDown} />
+                  </Button>
+                </Tooltip>
+                <Tooltip label={t("ws.sets.collapseAll")}>
+                  <Button
+                    variant="ghost"
+                    size="icon-md"
+                    className="size-7! rounded-none!"
+                    aria-label={t("ws.sets.collapseAll")}
+                    onClick={() =>
+                      setClosed(
+                        new Set(generated.map((section) => section.key)),
+                      )
+                    }
+                  >
+                    <Icon icon={LUCIDE.chevronsDownUp} />
+                  </Button>
+                </Tooltip>
+              </div>
+            </>
+          )}
           {generateNext}
         </div>
       </div>
+      {firstRun ? <SetsGenerating /> : null}
       <RunOutcome generationId={generationId} />
-      <div
-        ref={listRef}
-        className="flex max-h-[var(--fit-h,70vh)] min-h-0 flex-col gap-2 overflow-y-auto"
-      >
-        {/* Inside the scroller: outside it the placeholder pushed the list down and
+      {firstRun ? null : (
+        <div
+          ref={listRef}
+          className="flex max-h-[var(--fit-h,70vh)] min-h-0 flex-col gap-2 overflow-y-auto"
+        >
+          {/* Inside the scroller: outside it the placeholder pushed the list down and
             the earlier sets could not be reached while a run was going. */}
-        {generating ? (
-          <div className="shrink-0">
-            <SetsGenerating inline />
-          </div>
-        ) : null}
-        {[...generated].reverse().map((section) => {
-          const group = section.sets;
-          const total = group.reduce((sum, set) => sum + set.itemCount, 0);
-          const approved = group.reduce(
-            (sum, set) => sum + set.approvedCount,
-            0,
-          );
-          const expanded = !closed.has(section.key);
-          return (
-            <div
-              key={section.key}
-              className="flex max-h-[var(--fit-h,70vh)] shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-muted"
-            >
-              <div className="flex shrink-0 items-center gap-3 pr-3">
-                <button
-                  type="button"
-                  aria-expanded={expanded}
-                  onClick={() => {
-                    setOpened((prev) => new Set(prev).add(section.key));
-                    setClosed((prev) => {
-                      const nextClosed = new Set(prev);
-                      if (expanded) nextClosed.add(section.key);
-                      else nextClosed.delete(section.key);
-                      return nextClosed;
-                    });
-                  }}
-                  className="flex min-w-0 flex-1 items-start gap-3 py-3 pl-4 text-left sm:items-center"
-                >
-                  <Icon
-                    icon={expanded ? ICONS.chevronDown : ICONS.chevronRight}
-                    className="mt-1 size-4 shrink-0 sm:mt-0"
-                  />
-                  <span className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                    <Typography
-                      variant="title-3"
-                      className="min-w-0 flex-1 break-words"
-                    >
-                      {section.title}
-                    </Typography>
+          {generating ? (
+            <div className="shrink-0">
+              <SetsGenerating inline />
+            </div>
+          ) : null}
+          {generated.map((section) => {
+            const group = section.sets;
+            const total = group.reduce((sum, set) => sum + set.itemCount, 0);
+            const approved = group.reduce(
+              (sum, set) => sum + set.approvedCount,
+              0,
+            );
+            const expanded = !closed.has(section.key);
+            return (
+              <div
+                key={section.key}
+                className="flex max-h-[var(--fit-h,70vh)] shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-muted"
+              >
+                <div className="flex shrink-0 items-center gap-3 pr-3">
+                  <button
+                    type="button"
+                    aria-expanded={expanded}
+                    aria-label={section.title}
+                    onClick={() => {
+                      setOpened((prev) => new Set(prev).add(section.key));
+                      setClosed((prev) => {
+                        const nextClosed = new Set(prev);
+                        if (expanded) nextClosed.add(section.key);
+                        else nextClosed.delete(section.key);
+                        return nextClosed;
+                      });
+                    }}
+                    className="py-3 pl-4"
+                  >
+                    <Icon
+                      icon={expanded ? ICONS.chevronDown : ICONS.chevronRight}
+                      animate="snappy"
+                      className="size-4 shrink-0"
+                    />
+                  </button>
+                  <div className="flex min-w-0 flex-1 flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-3">
+                    <div className="min-w-0 flex-1">
+                      <SectionTitleField
+                        sets={group}
+                        title={group[0]?.title ?? section.title}
+                      />
+                    </div>
+                    {section.version !== null ? (
+                      <Badge size="sm" className="shrink-0 self-start sm:self-center">
+                        {t("outlines.versionShort", {
+                          version: section.version,
+                        })}
+                      </Badge>
+                    ) : null}
                     <SectionMetrics
                       createdAt={group
                         .map((set) => set.createdAt)
@@ -280,67 +321,70 @@ export function SetsStep({
                       total={total}
                       approved={approved}
                     />
-                  </span>
-                </button>
-                {approved < total ? (
-                  <Tooltip label={t("ws.sets.approveSection")}>
+                  </div>
+                  {approved < total ? (
+                    <Tooltip label={t("ws.sets.approveSection")}>
+                      <Button
+                        variant="outline"
+                        size="icon-md"
+                        aria-label={t("ws.sets.approveSection")}
+                        disabled={approveAll.isPending}
+                        onClick={() => {
+                          setApprovingKey(section.key);
+                          approveAll.mutate(
+                            group.map((set) => set.id),
+                            {
+                              onSettled: () => setApprovingKey(null),
+                            },
+                          );
+                        }}
+                      >
+                        {approvingKey === section.key ? (
+                          <Spinner size="sm" />
+                        ) : (
+                          <Icon icon={ICONS.check} />
+                        )}
+                      </Button>
+                    </Tooltip>
+                  ) : null}
+                  <Tooltip label={t("ws.sets.removeSection")}>
                     <Button
                       variant="outline"
                       size="icon-md"
-                      aria-label={t("ws.sets.approveSection")}
-                      disabled={approveAll.isPending}
-                      onClick={() => {
-                        setApprovingKey(section.key);
-                        approveAll.mutate(group.map((set) => set.id), {
-                          onSettled: () => setApprovingKey(null),
-                        });
-                      }}
+                      aria-label={t("ws.sets.removeSection")}
+                      onClick={() => setRemoving(section)}
                     >
-                      {approvingKey === section.key ? (
-                        <Spinner size="sm" />
-                      ) : (
-                        <Icon icon={ICONS.check} />
-                      )}
+                      <Icon icon={ICONS.delete} />
                     </Button>
                   </Tooltip>
-                ) : null}
-                <Tooltip label={t("ws.sets.removeSection")}>
-                  <Button
-                    variant="outline"
-                    size="icon-md"
-                    aria-label={t("ws.sets.removeSection")}
-                    onClick={() => setRemoving(section)}
-                  >
-                    <Icon icon={ICONS.delete} />
-                  </Button>
-                </Tooltip>
-              </div>
-              <div
-                aria-hidden={!expanded}
-                inert={!expanded}
-                className={`grid min-h-0 transition-[grid-template-rows] duration-200 ease-out ${
-                  expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-                }`}
-              >
-                <div className="min-h-0 overflow-hidden">
-                  {/* Mount lazily so collapsed sections do not fetch, then keep mounted to animate out. */}
-                  {expanded || opened.has(section.key) ? (
-                    <div className="flex max-h-[calc(var(--fit-h,70vh)-4rem)] min-h-0 flex-col gap-3 overflow-y-auto border-t border-border p-3">
-                      {group.map((set) => (
-                        <ReviewSet
-                          key={set.id}
-                          set={set}
-                          revealOnHover={view === "hover"}
-                        />
-                      ))}
-                    </div>
-                  ) : null}
+                </div>
+                <div
+                  aria-hidden={!expanded}
+                  inert={!expanded}
+                  className={`grid min-h-0 transition-[grid-template-rows] duration-200 ease-out ${
+                    expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                  }`}
+                >
+                  <div className="min-h-0 overflow-hidden">
+                    {/* Mount lazily so collapsed sections do not fetch, then keep mounted to animate out. */}
+                    {expanded || opened.has(section.key) ? (
+                      <div className="flex max-h-[calc(var(--fit-h,70vh)-4rem)] min-h-0 flex-col gap-3 overflow-y-auto border-t border-border p-3">
+                        {group.map((set) => (
+                          <ReviewSet
+                            key={set.id}
+                            set={set}
+                            revealOnHover={view === "hover"}
+                          />
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
       {removing ? (
         <RemoveSectionDialog
           section={removing}
@@ -348,6 +392,37 @@ export function SetsStep({
         />
       ) : null}
     </section>
+  );
+}
+
+/** The section name, edited in place: written onto every set of the section. */
+function SectionTitleField({
+  sets,
+  title,
+}: {
+  sets: QaSet[];
+  title: string;
+}) {
+  const t = useTranslations("admin.qa");
+  const rename = useRenameQaSets();
+  return (
+    <InlineTextField
+      value={title}
+      placeholder={t("sources.untitled")}
+      label={t("ws.sets.sectionTitle")}
+      onSubmit={async (next) => {
+        if (next === "") throw new Error("empty");
+        try {
+          await rename.mutateAsync({
+            sets: sets.map((set) => ({ id: set.id, version: set.version })),
+            title: next,
+          });
+        } catch (error) {
+          toast.error(t("ws.sets.renameFailed"));
+          throw error;
+        }
+      }}
+    />
   );
 }
 
@@ -504,6 +579,19 @@ function ReviewSet({
 
   return (
     <>
+      {detail.data.description || detail.data.intro ? (
+        <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4">
+          <Typography variant="title-4">{detail.data.title}</Typography>
+          {detail.data.description ? (
+            <Typography variant="body-3" className="text-muted-foreground">
+              {detail.data.description}
+            </Typography>
+          ) : null}
+          {detail.data.intro ? (
+            <PostContentPreview doc={detail.data.intro} />
+          ) : null}
+        </div>
+      ) : null}
       {detail.data.items.map((item, index) => (
         <QaReviewQuestion
           key={item.id}
@@ -579,9 +667,10 @@ function SectionMetrics({
   const t = useTranslations("admin.qa");
   const locale = useLocale();
   const df = useDateFormat();
-  const short = new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }).format(
-    new Date(createdAt),
-  );
+  const short = new Intl.DateTimeFormat(locale, {
+    month: "short",
+    day: "numeric",
+  }).format(new Date(createdAt));
 
   return (
     <MetricsCard
@@ -606,7 +695,8 @@ function SectionMetrics({
         {
           key: "approved",
           icon: LUCIDE.circleCheck,
-          iconClass: approved === total && total > 0 ? "text-success" : "text-warning",
+          iconClass:
+            approved === total && total > 0 ? "text-success" : "text-warning",
           value: `${approved}/${total}`,
           label: t("ws.sets.metrics.approved"),
           detail: t("ws.sets.approvedOf", { approved, total }),

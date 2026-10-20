@@ -1,7 +1,12 @@
 import React, { createContext, useContext } from "react";
 import { Image, Text, View } from "react-native";
 
-import type { BlogBlockNode, BlogDoc, BlogInlineNode } from "@noalhub/api/blog";
+import {
+  expandMarkdownImages,
+  type BlogBlockNode,
+  type BlogDoc,
+  type BlogInlineNode,
+} from "@noalhub/api/blog";
 
 /** Body text size; `lg` is for content that is the whole point of a screen, like a quiz question. */
 type ContentSize = "base" | "lg";
@@ -30,12 +35,29 @@ export function NativePostContent({ doc, size = "base" }: { doc: BlogDoc; size?:
   );
 }
 
+/**
+ * `NativePostContent` for Q&A text (question, answer, explanation): pictures written
+ * as markdown inside a paragraph become real images, as `QaContent` does on web.
+ */
+export function NativeQaContent({ doc, size = "base" }: { doc: BlogDoc; size?: ContentSize }) {
+  if (!doc || !Array.isArray(doc.content)) return null;
+  return <NativePostContent doc={expandMarkdownImages(doc)} size={size} />;
+}
+
+/** Left is the default and has no style (`BlogTextAlign`). */
+function alignStyle(align: "center" | "right" | "justify" | undefined) {
+  return align ? { textAlign: align } : undefined;
+}
+
 function NativeBlock({ block }: { block: BlogBlockNode }) {
   const size = useContext(SizeContext);
   switch (block.type) {
     case "paragraph":
       return (
-        <Text className={`text-foreground ${PARAGRAPH_CLASSES[size]}`}>
+        <Text
+          className={`text-foreground ${PARAGRAPH_CLASSES[size]}`}
+          style={alignStyle(block.attrs?.textAlign)}
+        >
           {block.content?.map((inline, i) => (
             <NativeInline key={i} inline={inline} />
           ))}
@@ -47,6 +69,7 @@ function NativeBlock({ block }: { block: BlogBlockNode }) {
           className={`font-bold text-foreground mt-2 ${
             block.attrs.level === 2 ? "text-xl" : "text-lg"
           }`}
+          style={alignStyle(block.attrs.textAlign)}
         >
           {block.content?.map((inline, i) => (
             <NativeInline key={i} inline={inline} />
@@ -105,8 +128,22 @@ function NativeBlock({ block }: { block: BlogBlockNode }) {
       return (
         <Image
           source={{ uri: block.attrs.src }}
-          className="h-48 w-full rounded-xl bg-muted my-2"
-          resizeMode="cover"
+          className={`rounded-xl bg-muted my-2 ${
+            block.attrs.width && block.attrs.height ? "w-full max-w-[300px]" : "h-48 w-full"
+          }`}
+          style={{
+            ...(block.attrs.width && block.attrs.height
+              ? { aspectRatio: block.attrs.width / block.attrs.height }
+              : null),
+            alignSelf:
+              block.attrs.align === "center"
+                ? "center"
+                : block.attrs.align === "right"
+                  ? "flex-end"
+                  : "flex-start",
+          }}
+          accessibilityLabel={block.attrs.alt}
+          resizeMode={block.attrs.width && block.attrs.height ? "contain" : "cover"}
         />
       );
     case "horizontalRule":

@@ -5,15 +5,20 @@ import { useState } from "react";
 
 import {
   useAiCredentials,
-  useAiModels,
   type AiCredential,
+  type AiModel,
 } from "@noalhub/api/qa";
+import { AlertWarning } from "@noalhub/ui/alert";
 import { Select } from "@noalhub/ui/select";
+import { Typography } from "@noalhub/ui/typography";
 
 export type AiRunChoice = {
   credential: AiCredential | undefined;
+  /** The model the picked key runs — read-only here, changed on the AI keys screen. */
+  modelInfo: AiModel | undefined;
+  /** Display name of that model, `""` until a key is picked. */
   model: string;
-  /** Both picked — the only state in which a billed call may be sent. */
+  /** A key is picked and its model can run — the only state in which a billed call may be sent. */
   ready: boolean;
   /** No enabled key at all: nothing to pick, the dialog should say so. */
   empty: boolean;
@@ -21,47 +26,39 @@ export type AiRunChoice = {
 };
 
 /**
- * Key + model for a call that spends money.
+ * The key for a call that spends money.
  *
- * The backend requires both on `analyze` and `generate-sets` — there is no
- * fallback to the `isDefault` key any more, because a flag somebody set weeks
+ * The backend requires `credentialId` on `analyze` and `generate-sets` — there is
+ * no fallback to the `isDefault` key any more, because a flag somebody set weeks
  * ago should not decide today's invoice. `isDefault` survives only as the
- * pre-selected option, and the key's `defaultModel` as the pre-selected model.
+ * pre-selected option. The model is not picked here: it belongs to the key
+ * (chosen when the key is created or edited), so choosing the key already
+ * answers "which model is this billed on".
  */
 export function useAiRunChoice(): AiRunChoice {
   const t = useTranslations("admin.qa");
   const credentials = useAiCredentials();
-  const models = useAiModels();
-  const [picked, setPicked] = useState<{
-    credentialId?: string;
-    model?: string;
-  }>({});
+  const [pickedId, setPickedId] = useState<string | undefined>();
 
   // A disabled key is refused by the backend (`AI_CREDENTIAL_DISABLED`); offering
   // it would only move the error from here to after the click.
   const usable = (credentials.data ?? []).filter((row) => row.enabled);
   const credential =
-    usable.find((row) => row.id === picked.credentialId) ??
-    (picked.credentialId === undefined
-      ? usable.find((row) => row.isDefault)
-      : undefined);
+    usable.find((row) => row.id === pickedId) ??
+    (pickedId === undefined ? usable.find((row) => row.isDefault) : undefined);
 
-  // A model id belongs to exactly one provider, and the backend answers
-  // `AI_MODEL_NOT_ALLOWED` for any other pairing — so only that provider's models.
-  const providerModels = (models.data ?? []).filter(
-    (row) => row.provider === credential?.provider,
-  );
-  const model = picked.model ?? credential?.defaultModel ?? "";
+  const modelInfo = credential?.model;
+  // Mirrors the backend's `AI_MODEL_NOT_ALLOWED`: a model that was switched off, or
+  // cannot be forced into a JSON schema, is refused before the call.
+  const modelUsable =
+    modelInfo !== undefined && modelInfo.enabled && modelInfo.supportsStructuredOutput;
 
   const fields = (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="space-y-2">
       <Select
         label={t("run.credential")}
         value={credential?.id ?? ""}
-        onChange={(event) =>
-          // Switching key resets the model to that key's own default.
-          setPicked({ credentialId: event.target.value })
-        }
+        onChange={(event) => setPickedId(event.target.value)}
         placeholder={
           credentials.isPending
             ? t("loading")
@@ -71,41 +68,29 @@ export function useAiRunChoice(): AiRunChoice {
         }
         options={usable.map((row) => ({
           value: row.id,
-          label: `${row.label} · ${row.provider} · …${row.keyLast4}`,
+          label: `${row.label} · ${row.model.label} · …${row.keyLast4}`,
         }))}
       />
-      <Select
-        label={t("run.model")}
-        value={model}
-        onChange={(event) =>
-          setPicked((current) => ({
-            credentialId: credential?.id ?? current.credentialId,
-            model: event.target.value,
-          }))
-        }
-        disabled={!credential}
-        placeholder={
-          models.isPending
-            ? t("loading")
-            : models.isError
-              ? t("credentials.modelsLoadFailed")
-              : t("run.pickModel")
-        }
-        options={providerModels.map((row) => ({
-          value: row.id,
-          label: row.supportsStructuredOutput
-            ? row.label
-            : t("credentials.modelUnsupported", { label: row.label }),
-          disabled: !row.supportsStructuredOutput,
-        }))}
-      />
+      {modelInfo && modelUsable ? (
+        <Typography variant="body-4" className="opacity-70">
+          {t("run.modelOfKey", {
+            label: modelInfo.label,
+            context: modelInfo.contextWindow,
+            output: modelInfo.maxOutputTokens,
+          })}
+        </Typography>
+      ) : null}
+      {modelInfo && !modelUsable ? (
+        <AlertWarning message={t("run.modelUnavailable", { label: modelInfo.label })} />
+      ) : null}
     </div>
   );
 
   return {
     credential,
-    model,
-    ready: credential !== undefined && model !== "",
+    modelInfo,
+    model: modelInfo?.label ?? "",
+    ready: credential !== undefined && modelUsable,
     empty: !credentials.isPending && usable.length === 0,
     fields,
   };

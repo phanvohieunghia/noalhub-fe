@@ -1,9 +1,10 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
+  CHARS_PER_TOKEN,
   MAX_SOURCE_CHARS,
   useAddQaSource,
   useDeleteQaSource,
@@ -20,44 +21,61 @@ import { MarkdownEditor } from "@noalhub/ui/blog/markdown-editor";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
 import { DropdownMenu, DropdownMenuItem } from "@noalhub/ui/dropdown-menu";
-import { Icon, ICONS } from "@noalhub/ui/icons";
+import { Icon, ICONS, LUCIDE } from "@noalhub/ui/icons";
+import { InlineTextField } from "@noalhub/ui/inline-text-field";
 import { Input } from "@noalhub/ui/input";
-import { Select } from "@noalhub/ui/select";
+import { MetricsCard, type MetricItem } from "@noalhub/ui/metrics-card";
 import { Skeleton } from "@noalhub/ui/skeleton";
 import { toast } from "@noalhub/ui/toast";
-import { Textarea } from "@noalhub/ui/textarea";
+import { Tooltip } from "@noalhub/ui/tooltip";
 import { Typography } from "@noalhub/ui/typography";
 
-import { htmlToMarkdown } from "./clipboard-markdown";
 import { EditorShell } from "./qa-editor-shell";
+import { textStats } from "./qa-plain-doc";
+import { useFitHeight } from "./use-fit-height";
 
 /**
- * Step 1: the dataset's source text, edited in place. One source is open at a time;
- * with several chapters the title becomes a picker. The editor works on Markdown —
- * the rich editor round-trips it, the "raw" view shows the text exactly as stored,
+ * Step 1: the dataset's source text, edited in place. Every source is fetched up
+ * front; the first starts open, the rest folded. The editor works on Markdown,
  * which is what goes into the prompt.
  */
 export function SourcesStep({ datasetId }: { datasetId: string }) {
   const t = useTranslations("admin.qa");
   const sources = useQaSources(datasetId);
   const remove = useDeleteQaSource(datasetId);
-  const [picked, setPicked] = useState<string | null>(null);
+  // `null` = untouched: the first source starts open, the rest folded.
+  const [openIds, setOpenIds] = useState<string[] | null>(null);
   const [adding, setAdding] = useState(false);
+  const listRef = useFitHeight<HTMLDivElement>();
 
   const rows = sources.data ?? [];
-  // A removed source must not leave the editor pointing at nothing.
-  const activeId = rows.some((row) => row.id === picked) ? picked : (rows[0]?.id ?? null);
-  const full = useQaSource(activeId ?? undefined);
 
   if (sources.isPending) return <Skeleton className="h-96 w-full" />;
 
+  const opened = openIds ?? (rows[0] ? [rows[0].id] : []);
+  const toggle = (id: string) => {
+    setOpenIds(opened.includes(id) ? opened.filter((x) => x !== id) : [...opened, id]);
+  };
+
   const addDialog = adding ? (
-    <Dialog open onClose={() => setAdding(false)} title={t("sources.add")}>
-      <AddSourceForm datasetId={datasetId} onSaved={() => setAdding(false)} />
+    <Dialog
+      open
+      size="lg"
+      onClose={() => setAdding(false)}
+      title={t("sources.add")}
+    >
+      <AddSourceForm
+        datasetId={datasetId}
+        onSaved={(id) => {
+          setAdding(false);
+          // Show what was just added.
+          if (id) setOpenIds([...opened, id]);
+        }}
+      />
     </Dialog>
   ) : null;
 
-  if (rows.length === 0 || !activeId) {
+  if (rows.length === 0) {
     return (
       <section className="flex flex-col items-center gap-3 rounded-lg border border-border bg-surface p-10">
         <Typography variant="body-3" className="text-muted-foreground">
@@ -69,68 +87,95 @@ export function SourcesStep({ datasetId }: { datasetId: string }) {
     );
   }
 
-  const picker =
-    rows.length > 1 ? (
-      <div className="w-72 max-w-full">
-        <Select
-          label={t("ws.source.pick")}
-          hideLabel
-          size="sm"
-          value={activeId}
-          onChange={(event) => setPicked(event.target.value)}
-          options={rows.map((row) => ({
-            value: row.id,
-            label: row.title ?? t("sources.untitled"),
-          }))}
-        />
-      </div>
-    ) : null;
-
   return (
-    <div className="flex flex-col gap-3">
-      {full.isError ? (
-        <AlertError message={t("ws.source.loadFailed")} />
-      ) : full.isPending || !full.data ? (
-        <Skeleton className="h-96 w-full" />
-      ) : (
-        <SourceEditor
-          key={full.data.id}
-          datasetId={datasetId}
-          source={full.data}
-          picker={picker}
-          removing={remove.isPending}
-          onRemove={() => remove.mutate(activeId)}
-        />
-      )}
-      <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={() => setAdding(true)}>
-          {t("ws.source.add")}
-        </Button>
+    // The list is the scroller, ending at the bottom of the viewport: the step tabs
+    // above stay put, and the editors inside just grow.
+    <div
+      ref={listRef}
+      className="flex max-h-[var(--fit-h,70vh)] min-h-0 flex-col gap-3 overflow-y-auto [&>*]:shrink-0"
+    >
+      <div className="flex justify-end">
+        <Tooltip label={t("ws.source.add")}>
+          <Button
+            variant="outline"
+            size="icon-md"
+            aria-label={t("ws.source.add")}
+            onClick={() => setAdding(true)}
+          >
+            <Icon icon={ICONS.add} />
+          </Button>
+        </Tooltip>
       </div>
+      {/* Every source is mounted folded, so its full text and metrics are fetched up
+        front instead of on first open. */}
+      {rows.map((row) => (
+        <OpenSource
+          key={row.id}
+          datasetId={datasetId}
+          id={row.id}
+          collapsed={!opened.includes(row.id)}
+          removing={remove.isPending}
+          onRemove={() => remove.mutate(row.id)}
+          onToggle={() => toggle(row.id)}
+        />
+      ))}
       {addDialog}
     </div>
+  );
+}
+
+/** One source, open or folded: fetches its full text as soon as it is mounted. */
+function OpenSource({
+  datasetId,
+  id,
+  collapsed,
+  removing,
+  onRemove,
+  onToggle,
+}: {
+  datasetId: string;
+  id: string;
+  collapsed: boolean;
+  removing: boolean;
+  onRemove: () => void;
+  onToggle: () => void;
+}) {
+  const t = useTranslations("admin.qa");
+  const full = useQaSource(id);
+
+  if (full.isError) return <AlertError message={t("ws.source.loadFailed")} />;
+  if (full.isPending || !full.data) return <Skeleton className="h-96 w-full" />;
+  return (
+    <SourceEditor
+      datasetId={datasetId}
+      source={full.data}
+      collapsed={collapsed}
+      removing={removing}
+      onRemove={onRemove}
+      onToggle={onToggle}
+    />
   );
 }
 
 function SourceEditor({
   datasetId,
   source,
-  picker,
+  collapsed,
   removing,
   onRemove,
+  onToggle,
 }: {
   datasetId: string;
   source: QaDatasetSourceFull;
-  picker: React.ReactNode;
+  collapsed: boolean;
   removing: boolean;
   onRemove: () => void;
+  onToggle: () => void;
 }) {
   const t = useTranslations("admin.qa");
-  const tc = useTranslations("common");
   const update = useUpdateQaSource(datasetId);
   const original = source.content ?? "";
   const [value, setValue] = useState(original);
-  const [rich, setRich] = useState(true);
   const [saved, setSaved] = useState(original);
   const [error, setError] = useState<string | null>(null);
 
@@ -147,72 +192,202 @@ function SourceEditor({
     }
   };
 
+  // ⌘S / Ctrl+S saves instead of opening the browser's "save page" dialog.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        if (canSave && !update.isPending) void save();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  });
+
+  const stats = useMemo(() => textStats(value), [value]);
+  const readMinutes = Math.max(1, Math.ceil(stats.words / 230));
+  const fmt = (n: number) => n.toLocaleString("en-US");
+  const statItems: MetricItem[] = [
+    {
+      key: "words",
+      icon: LUCIDE.fileText,
+      iconClass: "text-primary",
+      value: fmt(stats.words),
+      label: t("ws.source.metrics.words"),
+    },
+    {
+      key: "characters",
+      icon: LUCIDE.type,
+      iconClass: "text-brand-500",
+      value: fmt(stats.characters),
+      label: t("ws.source.metrics.characters"),
+    },
+    {
+      key: "tokens",
+      icon: LUCIDE.zap,
+      iconClass: "text-success",
+      value: fmt(Math.ceil(stats.characters / CHARS_PER_TOKEN)),
+      label: t("ws.source.metrics.tokens"),
+    },
+    {
+      key: "readTime",
+      icon: LUCIDE.clock,
+      iconClass: "text-warning",
+      value: `~${readMinutes}`,
+      label: t("ws.source.metrics.readTime"),
+      detail: t("ws.source.metrics.minutes", { count: readMinutes }),
+    },
+  ];
+
+  const statusLabel = update.isPending
+    ? t("ws.source.statusSaving")
+    : value !== saved
+      ? t("ws.source.statusUnsaved")
+      : t("ws.source.statusSaved");
+
   return (
-    <EditorShell
-      fullscreenTitle={source.title ?? t("sources.untitled")}
-      title={
-        picker ?? (
-          <Typography variant="title-3" className="truncate">
-            {source.title ?? t("sources.untitled")}
-          </Typography>
-        )
-      }
-      switchLabel={t("ws.source.rawMarkdown")}
-      switchOn={rich}
-      onSwitchChange={setRich}
-      actions={
-        <DropdownMenu
-          compact
-          trigger={
-            <Button variant="outline" size="icon-md" aria-label={t("ws.source.actions")}>
-              <Icon icon={ICONS.more} />
-            </Button>
-          }
-        >
-          <DropdownMenuItem
-            icon={ICONS.save}
-            disabled={!canSave || update.isPending}
-            onSelect={() => void save()}
-          >
-            {tc("actions.save")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            icon={ICONS.delete}
-            tone="danger"
-            disabled={removing}
-            onSelect={onRemove}
-          >
-            {t("ws.source.remove")}
-          </DropdownMenuItem>
-        </DropdownMenu>
-      }
-      onSave={() => void save()}
-      saving={update.isPending}
-      canSave={canSave}
-      error={error}
-      fill
-      renderEditor={({ className, fullscreen }) =>
-        rich ? (
+    <>
+      <EditorShell
+        fullscreenTitle={source.title ?? t("sources.untitled")}
+        title={
+          <div className="flex min-w-0 items-center gap-2">
+            <Tooltip label={t(collapsed ? "ws.source.expand" : "ws.source.collapse")}>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-expanded={!collapsed}
+                aria-label={t(collapsed ? "ws.source.expand" : "ws.source.collapse")}
+                onClick={onToggle}
+              >
+                <Icon
+                  icon={collapsed ? ICONS.chevronRight : ICONS.chevronDown}
+                  animate="snappy"
+                />
+              </Button>
+            </Tooltip>
+            <SourceTitleField datasetId={datasetId} source={source} />
+            <Tooltip label={statusLabel}>
+              <span
+                role="status"
+                tabIndex={0}
+                aria-label={statusLabel}
+                className={`hidden size-5 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring md:flex ${
+                  value !== saved || update.isPending
+                    ? "text-warning"
+                    : "text-success"
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className="size-2 rounded-full bg-current"
+                />
+              </span>
+            </Tooltip>
+          </div>
+        }
+        actions={
+          <div className="flex items-center gap-2">
+            <Tooltip label={`${t("ws.source.saveChanges")} (⌘S)`}>
+              {/* The span takes the hover: a disabled button swallows pointer events. */}
+              <span className="inline-flex">
+                <Button
+                  size="icon-md"
+                  disabled={!canSave || update.isPending}
+                  aria-label={t("ws.source.saveChanges")}
+                  aria-keyshortcuts="Meta+S Control+S"
+                  onClick={() => void save()}
+                >
+                  <Icon icon={LUCIDE.save} />
+                </Button>
+              </span>
+            </Tooltip>
+            <DropdownMenu
+              compact
+              trigger={
+                <Button
+                  variant="outline"
+                  size="icon-md"
+                  aria-label={t("ws.source.actions")}
+                >
+                  <Icon icon={ICONS.more} />
+                </Button>
+              }
+            >
+              <DropdownMenuItem
+                icon={ICONS.delete}
+                tone="danger"
+                disabled={removing}
+                onSelect={onRemove}
+              >
+                {t("ws.source.remove")}
+              </DropdownMenuItem>
+            </DropdownMenu>
+          </div>
+        }
+        onSave={() => void save()}
+        saving={update.isPending}
+        canSave={canSave}
+        error={error}
+        grow
+        collapsed={collapsed}
+        meta={
+          <MetricsCard
+            title={t("ws.source.metrics.title")}
+            items={statItems}
+            className="hidden lg:flex"
+          />
+        }
+        renderEditor={({ className, fullscreen }) => (
           <MarkdownEditor
             value={value}
             onChange={setValue}
             contentClassName={className}
             fullscreen={fullscreen}
           />
-        ) : (
-          <Textarea
-            aria-label={t("ws.source.rawMarkdown")}
-            rows={18}
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-          />
-        )
-      }
+        )}
+      />
+    </>
+  );
+}
+
+function SourceTitleField({
+  datasetId,
+  source,
+}: {
+  datasetId: string;
+  source: QaDatasetSourceFull;
+}) {
+  const t = useTranslations("admin.qa");
+  const update = useUpdateQaSource(datasetId);
+
+  return (
+    <InlineTextField
+      value={source.title ?? ""}
+      placeholder={t("sources.untitled")}
+      label={t("sources.fields.title")}
+      onSubmit={async (title) => {
+        try {
+          // An empty title goes back to `null`, i.e. "Untitled".
+          await update.mutateAsync({
+            id: source.id,
+            input: { title: title === "" ? null : title },
+          });
+        } catch (error) {
+          toast.error(t("ws.source.saveFailed"));
+          throw error;
+        }
+      }}
     />
   );
 }
 
-function AddSourceForm({ datasetId, onSaved }: { datasetId: string; onSaved: () => void }) {
+function AddSourceForm({
+  datasetId,
+  onSaved,
+}: {
+  datasetId: string;
+  onSaved: (id?: string) => void;
+}) {
   const t = useTranslations("admin.qa");
   const m = useMessage();
   const add = useAddQaSource(datasetId);
@@ -222,27 +397,17 @@ function AddSourceForm({ datasetId, onSaved }: { datasetId: string; onSaved: () 
 
   const tooLong = content.length > MAX_SOURCE_CHARS;
 
-  const onPaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
-    const html = event.clipboardData.getData("text/html");
-    if (!html) return;
-    // Pasting into a plain textarea turns `<a href>` into bare words and the
-    // backend never sees the URL, so read the clipboard's HTML and flatten it to
-    // Markdown first. Plain-text pastes are already what we want.
-    event.preventDefault();
-    const markdown = htmlToMarkdown(html);
-    const field = event.currentTarget;
-    const start = field.selectionStart ?? content.length;
-    const end = field.selectionEnd ?? content.length;
-    setContent(content.slice(0, start) + markdown + content.slice(end));
-  };
-
   const save = async () => {
     setFormError(null);
     try {
-      await add.mutateAsync({ kind: "text", title: title === "" ? null : title, content });
+      const created = await add.mutateAsync({
+        kind: "text",
+        title: title === "" ? null : title,
+        content,
+      });
       setTitle("");
       setContent("");
-      onSaved();
+      onSaved(created.id);
     } catch (error) {
       setFormError(applyApiError(error, () => undefined, []));
     }
@@ -255,24 +420,41 @@ function AddSourceForm({ datasetId, onSaved }: { datasetId: string; onSaved: () 
         value={title}
         onChange={(event) => setTitle(event.target.value)}
       />
-      <Textarea
-        label={t("sources.fields.content")}
-        rows={10}
-        value={content}
-        onPaste={onPaste}
-        onChange={(event) => setContent(event.target.value)}
-      />
-      <div className="flex items-center justify-between gap-3">
-        <Typography variant="body-4" className={tooLong ? "text-danger" : "text-muted-foreground"}>
-          {t("sources.charCount", { count: content.length, max: MAX_SOURCE_CHARS })}
+      <div className="space-y-1.5">
+        <Typography variant="body-4" as="span" className="font-medium">
+          {t("sources.fields.content")}
         </Typography>
-        <Button onClick={() => void save()} disabled={add.isPending || content.trim() === "" || tooLong}>
+        {/* The same editor as editing a source: paste, images and Markdown behave alike. */}
+        <MarkdownEditor
+          value={content}
+          onChange={setContent}
+          contentClassName="min-h-[320px] max-h-[50dvh] overflow-y-auto overscroll-contain"
+        />
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <Typography
+          variant="body-4"
+          className={tooLong ? "text-danger" : "text-muted-foreground"}
+        >
+          {t("sources.charCount", {
+            count: content.length,
+            max: MAX_SOURCE_CHARS,
+          })}
+        </Typography>
+        <Button
+          onClick={() => void save()}
+          disabled={add.isPending || content.trim() === "" || tooLong}
+        >
           {t("sources.save")}
         </Button>
       </div>
       {/* Stopped here rather than at the API: a 400 after pasting a whole chapter
           is the worst possible moment to learn about the limit. */}
-      {tooLong ? <AlertWarning message={t("sources.tooLong", { max: MAX_SOURCE_CHARS })} /> : null}
+      {tooLong ? (
+        <AlertWarning
+          message={t("sources.tooLong", { max: MAX_SOURCE_CHARS })}
+        />
+      ) : null}
       {formError ? <AlertError message={m(formError)} /> : null}
     </div>
   );

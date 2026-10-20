@@ -5,7 +5,12 @@ import { Editor } from "@tiptap/react";
 
 import { sanitizeBlogDoc, type BlogDoc } from "@noalhub/api/blog";
 
-import { BLOG_EXTENSIONS, RichTextEditor, type EditorFullscreen } from "./tiptap-editor";
+import {
+  BLOG_EXTENSIONS,
+  RichTextEditor,
+  flattenTaskLists,
+  type EditorFullscreen,
+} from "./tiptap-editor";
 
 /** Re-exported so apps need not depend on Tiptap just to type `onReady`. */
 export type { Editor };
@@ -65,9 +70,31 @@ export function blogDocToMarkdown(doc: BlogDoc): string {
   return withHeadlessEditor(doc, "json", (editor) => editor.getMarkdown());
 }
 
+const IMAGE_LINE = /^\s*!\[[^\]]*\]\([^)]*\)\s*$/;
+
+/**
+ * The `image` node is a block, but markdown happily puts `![](url)` on the line
+ * right under a sentence — which parses as an inline image inside that
+ * paragraph, and a paragraph cannot hold one, so the picture silently vanishes.
+ * Giving every image-only line its own paragraph keeps it.
+ */
+function isolateImages(markdown: string): string {
+  const out: string[] = [];
+  let fenced = false;
+  for (const line of markdown.split("\n")) {
+    if (/^\s*(```|~~~)/.test(line)) fenced = !fenced;
+    const isImage = !fenced && IMAGE_LINE.test(line);
+    const previous = out[out.length - 1];
+    if (isImage && previous !== undefined && previous.trim() !== "") out.push("");
+    else if (!isImage && previous !== undefined && IMAGE_LINE.test(previous) && line.trim() !== "") out.push("");
+    out.push(line);
+  }
+  return out.join("\n");
+}
+
 /** The reverse of `blogDocToMarkdown`, sanitized like every other doc write. */
 export function markdownToBlogDoc(markdown: string): BlogDoc {
-  return withHeadlessEditor(markdown, "markdown", (editor) =>
+  return withHeadlessEditor(isolateImages(flattenTaskLists(markdown)), "markdown", (editor) =>
     sanitizeBlogDoc(editor.getJSON()),
   );
 }

@@ -7,6 +7,8 @@ import { usePathname } from "next/navigation";
 import { FLAT_NAV_ITEMS, NON_ROUTE_SEGMENTS, SEGMENT_LABEL_KEYS } from "./nav-items";
 import { Typography } from "@noalhub/ui/typography";
 
+import { DatasetTitleField } from "../qa/dataset-title-field";
+
 /**
  * The breadcrumb is derived from the pathname, not from separate state — so
  * there is nowhere for it to drift from the URL.
@@ -21,6 +23,9 @@ import { Typography } from "@noalhub/ui/typography";
  * map wins because a nav entry's label names a *destination*, which is not
  * always the name of its last segment — "Q&A" points at `/qa/datasets`.
  *
+ * Exception: on `/qa/datasets/[id]` the last crumb is the dataset's own title,
+ * editable in place, instead of "Details".
+ *
  * A segment in `NON_ROUTE_SEGMENTS` is a grouping folder with no page: it
  * stays in the trail for orientation but is not a link.
  */
@@ -28,6 +33,11 @@ export function AdminBreadcrumb() {
   const t = useTranslations("nav.admin");
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
+
+  const datasetId =
+    segments.length === 3 && segments[0] === "qa" && segments[1] === "datasets"
+      ? segments[2]
+      : null;
 
   const crumbs = segments.map((segment, index) => {
     const href = `/${segments.slice(0, index + 1).join("/")}`;
@@ -50,9 +60,15 @@ export function AdminBreadcrumb() {
         {crumbs.map((crumb) => (
           <li key={crumb.href} className="flex items-center gap-1.5">
             {crumb.isLast ? (
-              <Typography variant="body-3" as="span" weight={500} aria-current="page">
-                {crumb.label}
-              </Typography>
+              datasetId ? (
+                <span aria-current="page">
+                  <DatasetTitleField datasetId={datasetId} />
+                </span>
+              ) : (
+                <Typography variant="body-3" as="span" weight={500} aria-current="page">
+                  {crumb.label}
+                </Typography>
+              )
             ) : !crumb.isRoute ? (
               <>
                 <Typography variant="body-3" as="span" className="opacity-70">

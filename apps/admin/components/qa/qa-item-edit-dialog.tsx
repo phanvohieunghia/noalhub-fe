@@ -22,6 +22,7 @@ import { Select } from "@noalhub/ui/select";
 import { Textarea } from "@noalhub/ui/textarea";
 import { Typography } from "@noalhub/ui/typography";
 
+import { QaItemTagPicker } from "./qa-item-tag-picker";
 import { docToText, textToDoc } from "./qa-plain-doc";
 
 const DIFFICULTIES = ["easy", "medium", "hard"] as const satisfies readonly QaDifficulty[];
@@ -68,6 +69,7 @@ export function QaItemEditDialog({
   );
   const [answer, setAnswer] = useState(initialAnswer ?? "");
   const [explanation, setExplanation] = useState(initialExplanation ?? "");
+  const [tagIds, setTagIds] = useState<string[]>(item.tagIds);
   const [error, setError] = useState<Message | string | null>(null);
 
   const save = async () => {
@@ -89,6 +91,7 @@ export function QaItemEditDialog({
 
     const input: PatchItemInput = {
       difficulty: difficulty === "" ? null : difficulty,
+      tagIds,
       ...(initialQuestion !== null ? { question: textToDoc(question) } : {}),
       ...(initialExplanation !== null
         ? { explanation: explanation.trim() === "" ? null : textToDoc(explanation) }
@@ -137,6 +140,8 @@ export function QaItemEditDialog({
             }))}
           />
         </div>
+
+        <QaItemTagPicker value={tagIds} onChange={setTagIds} />
 
         {initialQuestion === null ? (
           <Typography variant="body-4" className="text-muted-foreground">

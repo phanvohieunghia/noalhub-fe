@@ -26,7 +26,7 @@
     "columns": {
       "label": "Label",
       "providerKey": "Provider / Key",
-      "model": "Default model",
+      "model": "Model",
       "budget": "Budget"
     },
     "fields": {
@@ -35,15 +35,20 @@
       "apiKeyHint": "Accepted once. There is no way to read it back — lose it and you rotate.",
       "rotate": "Replace the key",
       "rotateHint": "Leave empty to keep the current key.",
-      "model": "Default model",
+      "model": "Model",
       "modelPlaceholder": "Pick a model",
       "isDefault": "Use this key when a generate call names none",
       "budget": "Monthly token budget",
       "budgetHint": "Leave empty for unlimited. Counted per calendar month, UTC.",
       "budgetInvalid": "A whole number of tokens, at least 1."
-    }
+    },
+    "modelDisabled": "{label} — switched off, unusable"
   },
   "templates": {
+    "saved": "Prompt saved",
+    "created": "Prompt created",
+    "duplicated": "Prompt duplicated",
+    "saveFailed": "Could not save the prompt.",
     "title": "Prompts",
     "intro": "Prompts for the two stages: turning sources into an outline, and writing questions. A prompt is yours to write — none are seeded.",
     "caption": "Prompts",
@@ -114,7 +119,6 @@
     "add": "Add a dataset",
     "addTitle": "Add a dataset",
     "empty": "No datasets yet.",
-    "open": "Open",
     "large": "Large source",
     "chars": "{count, plural, one {# character} other {# characters}}",
     "charWarning": "The source is large: the analyze stage rewrites the whole document, so output is roughly the size of input and the call may hit the model's output ceiling. Consider splitting it into smaller datasets.",
@@ -134,6 +138,7 @@
       "title": "Title",
       "description": "Description"
     },
+    "saveFailed": "Could not rename the dataset.",
     "delete": "Delete",
     "deleteTitle": "Delete “{title}”?",
     "deleteBody": "This deletes the dataset and its sources for good. It is only allowed while no set has been generated from it."
@@ -170,7 +175,6 @@
     "editorTitle": "Edit outline",
     "editorIntro": "The model drafts, you sign off. The outline on the right is recomputed by the backend from the content — editing a section means editing its heading.",
     "backToDataset": "Back to the dataset",
-    "makeCurrent": "Make this the current one",
     "label": "Note for this version",
     "labelHint": "For example: \"finer split\", \"prompt v3\".",
     "versionShort": "v{version}",
@@ -195,8 +199,8 @@
     "pickCredential": "Pick a key",
     "noCredential": "No enabled key",
     "noCredentialHint": "No AI key is enabled. Add or enable one on the AI keys screen first.",
-    "model": "Model",
-    "pickModel": "Pick a model"
+    "modelOfKey": "Runs on {label} · {context, number, ::compact-short} context · {output, number, ::compact-short} output. Change the model on the AI keys screen.",
+    "modelUnavailable": "This key's model ({label}) is switched off or cannot return structured JSON, so the call would be refused. Assign another model to the key on the AI keys screen."
   },
   "analyze": {
     "another": "Generate another version",
@@ -209,7 +213,12 @@
     "noTemplate": "No outline prompt exists yet",
     "label": "Note for the version about to be created",
     "labelHint": "Optional. A note makes versions tellable apart after several runs.",
-    "cost": "Runs on key \"{key}\", model {model}. This call is billed for real."
+    "cost": "Runs on key \"{key}\", model {model}. This call is billed for real.",
+    "sources": "Sources to include",
+    "sourcesHint": "{selected} of {total} selected",
+    "selectAll": "Select all",
+    "sourceUntitled": "Untitled source",
+    "sourceChars": "{count} characters"
   },
   "generation": {
     "queued": "Queued, waiting for a worker…",
@@ -335,12 +344,16 @@
     "previewEmpty": "There is no question of this type yet.",
     "previewFailed": "Could not load a question of this type.",
     "stateEmpty": "No questions yet",
-    "statePartial": "Partly published ({published}/{total})"
+    "statePartial": "Partly published ({published}/{total})",
+    "previewTags": "Tags (preview only — nothing is saved)",
+    "tagsLabel": "Tags",
+    "tagsHint": "Shown to learners as a framed card with the label on its edge."
   },
   "generate": {
     "button": "Generate question sets",
     "title": "Generate question sets",
     "confirm": "Run",
+    "confirmTitle": "Run and be billed?",
     "template": "Question shape",
     "pickTemplate": "Pick a prompt",
     "noTemplate": "No question prompt exists yet",
@@ -353,8 +366,13 @@
     "questionTypesHint": "The model picks a type for each question from the ones ticked, and each type adds its own rules to the prompt.",
     "kinds": "Question kinds",
     "sections": "Sections",
+    "countBoth": "{min}–{max} questions",
+    "countMin": "at least {min} questions",
+    "countMax": "up to {max} questions",
+    "countAny": "as many questions as the model sees fit",
     "allSections": "All {count, plural, one {# section} other {# sections}}",
-    "cost": "Generating {min}–{max} questions from {sections, plural, one {# section} other {# sections}}, on key \"{key}\", model {model}. This call is billed for real.",
+    "costWhole": "Generating {count} from the whole outline, on key \"{key}\", model {model}. This call is billed for real.",
+    "cost": "Generating {count} from {sections, plural, one {# section} other {# sections}}, on key \"{key}\", model {model}. This call is billed for real.",
     "contextExceeded": "The selected sections are {chars, plural, one {# character} other {# characters}} (≈ {tokens} tokens), over the {window}-token context window of {model}. Pick fewer sections or a model with a larger window.",
     "outputExceeded": "You picked up to {max} questions, but {model} can write about {capacity, plural, one {# question} other {# questions}} per call. Lower the count to {capacity} or fewer, or pick a model with a larger output limit."
   },
@@ -471,16 +489,28 @@
     },
     "source": {
       "saved": "Source saved",
-      "rawMarkdown": "Raw Markdown",
+      "saveChanges": "Save changes",
+      "statusSaving": "Saving…",
+      "statusUnsaved": "Unsaved changes",
+      "statusSaved": "All changes saved",
       "actions": "Source actions",
       "fullscreen": "Full screen",
       "save": "Save",
       "add": "Add source",
       "remove": "Remove",
-      "pick": "Source",
+      "collapse": "Collapse source",
+      "expand": "Expand source",
       "empty": "No source yet. Add one to start.",
       "loadFailed": "Could not load this source.",
-      "saveFailed": "Could not save this source."
+      "saveFailed": "Could not save this source.",
+      "metrics": {
+        "title": "Source metrics",
+        "words": "Words",
+        "characters": "Characters",
+        "tokens": "Estimated tokens",
+        "readTime": "Read time",
+        "minutes": "~{count} min"
+      }
     },
     "outline": {
       "editor": "Outline editor",
@@ -493,7 +523,6 @@
       "statusSaved": "All changes saved",
       "statusUnsaved": "Unsaved changes",
       "statusSaving": "Saving…",
-      "active": "Active",
       "readTime": "~{count} min read",
       "metrics": {
         "title": "Outline metrics",
@@ -523,6 +552,8 @@
       "removeTitle": "Remove \"{title}\"?",
       "removeIntro": "Its question sets disappear from this list, including questions you already approved. This can't be undone from here.",
       "removeFailed": "{count, plural, one {# set} other {# sets}} could not be removed. Try again.",
+      "sectionTitle": "Section name",
+      "renameFailed": "Could not rename the section. Try again.",
       "removeConfirm": "Remove",
       "expandAll": "Expand all sections",
       "collapseAll": "Collapse all sections",
@@ -572,6 +603,86 @@
       "accepted": "Accepted answers · one per line",
       "save": "Save changes",
       "saveFailed": "Could not save this question."
+    }
+  },
+  "models": {
+    "title": "AI models",
+    "intro": "The catalogue of models a key can be assigned. The context window and output ceiling are the provider's figures and decide which calls are blocked before anything is billed — copy them from the provider's model page.",
+    "caption": "AI models",
+    "add": "Add a model",
+    "addTitle": "Add an AI model",
+    "editTitle": "Edit {label}",
+    "edit": "Edit",
+    "disable": "Switch off",
+    "enable": "Switch on",
+    "disabled": "Off",
+    "delete": "Delete",
+    "deleteTitle": "Delete {label}?",
+    "deleteBody": "Only possible while no key uses this model. To stop using it, switch it off instead.",
+    "empty": "No models yet. A key cannot be created without one.",
+    "structured": "Structured output",
+    "noStructured": "No structured output",
+    "context": "{count, number, ::compact-short} context",
+    "output": "{count, number, ::compact-short} output",
+    "columns": {
+      "label": "Model",
+      "provider": "Provider",
+      "limits": "Limits",
+      "status": "Status"
+    },
+    "fields": {
+      "provider": "Provider",
+      "providerPlaceholder": "Pick a provider",
+      "name": "Provider's model id",
+      "nameHint": "Exactly as the provider names it (e.g. anthropic/claude-sonnet-5 on OpenRouter, claude-sonnet-5 directly). Cannot be changed afterwards — the same model via another provider is a separate row.",
+      "label": "Display name",
+      "contextWindow": "Context window (tokens)",
+      "maxOutputTokens": "Max output (tokens)",
+      "maxOutputHint": "Sent as the real max_tokens, so use the figure you want to allow, not the technical ceiling.",
+      "maxOutputInvalid": "A whole number between 1 and the context window.",
+      "numberInvalid": "A whole number of at least 1.",
+      "structured": "Can return JSON that matches a schema (structured output)",
+      "enabled": "Switched on"
+    }
+  },
+  "tags": {
+    "title": "Question tags",
+    "intro": "Labels attached to questions, such as \"Critical question\". A question with a tag is drawn in a framed card with the label on its edge. The description is what the AI reads to decide when to attach a tag.",
+    "caption": "Question tags",
+    "add": "Add a tag",
+    "addTitle": "Add a question tag",
+    "editTitle": "Edit {label}",
+    "edit": "Edit",
+    "empty": "No tags yet.",
+    "saved": "Saved",
+    "saveFailed": "Could not save. Try again.",
+    "toggleRow": "Switch {name} on or off",
+    "disabled": "Off",
+    "columns": {
+      "tag": "Tag",
+      "description": "When the AI attaches it",
+      "active": "On"
+    },
+    "fields": {
+      "key": "Key",
+      "keyHint": "Lowercase letters, digits and underscores. This is the name the AI is given in the prompt.",
+      "keyInvalid": "Start with a letter; use lowercase letters, digits and underscores only.",
+      "description": "Description for the AI",
+      "descriptionInvalid": "Describe when this tag applies.",
+      "icon": "Icon",
+      "iconHint": "A lucide icon name, e.g. lucide:info.",
+      "iconInvalid": "Pick an icon from the lucide set, e.g. lucide:info.",
+      "tone": "Colour",
+      "labelVi": "Label (Vietnamese)",
+      "labelEn": "Label (English)",
+      "labelInvalid": "Required, up to 80 characters.",
+      "keyRenameWarning": "Questions are not affected, but prompts saved earlier still use the old key until you update them."
+    },
+    "tones": {
+      "danger": "Red (danger)",
+      "warning": "Amber (warning)",
+      "success": "Green (success)",
+      "primary": "Brand (primary)"
     }
   }
 }

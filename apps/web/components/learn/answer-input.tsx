@@ -170,11 +170,6 @@ export function AnswerInput({
             />
           ))}
         </div>
-        {result ? null : (
-          <Typography variant="body-4" className="text-muted-foreground">
-            {t("answer.doubleClickHint")}
-          </Typography>
-        )}
       </div>
     );
   }
@@ -299,11 +294,6 @@ function OptionCard({
       <Typography as="span" variant="body-2" className={centered ? "" : "flex-1"}>
         {text}
       </Typography>
-      {state === "right" ? (
-        <Icon icon={LUCIDE.check} className="size-5 text-success" />
-      ) : state === "wrong" ? (
-        <Icon icon={LUCIDE.x} className="size-5 text-danger" />
-      ) : null}
     </button>
   );
 }

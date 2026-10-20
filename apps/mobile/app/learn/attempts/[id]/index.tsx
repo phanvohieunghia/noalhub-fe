@@ -20,7 +20,7 @@ import { Alert, Badge, Button, Spinner } from "@noalhub/ui-native";
 import { AnswerInput } from "../../../../components/learn/answer-input";
 import { ExplanationSheet } from "../../../../components/learn/explanation-sheet";
 import { LearnHeader } from "../../../../components/learn/screen-header";
-import { NativePostContent } from "../../../../components/post-content";
+import { NativeQaContent } from "../../../../components/post-content";
 import { useMessage } from "../../../../lib/i18n";
 
 /**
@@ -200,7 +200,7 @@ export default function LearnAttemptScreen() {
                     <Badge variant="primary">{t(`difficulty.${current.difficulty}`)}</Badge>
                   ) : null}
                 </View>
-                <NativePostContent doc={current.question} size="lg" />
+                <NativeQaContent doc={current.question} size="lg" />
               </View>
             }
             afterAnswer={
