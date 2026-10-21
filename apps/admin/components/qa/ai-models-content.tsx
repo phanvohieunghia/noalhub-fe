@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
   aiProviderNameSchema,
@@ -61,7 +61,10 @@ export function AiModelsContent() {
   const [editing, setEditing] = useState<AiModel | null>(null);
   const [deleting, setDeleting] = useState<AiModel | null>(null);
 
-  const rows = models.data ?? [];
+  const rows = useMemo(
+    () => [...(models.data ?? [])].sort((a, b) => a.name.localeCompare(b.name)),
+    [models.data],
+  );
 
   return (
     <main className="w-full p-6">

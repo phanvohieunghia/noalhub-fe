@@ -506,6 +506,9 @@ importers:
       '@tiptap/starter-kit':
         specifier: ^3.30.5
         version: 3.30.5
+      diff:
+        specifier: ^9.0.0
+        version: 9.0.0
       radix-ui:
         specifier: ^1.6.7
         version: 1.6.7(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -5378,6 +5381,10 @@ packages:
 
   diff@7.0.0:
     resolution: {integrity: sha512-PJWHUb1RFevKCwaFA9RlG5tCd+FO5iRh9A8HEtkmBH2Li03iJriB6m6JIN4rGz3K3JLawI7/veA1xzRKP6ISBw==}
+    engines: {node: '>=0.3.1'}
+
+  diff@9.0.0:
+    resolution: {integrity: sha512-svtcdpS8CgJyqAjEQIXdb3OjhFVVYjzGAPO8WGCmRbrml64SPw/jJD4GoE98aR7r25A0XcgrK3F02yw9R/vhQw==}
     engines: {node: '>=0.3.1'}
 
   diffable-html@4.1.0:
@@ -15022,6 +15029,8 @@ snapshots:
   diff@4.0.4: {}
 
   diff@7.0.0: {}
+
+  diff@9.0.0: {}
 
   diffable-html@4.1.0:
     dependencies:

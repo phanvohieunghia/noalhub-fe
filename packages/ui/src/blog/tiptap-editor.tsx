@@ -62,6 +62,10 @@ import { Typography } from "../typography";
 // stylesheet the renderer uses — otherwise what is typed and what is published
 // look different.
 import { formatAlignMarker, takeAlignMarker } from "./align-markdown";
+import {
+  ChangeHighlight,
+  acceptChanges,
+} from "./change-highlight";
 import "./post-prose.css";
 
 /**
@@ -551,7 +555,7 @@ export function RichTextEditor({
   const editor = useEditor({
     // Required with Next's SSR: rendering on the first pass mismatches hydration.
     immediatelyRender: false,
-    extensions: [...BLOG_EXTENSIONS, ...extensions],
+    extensions: [...BLOG_EXTENSIONS, ChangeHighlight, ...extensions],
     // Stored markdown can hold `- [ ]` too (see `flattenTaskLists`); an invalid item
     // here would throw on mount and blank the editor.
     content: contentType === "markdown" && typeof content === "string" ? flattenTaskLists(content) : content,
@@ -582,6 +586,9 @@ export function RichTextEditor({
           uploadAndInsert(file);
           return true;
         }
+        // A paste is diffed against what was there just before it — also when the
+        // content was loaded after the editor mounted (so the opening baseline is empty).
+        if (editorRef.current) acceptChanges(editorRef.current);
         return pasteMarkdown(editorRef.current, event, contentType, (items) =>
           setLocalImages((prev) => [...prev, ...items]),
         );
