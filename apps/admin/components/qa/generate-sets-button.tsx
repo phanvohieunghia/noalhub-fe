@@ -523,7 +523,8 @@ function GenerateDialog({
               message={
                 fit.reason === "context"
                   ? t("generate.contextExceeded", {
-                      chars: fit.chars.toLocaleString("en-US"),
+                      // A number, not a string: the message pluralises on it.
+                      chars: fit.chars,
                       tokens: fit.tokens.toLocaleString("en-US"),
                       window: fit.window.toLocaleString("en-US"),
                       model: fit.model,

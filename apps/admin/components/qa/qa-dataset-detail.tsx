@@ -18,6 +18,7 @@ import { QaSteps, type WorkbenchStep } from "./qa-steps";
 import { OutlineStep } from "./qa-outline-step";
 import { SetsStep } from "./qa-sets-step";
 import { SourcesStep } from "./qa-source-step";
+import { useFaviconBadge } from "./use-favicon-badge";
 
 const WORKBENCH_STEPS: readonly WorkbenchStep[] = ["sources", "outline", "sets", "final"];
 
@@ -57,6 +58,8 @@ export function QaDatasetDetail({ datasetId }: { datasetId: string }) {
   const setsGeneration = useQaGeneration(setsGenerationId);
   const generatingSets =
     !!setsGenerationId && (!setsGeneration.data || isGenerationRunning(setsGeneration.data.status));
+
+  useFaviconBadge(generating || generatingSets);
 
   const dataset = datasets.data?.find((row) => row.id === datasetId);
 

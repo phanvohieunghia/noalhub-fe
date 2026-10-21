@@ -373,7 +373,7 @@
     "allSections": "Tất cả {count} mục",
     "costWhole": "Sinh {count} từ toàn bộ nội dung outline, bằng khoá \"{key}\", model {model}. Đây là thao tác tính tiền thật.",
     "cost": "Sinh {count} từ {sections} mục, bằng khoá \"{key}\", model {model}. Đây là thao tác tính tiền thật.",
-    "contextExceeded": "Các mục đã chọn dài {chars} ký tự (≈ {tokens} token), vượt cửa sổ {window} token của {model}. Chọn ít mục hơn hoặc chọn model có cửa sổ lớn hơn.",
+    "contextExceeded": "Các mục đã chọn dài {chars, number} ký tự (≈ {tokens} token), vượt cửa sổ {window} token của {model}. Chọn ít mục hơn hoặc chọn model có cửa sổ lớn hơn.",
     "outputExceeded": "Bạn chọn tối đa {max} câu, nhưng {model} chỉ sinh được khoảng {capacity} câu mỗi lần gọi. Giảm số câu xuống {capacity} hoặc ít hơn, hoặc chọn model có trần output lớn hơn."
   },
   "pipeline": {
@@ -536,7 +536,6 @@
       "saveChanges": "Lưu thay đổi",
       "generatingHeading": "Mục lục · đang tạo",
       "generatingTitle": "Đang tạo mục lục từ {count} chương…",
-      "generatingHint": "Thường mất chưa đến một phút.",
       "fullscreen": "Toàn màn hình",
       "longWarning": "Tài liệu đã dài {chars} ký tự (≈ {tokens} token). Có thể không vừa cửa sổ của các model nhỏ khi sinh câu hỏi — khi đó hãy chọn ít mục mỗi lần hoặc dùng model lớn hơn."
     },

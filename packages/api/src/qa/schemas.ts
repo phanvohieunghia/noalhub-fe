@@ -193,7 +193,7 @@ export const MAX_RUN_ITEMS = 1000;
  * blocking early — Vietnamese tokenizes badly.
  */
 export const EST_TOKENS_PER_ITEM = 400;
-export const CHARS_PER_TOKEN = 2;
+export const CHARS_PER_TOKEN = 3.5;
 
 /**
  * Characters in the outline editor past which a warning shows. About 100k tokens at

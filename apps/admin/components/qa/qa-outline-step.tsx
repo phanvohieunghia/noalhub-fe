@@ -252,9 +252,6 @@ function OutlineGenerating({
             <Typography variant="title-4">
               {t("ws.outline.generatingTitle", { count: chapters ?? 0 })}
             </Typography>
-            <Typography variant="body-4" className="text-muted-foreground">
-              {t("ws.outline.generatingHint")}
-            </Typography>
           </div>
         </div>
         <div className="flex flex-col gap-5 rounded-md border border-border bg-background px-4 py-3">

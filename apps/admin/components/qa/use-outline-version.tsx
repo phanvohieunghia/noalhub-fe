@@ -64,7 +64,10 @@ export function OutlineVersionSelect({
               ]),
           ...items.map((outline) => ({
             value: outline.id,
-            label: t("outlines.versionShort", { version: outline.version }),
+            // A named version shows its name; "v*" is only the fallback.
+            label:
+              outline.label?.trim() ||
+              t("outlines.versionShort", { version: outline.version }),
           })),
         ]}
       />

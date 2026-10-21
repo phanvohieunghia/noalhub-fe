@@ -536,7 +536,6 @@
       "saveChanges": "Save changes",
       "generatingHeading": "Outline · generating",
       "generatingTitle": "Generating outline from {count, plural, one {# chapter} other {# chapters}}…",
-      "generatingHint": "This usually takes under a minute.",
       "fullscreen": "Full screen",
       "longWarning": "This document is {chars, plural, one {# character} other {# characters}} (≈ {tokens} tokens). It may not fit smaller models' context window when generating questions — pick fewer sections per run or use a larger model."
     },

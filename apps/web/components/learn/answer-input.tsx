@@ -135,7 +135,7 @@ export function AnswerInput({
 
   if (options.length > 0) {
     return (
-      <div className="flex flex-1 flex-col gap-5">
+      <div className="flex flex-col gap-5">
         {/* Single choice needs no hint — one pick is the default. Several does. */}
         {single ? null : (
           <Typography variant="body-4" className="text-muted-foreground">
@@ -145,9 +145,9 @@ export function AnswerInput({
         <div
           role={single ? "radiogroup" : "group"}
           aria-label={single ? t("answer.singleHint") : t("answer.multiHint")}
-          // The group takes the height the question leaves over and splits it evenly
-          // between rows, so the answers fill the screen instead of huddling at the top.
-          className={`grid flex-1 auto-rows-fr gap-2 ${compact ? "grid-cols-2" : ""}`}
+          // Rows size to their content (equal height within a row, never stretched to
+          // fill the screen) so the answers read like the admin preview.
+          className={`grid gap-2 ${compact ? "grid-cols-2" : ""}`}
         >
           {options.map((option) => (
             <OptionCard
@@ -281,7 +281,7 @@ function OptionCard({
       disabled={disabled}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
-      className={`flex h-full w-full items-center gap-3 rounded-lg border-2 px-4 py-3 shadow-sm ${centered ? "justify-center text-center" : "text-left"} transition-[color,background-color,border-color,box-shadow] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-default ${look.card}`}
+      className={`flex h-full min-h-14 w-full items-center gap-3 rounded-lg border-2 px-4 py-3 shadow-sm ${centered ? "justify-center text-center" : "text-left"} transition-[color,background-color,border-color,box-shadow] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-default ${look.card}`}
     >
       {shape === "square" ? (
         <span
