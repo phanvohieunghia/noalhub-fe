@@ -177,6 +177,9 @@ function SidebarEntry({
           side="right"
         >
           <span
+            // `aria-label` is only allowed on an element with a role; a disabled
+            // link is `role="link"` + `aria-disabled`.
+            role="link"
             aria-disabled="true"
             aria-label={item.label}
             className="flex cursor-not-allowed items-center justify-center rounded-md py-2.5 text-muted-foreground"

@@ -216,6 +216,7 @@ export const IconAnimateProp: Story = {
         </div>
         <button
           type="button"
+          aria-label="Toggle icon"
           onClick={() => setOn((v) => !v)}
           className="flex h-40 items-center justify-center rounded-lg border border-border bg-surface text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
