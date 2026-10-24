@@ -322,6 +322,9 @@ export const qaGenerationSchema = z.object({
     .nullish()
     .transform((v) => v ?? null),
   resultCount: z.number(),
+  /** Chunks of an `outline` run; `null` = one call (older run, or a `qa` run). */
+  chunkTotal: nullableNumber,
+  chunkDone: nullableNumber,
   inputTokens: nullableNumber,
   outputTokens: nullableNumber,
   cacheReadInputTokens: nullableNumber,
@@ -350,12 +353,65 @@ const aiRunFields = {
   credentialId: z.string().uuid(),
 };
 
+/**
+ * How a long source is cut into chunks (chặng ②). Mirrors the backend constants in
+ * `src/qa/qa-limits.ts` / `src/qa/qa-chunking.ts`; the backend is the authority and
+ * these only let the form stop a bad value before the 400.
+ */
+export const CHUNK_MODES = ["auto", "source", "heading", "pattern", "size", "ai"] as const;
+export const chunkModeSchema = z.enum(CHUNK_MODES);
+
+/** `CHUNK_TARGET_INPUT_TOKENS` — the soft ceiling on one chunk's input. */
+export const CHUNK_TARGET_INPUT_TOKENS = 24_000;
+/** `MIN_CHUNK_TOKENS` — a smaller `maxChunkTokens` is refused. */
+export const MIN_CHUNK_TOKENS = 1_500;
+export const CHUNK_OVERLAP_MAX = 3;
+export const CHUNK_PATTERN_MAX_LENGTH = 100;
+/** `OUTLINE_OUTPUT_RATIO` and `CHUNK_OUTPUT_SAFETY` / `CHUNK_CONTEXT_MARGIN_TOKENS`. */
+export const OUTLINE_OUTPUT_RATIO = 0.9;
+export const CHUNK_OUTPUT_SAFETY = 0.8;
+export const CHUNK_CONTEXT_MARGIN_TOKENS = 4_000;
+
+/**
+ * Only what the chosen mode uses is sent: the backend answers 400
+ * `QA_CHUNK_OPTIONS_INVALID` for `pattern` outside `pattern` mode (and likewise
+ * `headingLevel`), rather than silently ignoring it.
+ */
+const chunkFields = {
+  chunkMode: chunkModeSchema.optional(),
+  headingLevel: z.number().int().min(1).max(4).optional(),
+  pattern: z.string().min(1).max(CHUNK_PATTERN_MAX_LENGTH).optional(),
+  maxChunkTokens: z.number().int().min(MIN_CHUNK_TOKENS).max(200_000).optional(),
+  overlapParagraphs: z.number().int().min(0).max(CHUNK_OVERLAP_MAX).optional(),
+};
+
 export const startAnalyzeSchema = z.object({
   templateId: z.string().uuid(),
   ...aiRunFields,
   label: z.string().max(120).optional(),
   /** Omitted = every source of the dataset. */
   sourceIds: z.array(z.string().uuid()).min(1).optional(),
+  ...chunkFields,
+});
+
+/** Same body as `analyze`: the preview shows exactly what that call would do. */
+export const previewChunksSchema = startAnalyzeSchema;
+
+export const qaChunkPreviewSchema = z.object({
+  /** The mode actually used — for `auto`, the step it picked. */
+  strategy: z.string(),
+  note: nullableString,
+  budgetTokens: z.number(),
+  totalTokens: z.number(),
+  chunks: z.array(
+    z.object({
+      position: z.number(),
+      title: nullableString,
+      startsWith: z.string(),
+      charCount: z.number(),
+      tokensEstimate: z.number(),
+    }),
+  ),
 });
 
 /**
@@ -399,6 +455,7 @@ export const generateSetsSchema = z
   );
 
 export type StartAnalyzeInput = z.infer<typeof startAnalyzeSchema>;
+export type PreviewChunksInput = z.infer<typeof previewChunksSchema>;
 export type GenerateSetsInput = z.infer<typeof generateSetsSchema>;
 
 /* --------------------------------- outlines -------------------------------- */

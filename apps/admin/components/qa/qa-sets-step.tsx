@@ -1,7 +1,9 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
+
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 import {
   useApproveQaSets,
@@ -129,17 +131,14 @@ export function SetsStep({
   for (const set of draftSets) {
     const key = `${set.outlineId ?? "none"}:${set.sectionAnchor ?? set.id}`;
     const version =
-      versions.find((outline) => outline.id === set.outlineId)?.version ??
-      null;
+      versions.find((outline) => outline.id === set.outlineId)?.version ?? null;
     ensure(key, set.sectionTitle ?? set.title, version).sets.push(set);
   }
 
   // Most recently changed first: a section is as fresh as its freshest set.
   const touchedAt = (section: Section) =>
     Math.max(
-      ...section.sets.map((set) =>
-        Date.parse(set.updatedAt ?? set.createdAt),
-      ),
+      ...section.sets.map((set) => Date.parse(set.updatedAt ?? set.createdAt)),
     );
   const generated = sections
     .filter((section) => section.sets.length > 0)
@@ -308,7 +307,10 @@ export function SetsStep({
                       />
                     </div>
                     {section.version !== null ? (
-                      <Badge size="sm" className="shrink-0 self-start sm:self-center">
+                      <Badge
+                        size="sm"
+                        className="shrink-0 self-start sm:self-center"
+                      >
                         {t("outlines.versionShort", {
                           version: section.version,
                         })}
@@ -368,7 +370,10 @@ export function SetsStep({
                   <div className="min-h-0 overflow-hidden">
                     {/* Mount lazily so collapsed sections do not fetch, then keep mounted to animate out. */}
                     {expanded || opened.has(section.key) ? (
-                      <div className="flex max-h-[calc(var(--fit-h,70vh)-4rem)] min-h-0 flex-col gap-3 overflow-y-auto border-t border-border p-3">
+                      <div
+                        data-qa-scroll
+                        className="flex max-h-[calc(var(--fit-h,70vh)-4rem)] min-h-0 flex-col gap-3 overflow-y-auto border-t border-border p-3"
+                      >
                         {group.map((set) => (
                           <ReviewSet
                             key={set.id}
@@ -396,13 +401,7 @@ export function SetsStep({
 }
 
 /** The section name, edited in place: written onto every set of the section. */
-function SectionTitleField({
-  sets,
-  title,
-}: {
-  sets: QaSet[];
-  title: string;
-}) {
+function SectionTitleField({ sets, title }: { sets: QaSet[]; title: string }) {
   const t = useTranslations("admin.qa");
   const rename = useRenameQaSets();
   return (
@@ -564,6 +563,38 @@ function ReviewSet({
   const update = useUpdateQaItem(set.id);
   const remove = useDeleteQaItem(set.id);
 
+  // A set can hold hundreds of questions after a chunked run, so only the rows near the
+  // viewport are mounted. The scroll element is the section body that holds every set of
+  // the section (marked `data-qa-scroll`); `scrollMargin` is where this list starts inside
+  // it, because the intro card sits above and other sets may sit above that.
+  const listRef = useRef<HTMLDivElement>(null);
+  const [scrollEl, setScrollEl] = useState<HTMLElement | null>(null);
+  const [scrollMargin, setScrollMargin] = useState(0);
+  const itemCount = detail.data?.items.length ?? 0;
+  const hasHeader = !!(detail.data?.description || detail.data?.intro);
+
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    const scroller = list?.closest<HTMLElement>("[data-qa-scroll]") ?? null;
+    setScrollEl(scroller);
+    if (!list || !scroller) return;
+    setScrollMargin(
+      list.getBoundingClientRect().top -
+        scroller.getBoundingClientRect().top +
+        scroller.scrollTop,
+    );
+  }, [itemCount, hasHeader]);
+
+  const virtualizer = useVirtualizer({
+    count: itemCount,
+    getScrollElement: () => scrollEl,
+    estimateSize: () => 180,
+    gap: 12,
+    overscan: 6,
+    scrollMargin,
+    getItemKey: (index) => detail.data?.items[index]?.id ?? index,
+  });
+
   // The shape is the set's own: one prompt can now produce several.
   const shape = set.questionType
     ? t(
@@ -592,61 +623,79 @@ function ReviewSet({
           ) : null}
         </div>
       ) : null}
-      {detail.data.items.map((item, index) => (
-        <QaReviewQuestion
-          key={item.id}
-          item={item}
-          index={index}
-          shapeLabel={shape}
-          revealOnHover={revealOnHover}
-          actions={
-            <>
-              <Badge tone={STATUS_TONE[item.reviewStatus]} size="sm">
-                {t(`ws.sets.${item.reviewStatus}`)}
-              </Badge>
-              <DropdownMenu
-                compact
-                trigger={
-                  <Button
-                    variant="outline"
-                    size="icon-md"
-                    aria-label={t("ws.sets.actions")}
-                  >
-                    <Icon icon={ICONS.more} />
-                  </Button>
+      <div
+        ref={listRef}
+        className="relative w-full"
+        style={{ height: virtualizer.getTotalSize() }}
+      >
+        {virtualizer.getVirtualItems().map((row) => {
+          const item = detail.data.items[row.index];
+          return (
+            <div
+              key={row.key}
+              ref={virtualizer.measureElement}
+              data-index={row.index}
+              className="absolute left-0 top-0 w-full"
+              style={{
+                transform: `translateY(${row.start - virtualizer.options.scrollMargin}px)`,
+              }}
+            >
+              <QaReviewQuestion
+                item={item}
+                index={row.index}
+                shapeLabel={shape}
+                revealOnHover={revealOnHover}
+                actions={
+                  <>
+                    <Badge tone={STATUS_TONE[item.reviewStatus]} size="sm">
+                      {t(`ws.sets.${item.reviewStatus}`)}
+                    </Badge>
+                    <DropdownMenu
+                      compact
+                      trigger={
+                        <Button
+                          variant="outline"
+                          size="icon-md"
+                          aria-label={t("ws.sets.actions")}
+                        >
+                          <Icon icon={ICONS.more} />
+                        </Button>
+                      }
+                    >
+                      {item.reviewStatus !== "approved" ? (
+                        <DropdownMenuItem
+                          icon={ICONS.check}
+                          disabled={update.isPending}
+                          onSelect={() => review(item, "approved")}
+                        >
+                          {t("ws.sets.approve")}
+                        </DropdownMenuItem>
+                      ) : null}
+                      {item.reviewStatus !== "rejected" ? (
+                        <DropdownMenuItem
+                          icon={ICONS.close}
+                          disabled={update.isPending}
+                          onSelect={() => review(item, "rejected")}
+                        >
+                          {t("ws.sets.reject")}
+                        </DropdownMenuItem>
+                      ) : null}
+                      <DropdownMenuItem
+                        icon={ICONS.delete}
+                        tone="danger"
+                        disabled={remove.isPending}
+                        onSelect={() => remove.mutate(item.id)}
+                      >
+                        {t("ws.sets.delete")}
+                      </DropdownMenuItem>
+                    </DropdownMenu>
+                  </>
                 }
-              >
-                {item.reviewStatus !== "approved" ? (
-                  <DropdownMenuItem
-                    icon={ICONS.check}
-                    disabled={update.isPending}
-                    onSelect={() => review(item, "approved")}
-                  >
-                    {t("ws.sets.approve")}
-                  </DropdownMenuItem>
-                ) : null}
-                {item.reviewStatus !== "rejected" ? (
-                  <DropdownMenuItem
-                    icon={ICONS.close}
-                    disabled={update.isPending}
-                    onSelect={() => review(item, "rejected")}
-                  >
-                    {t("ws.sets.reject")}
-                  </DropdownMenuItem>
-                ) : null}
-                <DropdownMenuItem
-                  icon={ICONS.delete}
-                  tone="danger"
-                  disabled={remove.isPending}
-                  onSelect={() => remove.mutate(item.id)}
-                >
-                  {t("ws.sets.delete")}
-                </DropdownMenuItem>
-              </DropdownMenu>
-            </>
-          }
-        />
-      ))}
+              />
+            </div>
+          );
+        })}
+      </div>
     </>
   );
 }

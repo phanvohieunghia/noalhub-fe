@@ -218,7 +218,51 @@
     "sourcesHint": "Đã chọn {selected}/{total}",
     "selectAll": "Chọn tất cả",
     "sourceUntitled": "Nguồn chưa đặt tên",
-    "sourceChars": "{count} ký tự"
+    "sourceChars": "{count} ký tự",
+    "chunk": {
+      "title": "Cách chia nguồn",
+      "needed": "Các nguồn đã chọn dài khoảng {tokens} token, vượt mức ~{budget} token một lần gọi. Chúng sẽ được chia thành nhiều phần và chạy lần lượt.",
+      "fits": "Các nguồn đã chọn dài khoảng {tokens} token, dưới mức ~{budget} token một lần gọi nên sẽ chạy một lần gọi duy nhất. Đặt \"Số token tối đa mỗi phần\" bên dưới nếu bạn vẫn muốn cắt nhỏ.",
+      "mode": "Cách chia",
+      "modes": {
+        "auto": "Tự động",
+        "source": "Theo nguồn",
+        "heading": "Theo heading",
+        "pattern": "Theo mẫu (regex)",
+        "size": "Theo độ dài",
+        "ai": "Để AI tìm chỗ cắt"
+      },
+      "modeHint": {
+        "auto": "Thử lần lượt: heading, rồi mẫu đánh số lặp như \"Câu 12\", rồi tiêu đề chữ hoa, cuối cùng là đoạn.",
+        "source": "Chỉ cắt giữa các nguồn đã chọn.",
+        "heading": "Cắt trước mỗi heading tới cấp bên dưới.",
+        "pattern": "Cắt trước mỗi dòng khớp mẫu.",
+        "size": "Chỉ cắt để vừa giới hạn độ dài, tại chỗ ngắt đoạn.",
+        "ai": "Model chọn chỗ cắt. Tốn thêm một lần gọi và không xem trước được."
+      },
+      "headingLevel": "Cấp heading",
+      "headingLevelOption": "{marks} · cấp {level}",
+      "pattern": "Mẫu cho từng dòng (regex)",
+      "patternHint": "Áp lên từng dòng; dòng khớp mở một phần mới. Ví dụ: ^Câu \\d+$",
+      "patternRequired": "Nhập một mẫu.",
+      "maxTokens": "Số token tối đa mỗi phần",
+      "maxTokensHint": "Để trống cũng được, tối thiểu {min}. Phần nhỏ hơn nghĩa là nhiều lần gọi hơn, mỗi lần rẻ và nhanh hơn.",
+      "maxTokensInvalid": "Nhập số nguyên từ {min} trở lên, hoặc để trống.",
+      "overlap": "Chồng lấn với phần trước",
+      "overlapHint": "Những đoạn cuối của phần trước, đưa vào làm ngữ cảnh chỉ để đọc.",
+      "overlapNone": "Không",
+      "overlapOption": "{count} đoạn",
+      "preview": "Xem trước cách chia",
+      "previewing": "Đang tính…",
+      "previewHint": "Xem trước miễn phí, không gọi model.",
+      "needKey": "Hãy chọn khoá AI trước.",
+      "needPromptForPreview": "Chọn prompt phân tích để xem trước cách chia.",
+      "aiNoPreview": "Cách này không xem trước được: model quyết định chỗ cắt và bị tính tiền khi chạy.",
+      "result": {
+        "summary": "{count} phần · cắt theo {strategy} · khoảng {total} token tất cả",
+        "tokens": "khoảng {tokens} token"
+      }
+    }
   },
   "generation": {
     "queued": "Đã xếp hàng, đang chờ worker nhận…",
@@ -231,7 +275,8 @@
     "partialDetail": "Mục không có kết quả: {sections}",
     "partialUnknown": "Model trả về thiếu mục so với danh sách đã gửi.",
     "tokens": "Token: {input} vào · {output} ra · {cached} đọc từ cache",
-    "pollFailed": "Không đọc được trạng thái lần chạy."
+    "pollFailed": "Không đọc được trạng thái lần chạy.",
+    "chunks": "Đã xong {done}/{total} phần"
   },
   "sets": {
     "title": "Bộ câu hỏi",

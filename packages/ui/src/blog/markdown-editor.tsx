@@ -36,6 +36,7 @@ export function MarkdownEditor({
   fullscreen,
   toolbarExtra,
   onReady,
+  savedKey,
 }: {
   value: string;
   onChange: (markdown: string) => void;
@@ -45,6 +46,8 @@ export function MarkdownEditor({
   toolbarExtra?: React.ReactNode;
   /** The live Tiptap instance, for callers that insert content programmatically. Pass a stable callback. */
   onReady?: (editor: Editor | null) => void;
+  /** Bump after a successful save to clear the change highlights. */
+  savedKey?: number;
 }) {
   return (
     <RichTextEditor
@@ -56,6 +59,7 @@ export function MarkdownEditor({
       fullscreen={fullscreen}
       toolbarExtra={toolbarExtra}
       onReady={onReady}
+      savedKey={savedKey}
     />
   );
 }

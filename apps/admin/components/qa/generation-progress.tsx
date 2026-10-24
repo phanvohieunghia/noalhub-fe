@@ -73,6 +73,16 @@ export function GenerationProgress({
             {status === "queued" ? t("generation.queued") : t("generation.running")}
           </Typography>
         </div>
+        {generation.data?.chunkTotal ? (
+          /* A long source runs as several calls one after another; without this
+             the screen looks the same for ten minutes. */
+          <Typography variant="body-4" className="text-muted-foreground">
+            {t("generation.chunks", {
+              done: generation.data.chunkDone ?? 0,
+              total: generation.data.chunkTotal,
+            })}
+          </Typography>
+        ) : null}
         {reused ? (
           /* Someone clicked twice: tell them they are watching the run that
              already existed, not that a second one just started. */

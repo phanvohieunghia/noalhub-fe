@@ -204,6 +204,9 @@ export type QaGeneration = {
    */
   sectionErrors: Record<string, string> | null;
   resultCount: number;
+  /** Chunks of an `outline` run, and how many are done. `null` = a single call. */
+  chunkTotal: number | null;
+  chunkDone: number | null;
   inputTokens: number | null;
   outputTokens: number | null;
   /** Tokens read from cache (~0.1× price). The only way to tell caching works. */
@@ -217,6 +220,27 @@ export type StartGenerationResponse = {
   generationId: string;
   /** `true` = a run with these exact parameters was already going; this is it. */
   reused: boolean;
+};
+
+/* --------------------------------- chunking -------------------------------- */
+
+/** `auto` detects; `ai` asks the model for cut points (billed, cannot be previewed). */
+export type ChunkMode = "auto" | "source" | "heading" | "pattern" | "size" | "ai";
+
+/** `QaChunkPreviewDto` — what an analyze call would do, computed without the model. */
+export type QaChunkPreview = {
+  strategy: string;
+  note: string | null;
+  budgetTokens: number;
+  totalTokens: number;
+  chunks: {
+    position: number;
+    title: string | null;
+    /** The first ~120 characters — enough to see where the chunk starts. */
+    startsWith: string;
+    charCount: number;
+    tokensEstimate: number;
+  }[];
 };
 
 /* --------------------------------- outlines -------------------------------- */

@@ -1,6 +1,10 @@
 import {
   CHARS_PER_TOKEN,
+  CHUNK_CONTEXT_MARGIN_TOKENS,
+  CHUNK_OUTPUT_SAFETY,
+  CHUNK_TARGET_INPUT_TOKENS,
   EST_TOKENS_PER_ITEM,
+  OUTLINE_OUTPUT_RATIO,
   type AiModel,
   type QaOutlineEntry,
 } from "@noalhub/api/qa";
@@ -71,4 +75,23 @@ export function checkRunFit({
     };
   }
   return { ok: true };
+}
+
+/**
+ * Input tokens one chunk of an outline run may carry on this model — the backend's
+ * `chunkBudgetTokens`, so the dialog can say "this will be split" before the click.
+ * `system` is unknown here (it depends on the prompt picked), so it is a typical
+ * size; the backend recomputes the exact figure and its answer wins.
+ */
+const TYPICAL_SYSTEM_TOKENS = 2_500;
+
+export function outlineChunkBudget(model: AiModel): number {
+  const byContext = Math.floor(
+    (model.contextWindow - TYPICAL_SYSTEM_TOKENS - CHUNK_CONTEXT_MARGIN_TOKENS) /
+      (1 + OUTLINE_OUTPUT_RATIO),
+  );
+  const byOutput = Math.floor(
+    (model.maxOutputTokens * CHUNK_OUTPUT_SAFETY) / OUTLINE_OUTPUT_RATIO,
+  );
+  return Math.min(byContext, byOutput, CHUNK_TARGET_INPUT_TOKENS);
 }

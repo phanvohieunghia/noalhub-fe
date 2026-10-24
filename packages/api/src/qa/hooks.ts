@@ -14,6 +14,7 @@ import type {
   DuplicateTemplateInput,
   GenerateSetsInput,
   PatchItemInput,
+  PreviewChunksInput,
   ReorderItemsInput,
   StartAnalyzeInput,
   SubmitAnswerInput,
@@ -385,6 +386,17 @@ export function useStartAnalyze(datasetId: string) {
   return useMutation({
     mutationFn: (input: StartAnalyzeInput) => qaApi.startAnalyze(datasetId, input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.generations() }),
+  });
+}
+
+/**
+ * Mutations, not queries: each call is a deliberate click (the second one is
+ * billed), and its answer describes the options at that moment — a cached copy
+ * would outlive the form it answered.
+ */
+export function usePreviewChunks(datasetId: string) {
+  return useMutation({
+    mutationFn: (input: PreviewChunksInput) => qaApi.previewChunks(datasetId, input),
   });
 }
 

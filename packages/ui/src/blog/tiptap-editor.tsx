@@ -368,9 +368,12 @@ export function TiptapEditor({
   onChange,
   contentClassName,
   fullscreen,
+  savedKey,
 }: {
   value: BlogDoc;
   onChange: (doc: BlogDoc) => void;
+  /** Bump after a successful save: the change highlights clear and the saved text becomes the baseline. */
+  savedKey?: number;
   /** Draws the full-screen toggle as the toolbar's first button. */
   fullscreen?: EditorFullscreen;
   /**
@@ -390,6 +393,7 @@ export function TiptapEditor({
       onUpdate={(instance) => onChange(sanitizeBlogDoc(instance.getJSON()))}
       contentClassName={contentClassName}
       fullscreen={fullscreen}
+      savedKey={savedKey}
     />
   );
 }
@@ -409,6 +413,7 @@ export function RichTextEditor({
   fullscreen,
   toolbarExtra,
   onReady,
+  savedKey,
 }: {
   content: BlogDoc | string;
   /** How Tiptap parses `content`. `"markdown"` needs the `Markdown` extension. */
@@ -423,6 +428,8 @@ export function RichTextEditor({
   toolbarExtra?: React.ReactNode;
   /** Hands the live instance to the parent (and `null` on unmount), e.g. to insert text at the caret. */
   onReady?: (editor: Editor | null) => void;
+  /** Bump after a successful save: the change highlights clear and the saved text becomes the baseline. */
+  savedKey?: number;
 }) {
   const t = useTranslations("common.editor");
   const [linkOpen, setLinkOpen] = useState(false);
@@ -615,6 +622,15 @@ export function RichTextEditor({
     onReady?.(editor);
     return () => onReady?.(null);
   }, [editor, onReady]);
+
+  // A save makes what is on screen the new baseline, so the highlights of what was
+  // just saved go away. The first run is the mount, not a save.
+  const seenSavedKey = useRef(savedKey);
+  useEffect(() => {
+    if (!editor || savedKey === seenSavedKey.current) return;
+    seenSavedKey.current = savedKey;
+    acceptChanges(editor);
+  }, [editor, savedKey]);
 
   if (!editor) {
     return (

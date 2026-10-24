@@ -19,6 +19,7 @@ import { Tooltip } from "@noalhub/ui/tooltip";
 import { Typography } from "@noalhub/ui/typography";
 
 import { useAiRunChoice } from "./ai-run-picker";
+import { useChunkingChoice } from "./chunking-picker";
 
 /**
  * One of the two buttons that spend money.
@@ -119,6 +120,22 @@ function AnalyzeDialog({
     });
   const [formError, setFormError] = useState<Message | string | null>(null);
 
+  // What `analyze` will actually read: the whole dataset unless a subset is ticked.
+  const sourceIds =
+    pickable && selected.length < sourceRows.length
+      ? selected.map((row) => row.id)
+      : undefined;
+  const chunking = useChunkingChoice({
+    datasetId,
+    templateId,
+    sourceIds,
+    selectedChars: (pickable ? selected : sourceRows).reduce(
+      (sum, row) => sum + row.charCount,
+      0,
+    ),
+    credential: aiRun.credential,
+  });
+
   const usableTemplates = (templates.data ?? []).filter((row) => row.enabled);
 
   const run = async () => {
@@ -129,10 +146,8 @@ function AnalyzeDialog({
         templateId,
         credentialId: aiRun.credential.id,
         label: label === "" ? undefined : label,
-        sourceIds:
-          pickable && selected.length < sourceRows.length
-            ? selected.map((row) => row.id)
-            : undefined,
+        sourceIds,
+        ...chunking.input,
       });
       onStarted(result.generationId);
       onClose();
@@ -144,7 +159,10 @@ function AnalyzeDialog({
   };
 
   return (
-    <Dialog open onClose={onClose} title={t("analyze.title")}>
+    // `lg` scrolls inside the viewport (the default size does not): with the chunking
+    // block open this dialog is taller than a laptop screen, and the title and Run
+    // would sit off-screen.
+    <Dialog open onClose={onClose} size="lg" title={t("analyze.title")}>
       <div className="space-y-4">
         <Typography variant="body-3" className="opacity-80">
           {t("analyze.intro")}
@@ -209,6 +227,9 @@ function AnalyzeDialog({
 
         {aiRun.fields}
 
+        {/* After the key: asking the model how to split needs one picked. */}
+        {chunking.fields}
+
         <Input
           label={t("analyze.label")}
           hint={t("analyze.labelHint")}
@@ -243,6 +264,7 @@ function AnalyzeDialog({
             templateId === "" ||
             !aiRun.ready ||
             start.isPending ||
+            !chunking.ready ||
             (pickable && selected.length === 0)
           }
         >

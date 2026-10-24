@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { startTransition, useState } from "react";
 
 import {
   isGenerationRunning,
@@ -31,17 +31,27 @@ export function QaDatasetDetail({ datasetId }: { datasetId: string }) {
   const t = useTranslations("admin.qa");
   const datasets = useQaDatasets();
   // The open step lives in `?step=` so a reload (or a shared link) lands on the same tab.
+  // The tab itself is local state, so a switch paints at once; the URL follows in a
+  // transition instead of gating the switch on a Next navigation.
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const stepParam = searchParams.get("step");
-  const step: WorkbenchStep = WORKBENCH_STEPS.includes(stepParam as WorkbenchStep)
+  const initialStep: WorkbenchStep = WORKBENCH_STEPS.includes(stepParam as WorkbenchStep)
     ? (stepParam as WorkbenchStep)
     : "sources";
+  const [step, setStepState] = useState<WorkbenchStep>(initialStep);
+  // Panels stay mounted once opened and are only hidden afterwards: remounting a step
+  // rebuilt its editor and re-parsed the whole document on every switch.
+  const [visited, setVisited] = useState<readonly WorkbenchStep[]>([initialStep]);
   const setStep = (next: WorkbenchStep) => {
+    setStepState(next);
+    setVisited((prev) => (prev.includes(next) ? prev : [...prev, next]));
     const params = new URLSearchParams(searchParams);
     params.set("step", next);
-    router.replace(`${pathname}?${params}`, { scroll: false });
+    startTransition(() => {
+      router.replace(`${pathname}?${params}`, { scroll: false });
+    });
   };
   // A run started from this screen wins; otherwise one the backend reports as still
   // running, so a reload keeps showing it instead of forgetting it.
@@ -89,24 +99,36 @@ export function QaDatasetDetail({ datasetId }: { datasetId: string }) {
         generatingSets={generatingSets}
       />
 
-      {step === "sources" ? <SourcesStep datasetId={datasetId} /> : null}
-      {step === "outline" ? (
-        <OutlineStep
-          datasetId={datasetId}
-          generationId={generationId}
-          generating={generating}
-          onStarted={setGenerationId}
-        />
+      {visited.includes("sources") ? (
+        <div className={step === "sources" ? "contents" : "hidden"}>
+          <SourcesStep datasetId={datasetId} />
+        </div>
       ) : null}
-      {step === "sets" ? (
-        <SetsStep
-          datasetId={datasetId}
-          generationId={setsGenerationId}
-          generating={generatingSets}
-          onStarted={setSetsGenerationId}
-        />
+      {visited.includes("outline") ? (
+        <div className={step === "outline" ? "contents" : "hidden"}>
+          <OutlineStep
+            datasetId={datasetId}
+            generationId={generationId}
+            generating={generating}
+            onStarted={setGenerationId}
+          />
+        </div>
       ) : null}
-      {step === "final" ? <QaFinalStep datasetId={datasetId} /> : null}
+      {visited.includes("sets") ? (
+        <div className={step === "sets" ? "contents" : "hidden"}>
+          <SetsStep
+            datasetId={datasetId}
+            generationId={setsGenerationId}
+            generating={generatingSets}
+            onStarted={setSetsGenerationId}
+          />
+        </div>
+      ) : null}
+      {visited.includes("final") ? (
+        <div className={step === "final" ? "contents" : "hidden"}>
+          <QaFinalStep datasetId={datasetId} />
+        </div>
+      ) : null}
     </main>
   );
 }

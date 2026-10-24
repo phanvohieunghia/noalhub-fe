@@ -372,6 +372,9 @@ function OutlineWorkbench({
     afterScroll(target, () => flashHeading(target));
   };
 
+  // Counts saves so the editor can drop the change highlights of what was just saved.
+  const [savedCount, setSavedCount] = useState(0);
+
   const save = async () => {
     if (loading) return;
     setError(null);
@@ -382,6 +385,7 @@ function OutlineWorkbench({
         content: blogDocToMarkdown(doc),
       });
       setDirty(false);
+      setSavedCount((count) => count + 1);
       toast.success(t("ws.outline.saved"));
     } catch {
       // Deliberately does not reload: the editor keeps what is on screen so the
@@ -544,6 +548,7 @@ function OutlineWorkbench({
               }}
               contentClassName={className}
               fullscreen={fullscreen}
+              savedKey={savedCount}
             />
           )
         }

@@ -1,4 +1,5 @@
 import { http } from "../client";
+import { ApiError } from "../errors";
 import {
   addSourceSchema,
   aiCredentialListSchema,
@@ -9,6 +10,8 @@ import {
   qaDatasetSchema,
   qaActiveGenerationsSchema,
   qaGenerationSchema,
+  qaChunkPreviewSchema,
+  previewChunksSchema,
   qaItemFullSchema,
   qaItemTagListSchema,
   qaItemTagPlayListSchema,
@@ -51,6 +54,7 @@ import {
   type PatchItemInput,
   type ReorderItemsInput,
   type StartAnalyzeInput,
+  type PreviewChunksInput,
   type SubmitAnswerInput,
   type UpdateCredentialInput,
   type UpdateItemTagInput,
@@ -79,6 +83,7 @@ import type {
   QaDatasetSourceFull,
   QaActiveGenerations,
   QaGeneration,
+  QaChunkPreview,
   QaItemFull,
   QaItemList,
   QaFinalOverview,
@@ -339,6 +344,23 @@ export async function startAnalyze(
     `/admin/qa/datasets/${datasetId}/analyze`,
     input,
     { authRequired: true, schema: startGenerationSchema },
+  );
+  return data;
+}
+
+/**
+ * Where an analyze call would cut the source — computed without the model, so it
+ * is free and `admin` may call it. Mode `ai` is refused (400
+ * `QA_CHUNK_PREVIEW_UNAVAILABLE`): its cut points are the model's to decide.
+ */
+export async function previewChunks(
+  datasetId: string,
+  input: PreviewChunksInput,
+): Promise<QaChunkPreview> {
+  const { data } = await http.post<QaChunkPreview>(
+    `/admin/qa/datasets/${datasetId}/analyze/preview-chunks`,
+    previewChunksSchema.parse(input),
+    { authRequired: true, schema: qaChunkPreviewSchema },
   );
   return data;
 }

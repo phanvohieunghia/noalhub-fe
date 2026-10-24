@@ -177,7 +177,14 @@ function SourceEditor({
   const original = source.content ?? "";
   const [value, setValue] = useState(original);
   const [saved, setSaved] = useState(original);
+  // Counts saves so the editor can drop the change highlights of what was just saved.
+  const [savedCount, setSavedCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  // The editor is built the first time the source is opened, not while it is folded:
+  // parsing a long document is the expensive part. The text (and so the metrics) is
+  // already here; once built, the editor stays mounted so folding keeps the edits.
+  const [rendered, setRendered] = useState(!collapsed);
+  if (!collapsed && !rendered) setRendered(true);
 
   const canSave = value !== saved && value.trim() !== "";
 
@@ -186,6 +193,7 @@ function SourceEditor({
     try {
       await update.mutateAsync({ id: source.id, input: { content: value } });
       setSaved(value);
+      setSavedCount((count) => count + 1);
       toast.success(t("ws.source.saved"));
     } catch {
       setError(t("ws.source.saveFailed"));
@@ -337,14 +345,17 @@ function SourceEditor({
             className="hidden lg:flex"
           />
         }
-        renderEditor={({ className, fullscreen }) => (
-          <MarkdownEditor
-            value={value}
-            onChange={setValue}
-            contentClassName={className}
-            fullscreen={fullscreen}
-          />
-        )}
+        renderEditor={({ className, fullscreen }) =>
+          rendered ? (
+            <MarkdownEditor
+              value={value}
+              onChange={setValue}
+              contentClassName={className}
+              fullscreen={fullscreen}
+              savedKey={savedCount}
+            />
+          ) : null
+        }
       />
     </>
   );

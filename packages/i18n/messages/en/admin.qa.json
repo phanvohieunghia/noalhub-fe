@@ -218,7 +218,51 @@
     "sourcesHint": "{selected} of {total} selected",
     "selectAll": "Select all",
     "sourceUntitled": "Untitled source",
-    "sourceChars": "{count} characters"
+    "sourceChars": "{count} characters",
+    "chunk": {
+      "title": "How to split the source",
+      "needed": "The selected sources are about {tokens} tokens, over the ~{budget} one call takes. They will be split into several parts that run one after another.",
+      "fits": "The selected sources are about {tokens} tokens, under the ~{budget} one call takes, so they run as a single call. Set \"Max tokens per part\" below if you still want them cut into smaller parts.",
+      "mode": "Split mode",
+      "modes": {
+        "auto": "Automatic",
+        "source": "By source",
+        "heading": "By heading",
+        "pattern": "By pattern (regex)",
+        "size": "By size",
+        "ai": "Let AI find the cut points"
+      },
+      "modeHint": {
+        "auto": "Tries headings, then repeating markers like \"Câu 12\", then uppercase titles, then paragraphs.",
+        "source": "Cuts only between the sources you ticked.",
+        "heading": "Cuts before each heading up to the level below.",
+        "pattern": "Cuts before every line that matches the pattern.",
+        "size": "Cuts only to fit the size limit, at paragraph breaks.",
+        "ai": "The model picks where to cut. Costs one extra call and cannot be previewed."
+      },
+      "headingLevel": "Heading level",
+      "headingLevelOption": "{marks} · level {level}",
+      "pattern": "Line pattern (regex)",
+      "patternHint": "Tested against each line; a matching line starts a new part. Example: ^Câu \\d+$",
+      "patternRequired": "Enter a pattern.",
+      "maxTokens": "Max tokens per part",
+      "maxTokensHint": "Optional, at least {min}. Smaller parts mean more calls, each cheaper and faster.",
+      "maxTokensInvalid": "Enter a whole number of at least {min}, or leave it empty.",
+      "overlap": "Overlap with the previous part",
+      "overlapHint": "Last paragraphs of the previous part, given as read-only context.",
+      "overlapNone": "None",
+      "overlapOption": "{count, plural, one {# paragraph} other {# paragraphs}}",
+      "preview": "Preview the split",
+      "previewing": "Calculating…",
+      "previewHint": "Preview is free and does not call the model.",
+      "needKey": "Pick an AI key first.",
+      "needPromptForPreview": "Pick an outline prompt to preview the split.",
+      "aiNoPreview": "This mode cannot be previewed: the model decides where to cut, and it is billed when the run starts.",
+      "result": {
+        "summary": "{count, plural, one {# part} other {# parts}} · cut by {strategy} · about {total} tokens in all",
+        "tokens": "about {tokens} tokens"
+      }
+    }
   },
   "generation": {
     "queued": "Queued, waiting for a worker…",
@@ -231,7 +275,8 @@
     "partialDetail": "Sections with no result: {sections}",
     "partialUnknown": "The model returned fewer sections than were sent.",
     "tokens": "Tokens: {input} in · {output} out · {cached} read from cache",
-    "pollFailed": "Could not read the run's status."
+    "pollFailed": "Could not read the run's status.",
+    "chunks": "Part {done} of {total} done"
   },
   "sets": {
     "title": "Question sets",
