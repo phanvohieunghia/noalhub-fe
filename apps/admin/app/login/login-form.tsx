@@ -120,7 +120,7 @@ export function AdminLoginForm() {
           }
           {...register("password")}
         />
-        <Button type="submit" size="lg" disabled={isSubmitting}>
+        <Button type="submit" size="lg" loading={isSubmitting}>
           {isSubmitting ? t("submitting") : t("submit")}
         </Button>
       </form>

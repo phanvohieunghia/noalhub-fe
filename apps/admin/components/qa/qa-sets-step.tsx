@@ -331,6 +331,7 @@ export function SetsStep({
                         size="icon-md"
                         aria-label={t("ws.sets.approveSection")}
                         disabled={approveAll.isPending}
+                        loading={approvingKey === section.key}
                         onClick={() => {
                           setApprovingKey(section.key);
                           approveAll.mutate(
@@ -341,11 +342,7 @@ export function SetsStep({
                           );
                         }}
                       >
-                        {approvingKey === section.key ? (
-                          <Spinner size="sm" />
-                        ) : (
-                          <Icon icon={ICONS.check} />
-                        )}
+                        {approvingKey === section.key ? null : <Icon icon={ICONS.check} />}
                       </Button>
                     </Tooltip>
                   ) : null}
@@ -465,7 +462,7 @@ function RemoveSectionDialog({
           </Button>
           <Button
             variant="danger"
-            disabled={archive.isPending}
+            loading={archive.isPending}
             onClick={() => void confirm()}
           >
             {t("ws.sets.removeConfirm")}

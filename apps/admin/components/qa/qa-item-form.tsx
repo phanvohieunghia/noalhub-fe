@@ -268,7 +268,7 @@ export function QaItemForm({ setId, item }: { setId: string; item?: QaItemFull }
         <Button variant="outline" onClick={() => router.back()}>
           {common("actions.cancel")}
         </Button>
-        <Button disabled={pending} onClick={() => void submit()}>
+        <Button loading={pending} onClick={() => void submit()}>
           {editing ? common("actions.save") : common("actions.create")}
         </Button>
       </div>

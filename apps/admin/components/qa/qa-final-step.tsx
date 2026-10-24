@@ -77,7 +77,7 @@ export function QaFinalStep({ datasetId }: { datasetId: string }) {
         <Button
           size="icon-md"
           aria-label={t("ws.final.add")}
-          disabled={add.isPending}
+          loading={add.isPending}
           onClick={() => add.mutate([entry.item.id])}
         >
           <Icon icon={ICONS.add} />
@@ -110,11 +110,11 @@ export function QaFinalStep({ datasetId }: { datasetId: string }) {
           ]}
         />
         {!hasFinal ? (
-          <Button disabled={add.isPending} onClick={() => add.mutate(undefined)}>
+          <Button loading={add.isPending} onClick={() => add.mutate(undefined)}>
             {t("ws.final.create")}
           </Button>
         ) : waiting > 0 ? (
-          <Button disabled={add.isPending} onClick={() => add.mutate(undefined)}>
+          <Button loading={add.isPending} onClick={() => add.mutate(undefined)}>
             {t("ws.final.addNew", { count: waiting })}
           </Button>
         ) : null}

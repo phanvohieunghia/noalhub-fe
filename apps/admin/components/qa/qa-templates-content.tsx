@@ -399,7 +399,7 @@ function BulkDisableDialog({
           </Button>
           <Button
             variant="danger"
-            disabled={disable.isPending}
+            loading={disable.isPending}
             onClick={() => void confirm()}
           >
             {t("templates.disableSelected")}

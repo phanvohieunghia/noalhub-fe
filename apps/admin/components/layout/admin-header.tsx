@@ -71,7 +71,7 @@ export function AdminHeader() {
                 size="icon-sm"
                 shape="circle"
                 onClick={onLogout}
-                disabled={pending}
+                loading={pending}
                 aria-busy={pending}
                 aria-label={t("logout")}
                 className="shrink-0 text-muted-foreground hover:text-foreground"

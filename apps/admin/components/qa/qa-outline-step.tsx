@@ -46,7 +46,7 @@ import {
   useOutlineVersion,
 } from "./use-outline-version";
 import { TableOfContents } from "./table-of-contents";
-import { useOutlineScrollSpy } from "./use-outline-scroll-spy";
+import { findOutlineHeading, useOutlineScrollSpy } from "./use-outline-scroll-spy";
 
 /**
  * Runs `done` once the smooth scroll has settled. A fixed delay cannot work: the
@@ -355,15 +355,13 @@ function OutlineWorkbench({
 
   const activeIndex = useOutlineScrollSpy(outline?.outline);
 
-  const scrollToEntry = (index: number, title: string) => {
+  const scrollToEntry = (index: number) => {
     const headings = Array.from(
       rootRef.current?.querySelectorAll<HTMLElement>(
         ".ProseMirror h2, .ProseMirror h3, .ProseMirror h4",
       ) ?? [],
     );
-    const target =
-      headings.find((node) => node.textContent?.trim() === title.trim()) ??
-      headings[index];
+    const target = findOutlineHeading(headings, outline?.outline ?? [], index);
     if (!target) return;
     // The stylesheet's 5rem margin is for anchors under a sticky header; here the
     // scroller is the editor itself, so land the heading at its top edge.
@@ -522,7 +520,7 @@ function OutlineWorkbench({
               <span className="inline-flex">
                 <Button
                   size="icon-md"
-                  disabled={!dirty || update.isPending}
+                  disabled={!dirty} loading={update.isPending}
                   aria-label={t("ws.outline.saveChanges")}
                   aria-keyshortcuts="Meta+S Control+S"
                   onClick={() => void save()}

@@ -151,6 +151,7 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
   const m = useMessage();
   const [formError, setFormError] = useState<Message | string | null>(null);
   const [conflict, setConflict] = useState(false);
+  const [reloading, setReloading] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [publishOpen, setPublishOpen] = useState(false);
   const [tab, setTab] = useState<"edit" | "preview">("edit");
@@ -224,7 +225,7 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
 
           <div className="flex flex-wrap items-center gap-2">
             <SaveState isDirty={formState.isDirty} savedAt={savedAt} />
-            <Button type="submit" disabled={busy || !formState.isDirty}>
+            <Button type="submit" disabled={!formState.isDirty} loading={busy}>
               <Icon
                 icon={update.isPending ? ICONS.loading : ICONS.save}
                 className={update.isPending ? "size-4 animate-spin" : "size-4"}
@@ -234,7 +235,7 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
             {post.status === "published" ? (
               <Button
                 variant="outline"
-                disabled={busy}
+                loading={busy}
                 onClick={async () => {
                   setFormError(null);
                   try {
@@ -248,7 +249,7 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
                 {t("editor.unpublish")}
               </Button>
             ) : (
-              <Button variant="outline" disabled={busy} onClick={() => setPublishOpen(true)}>
+              <Button variant="outline" loading={busy} onClick={() => setPublishOpen(true)}>
                 <Icon icon={ICONS.eye} className="size-4" />
                 {t("editor.publish")}
               </Button>
@@ -271,7 +272,18 @@ function EditorForm({ post, categories, tags, onReloadPost }: EditorFormProps) {
               <Icon icon={ICONS.warning} className="size-4 shrink-0" />
               {t("editor.conflict")}
             </Typography>
-            <Button variant="outline" onClick={async () => applyFresh(await onReloadPost())}>
+            <Button
+              variant="outline"
+              loading={reloading}
+              onClick={async () => {
+                setReloading(true);
+                try {
+                  applyFresh(await onReloadPost());
+                } finally {
+                  setReloading(false);
+                }
+              }}
+            >
               <Icon icon={LUCIDE.refreshCw} className="size-4" />
               {t("editor.reload")}
             </Button>

@@ -390,7 +390,7 @@ function DatasetDialog({
       {start.isError ? <AlertError message={t("dataset.startFailed")} /> : null}
 
       <div className="space-y-2">
-        <Button className="w-full" onClick={begin} disabled={start.isPending}>
+        <Button className="w-full" onClick={begin} loading={start.isPending}>
           {resuming ? t("browse.continue") : t("dataset.start")}
         </Button>
         {resuming ? (

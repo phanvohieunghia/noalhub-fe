@@ -218,7 +218,7 @@ export function useChunkingChoice({
         <Button
           variant="outline"
           onClick={() => void runPreview()}
-          disabled={!canPreview || !ready || form.mode === "ai" || preview.isPending}
+          disabled={!canPreview || !ready || form.mode === "ai"} loading={preview.isPending}
         >
           {preview.isPending ? t("previewing") : t("preview")}
         </Button>

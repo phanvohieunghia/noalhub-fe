@@ -84,7 +84,7 @@ export function ChangeUsernameForm({ user }: { user: User }) {
       </Typography>
 
       <div>
-        <Button type="submit" disabled={locked || isSubmitting}>
+        <Button type="submit" disabled={locked} loading={isSubmitting}>
           {isSubmitting ? t("submitting") : t("submit")}
         </Button>
       </div>

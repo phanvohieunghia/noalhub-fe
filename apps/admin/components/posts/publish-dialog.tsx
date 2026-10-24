@@ -81,7 +81,7 @@ export function PublishDialog({
             {tc("cancel")}
           </Button>
           <Button
-            disabled={blocked || isPending}
+            disabled={blocked} loading={isPending}
             onClick={async () => {
               setError(null);
               try {

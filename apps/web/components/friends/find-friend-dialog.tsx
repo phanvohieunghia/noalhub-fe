@@ -223,7 +223,7 @@ function FriendshipAction({
     default:
       return (
         <div>
-          <Button onClick={onSend} disabled={pending}>
+          <Button onClick={onSend} loading={pending}>
             {pending ? t("request.sending") : t("request.send")}
           </Button>
         </div>

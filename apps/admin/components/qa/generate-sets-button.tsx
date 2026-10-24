@@ -554,7 +554,7 @@ function GenerateDialog({
             </Button>
             <Button
               onClick={() => setConfirming(true)}
-              disabled={!canRun || generate.isPending}
+              disabled={!canRun} loading={generate.isPending}
             >
               {t("generate.confirm")}
             </Button>

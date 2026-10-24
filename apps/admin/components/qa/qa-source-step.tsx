@@ -300,7 +300,7 @@ function SourceEditor({
               <span className="inline-flex">
                 <Button
                   size="icon-md"
-                  disabled={!canSave || update.isPending}
+                  disabled={!canSave} loading={update.isPending}
                   aria-label={t("ws.source.saveChanges")}
                   aria-keyshortcuts="Meta+S Control+S"
                   onClick={() => void save()}
@@ -454,7 +454,8 @@ function AddSourceForm({
         </Typography>
         <Button
           onClick={() => void save()}
-          disabled={add.isPending || content.trim() === "" || tooLong}
+          disabled={content.trim() === "" || tooLong}
+          loading={add.isPending}
         >
           {t("sources.save")}
         </Button>

@@ -88,7 +88,7 @@ export function RegisterForm() {
           {...register("confirmPassword")}
         />
 
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" loading={isSubmitting}>
           {isSubmitting ? t("submitting") : t("submit")}
         </Button>
       </form>

@@ -129,7 +129,7 @@ export function TagMultiselect({
               size="xs"
               shape="circle"
               onClick={() => void create()}
-              disabled={createTag.isPending}
+              loading={createTag.isPending}
             >
               {createTag.isPending
                 ? t("tags.creating")

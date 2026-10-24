@@ -291,7 +291,7 @@ function TagDialog({ row, onClose }: { row?: QaItemTag; onClose: () => void }) {
           <Button variant="outline" onClick={onClose}>
             {tc("actions.cancel")}
           </Button>
-          <Button onClick={() => void save()} disabled={create.isPending || update.isPending}>
+          <Button onClick={() => void save()} loading={create.isPending || update.isPending}>
             {tc("actions.save")}
           </Button>
         </div>

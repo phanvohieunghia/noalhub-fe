@@ -31,7 +31,7 @@ import { Typography } from "@noalhub/ui/typography";
 import { AdminErrorState } from "../admin-error-state";
 import { GenerateSetsButton } from "./generate-sets-button";
 import { TableOfContents } from "./table-of-contents";
-import { useOutlineScrollSpy } from "./use-outline-scroll-spy";
+import { findOutlineHeading, useOutlineScrollSpy } from "./use-outline-scroll-spy";
 import { QaResizeHandle } from "./qa-resize-handle";
 
 const FORMATS: readonly QaContentFormat[] = ["doc", "markdown"];
@@ -144,14 +144,13 @@ function Loaded({
    * on: match the heading by title first and fall back to its position among
    * the h2–h4 headings, which is the order the backend derives it in.
    */
-  const scrollToSection = (index: number, title: string) => {
+  const scrollToSection = (index: number) => {
     const headings = Array.from(
       editorRef.current?.querySelectorAll<HTMLElement>(
         ".ProseMirror h2, .ProseMirror h3, .ProseMirror h4",
       ) ?? [],
     );
-    const target =
-      headings.find((node) => node.textContent?.trim() === title.trim()) ?? headings[index];
+    const target = findOutlineHeading(headings, initial.outline, index);
     target?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -196,7 +195,7 @@ function Loaded({
             outlineId={outlineId}
             sections={initial.outline}
           />
-          <Button onClick={() => void save()} disabled={update.isPending}>
+          <Button onClick={() => void save()} loading={update.isPending}>
             {tc("actions.save")}
           </Button>
         </div>

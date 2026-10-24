@@ -471,7 +471,7 @@ function Summary({
         </Typography>
       </div>
       <div className="flex flex-wrap justify-center gap-2">
-        <Button onClick={onReview} disabled={pending}>
+        <Button onClick={onReview} loading={pending}>
           {t("attempt.finish")}
         </Button>
         <Button variant="outline" asChild>

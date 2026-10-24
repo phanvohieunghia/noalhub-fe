@@ -374,7 +374,7 @@ function BulkDeleteDialog({
           </Button>
           <Button
             variant="danger"
-            disabled={remove.isPending}
+            loading={remove.isPending}
             onClick={() => void confirm()}
           >
             {t("sets.deleteForever")}
@@ -444,7 +444,7 @@ function RemoveDialog({
           </Button>
           <Button
             variant="danger"
-            disabled={archive.isPending || remove.isPending}
+            loading={archive.isPending || remove.isPending}
             onClick={() => void confirm()}
           >
             {t(mode === "delete" ? "sets.deleteForever" : "sets.remove")}

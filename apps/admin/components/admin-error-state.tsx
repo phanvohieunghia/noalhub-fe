@@ -2,6 +2,7 @@
 
 import { adminErrorText } from "@noalhub/core/admin/error-message";
 import { useMessage } from "@noalhub/i18n/use-message";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@noalhub/ui/button";
 import { Typography } from "@noalhub/ui/typography";
@@ -11,7 +12,8 @@ import { Typography } from "@noalhub/ui/typography";
  * Thanks to it, losing a role mid-session produces an explanation rather than a
  * blank screen.
  */
-export function AdminErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
+export function AdminErrorState({ error, onRetry }: { error: unknown; onRetry?: () => unknown }) {
+  const [retrying, setRetrying] = useState(false);
   const t = useTranslations("common.actions");
   const m = useMessage();
 
@@ -22,7 +24,18 @@ export function AdminErrorState({ error, onRetry }: { error: unknown; onRetry?: 
     >
       <Typography variant="body-3">{m(adminErrorText(error))}</Typography>
       {onRetry ? (
-        <Button variant="outline" onClick={onRetry}>
+        <Button
+          variant="outline"
+          loading={retrying}
+          onClick={async () => {
+            setRetrying(true);
+            try {
+              await onRetry();
+            } finally {
+              setRetrying(false);
+            }
+          }}
+        >
           {t("retry")}
         </Button>
       ) : null}

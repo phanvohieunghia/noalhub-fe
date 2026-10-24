@@ -211,7 +211,7 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
           </Button>
           <Button
             onClick={() => void save()}
-            disabled={create.isPending || title === ""}
+            disabled={title === ""} loading={create.isPending}
           >
             {tc("actions.save")}
           </Button>
@@ -257,7 +257,7 @@ function DeleteDialog({ row, onClose }: { row: QaDataset; onClose: () => void })
           <Button
             variant="danger"
             onClick={() => void confirm()}
-            disabled={remove.isPending}
+            loading={remove.isPending}
           >
             {t("datasets.delete")}
           </Button>

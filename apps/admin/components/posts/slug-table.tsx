@@ -305,7 +305,8 @@ function EditSlugDialog({
             </Button>
             <Button
               className="bg-danger text-white hover:opacity-90"
-              disabled={confirmValue.trim() !== row.slug || update.isPending}
+              disabled={confirmValue.trim() !== row.slug}
+              loading={update.isPending}
               onClick={async () => {
                 setError(null);
                 try {
@@ -362,7 +363,7 @@ function DeleteSlugDialog({
           </Button>
           <Button
             className="bg-danger text-white hover:opacity-90"
-            disabled={remove.isPending}
+            loading={remove.isPending}
             onClick={async () => {
               setError(null);
               try {

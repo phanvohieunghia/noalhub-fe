@@ -3,6 +3,7 @@
 import { forwardRef } from "react";
 import { Slot } from "radix-ui";
 
+import { Spinner } from "./spinner";
 import { keysOf } from "./variants";
 
 const VARIANTS = {
@@ -76,6 +77,12 @@ type ButtonProps = React.ComponentPropsWithoutRef<"button"> & {
    * button, and nesting a button inside a button is invalid HTML.
    */
   asChild?: boolean;
+  /**
+   * An API call is in flight: shows a spinner, disables the button and sets
+   * `aria-busy`. Pass the mutation's pending flag so a second click cannot
+   * fire the same request twice. Ignored with `asChild` (no `<button>` of ours).
+   */
+  loading?: boolean;
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
@@ -85,6 +92,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     shape = "default",
     className = "",
     asChild,
+    loading = false,
+    children,
     type = "button",
     ...props
   },
@@ -98,7 +107,25 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   // Slot forwards classes/handlers to the child — but `type` is a <button>
   // attribute that means nothing on <a>/<span>, so it is only set when we
   // render the button ourselves.
-  if (asChild) return <Slot.Root ref={ref} className={classes} {...props} />;
+  if (asChild) {
+    return (
+      <Slot.Root ref={ref} className={classes} {...props}>
+        {children}
+      </Slot.Root>
+    );
+  }
 
-  return <button ref={ref} type={type} className={classes} {...props} />;
+  return (
+    <button
+      ref={ref}
+      type={type}
+      className={classes}
+      aria-busy={loading || undefined}
+      {...props}
+      disabled={props.disabled || loading}
+    >
+      {loading ? <Spinner size="sm" /> : null}
+      {children}
+    </button>
+  );
 });

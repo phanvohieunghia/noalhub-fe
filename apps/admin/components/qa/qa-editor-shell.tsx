@@ -143,7 +143,7 @@ export function EditorShell({
         </>
       ) : null}
       {actions ?? (
-        <Button size="sm" disabled={!canSave || saving} onClick={onSave}>
+        <Button size="sm" disabled={!canSave} loading={saving} onClick={onSave}>
           {tc("actions.save")}
         </Button>
       )}

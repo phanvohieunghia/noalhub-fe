@@ -213,7 +213,7 @@ function GrantDialog({ onClose }: { onClose: () => void }) {
           <Button variant="outline" onClick={onClose}>
             {tc("actions.cancel")}
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" loading={isSubmitting}>
             {isSubmitting ? t("granting") : t("grant")}
           </Button>
         </div>
@@ -243,7 +243,7 @@ function RevokeDialog({ row, onClose }: { row: StorybookAccess; onClose: () => v
             {tc("actions.cancel")}
           </Button>
           <Button
-            disabled={revoke.isPending}
+            loading={revoke.isPending}
             onClick={async () => {
               setError(null);
               try {

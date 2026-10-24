@@ -227,7 +227,7 @@ export function QaItemEditDialog({
           <Button variant="outline" onClick={onClose}>
             {tc("actions.cancel")}
           </Button>
-          <Button disabled={update.isPending} onClick={() => void save()}>
+          <Button loading={update.isPending} onClick={() => void save()}>
             {t("ws.final.save")}
           </Button>
         </div>

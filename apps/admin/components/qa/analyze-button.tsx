@@ -263,10 +263,10 @@ function AnalyzeDialog({
           disabled={
             templateId === "" ||
             !aiRun.ready ||
-            start.isPending ||
             !chunking.ready ||
             (pickable && selected.length === 0)
           }
+          loading={start.isPending}
         >
           {t("analyze.confirm")}
         </Button>

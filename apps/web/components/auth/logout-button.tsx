@@ -51,7 +51,7 @@ export function LogoutButton({
           size="icon-sm"
           shape="circle"
           onClick={onClick}
-          disabled={pending}
+          loading={pending}
           aria-busy={pending}
           aria-label={t("logout")}
           className={`shrink-0 text-muted-foreground hover:text-foreground ${className ?? ""}`}
@@ -63,7 +63,7 @@ export function LogoutButton({
   }
 
   return (
-    <Button variant="outline" onClick={onClick} disabled={pending} className={className}>
+    <Button variant="outline" onClick={onClick} loading={pending} className={className}>
       {pending ? t("loggingOut") : t("logout")}
     </Button>
   );

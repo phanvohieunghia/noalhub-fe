@@ -322,7 +322,7 @@ function ModelDialog({ row, onClose }: { row?: AiModel; onClose: () => void }) {
           </Button>
           <Button
             onClick={() => void save()}
-            disabled={create.isPending || update.isPending}
+            loading={create.isPending || update.isPending}
           >
             {tc("actions.save")}
           </Button>
@@ -365,7 +365,7 @@ function DeleteDialog({ row, onClose }: { row: AiModel; onClose: () => void }) {
             className="text-danger"
             variant="outline"
             onClick={() => void confirm()}
-            disabled={remove.isPending}
+            loading={remove.isPending}
           >
             {t("models.delete")}
           </Button>

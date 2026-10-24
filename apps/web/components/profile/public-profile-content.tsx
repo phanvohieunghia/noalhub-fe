@@ -114,7 +114,7 @@ function MessageButton({ user }: { user: PublicProfile }) {
   return (
     <div className="ml-auto flex flex-col items-end gap-1">
       <Button
-        disabled={createDirect.isPending}
+        loading={createDirect.isPending}
         onClick={() =>
           createDirect.mutate(user.id, {
             onSuccess: (conversation) => router.push(`/chat/${conversation.id}`),

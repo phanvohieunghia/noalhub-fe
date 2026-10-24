@@ -333,7 +333,7 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
           <Button variant="outline" onClick={onClose}>
             {tc("actions.cancel")}
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" loading={isSubmitting}>
             {tc("actions.save")}
           </Button>
         </div>
@@ -442,7 +442,7 @@ function EditDialog({ row, onClose }: { row: AiCredential; onClose: () => void }
           <Button variant="outline" onClick={onClose}>
             {tc("actions.cancel")}
           </Button>
-          <Button onClick={() => void save()} disabled={update.isPending}>
+          <Button onClick={() => void save()} loading={update.isPending}>
             {tc("actions.save")}
           </Button>
         </div>
@@ -488,7 +488,7 @@ function DeleteDialog({ row, onClose }: { row: AiCredential; onClose: () => void
             className="text-danger"
             variant="outline"
             onClick={() => void confirm()}
-            disabled={remove.isPending}
+            loading={remove.isPending}
           >
             {t("credentials.delete")}
           </Button>

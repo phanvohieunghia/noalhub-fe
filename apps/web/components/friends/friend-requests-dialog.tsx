@@ -104,7 +104,7 @@ function IncomingRow({ friend }: { friend: Friend }) {
       <span className="flex shrink-0 gap-2">
         <Button
           className="h-8 px-3 text-body-4"
-          disabled={busy}
+          loading={busy}
           onClick={() => accept.mutate(friend.user.username)}
         >
           {t("accept")}
@@ -112,7 +112,7 @@ function IncomingRow({ friend }: { friend: Friend }) {
         <Button
           variant="outline"
           className="h-8 px-3 text-body-4"
-          disabled={busy}
+          loading={busy}
           onClick={() => remove.mutate(friend.user.username)}
         >
           {t("decline")}
@@ -132,7 +132,7 @@ function OutgoingRow({ friend }: { friend: Friend }) {
       <Button
         variant="outline"
         className="h-8 shrink-0 px-3 text-body-4"
-        disabled={remove.isPending}
+        loading={remove.isPending}
         onClick={() => remove.mutate(friend.user.username)}
       >
         {t("cancel")}

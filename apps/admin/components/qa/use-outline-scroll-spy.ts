@@ -21,6 +21,43 @@ function editorOf(scroller: Element | Document): HTMLElement | null {
   return document.querySelector<HTMLElement>(".ProseMirror");
 }
 
+const norm = (text: string | null | undefined) => (text ?? "").trim();
+
+/**
+ * The heading an outline entry points at. Titles repeat (two "Chương V" in a
+ * row, or the same "Câu 1" under several parts), so a plain title lookup always
+ * lands on the first one: the entry is matched as the N-th of its title, and the
+ * heading as the N-th heading with that title. Falls back to position when the
+ * document no longer has that many.
+ */
+export function findOutlineHeading(
+  headings: readonly HTMLElement[],
+  entries: readonly OutlineEntry[],
+  index: number,
+): HTMLElement | undefined {
+  const title = norm(entries[index]?.title);
+  const nth = entries.slice(0, index).filter((entry) => norm(entry.title) === title).length;
+  const sameTitle = headings.filter((node) => norm(node.textContent) === title);
+  return sameTitle[nth] ?? headings[index];
+}
+
+/** Inverse of `findOutlineHeading`: the entry index of the heading at `position`. */
+function findOutlineEntry(
+  headings: readonly HTMLElement[],
+  entries: readonly OutlineEntry[],
+  position: number,
+): number {
+  const title = norm(headings[position].textContent);
+  const nth = headings.slice(0, position).filter((node) => norm(node.textContent) === title).length;
+  let seen = 0;
+  for (let i = 0; i < entries.length; i += 1) {
+    if (norm(entries[i].title) !== title) continue;
+    if (seen === nth) return i;
+    seen += 1;
+  }
+  return -1;
+}
+
 /**
  * Scroll-spy for an outline: the index of the entry whose heading last crossed
  * the top of the editor. `scroll` does not bubble, so one capturing listener on
@@ -56,9 +93,8 @@ export function useOutlineScrollSpy(entries: readonly OutlineEntry[] | undefined
       });
       if (atEnd) current = headings.length - 1;
 
-      const title = headings[current].textContent?.trim();
       const list = entriesRef.current;
-      const byTitle = list.findIndex((entry) => entry.title.trim() === title);
+      const byTitle = findOutlineEntry(headings, list, current);
       setActiveIndex(byTitle >= 0 ? byTitle : current < list.length ? current : null);
     };
 

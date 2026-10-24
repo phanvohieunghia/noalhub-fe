@@ -91,7 +91,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
             {...register("confirmPassword")}
           />
 
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" loading={isSubmitting}>
             {isSubmitting ? t("submitting") : t("submit")}
           </Button>
         </form>

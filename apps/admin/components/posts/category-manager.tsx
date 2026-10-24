@@ -312,7 +312,7 @@ function CategoryDialog({
           <Button variant="outline" onClick={onClose}>
             {tc("actions.cancel")}
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" loading={isSubmitting}>
             {isSubmitting ? tc("states.saving") : tc("actions.save")}
           </Button>
         </div>
@@ -354,7 +354,7 @@ function DeleteCategoryDialog({
             {tc("actions.cancel")}
           </Button>
           <Button
-            disabled={remove.isPending}
+            loading={remove.isPending}
             onClick={async () => {
               setError(null);
               try {
