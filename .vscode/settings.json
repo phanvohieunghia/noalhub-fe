@@ -1,3 +1,11 @@
 {
-  "cSpell.words": ["noalhub"]
+  "cSpell.words": ["noalhub"],
+  "i18n-ally.localesPaths": ["packages/i18n/messages"],
+  "i18n-ally.pathMatcher": "{locale}/{namespace}.json",
+  "i18n-ally.namespace": true,
+  "i18n-ally.keystyle": "nested",
+  "i18n-ally.sourceLanguage": "vi",
+  "i18n-ally.displayLanguage": "vi",
+  "i18n-ally.enabledFrameworks": ["next-intl"],
+  "i18n-ally.annotationInPlace": true
 }

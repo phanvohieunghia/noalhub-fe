@@ -3,6 +3,7 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
 import { boundaryRules } from "@noalhub/config/eslint.boundaries.mjs";
+import { i18nConfig } from "@noalhub/config/eslint.i18n.mjs";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -10,6 +11,7 @@ const eslintConfig = defineConfig([
   {
     rules: boundaryRules,
   },
+  i18nConfig,
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
