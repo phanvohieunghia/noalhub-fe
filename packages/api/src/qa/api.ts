@@ -18,6 +18,11 @@ import {
   qaItemTagSchema,
   qaItemListSchema,
   addToFinalSetResultSchema,
+  bulkReviewResultSchema,
+  qaFinalEntryPageSchema,
+  qaFinalSummarySchema,
+  qaItemPageSchema,
+  qaSetSectionListSchema,
   qaFinalOverviewSchema,
   qaQuestionTypeListSchema,
   updateSourceSchema,
@@ -44,6 +49,7 @@ import {
   qaStatsSchema,
   startGenerationSchema,
   type AddSourceInput,
+  type BulkReviewInput,
   type CreateCredentialInput,
   type CreateItemTagInput,
   type CreateModelInput,
@@ -86,7 +92,10 @@ import type {
   QaChunkPreview,
   QaItemFull,
   QaItemList,
+  QaFinalEntryPage,
   QaFinalOverview,
+  QaFinalSummary,
+  QaItemPage,
   QaQuestionType,
   UpdateSourceInput,
   UpdateQuestionTypeInput,
@@ -98,6 +107,7 @@ import type {
   QaPromptTemplate,
   QaSet,
   QaSetDetail,
+  QaSetSection,
   QaSetsQuery,
   UpdateQaOutlineInput,
   StartGenerationResponse,
@@ -615,6 +625,56 @@ export async function reorderItems(
   return data;
 }
 
+/** One page of a set's questions; a section's questions come together, in order. */
+export async function listSetItems(
+  setId: string,
+  page: { limit: number; offset: number },
+  signal?: AbortSignal,
+): Promise<QaItemPage> {
+  const { data } = await http.get<QaItemPage>(`/admin/qa/sets/${setId}/items`, {
+    authRequired: true,
+    schema: qaItemPageSchema,
+    params: page,
+    signal,
+  });
+  return data;
+}
+
+export async function listSetSections(
+  setId: string,
+  signal?: AbortSignal,
+): Promise<QaSetSection[]> {
+  const { data } = await http.get<QaSetSection[]>(
+    `/admin/qa/sets/${setId}/sections`,
+    { authRequired: true, schema: qaSetSectionListSchema, signal },
+  );
+  return data;
+}
+
+/** The Final set step's counts, without its questions. */
+export async function getFinalSummary(
+  datasetId: string,
+  signal?: AbortSignal,
+): Promise<QaFinalSummary> {
+  const { data } = await http.get<QaFinalSummary>(
+    `/admin/qa/datasets/${datasetId}/final-set/summary`,
+    { authRequired: true, schema: qaFinalSummarySchema, signal },
+  );
+  return data;
+}
+
+export async function listFinalEntries(
+  datasetId: string,
+  page: { limit: number; offset: number },
+  signal?: AbortSignal,
+): Promise<QaFinalEntryPage> {
+  const { data } = await http.get<QaFinalEntryPage>(
+    `/admin/qa/datasets/${datasetId}/final-set/entries`,
+    { authRequired: true, schema: qaFinalEntryPageSchema, params: page, signal },
+  );
+  return data;
+}
+
 export async function getFinalSet(
   datasetId: string,
   signal?: AbortSignal,
@@ -622,6 +682,22 @@ export async function getFinalSet(
   const { data } = await http.get<QaFinalOverview>(
     `/admin/qa/datasets/${datasetId}/final-set`,
     { authRequired: true, schema: qaFinalOverviewSchema, signal },
+  );
+  return data;
+}
+
+/**
+ * Changes the review status of many questions in ONE request. Replaces a PATCH per
+ * question, which hit the backend's 120 requests/min limit (429). Resolves to how many
+ * questions actually changed.
+ */
+export async function bulkReviewItems(
+  input: BulkReviewInput,
+): Promise<{ updated: number }> {
+  const { data } = await http.post<{ updated: number }>(
+    "/admin/qa/items/bulk-review",
+    input,
+    { authRequired: true, schema: bulkReviewResultSchema },
   );
   return data;
 }

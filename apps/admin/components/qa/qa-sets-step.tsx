@@ -1,17 +1,26 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 import {
-  useApproveQaItems,
+  useApproveQaSection,
   useApproveQaSets,
   useArchiveQaSets,
   useDeleteQaItem,
   useQaOutline,
-  useQaSet,
+  useQaSetItems,
+  useQaSetSections,
   useQaSets,
   useRenameQaSets,
   useUpdateQaItem,
@@ -41,6 +50,7 @@ import { useFitHeight } from "./use-fit-height";
 import { RunOutcome } from "./generation-progress";
 import { useOutlineVersion } from "./use-outline-version";
 import { PostContentPreview } from "./post-content-preview";
+import { TruncatedTooltip } from "./truncated-tooltip";
 import { QaReviewQuestion } from "./qa-review-question";
 
 type Section = {
@@ -51,6 +61,12 @@ type Section = {
   version: number | null;
   sets: QaSet[];
 };
+
+/** Sections with more loaded questions than this fold and open instantly rather than animated. */
+const ANIMATE_UP_TO = 12;
+
+/** Tailwind's default transition length, which folding a group uses: rows leave once it is over. */
+const FOLD_MS = 150;
 
 const STATUS_TONE = {
   pending: "warning",
@@ -235,12 +251,6 @@ export function SetsStep({
                   },
                 ]}
               />
-              <Typography
-                variant="body-4"
-                className="hidden text-muted-foreground lg:block"
-              >
-                {t("ws.sets.groupByLabel")}
-              </Typography>
               <Toggle
                 variant="outline"
                 aria-label={t("ws.sets.groupBy")}
@@ -321,8 +331,9 @@ export function SetsStep({
                 className="flex max-h-[var(--fit-h,70vh)] shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-muted"
               >
                 <div className="flex shrink-0 items-center gap-3 pr-3">
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="icon-md"
                     aria-expanded={expanded}
                     aria-label={section.title}
                     onClick={() => {
@@ -334,15 +345,15 @@ export function SetsStep({
                         return nextClosed;
                       });
                     }}
-                    className="py-3 pl-4"
+                    className="ml-3"
                   >
                     <Icon
                       icon={expanded ? ICONS.chevronDown : ICONS.chevronRight}
                       animate="snappy"
                       className="size-4 shrink-0"
                     />
-                  </button>
-                  <div className="flex min-w-0 flex-1 flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-3">
+                  </Button>
+                  <div className="flex min-w-0 flex-1 flex-col gap-2 py-1.5 sm:flex-row sm:items-center sm:gap-3">
                     <div className="min-w-0 flex-1">
                       <SectionTitleField
                         sets={group}
@@ -597,13 +608,122 @@ type ReviewRow =
   | {
       kind: "header";
       key: string;
+      sectionAnchor: string | null;
       title: string;
       total: number;
       approved: number;
-      pendingIds: string[];
+      /** Neither approved nor rejected yet — what the heading's approve button would change. */
+      pending: number;
       folded: boolean;
     }
-  | { kind: "item"; key: string; item: QaItemFull; index: number };
+  | {
+      kind: "item";
+      key: string;
+      item: QaItemFull;
+      index: number;
+      /** The heading row (`h:<anchor>`) this question sits under; empty when ungrouped. */
+      groupKey: string;
+    };
+
+/**
+ * One question with its review menu, in the grid wrapper that folds it away.
+ *
+ * `memo` because the list around it renders on every scroll tick (the pinned heading
+ * follows the scroll), and a card is the expensive part — rich text, options, an
+ * explanation. Every prop is a value or a stable callback, so a tick re-renders none of
+ * them; the same goes for the pending flags, which only change while a request runs.
+ */
+const ReviewItemRow = memo(function ReviewItemRow({
+  item,
+  index,
+  shapeLabel,
+  revealOnHover,
+  folded,
+  updating,
+  removing,
+  onReview,
+  onRemove,
+}: {
+  item: QaItemFull;
+  index: number;
+  shapeLabel: string;
+  revealOnHover: boolean;
+  folded: boolean;
+  updating: boolean;
+  removing: boolean;
+  onReview: (item: QaItemFull, status: QaReviewStatus) => void;
+  onRemove: (id: string) => void;
+}) {
+  const t = useTranslations("admin.qa");
+  return (
+    <div
+      className={`grid transition-[grid-template-rows,opacity] ease-[ease] ${
+        folded ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"
+      }`}
+    >
+      <div className="min-h-0 overflow-hidden">
+        <div className="pb-3">
+          <QaReviewQuestion
+            item={item}
+            index={index}
+            shapeLabel={shapeLabel}
+            revealOnHover={revealOnHover}
+            actions={
+              <>
+                <Badge tone={STATUS_TONE[item.reviewStatus]} size="sm">
+                  {t(`ws.sets.${item.reviewStatus}`)}
+                </Badge>
+                <DropdownMenu
+                  compact
+                  trigger={
+                    <Button
+                      variant="outline"
+                      size="icon-md"
+                      aria-label={t("ws.sets.actions")}
+                    >
+                      <Icon icon={ICONS.more} />
+                    </Button>
+                  }
+                >
+                  {item.reviewStatus !== "approved" ? (
+                    <DropdownMenuItem
+                      icon={ICONS.check}
+                      disabled={updating}
+                      onSelect={() => onReview(item, "approved")}
+                    >
+                      {t("ws.sets.approve")}
+                    </DropdownMenuItem>
+                  ) : null}
+                  {item.reviewStatus !== "rejected" ? (
+                    <DropdownMenuItem
+                      icon={ICONS.close}
+                      disabled={updating}
+                      onSelect={() => onReview(item, "rejected")}
+                    >
+                      {t("ws.sets.reject")}
+                    </DropdownMenuItem>
+                  ) : null}
+                  <DropdownMenuItem
+                    icon={ICONS.delete}
+                    tone="danger"
+                    disabled={removing}
+                    onSelect={() => onRemove(item.id)}
+                  >
+                    {t("ws.sets.delete")}
+                  </DropdownMenuItem>
+                </DropdownMenu>
+              </>
+            }
+          />
+        </div>
+      </div>
+    </div>
+  );
+});
+
+/** A real card is 500–650px; a row not yet measured is guessed at this, so the scroll bar barely jumps. */
+const ITEM_ESTIMATE = 520;
+const HEADING_ESTIMATE = 56;
 
 function ReviewSet({
   set,
@@ -618,71 +738,118 @@ function ReviewSet({
   anchorTitles: Map<string, string>;
 }) {
   const t = useTranslations("admin.qa");
-  const detail = useQaSet(set.id);
+  // A set is read a page at a time (more load as the list nears its end) and its
+  // per-section counts come separately, so a heading can read `25/25` before its
+  // questions are here. The set's own title, description and intro are already on `set`.
+  const items = useQaSetItems(set.id);
+  const sections = useQaSetSections(set.id);
   const update = useUpdateQaItem(set.id);
   const remove = useDeleteQaItem(set.id);
-  const approveGroup = useApproveQaItems();
+  const approveSection = useApproveQaSection();
   const [approvingKey, setApprovingKey] = useState<string | null>(null);
+  // `mutate` keeps its identity between renders, which is what lets the rows be memoised.
+  const { mutate: mutateItem } = update;
+  const { mutate: deleteItem } = remove;
+  const review = useCallback(
+    (item: QaItemFull, reviewStatus: QaReviewStatus) =>
+      mutateItem({ id: item.id, input: { reviewStatus } }),
+    [mutateItem],
+  );
+  const removeItem = useCallback((id: string) => deleteItem(id), [deleteItem]);
   // Heading keys (`h:<anchor>`) whose questions are folded away.
   const [folded, setFolded] = useState<Set<string>>(new Set());
-  const toggleFold = (key: string) =>
-    setFolded((prev) => {
-      const next = new Set(prev);
-      if (!next.delete(key)) next.add(key);
+  // Folding a group collapses the height of each of its rows to 0 (see the row markup),
+  // and the virtualizer re-measures them every frame, so everything below follows. The
+  // rows only leave the list once that has finished (`hidden`); opening mounts them
+  // already collapsed and lets them grow a moment later.
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const foldTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const toggleFold = (key: string) => {
+    clearTimeout(foldTimers.current.get(key));
+    const change = (set: Set<string>, add: boolean) => {
+      const next = new Set(set);
+      if (add) next.add(key);
+      else next.delete(key);
       return next;
-    });
+    };
+    // Only the rows on screen are mounted, and only those can animate: the rest of a
+    // long section keep their last measured height until they are removed, so folding
+    // it would shrink a few cards and then drop the whole remainder in one jump (opening
+    // is the same in reverse). Past a handful of rows the toggle is instant instead.
+    const anchor = key.slice(2);
+    const size = loaded.reduce(
+      (count, item) => ((item.sectionAnchor ?? "") === anchor ? count + 1 : count),
+      0,
+    );
+    const animate = size <= ANIMATE_UP_TO;
+    if (!folded.has(key)) {
+      setFolded((prev) => change(prev, true));
+      if (!animate) {
+        setHidden((prev) => change(prev, true));
+        return;
+      }
+      foldTimers.current.set(
+        key,
+        setTimeout(() => setHidden((prev) => change(prev, true)), FOLD_MS + 50),
+      );
+    } else {
+      setHidden((prev) => change(prev, false));
+      if (!animate) {
+        setFolded((prev) => change(prev, false));
+        return;
+      }
+      foldTimers.current.set(
+        key,
+        setTimeout(() => setFolded((prev) => change(prev, false)), 30),
+      );
+    }
+  };
 
-  // One flat list of rows (headings and questions) so the virtualizer covers both.
-  // Headings follow the outline order, then anchors the outline no longer has, then
-  // questions without an anchor; the original numbering is kept.
+  const loaded = useMemo(
+    () => items.data?.pages.flatMap((page) => page.items) ?? [],
+    [items.data],
+  );
+  const counts = useMemo(
+    () => new Map((sections.data ?? []).map((s) => [s.sectionAnchor ?? "", s])),
+    [sections.data],
+  );
+
+  // One flat list of rows (headings and questions) so the virtualizer covers both. The
+  // server sends each section's questions together, so a heading goes in wherever the
+  // section changes; its counts come from `counts`, not from what is loaded so far.
   const rows = useMemo<ReviewRow[]>(() => {
-    const items = detail.data?.items ?? [];
     if (!groupBySection)
-      return items.map((item, index) => ({
+      return loaded.map((item, index) => ({
         kind: "item",
         key: item.id,
         item,
         index,
+        groupKey: "",
       }));
-    const buckets = new Map<string, { item: QaItemFull; index: number }[]>();
-    items.forEach((item, index) => {
-      const key = item.sectionAnchor ?? "";
-      const bucket = buckets.get(key) ?? [];
-      bucket.push({ item, index });
-      buckets.set(key, bucket);
+    const out: ReviewRow[] = [];
+    let current: string | null = null;
+    loaded.forEach((item, index) => {
+      const anchor = item.sectionAnchor ?? "";
+      const key = `h:${anchor}`;
+      if (anchor !== current) {
+        current = anchor;
+        const count = counts.get(anchor);
+        out.push({
+          kind: "header",
+          key,
+          sectionAnchor: item.sectionAnchor,
+          title: anchorTitles.get(anchor) ?? anchor,
+          total: count?.total ?? 0,
+          approved: count?.approved ?? 0,
+          pending: count ? count.total - count.approved - count.rejected : 0,
+          folded: folded.has(key),
+        });
+      }
+      if (hidden.has(key)) return;
+      out.push({ kind: "item", key: item.id, item, index, groupKey: key });
     });
-    const order = [...anchorTitles.keys()].filter((key) => buckets.has(key));
-    for (const key of buckets.keys())
-      if (key !== "" && !order.includes(key)) order.push(key);
-    if (buckets.has("")) order.push("");
-    return order.flatMap((key) => {
-      const bucket = buckets.get(key) ?? [];
-      const header: ReviewRow = {
-        kind: "header",
-        key: `h:${key}`,
-        title: anchorTitles.get(key) ?? (key === "" ? "" : key),
-        total: bucket.length,
-        approved: bucket.filter(({ item }) => item.reviewStatus === "approved")
-          .length,
-        pendingIds: bucket
-          .filter(({ item }) => item.reviewStatus === "pending")
-          .map(({ item }) => item.id),
-        folded: folded.has(`h:${key}`),
-      };
-      if (header.folded) return [header];
-      return [
-        header,
-        ...bucket.map(
-          ({ item, index }): ReviewRow => ({
-            kind: "item",
-            key: item.id,
-            item,
-            index,
-          }),
-        ),
-      ];
-    });
-  }, [detail.data?.items, groupBySection, anchorTitles, folded]);
+    return out;
+  }, [loaded, groupBySection, anchorTitles, counts, folded, hidden]);
 
   // A set can hold hundreds of questions after a chunked run, so only the rows near the
   // viewport are mounted. The scroll element is the section body that holds every set of
@@ -691,8 +858,8 @@ function ReviewSet({
   const listRef = useRef<HTMLDivElement>(null);
   const [scrollEl, setScrollEl] = useState<HTMLElement | null>(null);
   const [scrollMargin, setScrollMargin] = useState(0);
-  const itemCount = detail.data?.items.length ?? 0;
-  const hasHeader = !!(detail.data?.description || detail.data?.intro);
+  const itemCount = loaded.length;
+  const hasHeader = !!(set.description || set.intro);
 
   useLayoutEffect(() => {
     const list = listRef.current;
@@ -706,15 +873,55 @@ function ReviewSet({
     );
   }, [itemCount, hasHeader]);
 
+  // Group headings sit at the head of their rows; each gets an overlay box (below).
+  const stickyIndexes = rows.flatMap((row, index) =>
+    row.kind === "header" ? [index] : [],
+  );
+
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollEl,
-    estimateSize: () => 180,
-    gap: 12,
+    estimateSize: (index) =>
+      rows[index]?.kind === "header" ? HEADING_ESTIMATE : ITEM_ESTIMATE,
+    // No `gap`: each row carries its own bottom padding so that collapsing a row takes
+    // the space between rows with it.
     overscan: 6,
     scrollMargin,
     getItemKey: (index) => rows[index]?.key ?? index,
   });
+  const virtualRows = virtualizer.getVirtualItems();
+
+  // Next page: when the rows on screen come within a few of the last one loaded.
+  const lastVisible = virtualRows[virtualRows.length - 1]?.index ?? -1;
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = items;
+  useEffect(() => {
+    if (lastVisible >= rows.length - 8 && hasNextPage && !isFetchingNextPage)
+      void fetchNextPage();
+  }, [lastVisible, rows.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Each group gets an overlay box spanning exactly its rows, with the heading
+  // `sticky` inside it. The browser pins it on the compositor (no lag behind the
+  // scroll, unlike positioning it from React state) and CSS keeps it inside the box,
+  // so it only leaves once the group's last question has gone by and the next
+  // heading pushes it out. The heading rows in the virtual list are invisible
+  // placeholders that only reserve (and measure) the space.
+  const GAP = 12;
+  const offset = virtualizer.scrollOffset ?? 0;
+  const viewport = virtualizer.scrollRect?.height ?? 800;
+  const measured = virtualizer.measurementsCache;
+  const groupBoxes = groupBySection
+    ? stickyIndexes.flatMap((index) => {
+        const head = measured[index];
+        if (!head) return [];
+        const nextIndex = stickyIndexes.find((i) => i > index);
+        const end =
+          nextIndex !== undefined && measured[nextIndex]
+            ? measured[nextIndex].start - GAP
+            : virtualizer.getTotalSize() + scrollMargin;
+        if (head.start > offset + viewport || end < offset) return [];
+        return [{ index, top: head.start - scrollMargin, height: end - head.start }];
+      })
+    : [];
 
   // The shape is the set's own: one prompt can now produce several.
   const shape = set.questionType
@@ -723,25 +930,92 @@ function ReviewSet({
       )
     : "";
 
-  if (detail.isPending) return <Skeleton className="h-32 w-full" />;
-  if (detail.isError) return <AlertError message={t("ws.sets.loadFailed")} />;
+  if (items.isPending) return <Skeleton className="h-32 w-full" />;
+  if (items.isError) return <AlertError message={t("ws.sets.loadFailed")} />;
 
-  const review = (item: QaItemFull, reviewStatus: QaReviewStatus) =>
-    update.mutate({ id: item.id, input: { reviewStatus } });
+  const renderHeading = (
+    entry: Extract<ReviewRow, { kind: "header" }>,
+    index: number,
+    top: number,
+  ) => (
+    <div
+      key={entry.key}
+      ref={virtualizer.measureElement}
+      data-index={index}
+      aria-hidden="true"
+      inert
+      className="invisible absolute left-0 top-0 w-full pb-3"
+      style={{ transform: `translateY(${top}px)` }}
+    >
+      {headingCard(entry)}
+    </div>
+  );
+
+  const headingCard = (entry: Extract<ReviewRow, { kind: "header" }>) => (
+      <div className="flex items-center gap-2 rounded-lg bg-surface py-1 pr-3 pl-1.5 shadow-sm ring-1 ring-border">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-expanded={!entry.folded}
+          aria-label={entry.title || t("ws.sets.noSection")}
+          onClick={() => toggleFold(entry.key)}
+        >
+          <Icon
+            icon={entry.folded ? ICONS.chevronRight : ICONS.chevronDown}
+            animate="snappy"
+            className="size-4 shrink-0"
+          />
+        </Button>
+        {/* The title is cut to one line; the tooltip shows the rest, only when something is cut. */}
+        <TruncatedTooltip label={entry.title || t("ws.sets.noSection")}>
+          <div className="min-w-0 flex-1">
+            <Typography variant="title-4" className="truncate">
+              {entry.title || t("ws.sets.noSection")}
+            </Typography>
+          </div>
+        </TruncatedTooltip>
+        <Typography
+          variant="body-4"
+          className={
+            entry.approved === entry.total ? "text-success" : "text-warning"
+          }
+        >
+          {entry.approved}/{entry.total}
+        </Typography>
+        {entry.pending > 0 ? (
+          <Tooltip label={t("ws.sets.approveHeading")}>
+            <Button
+              variant="outline"
+              size="icon-md"
+              aria-label={t("ws.sets.approveHeading")}
+              disabled={approveSection.isPending}
+              loading={approvingKey === entry.key}
+              onClick={() => {
+                setApprovingKey(entry.key);
+                approveSection.mutate(
+                  { setId: set.id, sectionAnchor: entry.sectionAnchor },
+                  { onSettled: () => setApprovingKey(null) },
+                );
+              }}
+            >
+              {approvingKey === entry.key ? null : <Icon icon={ICONS.check} />}
+            </Button>
+          </Tooltip>
+        ) : null}
+      </div>
+  );
 
   return (
     <>
-      {detail.data.description || detail.data.intro ? (
+      {set.description || set.intro ? (
         <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4">
-          <Typography variant="title-4">{detail.data.title}</Typography>
-          {detail.data.description ? (
+          <Typography variant="title-4">{set.title}</Typography>
+          {set.description ? (
             <Typography variant="body-3" className="text-muted-foreground">
-              {detail.data.description}
+              {set.description}
             </Typography>
           ) : null}
-          {detail.data.intro ? (
-            <PostContentPreview doc={detail.data.intro} />
-          ) : null}
+          {set.intro ? <PostContentPreview doc={set.intro} /> : null}
         </div>
       ) : null}
       <div
@@ -749,134 +1023,54 @@ function ReviewSet({
         className="relative w-full"
         style={{ height: virtualizer.getTotalSize() }}
       >
-        {virtualizer.getVirtualItems().map((row) => {
+        {virtualRows.map((row) => {
           const entry = rows[row.index];
           if (!entry) return null;
-          const wrapperStyle = {
-            transform: `translateY(${row.start - virtualizer.options.scrollMargin}px)`,
-          };
-          if (entry.kind === "header")
-            return (
-              <div
-                key={row.key}
-                ref={virtualizer.measureElement}
-                data-index={row.index}
-                className="absolute left-0 top-0 w-full"
-                style={wrapperStyle}
-              >
-                <div className="flex items-center gap-2 rounded-lg bg-surface px-3 py-2">
-                  <button
-                    type="button"
-                    aria-expanded={!entry.folded}
-                    onClick={() => toggleFold(entry.key)}
-                    className="flex min-w-0 flex-1 items-center gap-2 text-left"
-                  >
-                    <Icon
-                      icon={
-                        entry.folded ? ICONS.chevronRight : ICONS.chevronDown
-                      }
-                      animate="snappy"
-                      className="size-4 shrink-0"
-                    />
-                    <Typography variant="title-4" className="min-w-0 truncate">
-                      {entry.title || t("ws.sets.noSection")}
-                    </Typography>
-                  </button>
-                  <Typography
-                    variant="body-4"
-                    className={
-                      entry.approved === entry.total
-                        ? "text-success"
-                        : "text-warning"
-                    }
-                  >
-                    {entry.approved}/{entry.total}
-                  </Typography>
-                  {entry.pendingIds.length > 0 ? (
-                    <Tooltip label={t("ws.sets.approveHeading")}>
-                      <Button
-                        variant="outline"
-                        size="icon-md"
-                        aria-label={t("ws.sets.approveHeading")}
-                        disabled={approveGroup.isPending}
-                        loading={approvingKey === entry.key}
-                        onClick={() => {
-                          setApprovingKey(entry.key);
-                          approveGroup.mutate(entry.pendingIds, {
-                            onSettled: () => setApprovingKey(null),
-                          });
-                        }}
-                      >
-                        {approvingKey === entry.key ? null : (
-                          <Icon icon={ICONS.check} />
-                        )}
-                      </Button>
-                    </Tooltip>
-                  ) : null}
-                </div>
-              </div>
+          if (entry.kind === "header") {
+            return renderHeading(
+              entry,
+              row.index,
+              row.start - virtualizer.options.scrollMargin,
             );
-          const { item } = entry;
+          }
           return (
             <div
               key={row.key}
               ref={virtualizer.measureElement}
               data-index={row.index}
               className="absolute left-0 top-0 w-full"
-              style={wrapperStyle}
+              style={{
+                transform: `translateY(${row.start - virtualizer.options.scrollMargin}px)`,
+              }}
             >
-              <QaReviewQuestion
-                item={item}
+              <ReviewItemRow
+                item={entry.item}
                 index={entry.index}
                 shapeLabel={shape}
                 revealOnHover={revealOnHover}
-                actions={
-                  <>
-                    <Badge tone={STATUS_TONE[item.reviewStatus]} size="sm">
-                      {t(`ws.sets.${item.reviewStatus}`)}
-                    </Badge>
-                    <DropdownMenu
-                      compact
-                      trigger={
-                        <Button
-                          variant="outline"
-                          size="icon-md"
-                          aria-label={t("ws.sets.actions")}
-                        >
-                          <Icon icon={ICONS.more} />
-                        </Button>
-                      }
-                    >
-                      {item.reviewStatus !== "approved" ? (
-                        <DropdownMenuItem
-                          icon={ICONS.check}
-                          disabled={update.isPending}
-                          onSelect={() => review(item, "approved")}
-                        >
-                          {t("ws.sets.approve")}
-                        </DropdownMenuItem>
-                      ) : null}
-                      {item.reviewStatus !== "rejected" ? (
-                        <DropdownMenuItem
-                          icon={ICONS.close}
-                          disabled={update.isPending}
-                          onSelect={() => review(item, "rejected")}
-                        >
-                          {t("ws.sets.reject")}
-                        </DropdownMenuItem>
-                      ) : null}
-                      <DropdownMenuItem
-                        icon={ICONS.delete}
-                        tone="danger"
-                        disabled={remove.isPending}
-                        onSelect={() => remove.mutate(item.id)}
-                      >
-                        {t("ws.sets.delete")}
-                      </DropdownMenuItem>
-                    </DropdownMenu>
-                  </>
-                }
+                folded={folded.has(entry.groupKey)}
+                updating={update.isPending}
+                removing={remove.isPending}
+                onReview={review}
+                onRemove={removeItem}
               />
+            </div>
+          );
+        })}
+        {groupBoxes.map((box) => {
+          const entry = rows[box.index];
+          if (entry?.kind !== "header") return null;
+          return (
+            <div
+              key={`box:${entry.key}`}
+              className="pointer-events-none absolute left-0 z-10 w-full"
+              // `top`, not a transform: `sticky` works from layout positions and
+              // would ignore a translate on the box it is contained by.
+              style={{ top: box.top, height: box.height }}
+            >
+              <div className="pointer-events-auto sticky top-0">
+                {headingCard(entry)}
+              </div>
             </div>
           );
         })}

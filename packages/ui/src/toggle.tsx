@@ -4,6 +4,7 @@ import { forwardRef } from "react";
 import { ToggleGroup } from "radix-ui";
 
 import { Icon } from "./icons";
+import { Tooltip } from "./tooltip";
 import type { IconName } from "./icons";
 
 export type ToggleOption<T extends string = string> = {
@@ -35,7 +36,15 @@ type ToggleProps<T extends string> = {
  * swallowed here, because a view mode with nothing selected is not a state.
  */
 function ToggleInner<T extends string>(
-  { options, value, onValueChange, disabled, className = "", variant = "pill", ...props }: ToggleProps<T>,
+  {
+    options,
+    value,
+    onValueChange,
+    disabled,
+    className = "",
+    variant = "pill",
+    ...props
+  }: ToggleProps<T>,
   ref: React.ForwardedRef<HTMLDivElement>,
 ) {
   return (
@@ -55,12 +64,16 @@ function ToggleInner<T extends string>(
       } ${className}`}
     >
       {options.map((option) => (
-        <ToggleGroup.Item
-          key={option.value}
-          value={option.value}
-          aria-label={option.label}
-          title={option.label}
-          className={`flex shrink-0 items-center justify-center text-muted-foreground outline-none transition-colors
+        // The label shows as a tooltip on hover and focus rather than a native `title`,
+        // which is slow to appear and never shows for the keyboard. The tooltip sits on a
+        // wrapper: its trigger writes `data-state`, which on the item itself would
+        // overwrite the `on` / `off` that the pressed styling reads.
+        <Tooltip key={option.value} label={option.label}>
+          <span className="inline-flex">
+            <ToggleGroup.Item
+              value={option.value}
+              aria-label={option.label}
+              className={`flex shrink-0 cursor-pointer items-center justify-center text-muted-foreground outline-none transition-colors
             hover:text-foreground
             focus-visible:ring-2 focus-visible:ring-ring
             disabled:cursor-not-allowed disabled:opacity-50
@@ -69,9 +82,11 @@ function ToggleInner<T extends string>(
                 ? "size-6 rounded-md data-[state=on]:bg-muted data-[state=on]:text-foreground"
                 : "size-7 rounded-full data-[state=on]:bg-surface data-[state=on]:text-foreground data-[state=on]:shadow-sm data-[state=on]:ring-1 data-[state=on]:ring-border"
             }`}
-        >
-          <Icon icon={option.icon} className="size-4 shrink-0" />
-        </ToggleGroup.Item>
+            >
+              <Icon icon={option.icon} className="size-4 shrink-0" />
+            </ToggleGroup.Item>
+          </span>
+        </Tooltip>
       ))}
     </ToggleGroup.Root>
   );

@@ -1,6 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useEffect } from "react";
 
 import * as qaApi from "./api";
@@ -526,6 +531,35 @@ export function useQaSet(id: string | undefined) {
   });
 }
 
+/** Questions per request when a set or the final set is read a page at a time. */
+const REVIEW_PAGE_SIZE = 50;
+
+/**
+ * A set's questions, a page at a time, for a list that loads more as it is scrolled.
+ * Pages arrive in the server's display order (each section's questions together), so
+ * the flat list of `data.pages` is already the order to draw.
+ */
+export function useQaSetItems(setId: string) {
+  return useInfiniteQuery({
+    queryKey: [...qaKeys.set(setId), "items"] as const,
+    queryFn: ({ pageParam, signal }) =>
+      qaApi.listSetItems(setId, { limit: REVIEW_PAGE_SIZE, offset: pageParam }, signal),
+    initialPageParam: 0,
+    getNextPageParam: (last, pages) => {
+      const loaded = pages.reduce((sum, page) => sum + page.items.length, 0);
+      return loaded < last.total && last.items.length > 0 ? loaded : undefined;
+    },
+  });
+}
+
+/** Per-section counts of a set — for headings that should read `25/25` before their questions load. */
+export function useQaSetSections(setId: string) {
+  return useQuery({
+    queryKey: [...qaKeys.set(setId), "sections"] as const,
+    queryFn: ({ signal }) => qaApi.listSetSections(setId, signal),
+  });
+}
+
 export function useUpdateQaSet(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -605,34 +639,6 @@ export function useArchiveQaSets() {
   });
 }
 
-const APPROVE_CONCURRENCY = 6;
-
-/**
- * Approves the given items. Hundreds of PATCHes at once overflow the browser/backend
- * limits and the overflow fails silently, so a few run at a time and the leftovers are
- * retried. Resolves to how many still failed.
- */
-async function approveItems(ids: string[]): Promise<number> {
-  let remaining = ids;
-  for (let attempt = 0; attempt < 3 && remaining.length > 0; attempt++) {
-    const failed: string[] = [];
-    let cursor = 0;
-    const worker = async () => {
-      while (cursor < remaining.length) {
-        const id = remaining[cursor++];
-        try {
-          await qaApi.updateItem(id, { reviewStatus: "approved" });
-        } catch {
-          failed.push(id);
-        }
-      }
-    };
-    await Promise.all(Array.from({ length: APPROVE_CONCURRENCY }, worker));
-    remaining = failed;
-  }
-  return remaining.length;
-}
-
 function useInvalidateReview() {
   const queryClient = useQueryClient();
   return () => {
@@ -644,27 +650,46 @@ function useInvalidateReview() {
 
 /**
  * Approves every still-pending question of the given sets (rejected ones stay
- * rejected). Resolves to how many updates failed; one failure does not stop the rest.
+ * rejected) in ONE request. Resolves to how many questions changed.
  */
 export function useApproveQaSets() {
   const invalidate = useInvalidateReview();
   return useMutation({
-    mutationFn: async (setIds: string[]) => {
-      const details = await Promise.all(setIds.map((id) => qaApi.getSet(id)));
-      const pending = details.flatMap((detail) =>
-        detail.items.filter((item) => item.reviewStatus === "pending"),
-      );
-      return approveItems(pending.map((item) => item.id));
-    },
+    mutationFn: async (setIds: string[]) =>
+      (
+        await qaApi.bulkReviewItems({
+          reviewStatus: "approved",
+          setIds,
+          fromStatus: "pending",
+        })
+      ).updated,
     onSettled: invalidate,
   });
 }
 
-/** Approves the given questions (a slice of a set, e.g. one heading). Resolves to the failure count. */
-export function useApproveQaItems() {
+/**
+ * Approves every still-pending question of ONE section of a set, in one request — the
+ * server finds them, so a section whose questions are not all loaded yet is approved
+ * whole. `sectionAnchor` is `null` for the questions that belong to no section.
+ */
+export function useApproveQaSection() {
   const invalidate = useInvalidateReview();
   return useMutation({
-    mutationFn: (ids: string[]) => approveItems(ids),
+    mutationFn: async ({
+      setId,
+      sectionAnchor,
+    }: {
+      setId: string;
+      sectionAnchor: string | null;
+    }) =>
+      (
+        await qaApi.bulkReviewItems({
+          reviewStatus: "approved",
+          setIds: [setId],
+          sectionAnchor: sectionAnchor ?? "",
+          fromStatus: "pending",
+        })
+      ).updated,
     onSettled: invalidate,
   });
 }
@@ -754,6 +779,32 @@ export function useQaFinalSet(datasetId: string) {
   return useQuery({
     queryKey: qaKeys.finalSet(datasetId),
     queryFn: ({ signal }) => qaApi.getFinalSet(datasetId, signal),
+  });
+}
+
+/** The Final set step's counts (totals, per-section waiting) without its questions. */
+export function useQaFinalSummary(datasetId: string) {
+  return useQuery({
+    queryKey: [...qaKeys.finalSet(datasetId), "summary"] as const,
+    queryFn: ({ signal }) => qaApi.getFinalSummary(datasetId, signal),
+  });
+}
+
+/** The Final set step's questions, a page at a time, each section's together. */
+export function useQaFinalEntries(datasetId: string) {
+  return useInfiniteQuery({
+    queryKey: [...qaKeys.finalSet(datasetId), "entries"] as const,
+    queryFn: ({ pageParam, signal }) =>
+      qaApi.listFinalEntries(
+        datasetId,
+        { limit: REVIEW_PAGE_SIZE, offset: pageParam },
+        signal,
+      ),
+    initialPageParam: 0,
+    getNextPageParam: (last, pages) => {
+      const loaded = pages.reduce((sum, page) => sum + page.entries.length, 0);
+      return loaded < last.total && last.entries.length > 0 ? loaded : undefined;
+    },
   });
 }
 

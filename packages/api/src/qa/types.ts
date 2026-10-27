@@ -375,6 +375,16 @@ export type QaSet = {
 
 export type QaSetDetail = QaSet & { items: QaItemFull[] };
 
+export type QaItemPage = { items: QaItemFull[]; total: number };
+
+/** One section of a set, with its counts — enough to draw a heading before its questions are loaded. */
+export type QaSetSection = {
+  sectionAnchor: string | null;
+  total: number;
+  approved: number;
+  rejected: number;
+};
+
 /** A search hit: the question plus the shape (template key) of its set. */
 export type QaItemSearchRow = QaItemFull & { type: string };
 
@@ -415,6 +425,17 @@ export type QaFinalGroup = {
   inFinalSet: boolean;
   entries: QaFinalEntry[];
 };
+
+export type QaFinalSummary = {
+  /** Every question the Final set step lists: copies already there plus approved ones waiting. */
+  total: number;
+  added: number;
+  waiting: number;
+  hasFinal: boolean;
+  sections: { sectionAnchor: string | null; total: number; waiting: number }[];
+};
+
+export type QaFinalEntryPage = { entries: QaFinalEntry[]; total: number };
 
 export type QaFinalOverview = {
   approved: number;

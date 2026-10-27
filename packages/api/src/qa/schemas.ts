@@ -602,6 +602,60 @@ export const qaFinalOverviewSchema = z.object({
   ),
 });
 
+export const bulkReviewResultSchema = z.object({ updated: z.number() });
+
+export type BulkReviewInput = {
+  reviewStatus: "pending" | "approved" | "rejected";
+  /** Every question of these sets. Send this or `itemIds`; the backend 400s on neither. */
+  setIds?: string[];
+  itemIds?: string[];
+  /** Only change questions currently in this status (`pending` leaves rejected ones alone). */
+  fromStatus?: "pending" | "approved" | "rejected";
+  /** Only the questions of this section; `""` is those without one. Needs `setIds`. */
+  sectionAnchor?: string;
+};
+
+/** A page of a set's questions, sections as contiguous blocks. */
+export const qaItemPageSchema = z.object({
+  items: z.array(qaItemFullSchema),
+  total: z.number(),
+});
+
+/** How many questions each section of a set has, in the order `qaItemPageSchema` lists them. */
+export const qaSetSectionListSchema = z.array(
+  z.object({
+    sectionAnchor: nullableString,
+    total: z.number(),
+    approved: z.number(),
+    rejected: z.number(),
+  }),
+);
+
+export const qaFinalSummarySchema = z.object({
+  total: z.number(),
+  added: z.number(),
+  waiting: z.number(),
+  hasFinal: z.boolean(),
+  sections: z.array(
+    z.object({
+      sectionAnchor: nullableString,
+      total: z.number(),
+      waiting: z.number(),
+    }),
+  ),
+});
+
+export const qaFinalEntryPageSchema = z.object({
+  entries: z.array(
+    z.object({
+      item: qaItemFullSchema,
+      state: z.enum(["added", "new"]),
+      templateKey: z.string(),
+    }),
+  ),
+  total: z.number(),
+});
+
 export const addToFinalSetResultSchema = z.object({
   createdSets: z.number(),
   addedItems: z.number(),
