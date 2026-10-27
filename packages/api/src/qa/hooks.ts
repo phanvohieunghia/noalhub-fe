@@ -605,30 +605,67 @@ export function useArchiveQaSets() {
   });
 }
 
+const APPROVE_CONCURRENCY = 6;
+
+/**
+ * Approves the given items. Hundreds of PATCHes at once overflow the browser/backend
+ * limits and the overflow fails silently, so a few run at a time and the leftovers are
+ * retried. Resolves to how many still failed.
+ */
+async function approveItems(ids: string[]): Promise<number> {
+  let remaining = ids;
+  for (let attempt = 0; attempt < 3 && remaining.length > 0; attempt++) {
+    const failed: string[] = [];
+    let cursor = 0;
+    const worker = async () => {
+      while (cursor < remaining.length) {
+        const id = remaining[cursor++];
+        try {
+          await qaApi.updateItem(id, { reviewStatus: "approved" });
+        } catch {
+          failed.push(id);
+        }
+      }
+    };
+    await Promise.all(Array.from({ length: APPROVE_CONCURRENCY }, worker));
+    remaining = failed;
+  }
+  return remaining.length;
+}
+
+function useInvalidateReview() {
+  const queryClient = useQueryClient();
+  return () => {
+    queryClient.invalidateQueries({ queryKey: qaKeys.sets() });
+    queryClient.invalidateQueries({ queryKey: qaKeys.items() });
+    queryClient.invalidateQueries({ queryKey: [...qaKeys.all, "final-set"] });
+  };
+}
+
 /**
  * Approves every still-pending question of the given sets (rejected ones stay
  * rejected). Resolves to how many updates failed; one failure does not stop the rest.
  */
 export function useApproveQaSets() {
-  const queryClient = useQueryClient();
+  const invalidate = useInvalidateReview();
   return useMutation({
     mutationFn: async (setIds: string[]) => {
       const details = await Promise.all(setIds.map((id) => qaApi.getSet(id)));
       const pending = details.flatMap((detail) =>
         detail.items.filter((item) => item.reviewStatus === "pending"),
       );
-      const results = await Promise.allSettled(
-        pending.map((item) =>
-          qaApi.updateItem(item.id, { reviewStatus: "approved" }),
-        ),
-      );
-      return results.filter((result) => result.status === "rejected").length;
+      return approveItems(pending.map((item) => item.id));
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: qaKeys.sets() });
-      queryClient.invalidateQueries({ queryKey: qaKeys.items() });
-      queryClient.invalidateQueries({ queryKey: [...qaKeys.all, "final-set"] });
-    },
+    onSettled: invalidate,
+  });
+}
+
+/** Approves the given questions (a slice of a set, e.g. one heading). Resolves to the failure count. */
+export function useApproveQaItems() {
+  const invalidate = useInvalidateReview();
+  return useMutation({
+    mutationFn: (ids: string[]) => approveItems(ids),
+    onSettled: invalidate,
   });
 }
 
