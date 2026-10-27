@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@noalhub/ui/button";
 import { Icon, ICONS, LUCIDE } from "@noalhub/ui/icons";
 import { MorphIcon, type SpringPreset } from "@noalhub/ui/morph-icon";
+import { Select } from "@noalhub/ui/select";
 
 const meta: Meta<typeof MorphIcon> = {
   title: "UI/Data Display/MorphIcon",
@@ -64,8 +65,7 @@ const GALLERY = [
   LUCIDE.arrowRight,
 ];
 
-const fieldClass =
-  "h-9 rounded-md border border-border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const SPRING_OPTIONS = SPRINGS.map((value) => ({ value, label: value }));
 
 /** Click a pair to flip it. Every pair is morphing between two real lucide icons. */
 export const Toggles: Story = {
@@ -76,15 +76,16 @@ export const Toggles: Story = {
         {PAIRS.map(({ name, a, b }) => {
           const flipped = state[name] ?? false;
           return (
-            <button
+            <Button
               key={name}
-              type="button"
+              variant="outline"
+              className="h-auto flex-col gap-3 p-5"
+              aria-pressed={flipped}
               onClick={() => setState((s) => ({ ...s, [name]: !flipped }))}
-              className="flex flex-col items-center gap-3 rounded-lg border border-border bg-surface p-5 text-foreground transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <MorphIcon {...args} icon={flipped ? b : a} label={name} />
               <span className="text-xs text-muted-foreground">{name}</span>
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -93,44 +94,78 @@ export const Toggles: Story = {
   args: { size: 48, spring: "snappy" },
 };
 
-/** Pick any two icons, then compare spring presets. Re-click quickly to see a mid-flight retarget. */
+/**
+ * Pick icon A and icon B, then flip between them. The stage shows the live morph; the two
+ * tiles under it are the static endpoints, so you can judge the in-between against both.
+ * Click again mid-flight to see a retarget, or use Swap to exchange A and B.
+ */
 export const Playground: Story = {
   render: (args) => {
     const names = Object.entries(LUCIDE);
-    const [icon, setIcon] = useState<string>(LUCIDE.menu);
-    const [target, setTarget] = useState<string>(LUCIDE.x);
+    const [a, setA] = useState<string>(LUCIDE.menu);
+    const [b, setB] = useState<string>(LUCIDE.x);
+    const [showB, setShowB] = useState(false);
     const [spring, setSpring] = useState<SpringPreset>("snappy");
+    const options = names.map(([key, value]) => ({ value, label: key }));
+    const picker = (label: string, value: string, onChange: (value: string) => void) => (
+      <div className="min-w-44 flex-1">
+        <Select
+          label={label}
+          size="sm"
+          options={options}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      </div>
+    );
+    const endpoint = (label: string, icon: string, active: boolean) => (
+      <div
+        className={`flex flex-1 flex-col items-center gap-2 rounded-lg border p-3 text-foreground ${
+          active ? "border-primary" : "border-border"
+        }`}
+      >
+        <MorphIcon icon={icon} size={40} strokeWidth={args.strokeWidth} reducedMotion="always" />
+        <span className="text-xs text-muted-foreground">{label}</span>
+      </div>
+    );
     return (
       <div className="flex max-w-xl flex-col gap-6">
-        <div className="flex h-56 items-center justify-center rounded-lg border border-border bg-surface text-foreground">
-          <MorphIcon {...args} icon={icon} spring={spring} size={args.size ?? 120} />
+        <button
+          type="button"
+          aria-label="Morph between A and B"
+          onClick={() => setShowB((v) => !v)}
+          className="flex h-56 items-center justify-center rounded-lg border border-border bg-surface text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <MorphIcon {...args} icon={showB ? b : a} spring={spring} size={args.size ?? 120} />
+        </button>
+        <div className="flex gap-3">
+          {endpoint("A", a, !showB)}
+          {endpoint("B", b, showB)}
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <select
-            aria-label="Target icon"
-            className={fieldClass}
-            value={target}
-            onChange={(e) => setTarget(e.target.value)}
+        <div className="flex flex-wrap items-end gap-3">
+          {picker("Icon A", a, setA)}
+          {picker("Icon B", b, setB)}
+          <div className="w-32">
+            <Select
+              label="Spring"
+              size="sm"
+              options={SPRING_OPTIONS}
+              value={spring}
+              onChange={(e) => setSpring(e.target.value as SpringPreset)}
+            />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => setShowB((v) => !v)}>Morph to {showB ? "A" : "B"}</Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setA(b);
+              setB(a);
+            }}
           >
-            {names.map(([key, value]) => (
-              <option key={key} value={value}>
-                {key}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Spring"
-            className={fieldClass}
-            value={spring}
-            onChange={(e) => setSpring(e.target.value as SpringPreset)}
-          >
-            {SPRINGS.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-          <Button onClick={() => setIcon(target)}>Morph</Button>
+            Swap A ↔ B
+          </Button>
         </div>
       </div>
     );
@@ -149,16 +184,16 @@ export const Gallery: Story = {
         </div>
         <div className="grid grid-cols-4 gap-2">
           {GALLERY.map((name) => (
-            <button
+            <Button
               key={name}
-              type="button"
+              variant={icon === name ? "primary" : "outline"}
+              size="icon-lg"
               aria-label={name}
               aria-pressed={icon === name}
               onClick={() => setIcon(name)}
-              className="flex size-14 items-center justify-center rounded-md border border-border text-foreground transition-colors hover:bg-neutral-100 aria-pressed:border-primary aria-pressed:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <MorphIcon icon={name} size={22} reducedMotion="always" />
-            </button>
+            </Button>
           ))}
         </div>
       </div>

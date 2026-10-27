@@ -42,10 +42,18 @@ const SHAPE_ICONS = {
 
 const ITEM_KINDS = ["theory", "practice", "recall", "analysis"] as const;
 
+const KIND_ICONS = {
+  theory: LUCIDE.bookOpen,
+  practice: LUCIDE.wrench,
+  recall: LUCIDE.brain,
+  analysis: LUCIDE.microscope,
+} as const;
+
 /**
  * The second button that spends money.
  *
- * Sections must be picked, or "all" ticked deliberately — the backend refuses a
+ * Sections must be picked (the "all" box ticks every one, and half-ticks while only
+ * some are) — the backend refuses a
  * request with neither, and that refusal is the point: "empty means everything"
  * is the most expensive default available and the easiest to hit by forgetting
  * a field.
@@ -165,7 +173,6 @@ function GenerateDialog({
     setCollapsed([]);
   };
   const [collapsed, setCollapsed] = useState<string[]>([]);
-  const [allSections, setAllSections] = useState(false);
   const [kinds, setKinds] = useState<QaItemKind[]>([]);
   // The price is stated in a second dialog on Run, not inline: it is the last thing
   // read before money is spent.
@@ -181,8 +188,11 @@ function GenerateDialog({
   // An outline without headings has no sections to pick: the only run left is the
   // whole document, which the backend takes as `allSections`.
   const noSections = sections.length === 0 && !loadingSections;
-  const wholeOutline = allSections || noSections;
-  const chosenCount = wholeOutline ? sections.length : picked.length;
+  // Every section ticked is the same request as "all", and the backend takes it as the
+  // explicit `allSections` flag rather than a list that happens to be complete.
+  const allPicked = sections.length > 0 && picked.length === sections.length;
+  const wholeOutline = allPicked || noSections;
+  const chosenCount = picked.length;
   // A blank bound means "no limit on this side"; the model decides.
   const minValue = minCount.trim() === "" ? undefined : Number(minCount);
   const maxValue = maxCount.trim() === "" ? undefined : Number(maxCount);
@@ -215,7 +225,7 @@ function GenerateDialog({
           maxCount: maxValue,
           model: modelInfo,
         })
-      : ({ ok: true } as const);
+      : ({ ok: true, calls: 1 } as const);
   const canRun =
     fit.ok &&
     templateId !== "" &&
@@ -309,138 +319,52 @@ function GenerateDialog({
       {started ? (
         <GenerationProgress generationId={started.id} reused={started.reused} />
       ) : (
-        <div className="space-y-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <div className="space-y-5">
+          {/* What to generate from. */}
+          <div className="space-y-4">
             {datasetId && (versions.data?.items.length ?? 0) > 1 ? (
-              <div className="sm:w-40 sm:shrink-0">
+              <div className="sm:w-72">
                 <Select
                   label={t("ws.meta.versionLabel")}
                   value={outlineId}
                   onChange={(event) => switchOutline(event.target.value)}
                   options={(versions.data?.items ?? []).map((outline) => ({
                     value: outline.id,
-                    label: t("outlines.versionShort", {
-                      version: outline.version,
-                    }),
+                    // A named version shows its name; "v*" is only the fallback.
+                    label:
+                      outline.label?.trim() ||
+                      t("outlines.versionShort", { version: outline.version }),
                   }))}
                 />
               </div>
             ) : null}
-            <div className="min-w-0 flex-1">
-              <Select
-                label={t("generate.template")}
-                value={templateId}
-                onChange={(event) => setTemplateId(event.target.value)}
-                placeholder={
-                  usableTemplates.length === 0
-                    ? t("generate.noTemplate")
-                    : t("generate.pickTemplate")
-                }
-                options={usableTemplates.map((row) => ({
-                  value: row.id,
-                  label: row.name,
-                }))}
-              />
-            </div>
-          </div>
-
-          <fieldset className="space-y-2">
-            <Typography variant="title-4" as="legend">
-              {t("generate.questionTypes")}
-            </Typography>
-            <div className="flex flex-wrap gap-3">
-              {QA_TEMPLATE_KEYS.map((shape) => {
-                const on = types.includes(shape);
-                const name = t(`templates.shapes.${shape}`);
-                return (
-                  <Tooltip key={shape} label={name}>
-                    <Button
-                      type="button"
-                      size="icon-md"
-                      variant={on ? "primary" : "outline"}
-                      aria-label={name}
-                      aria-pressed={on}
-                      onClick={() =>
-                        setTypes((current) =>
-                          on
-                            ? current.filter((value) => value !== shape)
-                            : [...current, shape],
-                        )
-                      }
-                    >
-                      <Icon icon={SHAPE_ICONS[shape]} />
-                    </Button>
-                  </Tooltip>
-                );
-              })}
-            </div>
-            <Typography variant="body-4" className="text-muted-foreground">
-              {t("generate.questionTypesHint")}
-            </Typography>
-          </fieldset>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input
-              label={t("generate.minCount")}
-              type="number"
-              min={1}
-              value={minCount}
-              onChange={(event) => setMinCount(event.target.value)}
-              trailing={clearButton(minCount, () => setMinCount(""))}
-            />
-            <Input
-              label={t("generate.maxCount")}
-              type="number"
-              min={1}
-              value={maxCount}
-              onChange={(event) => setMaxCount(event.target.value)}
-              trailing={clearButton(maxCount, () => setMaxCount(""))}
-            />
-          </div>
-          <Typography variant="body-4" className="-mt-2 text-muted-foreground">
-            {t("generate.countHint")}
-          </Typography>
-
-          {aiRun.fields}
-
-          <fieldset className="space-y-2">
-            <Typography variant="title-4" as="legend">
-              {t("generate.kinds")}
-            </Typography>
-            <div className="flex flex-wrap gap-3">
-              {ITEM_KINDS.map((value) => (
+            {/* No headings means nothing to pick: the run is the whole document and
+              the cost confirmation says so. */}
+            {noSections ? null : (
+              <fieldset className="space-y-2">
+                <Typography variant="title-4" as="legend">
+                  {t("generate.sections")}
+                </Typography>
+                {/* Spelled out, never a default: "no sections given" would be the
+                most expensive request in the feature. */}
                 <Checkbox
-                  key={value}
-                  label={t(`items.kinds.${value}`)}
-                  checked={kinds.includes(value)}
-                  onCheckedChange={(checked) =>
-                    setKinds((current) =>
-                      checked === true
-                        ? [...current, value]
-                        : current.filter((kind) => kind !== value),
+                  label={t("generate.allSections", { count: sections.length })}
+                  checked={
+                    allPicked
+                      ? true
+                      : picked.length === 0
+                        ? false
+                        : "indeterminate"
+                  }
+                  onCheckedChange={() =>
+                    setPicked(
+                      allPicked
+                        ? []
+                        : sections.map((section) => section.anchor),
                     )
                   }
                 />
-              ))}
-            </div>
-          </fieldset>
-
-          {/* No headings means nothing to pick: the run is the whole document and
-              the cost confirmation says so. */}
-          {noSections ? null : (
-            <fieldset className="space-y-2">
-              <Typography variant="title-4" as="legend">
-                {t("generate.sections")}
-              </Typography>
-              {/* Spelled out, never a default: "no sections given" would be the
-                most expensive request in the feature. */}
-              <Checkbox
-                label={t("generate.allSections", { count: sections.length })}
-                checked={allSections}
-                onCheckedChange={(checked) => setAllSections(checked === true)}
-              />
-              {!wholeOutline ? (
-                <ul className="max-h-64 space-y-1 overflow-y-auto rounded-md border border-border p-2">
+                <ul className="max-h-52 space-y-1 overflow-y-auto rounded-md border border-border p-2">
                   {sections.map((section, index) => {
                     // Hidden while any ancestor is collapsed.
                     let hidden = false;
@@ -510,9 +434,130 @@ function GenerateDialog({
                     );
                   })}
                 </ul>
-              ) : null}
-            </fieldset>
-          )}
+              </fieldset>
+            )}
+          </div>
+
+          {/* What to generate. */}
+          <div className="space-y-4 border-t border-border pt-5">
+            <div>
+              <Select
+                label={t("generate.template")}
+                value={templateId}
+                onChange={(event) => setTemplateId(event.target.value)}
+                placeholder={
+                  usableTemplates.length === 0
+                    ? t("generate.noTemplate")
+                    : t("generate.pickTemplate")
+                }
+                options={usableTemplates.map((row) => ({
+                  value: row.id,
+                  label: row.name,
+                }))}
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <fieldset className="space-y-2">
+                <legend className="flex items-center gap-1">
+                  <Typography variant="title-4" as="span">
+                    {t("generate.questionTypes")}
+                  </Typography>
+                  {/* The long explanation lives behind the icon to keep the row short. */}
+                  <Tooltip label={t("generate.questionTypesHint")}>
+                    <span className="flex text-muted-foreground">
+                      <Icon icon={LUCIDE.info} className="size-4" />
+                    </span>
+                  </Tooltip>
+                </legend>
+                <div className="flex flex-wrap gap-2">
+                  {QA_TEMPLATE_KEYS.map((shape) => {
+                    const on = types.includes(shape);
+                    const name = t(`templates.shapes.${shape}`);
+                    return (
+                      <Tooltip key={shape} label={name}>
+                        <Button
+                          type="button"
+                          size="icon-md"
+                          variant={on ? "primary" : "outline"}
+                          aria-label={name}
+                          aria-pressed={on}
+                          onClick={() =>
+                            setTypes((current) =>
+                              on
+                                ? current.filter((value) => value !== shape)
+                                : [...current, shape],
+                            )
+                          }
+                        >
+                          <Icon icon={SHAPE_ICONS[shape]} />
+                        </Button>
+                      </Tooltip>
+                    );
+                  })}
+                </div>
+              </fieldset>
+
+              <fieldset className="space-y-2">
+                <Typography variant="title-4" as="legend">
+                  {t("generate.kinds")}
+                </Typography>
+                <div className="flex flex-wrap gap-2">
+                  {ITEM_KINDS.map((value) => {
+                    const on = kinds.includes(value);
+                    const name = t(`items.kinds.${value}`);
+                    return (
+                      <Tooltip key={value} label={name}>
+                        <Button
+                          type="button"
+                          size="icon-md"
+                          variant={on ? "primary" : "outline"}
+                          aria-label={name}
+                          aria-pressed={on}
+                          onClick={() =>
+                            setKinds((current) =>
+                              on
+                                ? current.filter((kind) => kind !== value)
+                                : [...current, value],
+                            )
+                          }
+                        >
+                          <Icon icon={KIND_ICONS[value]} />
+                        </Button>
+                      </Tooltip>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            </div>
+
+            <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-4 sm:max-w-sm">
+                <Input
+                  label={t("generate.minCount")}
+                  type="number"
+                  min={1}
+                  value={minCount}
+                  onChange={(event) => setMinCount(event.target.value)}
+                  trailing={clearButton(minCount, () => setMinCount(""))}
+                />
+                <Input
+                  label={t("generate.maxCount")}
+                  type="number"
+                  min={1}
+                  value={maxCount}
+                  onChange={(event) => setMaxCount(event.target.value)}
+                  trailing={clearButton(maxCount, () => setMaxCount(""))}
+                />
+              </div>
+              <Typography variant="body-4" className="text-muted-foreground">
+                {t("generate.countHint")}
+              </Typography>
+            </div>
+          </div>
+
+          {/* Who pays. */}
+          <div className="border-t border-border pt-5">{aiRun.fields}</div>
 
           {/* State the price before the click: how many sections × how many
               questions, on which key and model. */}
@@ -521,21 +566,29 @@ function GenerateDialog({
           ) : !fit.ok ? (
             <AlertError
               message={
-                fit.reason === "context"
-                  ? t("generate.contextExceeded", {
-                      // A number, not a string: the message pluralises on it.
-                      chars: fit.chars,
+                fit.reason === "section"
+                  ? t("generate.sectionTooLong", {
+                      title: fit.title,
+                      // Numbers, not strings: the messages pluralise on them.
                       tokens: fit.tokens.toLocaleString("en-US"),
-                      window: fit.window.toLocaleString("en-US"),
+                      budget: fit.budget.toLocaleString("en-US"),
                       model: fit.model,
                     })
-                  : t("generate.outputExceeded", {
-                      max: fit.maxCount,
-                      capacity: fit.capacity.toLocaleString("en-US"),
-                      model: fit.model,
-                    })
+                  : fit.reason === "model"
+                    ? t("generate.modelTooSmall", { model: fit.model })
+                    : t("generate.outputExceeded", {
+                        max: fit.maxCount,
+                        capacity: fit.capacity.toLocaleString("en-US"),
+                        calls: fit.calls,
+                        sections: fit.sections,
+                        model: fit.model,
+                      })
               }
             />
+          ) : fit.calls > 1 ? (
+            <Typography variant="body-4" className="text-muted-foreground">
+              {t("generate.calls", { calls: fit.calls })}
+            </Typography>
           ) : null}
 
           {formError ? <AlertError message={m(formError)} /> : null}
@@ -554,7 +607,8 @@ function GenerateDialog({
             </Button>
             <Button
               onClick={() => setConfirming(true)}
-              disabled={!canRun} loading={generate.isPending}
+              disabled={!canRun}
+              loading={generate.isPending}
             >
               {t("generate.confirm")}
             </Button>
@@ -575,6 +629,9 @@ function GenerateDialog({
               key: aiRun.credential.label,
               model: aiRun.model,
             })}
+            {fit.ok && fit.calls > 1
+              ? ` ${t("generate.calls", { calls: fit.calls })}`
+              : ""}
           </Typography>
           <div className="mt-4 flex justify-end gap-2">
             <Button variant="outline" onClick={() => setConfirming(false)}>

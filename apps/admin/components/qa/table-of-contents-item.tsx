@@ -1,6 +1,6 @@
 "use client";
 
-import { Icon, ICONS } from "@noalhub/ui/icons";
+import { Icon, LUCIDE } from "@noalhub/ui/icons";
 import { Typography } from "@noalhub/ui/typography";
 
 /* One row = one 8px-padded line. */
@@ -34,8 +34,8 @@ type ItemProps = {
 );
 
 /**
- * A row of the table of contents. A `chapter` has its own chevron button (the
- * only toggle, absent when it has no children) and a folder; a `section` hangs under it on a branch line.
+ * A row of the table of contents. A `chapter` leads with a folder that is also its
+ * toggle (open folder while expanded; a page icon when it has no children); a `section` hangs under it on a branch line.
  */
 export function TableOfContentsItem(props: ItemProps) {
   const { title, active, onSelect } = props;
@@ -70,34 +70,40 @@ export function TableOfContentsItem(props: ItemProps) {
   }
 
   const { open, expandable, onToggle } = props;
+  // Only a chapter with sections under it is a folder; one without is a plain page, so the
+  // icon alone says whether there is anything to open.
+  const glyph = (
+    <Icon
+      icon={!expandable ? LUCIDE.fileText : open ? LUCIDE.folderOpen : LUCIDE.folder}
+      animate="snappy"
+      className="size-4"
+    />
+  );
   return (
     <div data-active={active} className={`${ROW} items-start gap-1.5 ${tone(active)}`}>
+      {/* The folder is the toggle: closed it is a shut folder, open it is an open one. */}
       {expandable ? (
         <button
           type="button"
           onClick={onToggle}
           aria-expanded={open}
-          className={`mt-0.5 shrink-0 rounded-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+          className={`mt-0.5 shrink-0 rounded-sm text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
             active ? "hover:bg-surface" : "hover:bg-border"
           }`}
         >
-          <Icon
-            icon={open ? ICONS.chevronDown : ICONS.chevronRight}
-            animate="snappy"
-            className="size-4"
-          />
+          {glyph}
         </button>
       ) : (
-        // No children, nothing to toggle: keep the slot so folders stay aligned.
-        <span aria-hidden className="mt-0.5 size-4 shrink-0" />
+        <span aria-hidden className="mt-0.5 shrink-0 text-muted-foreground">
+          {glyph}
+        </span>
       )}
       <button
         type="button"
         onClick={onSelect}
         aria-current={active ? "location" : undefined}
-        className="flex min-w-0 flex-1 items-start gap-1.5 text-left focus-visible:outline-none"
+        className="min-w-0 flex-1 text-left focus-visible:outline-none"
       >
-        <Icon icon={ICONS.category} className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
         <Typography variant="title-4" as="span" className="min-w-0 break-words">
           {title}
         </Typography>

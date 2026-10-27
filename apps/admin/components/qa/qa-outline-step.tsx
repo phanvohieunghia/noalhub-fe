@@ -20,7 +20,7 @@ import {
 } from "@noalhub/api/qa";
 import { AlertError, AlertWarning } from "@noalhub/ui/alert";
 import { Button } from "@noalhub/ui/button";
-import { Icon, LUCIDE } from "@noalhub/ui/icons";
+import { ICONS, Icon, LUCIDE } from "@noalhub/ui/icons";
 import { MetricsCard, type MetricItem } from "@noalhub/ui/metrics-card";
 import {
   blogDocToMarkdown,
@@ -41,12 +41,42 @@ import { docStats } from "./qa-plain-doc";
 import { QaOutlineDrawer } from "./qa-outline-drawer";
 import { QaResizeHandle } from "./qa-resize-handle";
 import {
+  OutlineVersionMenu,
   OutlineVersionSelect,
   PENDING_VERSION,
   useOutlineVersion,
 } from "./use-outline-version";
 import { TableOfContents } from "./table-of-contents";
 import { findOutlineHeading, useOutlineScrollSpy } from "./use-outline-scroll-spy";
+
+const WARNING_AUTO_CLOSE_MS = 3000;
+
+/**
+ * Info icon beside the metrics that carries the "document too long" warning in a
+ * tooltip. It opens by itself when it first mounts so the warning is not missed,
+ * then falls back to hover / focus.
+ */
+function LongDocWarning({ message }: { message: string }) {
+  const [auto, setAuto] = useState(true);
+  const [hovered, setHovered] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setAuto(false), WARNING_AUTO_CLOSE_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <Tooltip label={message} side="bottom" open={auto || hovered} onOpenChange={setHovered}>
+      <span
+        role="img"
+        tabIndex={0}
+        aria-label={message}
+        className="flex size-6 items-center justify-center rounded-full text-warning outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <Icon icon={ICONS.info} className="size-5" />
+      </span>
+    </Tooltip>
+  );
+}
 
 /**
  * Runs `done` once the smooth scroll has settled. A fixed delay cannot work: the
@@ -189,12 +219,22 @@ export function OutlineStep({
         }
         onStarted={handleStarted}
         versionPicker={
-          <OutlineVersionSelect
-            items={outlines.data?.items ?? []}
-            pendingVersion={pendingVersion}
-            value={selected.id}
-            onChange={select}
-            className="w-28"
+          <>
+            <OutlineVersionSelect
+              items={outlines.data?.items ?? []}
+              pendingVersion={pendingVersion}
+              value={selected.id}
+              onChange={select}
+              className="w-28"
+            />
+          </>
+        }
+        versionMenu={
+          <OutlineVersionMenu
+            datasetId={datasetId}
+            outline={selected}
+            versionCount={outlines.data?.items.length ?? 0}
+            onDeleted={() => select(null)}
           />
         }
       />
@@ -323,6 +363,7 @@ function OutlineWorkbench({
   outline,
   onStarted,
   versionPicker,
+  versionMenu,
 }: {
   datasetId: string;
   /** `undefined` while a version is loading: the editor and section list show placeholders. */
@@ -330,6 +371,8 @@ function OutlineWorkbench({
   onStarted: (generationId: string) => void;
   /** The version switcher, shown beside the editor title. */
   versionPicker: React.ReactNode;
+  /** Actions on that version, shown beside Save so the destructive one is not by the picker. */
+  versionMenu: React.ReactNode;
 }) {
   const t = useTranslations("admin.qa");
   const [loadedId, setLoadedId] = useState<string | undefined>(outline?.id);
@@ -453,16 +496,6 @@ function OutlineWorkbench({
       className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_var(--outline-w)]"
       style={{ "--outline-w": `${outlineWidth}px` } as CSSProperties}
     >
-      {!loading && stats.characters > OUTLINE_CHAR_WARN ? (
-        <div className="lg:col-span-2">
-          <AlertWarning
-            message={t("ws.outline.longWarning", {
-              chars: charsValue,
-              tokens: tokensValue,
-            })}
-          />
-        </div>
-      ) : null}
       <EditorShell
         fullscreenTitle={outline?.label ?? t("ws.outline.editor")}
         title={
@@ -502,11 +535,21 @@ function OutlineWorkbench({
         error={error}
         fill
         meta={
-          <MetricsCard
-            title={t("ws.outline.metrics.title")}
-            items={statItems}
-            className="hidden lg:flex"
-          />
+          <div className="hidden items-center gap-2 lg:flex">
+            {!loading && stats.characters > OUTLINE_CHAR_WARN ? (
+              <LongDocWarning
+                message={t("ws.outline.longWarning", {
+                  chars: stats.characters,
+                  tokens: tokensValue,
+                })}
+              />
+            ) : null}
+            <MetricsCard
+              title={t("ws.outline.metrics.title")}
+              items={statItems}
+              className="hidden lg:flex"
+            />
+          </div>
         }
         actions={
           <div className="flex items-center gap-2">
@@ -529,6 +572,7 @@ function OutlineWorkbench({
                 </Button>
               </span>
             </Tooltip>
+            {versionMenu}
           </div>
         }
         renderEditor={({ className, fullscreen }) =>

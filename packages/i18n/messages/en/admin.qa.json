@@ -192,7 +192,13 @@
     "formatHint": "Switching converts what you are editing into the other format; anything it cannot hold is dropped. This version changes only when you save.",
     "showSource": "Edit markdown source",
     "hideSource": "Back to the editor",
-    "source": "Markdown source"
+    "source": "Markdown source",
+    "deleteVersion": "Delete this version",
+    "deleteLastHint": "The only version cannot be deleted",
+    "deleteTitle": "Delete {name}?",
+    "deleteBody": "This version and its content are removed for good. If it is the current one, the newest remaining version becomes current. A version that question sets were generated from cannot be deleted.",
+    "deleteConfirm": "Delete version",
+    "versionActions": "Version actions"
   },
   "run": {
     "credential": "AI key",
@@ -276,7 +282,9 @@
     "partialUnknown": "The model returned fewer sections than were sent.",
     "tokens": "Tokens: {input} in · {output} out · {cached} read from cache",
     "pollFailed": "Could not read the run's status.",
-    "chunks": "Part {done} of {total} done"
+    "chunks": "Part {done} of {total} done",
+    "retry": "Retry the failed parts",
+    "retryFailed": "Could not start the retry. Try again."
   },
   "sets": {
     "title": "Question sets",
@@ -418,8 +426,10 @@
     "allSections": "All {count, plural, one {# section} other {# sections}}",
     "costWhole": "Generating {count} from the whole outline, on key \"{key}\", model {model}. This call is billed for real.",
     "cost": "Generating {count} from {sections, plural, one {# section} other {# sections}}, on key \"{key}\", model {model}. This call is billed for real.",
-    "contextExceeded": "The selected sections are {chars, plural, one {# character} other {# characters}} (≈ {tokens} tokens), over the {window}-token context window of {model}. Pick fewer sections or a model with a larger window.",
-    "outputExceeded": "You picked up to {max} questions, but {model} can write about {capacity, plural, one {# question} other {# questions}} per call. Lower the count to {capacity} or fewer, or pick a model with a larger output limit."
+    "sectionTooLong": "\"{title}\" is ≈ {tokens} tokens, over the {budget} tokens {model} can read in one call, and a section is never split. Break it into sub-sections in the outline, or pick a model with a larger window.",
+    "modelTooSmall": "{model} has no room left for the sources at this question count. Lower the maximum number of questions or pick a model with a larger context window.",
+    "outputExceeded": "Up to {max} questions needs at least {calls} calls on {model} (about {capacity} questions each), but only {sections, plural, one {# section is} other {# sections are}} picked to split across. Pick more sections or lower the count.",
+    "calls": "This is too much for one call, so it runs as {calls} calls, one after another, each billed."
   },
   "pipeline": {
     "label": "Pipeline",

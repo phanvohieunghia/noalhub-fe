@@ -3,13 +3,26 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { useQaOutlines, type QaOutlineSummary } from "@noalhub/api/qa";
+import type { Message } from "@noalhub/api/message";
+import {
+  useDeleteQaOutline,
+  useQaOutlines,
+  type QaOutlineSummary,
+} from "@noalhub/api/qa";
+import { applyApiError } from "@noalhub/core/forms/apply-api-error";
+import { useMessage } from "@noalhub/i18n/use-message";
+import { AlertError } from "@noalhub/ui/alert";
+import { Button } from "@noalhub/ui/button";
+import { Dialog } from "@noalhub/ui/dialog";
+import { DropdownMenu, DropdownMenuItem } from "@noalhub/ui/dropdown-menu";
+import { ICONS, Icon } from "@noalhub/ui/icons";
 import { Select } from "@noalhub/ui/select";
+import { Typography } from "@noalhub/ui/typography";
 
 /**
- * Which outline version a step looks at. Versions are append-only history: there is
- * no "active" one to switch, so a step simply opens on the newest and the picker only
- * changes what it is showing. Until something is picked, the newest is followed — a
+ * Which outline version a step looks at. Versions are history: there is no "active"
+ * one to switch, so a step simply opens on the newest and the picker only changes what
+ * it is showing (a version nothing depends on can be deleted — see `OutlineVersionMenu`). Until something is picked, the newest is followed — a
  * version generated while the page is open takes over by itself.
  */
 /** Picker value for the version a run is still writing; it has no row on the server yet. */
@@ -72,5 +85,106 @@ export function OutlineVersionSelect({
         ]}
       />
     </div>
+  );
+}
+
+const versionName = (outline: QaOutlineSummary, fallback: string) =>
+  outline.label?.trim() || fallback;
+
+/**
+ * Actions on the version on screen, behind a "⋯" so the one destructive action does not
+ * sit one slip away from the picker. Today that is delete; the backend refuses a version question sets were
+ * generated from, a run is using, or the dataset's last one; the 409 message is shown
+ * in the dialog rather than hidden behind a disabled button, because "why can't I" is
+ * only knowable server-side.
+ */
+export function OutlineVersionMenu({
+  datasetId,
+  outline,
+  versionCount,
+  onDeleted,
+}: {
+  datasetId: string;
+  outline: QaOutlineSummary;
+  versionCount: number;
+  /** Called after the delete so the caller can drop a stale pick. */
+  onDeleted?: () => void;
+}) {
+  const t = useTranslations("admin.qa");
+  const tc = useTranslations("common");
+  const m = useMessage();
+  const remove = useDeleteQaOutline(datasetId);
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState<Message | string | null>(null);
+  const only = versionCount <= 1;
+  const name = versionName(outline, t("outlines.versionShort", { version: outline.version }));
+
+  const close = () => {
+    setOpen(false);
+    setError(null);
+  };
+  const confirm = async () => {
+    setError(null);
+    try {
+      await remove.mutateAsync(outline.id);
+      close();
+      onDeleted?.();
+    } catch (err) {
+      setError(applyApiError(err, () => undefined, []));
+    }
+  };
+
+  return (
+    <>
+      <DropdownMenu
+        compact
+        trigger={
+          <Button
+            variant="ghost"
+            size="icon-md"
+            aria-label={t("outlines.versionActions")}
+          >
+            <Icon icon={ICONS.more} />
+          </Button>
+        }
+      >
+        <DropdownMenuItem
+          icon={ICONS.delete}
+          tone="danger"
+          disabled={only}
+          onSelect={() => setOpen(true)}
+        >
+          <span className="flex flex-col">
+            {t("outlines.deleteVersion")}
+            {only ? (
+              <span className="text-body-4 text-muted-foreground">
+                {t("outlines.deleteLastHint")}
+              </span>
+            ) : null}
+          </span>
+        </DropdownMenuItem>
+      </DropdownMenu>
+      {open ? (
+        <Dialog open onClose={close} title={t("outlines.deleteTitle", { name })}>
+          <div className="space-y-4">
+            <Typography variant="body-3">{t("outlines.deleteBody")}</Typography>
+            {error ? <AlertError message={m(error)} /> : null}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={close}>
+                {tc("actions.cancel")}
+              </Button>
+              <Button
+                className="text-danger"
+                variant="outline"
+                onClick={() => void confirm()}
+                loading={remove.isPending}
+              >
+                {t("outlines.deleteConfirm")}
+              </Button>
+            </div>
+          </div>
+        </Dialog>
+      ) : null}
+    </>
   );
 }

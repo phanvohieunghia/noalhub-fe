@@ -114,7 +114,9 @@ import type {
 
 /* ------------------------------ AI credentials ----------------------------- */
 
-export async function listCredentials(signal?: AbortSignal): Promise<AiCredential[]> {
+export async function listCredentials(
+  signal?: AbortSignal,
+): Promise<AiCredential[]> {
   const { data } = await http.get<AiCredential[]>("/admin/ai/credentials", {
     authRequired: true,
     schema: aiCredentialListSchema,
@@ -140,7 +142,10 @@ export async function createModel(input: CreateModelInput): Promise<AiModel> {
   return data;
 }
 
-export async function updateModel(id: string, input: UpdateModelInput): Promise<AiModel> {
+export async function updateModel(
+  id: string,
+  input: UpdateModelInput,
+): Promise<AiModel> {
   const { data } = await http.patch<AiModel>(`/admin/ai/models/${id}`, input, {
     authRequired: true,
     schema: aiModelSchema,
@@ -155,10 +160,14 @@ export async function deleteModel(id: string): Promise<void> {
 export async function createCredential(
   input: CreateCredentialInput,
 ): Promise<AiCredential> {
-  const { data } = await http.post<AiCredential>("/admin/ai/credentials", input, {
-    authRequired: true,
-    schema: aiCredentialSchema,
-  });
+  const { data } = await http.post<AiCredential>(
+    "/admin/ai/credentials",
+    input,
+    {
+      authRequired: true,
+      schema: aiCredentialSchema,
+    },
+  );
   return data;
 }
 
@@ -176,10 +185,13 @@ export async function updateCredential(
 
 /** Disable, not delete — `qa_generations` points at these rows with RESTRICT. */
 export async function disableCredential(id: string): Promise<AiCredential> {
-  const { data } = await http.delete<AiCredential>(`/admin/ai/credentials/${id}`, {
-    authRequired: true,
-    schema: aiCredentialSchema,
-  });
+  const { data } = await http.delete<AiCredential>(
+    `/admin/ai/credentials/${id}`,
+    {
+      authRequired: true,
+      schema: aiCredentialSchema,
+    },
+  );
   return data;
 }
 
@@ -211,10 +223,14 @@ export async function listTemplates(
 export async function createTemplate(
   input: CreateTemplateInput,
 ): Promise<QaPromptTemplate> {
-  const { data } = await http.post<QaPromptTemplate>("/admin/qa/templates", input, {
-    authRequired: true,
-    schema: qaTemplateSchema,
-  });
+  const { data } = await http.post<QaPromptTemplate>(
+    "/admin/qa/templates",
+    input,
+    {
+      authRequired: true,
+      schema: qaTemplateSchema,
+    },
+  );
   return data;
 }
 
@@ -257,7 +273,9 @@ export async function listDatasets(signal?: AbortSignal): Promise<QaDataset[]> {
   return data;
 }
 
-export async function createDataset(input: CreateDatasetInput): Promise<QaDataset> {
+export async function createDataset(
+  input: CreateDatasetInput,
+): Promise<QaDataset> {
   const { data } = await http.post<QaDataset>("/admin/qa/datasets", input, {
     authRequired: true,
     schema: qaDatasetSchema,
@@ -269,10 +287,14 @@ export async function updateDataset(
   id: string,
   input: UpdateDatasetInput,
 ): Promise<QaDataset> {
-  const { data } = await http.patch<QaDataset>(`/admin/qa/datasets/${id}`, input, {
-    authRequired: true,
-    schema: qaDatasetSchema,
-  });
+  const { data } = await http.patch<QaDataset>(
+    `/admin/qa/datasets/${id}`,
+    input,
+    {
+      authRequired: true,
+      schema: qaDatasetSchema,
+    },
+  );
   return data;
 }
 
@@ -297,11 +319,14 @@ export async function getSource(
   id: string,
   signal?: AbortSignal,
 ): Promise<QaDatasetSourceFull> {
-  const { data } = await http.get<QaDatasetSourceFull>(`/admin/qa/sources/${id}`, {
-    authRequired: true,
-    schema: qaSourceFullSchema,
-    signal,
-  });
+  const { data } = await http.get<QaDatasetSourceFull>(
+    `/admin/qa/sources/${id}`,
+    {
+      authRequired: true,
+      schema: qaSourceFullSchema,
+      signal,
+    },
+  );
   return data;
 }
 
@@ -377,6 +402,21 @@ export async function generateSets(
   return data;
 }
 
+/**
+ * Re-runs the sections a `partial`/`failed` question-set run lost. A new run, billed
+ * as one: the old row stays as the record of what the first attempt cost.
+ */
+export async function retryGeneration(
+  id: string,
+): Promise<StartGenerationResponse> {
+  const { data } = await http.post<StartGenerationResponse>(
+    `/admin/qa/generations/${id}/retry`,
+    {},
+    { authRequired: true, schema: startGenerationSchema },
+  );
+  return data;
+}
+
 export async function getActiveGenerations(
   datasetId: string,
   signal?: AbortSignal,
@@ -435,10 +475,14 @@ export async function updateOutline(
   id: string,
   input: UpdateQaOutlineInput,
 ): Promise<QaOutline> {
-  const { data } = await http.patch<QaOutline>(`/admin/qa/outlines/${id}`, input, {
-    authRequired: true,
-    schema: qaOutlineSchema,
-  });
+  const { data } = await http.patch<QaOutline>(
+    `/admin/qa/outlines/${id}`,
+    input,
+    {
+      authRequired: true,
+      schema: qaOutlineSchema,
+    },
+  );
   return data;
 }
 
@@ -446,6 +490,14 @@ export async function updateOutline(
  * Route riêng: `PATCH /outlines/:id` bắt buộc `content` (tới 2 MB) và từ chối field
  * `label`, nên đổi tên phải đi đường `/label`. Trả bản tóm tắt, không kèm `content`.
  */
+/**
+ * Only a version nothing depends on goes: a 409 `QA_OUTLINE_IN_USE` means question
+ * sets point at it, a run is using it, or it is the dataset's last version.
+ */
+export async function deleteOutline(id: string): Promise<void> {
+  await http.delete(`/admin/qa/outlines/${id}`, { authRequired: true });
+}
+
 export async function updateOutlineLabel(
   id: string,
   label: string | null,
@@ -473,7 +525,10 @@ export async function listSets(
   return data;
 }
 
-export async function getSet(id: string, signal?: AbortSignal): Promise<QaSetDetail> {
+export async function getSet(
+  id: string,
+  signal?: AbortSignal,
+): Promise<QaSetDetail> {
   const { data } = await http.get<QaSetDetail>(`/admin/qa/sets/${id}`, {
     authRequired: true,
     schema: qaSetDetailSchema,
@@ -482,7 +537,10 @@ export async function getSet(id: string, signal?: AbortSignal): Promise<QaSetDet
   return data;
 }
 
-export async function updateSet(id: string, input: UpdateSetInput): Promise<QaSet> {
+export async function updateSet(
+  id: string,
+  input: UpdateSetInput,
+): Promise<QaSet> {
   const { data } = await http.patch<QaSet>(`/admin/qa/sets/${id}`, input, {
     authRequired: true,
     schema: qaSetSchema,
@@ -529,10 +587,14 @@ export async function updateItem(
   id: string,
   input: PatchItemInput,
 ): Promise<QaItemFull> {
-  const { data } = await http.patch<QaItemFull>(`/admin/qa/items/${id}`, input, {
-    authRequired: true,
-    schema: qaItemFullSchema,
-  });
+  const { data } = await http.patch<QaItemFull>(
+    `/admin/qa/items/${id}`,
+    input,
+    {
+      authRequired: true,
+      schema: qaItemFullSchema,
+    },
+  );
   return data;
 }
 
@@ -580,11 +642,14 @@ export async function addToFinalSet(
 export async function listQuestionTypes(
   signal?: AbortSignal,
 ): Promise<QaQuestionType[]> {
-  const { data } = await http.get<QaQuestionType[]>("/admin/qa/question-types", {
-    authRequired: true,
-    schema: qaQuestionTypeListSchema,
-    signal,
-  });
+  const { data } = await http.get<QaQuestionType[]>(
+    "/admin/qa/question-types",
+    {
+      authRequired: true,
+      schema: qaQuestionTypeListSchema,
+      signal,
+    },
+  );
   return data;
 }
 
@@ -623,15 +688,21 @@ export async function searchItems(
 export async function browseDatasets(
   signal?: AbortSignal,
 ): Promise<{ items: QaDatasetSummary[]; total: number }> {
-  const { data } = await http.get<{ items: QaDatasetSummary[]; total: number }>("/qa/datasets", {
-    authRequired: true,
-    schema: qaDatasetListPlaySchema,
-    signal,
-  });
+  const { data } = await http.get<{ items: QaDatasetSummary[]; total: number }>(
+    "/qa/datasets",
+    {
+      authRequired: true,
+      schema: qaDatasetListPlaySchema,
+      signal,
+    },
+  );
   return data;
 }
 
-export async function getPlayDataset(id: string, signal?: AbortSignal): Promise<QaDatasetPlay> {
+export async function getPlayDataset(
+  id: string,
+  signal?: AbortSignal,
+): Promise<QaDatasetPlay> {
   const { data } = await http.get<QaDatasetPlay>(`/qa/datasets/${id}`, {
     authRequired: true,
     schema: qaDatasetPlaySchema,
@@ -645,7 +716,10 @@ export async function getPlayDataset(id: string, signal?: AbortSignal): Promise<
  * (and then `count` is ignored — it already has its questions). `count` is how many
  * questions the learner wants; absent means all.
  */
-export async function startAttempt(datasetId: string, count?: number): Promise<QaAttempt> {
+export async function startAttempt(
+  datasetId: string,
+  count?: number,
+): Promise<QaAttempt> {
   const { data } = await http.post<QaAttempt>(
     `/qa/datasets/${datasetId}/attempts`,
     count === undefined ? {} : { count },
@@ -667,7 +741,10 @@ export async function getAttemptPlay(
   return data;
 }
 
-export async function listAttempts(datasetId?: string, signal?: AbortSignal): Promise<QaAttempt[]> {
+export async function listAttempts(
+  datasetId?: string,
+  signal?: AbortSignal,
+): Promise<QaAttempt[]> {
   const { data } = await http.get<QaAttempt[]>("/qa/attempts", {
     params: datasetId ? { datasetId } : undefined,
     authRequired: true,
@@ -742,7 +819,9 @@ export async function listItemTags(signal?: AbortSignal): Promise<QaItemTag[]> {
   return data;
 }
 
-export async function createItemTag(input: CreateItemTagInput): Promise<QaItemTag> {
+export async function createItemTag(
+  input: CreateItemTagInput,
+): Promise<QaItemTag> {
   const { data } = await http.post<QaItemTag>("/admin/qa/item-tags", input, {
     authRequired: true,
     schema: qaItemTagSchema,
@@ -750,16 +829,25 @@ export async function createItemTag(input: CreateItemTagInput): Promise<QaItemTa
   return data;
 }
 
-export async function updateItemTag(id: string, input: UpdateItemTagInput): Promise<QaItemTag> {
-  const { data } = await http.patch<QaItemTag>(`/admin/qa/item-tags/${id}`, input, {
-    authRequired: true,
-    schema: qaItemTagSchema,
-  });
+export async function updateItemTag(
+  id: string,
+  input: UpdateItemTagInput,
+): Promise<QaItemTag> {
+  const { data } = await http.patch<QaItemTag>(
+    `/admin/qa/item-tags/${id}`,
+    input,
+    {
+      authRequired: true,
+      schema: qaItemTagSchema,
+    },
+  );
   return data;
 }
 
 /** The active tags a learner can see — small and rarely changing, fetched once. */
-export async function listPlayItemTags(signal?: AbortSignal): Promise<QaItemTagPlay[]> {
+export async function listPlayItemTags(
+  signal?: AbortSignal,
+): Promise<QaItemTagPlay[]> {
   const { data } = await http.get<QaItemTagPlay[]>("/qa/item-tags", {
     authRequired: true,
     schema: qaItemTagPlayListSchema,

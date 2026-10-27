@@ -57,6 +57,9 @@ const STATUS_TONE = {
   rejected: "danger",
 } as const;
 
+/** More sections than this start collapsed. */
+const COLLAPSE_ABOVE = 5;
+
 /**
  * Step 3: the questions the model drafted, one outline section at a time. Nothing is
  * listed at first — a single Generate button opens the run dialog (prompt, AI key and
@@ -83,7 +86,8 @@ export function SetsStep({
   const current = latest;
   const detail = useQaOutline(current?.id);
   const sets = useQaSets({ datasetId });
-  const [closed, setClosed] = useState<Set<string>>(new Set());
+  // `null` = never toggled: the default then depends on how many sections there are.
+  const [closedState, setClosed] = useState<Set<string> | null>(null);
   // Sections toggled at least once: their body stays mounted so collapsing can animate.
   const [opened, setOpened] = useState<Set<string>>(new Set());
   const [removing, setRemoving] = useState<Section | null>(null);
@@ -160,6 +164,14 @@ export function SetsStep({
       onStarted={onStarted}
     />
   ) : null;
+
+  // A long list starts folded; until the user toggles anything, that default follows
+  // the section count rather than being frozen at the first render.
+  const closed =
+    closedState ??
+    new Set(
+      generated.length > COLLAPSE_ABOVE ? generated.map((section) => section.key) : [],
+    );
 
   // Before the first section is drafted the empty state stands in for the list; while
   // that first run is writing, the header bar is already there with only the action —
@@ -284,8 +296,8 @@ export function SetsStep({
                     aria-label={section.title}
                     onClick={() => {
                       setOpened((prev) => new Set(prev).add(section.key));
-                      setClosed((prev) => {
-                        const nextClosed = new Set(prev);
+                      setClosed(() => {
+                        const nextClosed = new Set(closed);
                         if (expanded) nextClosed.add(section.key);
                         else nextClosed.delete(section.key);
                         return nextClosed;

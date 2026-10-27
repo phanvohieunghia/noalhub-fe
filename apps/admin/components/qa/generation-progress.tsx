@@ -3,9 +3,15 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
-import { isGenerationRunning, useQaGeneration } from "@noalhub/api/qa";
+import {
+  isGenerationRunning,
+  useQaGeneration,
+  useRetryQaGeneration,
+} from "@noalhub/api/qa";
 import { AlertError, AlertInfo, AlertWarning } from "@noalhub/ui/alert";
+import { Button } from "@noalhub/ui/button";
 import { Spinner } from "@noalhub/ui/spinner";
+import { toast } from "@noalhub/ui/toast";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
@@ -30,14 +36,21 @@ export function GenerationProgress({
   generationId,
   reused,
   onDone,
+  onRetry,
 }: {
   generationId: string;
   /** The backend found an identical run already going; this is it. */
   reused?: boolean;
   onDone?: () => void;
+  /**
+   * Given, a failed or partial question-set run offers to re-run what it lost, and
+   * hands over the id of the new run. Left out where the caller cannot follow it.
+   */
+  onRetry?: (generationId: string) => void;
 }) {
   const t = useTranslations("admin.qa");
   const generation = useQaGeneration(generationId);
+  const retry = useRetryQaGeneration();
   const [startedAt] = useState(() => Date.now());
   const [waitedLong, setWaitedLong] = useState(false);
 
@@ -70,7 +83,9 @@ export function GenerationProgress({
         <div className="flex items-center gap-2">
           <Spinner />
           <Typography variant="body-3">
-            {status === "queued" ? t("generation.queued") : t("generation.running")}
+            {status === "queued"
+              ? t("generation.queued")
+              : t("generation.running")}
           </Typography>
         </div>
         {generation.data?.chunkTotal ? (
@@ -98,12 +113,30 @@ export function GenerationProgress({
   const data = generation.data;
   if (!data) return null;
 
+  const retryButton =
+    onRetry && data.kind === "qa" ? (
+      <Button
+        variant="outline"
+        size="sm"
+        loading={retry.isPending}
+        onClick={() =>
+          retry.mutate(data.id, {
+            onSuccess: (result) => onRetry(result.generationId),
+            onError: () => toast.error(t("generation.retryFailed")),
+          })
+        }
+      >
+        {t("generation.retry")}
+      </Button>
+    ) : null;
+
   if (data.status === "failed") {
     return (
       <div className="space-y-2">
         {/* The backend's message already names the cause — a truncated response
             says "output ceiling", not "invalid JSON". Show it verbatim. */}
         <AlertError message={data.error ?? t("generation.failed")} />
+        {retryButton}
       </div>
     );
   }
@@ -131,6 +164,7 @@ export function GenerationProgress({
           }
         />
       ) : null}
+      {data.status === "partial" ? retryButton : null}
 
       <Typography variant="body-4" className="text-muted-foreground">
         {t("generation.tokens", {
@@ -149,8 +183,21 @@ export function GenerationProgress({
  * read as if nothing had been tried.
  */
 export function RunOutcome({ generationId }: { generationId?: string }) {
-  const generation = useQaGeneration(generationId);
+  // A retry is a new run; follow it here so its progress and outcome replace the old.
+  // Keyed by the run it retried, so a new `generationId` from the parent drops it
+  // without an effect.
+  const [retried, setRetried] = useState<{ from?: string; id: string }>();
+  const retryId = retried?.from === generationId ? retried?.id : undefined;
+
+  const id = retryId ?? generationId;
+  const generation = useQaGeneration(id);
   const status = generation.data?.status;
-  if (!generationId || (status !== "failed" && status !== "partial")) return null;
-  return <GenerationProgress generationId={generationId} />;
+  if (!id) return null;
+  if (!retryId && status !== "failed" && status !== "partial") return null;
+  return (
+    <GenerationProgress
+      generationId={id}
+      onRetry={(id) => setRetried({ from: generationId, id })}
+    />
+  );
 }

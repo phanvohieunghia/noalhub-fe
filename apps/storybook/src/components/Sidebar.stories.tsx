@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { Button } from "@noalhub/ui/button";
 import { ICONS, LUCIDE } from "@noalhub/ui/icons";
 import { Sidebar, type SidebarItem } from "@noalhub/ui/sidebar";
 import { Typography } from "@noalhub/ui/typography";
@@ -141,15 +142,15 @@ function Demo({ pathname, rail: initialRail }: { pathname: string; rail: boolean
         </Typography>
         <div className="mt-3 flex flex-wrap gap-2">
           {PATHS.map((p) => (
-            <button
+            <Button
               key={p}
-              type="button"
-              onClick={() => setCurrent(p)}
+              size="sm"
+              variant={current === p ? "primary" : "outline"}
               aria-pressed={current === p}
-              className="rounded-md border border-border px-2 py-1 text-body-4 text-foreground hover:bg-muted aria-pressed:border-primary aria-pressed:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={() => setCurrent(p)}
             >
               {p}
-            </button>
+            </Button>
           ))}
         </div>
       </main>

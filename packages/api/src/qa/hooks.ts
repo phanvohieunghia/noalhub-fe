@@ -51,11 +51,13 @@ export const qaKeys = {
   itemTags: () => [...qaKeys.all, "item-tags"] as const,
 
   templates: () => [...qaKeys.all, "templates"] as const,
-  templateList: (kind?: QaPromptKind) => [...qaKeys.templates(), kind ?? "all"] as const,
+  templateList: (kind?: QaPromptKind) =>
+    [...qaKeys.templates(), kind ?? "all"] as const,
 
   datasets: () => [...qaKeys.all, "datasets"] as const,
   datasetList: () => [...qaKeys.datasets(), "list"] as const,
-  sources: (datasetId: string) => [...qaKeys.datasets(), datasetId, "sources"] as const,
+  sources: (datasetId: string) =>
+    [...qaKeys.datasets(), datasetId, "sources"] as const,
   source: (id: string) => [...qaKeys.all, "source", id] as const,
 
   generations: () => [...qaKeys.all, "generations"] as const,
@@ -64,10 +66,12 @@ export const qaKeys = {
     [...qaKeys.generations(), "active", datasetId] as const,
 
   outlines: () => [...qaKeys.all, "outlines"] as const,
-  outlineList: (datasetId: string) => [...qaKeys.outlines(), "list", datasetId] as const,
+  outlineList: (datasetId: string) =>
+    [...qaKeys.outlines(), "list", datasetId] as const,
   outline: (id: string) => [...qaKeys.outlines(), id] as const,
 
-  finalSet: (datasetId: string) => [...qaKeys.all, "final-set", datasetId] as const,
+  finalSet: (datasetId: string) =>
+    [...qaKeys.all, "final-set", datasetId] as const,
 
   sets: () => [...qaKeys.all, "sets"] as const,
   setList: (query: QaSetsQuery) => [...qaKeys.sets(), "list", query] as const,
@@ -83,9 +87,11 @@ export const qaKeys = {
   play: () => [...qaKeys.all, "play"] as const,
   playDatasets: () => [...qaKeys.play(), "datasets"] as const,
   playDataset: (id: string) => [...qaKeys.play(), "dataset", id] as const,
-  playItems: (query: BrowseItemsQuery) => [...qaKeys.play(), "items", query] as const,
+  playItems: (query: BrowseItemsQuery) =>
+    [...qaKeys.play(), "items", query] as const,
   attemptPlay: (id: string) => [...qaKeys.play(), "attempt", id] as const,
-  attempts: (datasetId?: string) => [...qaKeys.play(), "attempts", datasetId ?? "all"] as const,
+  attempts: (datasetId?: string) =>
+    [...qaKeys.play(), "attempts", datasetId ?? "all"] as const,
   attemptReview: (id: string) => [...qaKeys.play(), "review", id] as const,
   stats: () => [...qaKeys.play(), "stats"] as const,
   playTags: () => [...qaKeys.play(), "item-tags"] as const,
@@ -144,17 +150,20 @@ export function useCreateAiCredential() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateCredentialInput) => qaApi.createCredential(input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.credentials() }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: qaKeys.credentials() }),
   });
 }
 
 export function useUpdateAiCredential(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: UpdateCredentialInput) => qaApi.updateCredential(id, input),
+    mutationFn: (input: UpdateCredentialInput) =>
+      qaApi.updateCredential(id, input),
     // Invalidate the whole list, not just this row: flipping `isDefault` turns
     // the previous default off, so a second row changed too.
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.credentials() }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: qaKeys.credentials() }),
   });
 }
 
@@ -162,7 +171,8 @@ export function useDisableAiCredential() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => qaApi.disableCredential(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.credentials() }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: qaKeys.credentials() }),
   });
 }
 
@@ -170,7 +180,8 @@ export function useDeleteAiCredential() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => qaApi.deleteCredential(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.credentials() }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: qaKeys.credentials() }),
   });
 }
 
@@ -187,7 +198,8 @@ export function useCreateQaTemplate() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateTemplateInput) => qaApi.createTemplate(input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.templates() }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: qaKeys.templates() }),
   });
 }
 
@@ -195,16 +207,23 @@ export function useUpdateQaTemplate(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: UpdateTemplateInput) => qaApi.updateTemplate(id, input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.templates() }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: qaKeys.templates() }),
   });
 }
 
 export function useDuplicateQaTemplate() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: DuplicateTemplateInput }) =>
-      qaApi.duplicateTemplate(id, input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.templates() }),
+    mutationFn: ({
+      id,
+      input,
+    }: {
+      id: string;
+      input: DuplicateTemplateInput;
+    }) => qaApi.duplicateTemplate(id, input),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: qaKeys.templates() }),
   });
 }
 
@@ -212,7 +231,8 @@ export function useDisableQaTemplate() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => qaApi.disableTemplate(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.templates() }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: qaKeys.templates() }),
   });
 }
 
@@ -225,10 +245,13 @@ export function useDisableQaTemplates() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (ids: string[]) => {
-      const results = await Promise.allSettled(ids.map((id) => qaApi.disableTemplate(id)));
+      const results = await Promise.allSettled(
+        ids.map((id) => qaApi.disableTemplate(id)),
+      );
       return ids.filter((_, index) => results[index].status === "rejected");
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: qaKeys.templates() }),
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: qaKeys.templates() }),
   });
 }
 
@@ -245,7 +268,8 @@ export function useCreateQaDataset() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateDatasetInput) => qaApi.createDataset(input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.datasets() }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: qaKeys.datasets() }),
   });
 }
 
@@ -253,7 +277,8 @@ export function useUpdateQaDataset(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: UpdateDatasetInput) => qaApi.updateDataset(id, input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.datasets() }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: qaKeys.datasets() }),
   });
 }
 
@@ -261,7 +286,8 @@ export function useDeleteQaDataset() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => qaApi.deleteDataset(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.datasets() }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: qaKeys.datasets() }),
   });
 }
 
@@ -384,8 +410,10 @@ export function useQaActiveGenerations(datasetId: string) {
 export function useStartAnalyze(datasetId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: StartAnalyzeInput) => qaApi.startAnalyze(datasetId, input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.generations() }),
+    mutationFn: (input: StartAnalyzeInput) =>
+      qaApi.startAnalyze(datasetId, input),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: qaKeys.generations() }),
   });
 }
 
@@ -396,7 +424,8 @@ export function useStartAnalyze(datasetId: string) {
  */
 export function usePreviewChunks(datasetId: string) {
   return useMutation({
-    mutationFn: (input: PreviewChunksInput) => qaApi.previewChunks(datasetId, input),
+    mutationFn: (input: PreviewChunksInput) =>
+      qaApi.previewChunks(datasetId, input),
   });
 }
 
@@ -404,7 +433,17 @@ export function useGenerateSets() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: GenerateSetsInput) => qaApi.generateSets(input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.generations() }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: qaKeys.generations() }),
+  });
+}
+
+export function useRetryQaGeneration() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => qaApi.retryGeneration(id),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: qaKeys.generations() }),
   });
 }
 
@@ -433,6 +472,20 @@ export function useUpdateQaOutline(id: string, datasetId: string) {
     onSuccess: (outline) => {
       queryClient.setQueryData(qaKeys.outline(id), outline);
       // `sectionCount` on the summary changes with the content.
+      queryClient.invalidateQueries({
+        queryKey: qaKeys.outlineList(datasetId),
+      });
+    },
+  });
+}
+
+export function useDeleteQaOutline(datasetId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => qaApi.deleteOutline(id),
+    onSuccess: (_, id) => {
+      queryClient.removeQueries({ queryKey: qaKeys.outline(id) });
+      // Deleting the current version promotes another one, so every row may change.
       queryClient.invalidateQueries({
         queryKey: qaKeys.outlineList(datasetId),
       });
@@ -513,10 +566,15 @@ export function useRenameQaSets() {
       title: string;
     }) => {
       const results = await Promise.allSettled(
-        sets.map((set) => qaApi.updateSet(set.id, { version: set.version, title })),
+        sets.map((set) =>
+          qaApi.updateSet(set.id, { version: set.version, title }),
+        ),
       );
-      const failed = sets.filter((_, index) => results[index].status === "rejected");
-      if (failed.length > 0) throw new Error(`rename failed for ${failed.length} set(s)`);
+      const failed = sets.filter(
+        (_, index) => results[index].status === "rejected",
+      );
+      if (failed.length > 0)
+        throw new Error(`rename failed for ${failed.length} set(s)`);
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: qaKeys.sets() }),
   });
@@ -535,7 +593,9 @@ export function useArchiveQaSets() {
       const results = await Promise.allSettled(
         sets.map((set) => qaApi.archiveSet(set.id, set.version)),
       );
-      return sets.filter((_, index) => results[index].status === "rejected").map((set) => set.id);
+      return sets
+        .filter((_, index) => results[index].status === "rejected")
+        .map((set) => set.id);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: qaKeys.sets() });
@@ -558,7 +618,9 @@ export function useApproveQaSets() {
         detail.items.filter((item) => item.reviewStatus === "pending"),
       );
       const results = await Promise.allSettled(
-        pending.map((item) => qaApi.updateItem(item.id, { reviewStatus: "approved" })),
+        pending.map((item) =>
+          qaApi.updateItem(item.id, { reviewStatus: "approved" }),
+        ),
       );
       return results.filter((result) => result.status === "rejected").length;
     },
@@ -590,7 +652,9 @@ export function useDeleteQaSets() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (ids: string[]) => {
-      const results = await Promise.allSettled(ids.map((id) => qaApi.deleteSet(id)));
+      const results = await Promise.allSettled(
+        ids.map((id) => qaApi.deleteSet(id)),
+      );
       return ids.filter((_, index) => results[index].status === "rejected");
     },
     onSettled: () => {
@@ -678,8 +742,13 @@ export function useQaQuestionTypes() {
 export function useUpdateQaQuestionType() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: UpdateQuestionTypeInput }) =>
-      qaApi.updateQuestionType(id, input),
+    mutationFn: ({
+      id,
+      input,
+    }: {
+      id: string;
+      input: UpdateQuestionTypeInput;
+    }) => qaApi.updateQuestionType(id, input),
     // Publishing a type rewrites its questions, so the question lists go stale too.
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qaKeys.questionTypes() });
@@ -769,7 +838,8 @@ export function useStartQaAttempt() {
 export function useSubmitQaAnswer(attemptId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: SubmitAnswerInput) => qaApi.submitAnswer(attemptId, input),
+    mutationFn: (input: SubmitAnswerInput) =>
+      qaApi.submitAnswer(attemptId, input),
     onSuccess: () => {
       // `wrongOnly` and the stats both change with every answer.
       queryClient.invalidateQueries({ queryKey: qaKeys.playItems({}) });
@@ -824,7 +894,8 @@ export function useCreateQaItemTag() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateItemTagInput) => qaApi.createItemTag(input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.itemTags() }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: qaKeys.itemTags() }),
   });
 }
 
@@ -832,7 +903,8 @@ export function useUpdateQaItemTag(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: UpdateItemTagInput) => qaApi.updateItemTag(id, input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qaKeys.itemTags() }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: qaKeys.itemTags() }),
   });
 }
 
