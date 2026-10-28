@@ -13,7 +13,6 @@ import type { BlogDoc } from "@noalhub/api/blog";
 import { formatCompactNumber } from "@noalhub/core/format-number";
 import {
   CHARS_PER_TOKEN,
-  OUTLINE_CHAR_WARN,
   useQaOutline,
   useQaSources,
   useUpdateQaOutline,
@@ -134,11 +133,14 @@ const OUTLINE_WIDTH = { initial: 240, min: 240, max: 560 } as const;
 
 export function OutlineStep({
   datasetId,
+  sourceLarge,
   generationId,
   generating,
   onStarted,
 }: {
   datasetId: string;
+  /** The backend's verdict on the source size (`sourceCharWarning`); the threshold lives there. */
+  sourceLarge: boolean;
   /** The run started from this screen, if any — see `QaDatasetDetail`. */
   generationId?: string;
   generating: boolean;
@@ -212,6 +214,7 @@ export function OutlineStep({
       <RunOutcome generationId={generationId} />
       <OutlineWorkbench
         datasetId={datasetId}
+        sourceLarge={sourceLarge}
         // The badge in the section list marks the newest version.
         outline={
           detail.data
@@ -361,12 +364,14 @@ function TocSkeleton() {
 
 function OutlineWorkbench({
   datasetId,
+  sourceLarge,
   outline,
   onStarted,
   versionPicker,
   versionMenu,
 }: {
   datasetId: string;
+  sourceLarge: boolean;
   /** `undefined` while a version is loading: the editor and section list show placeholders. */
   outline: QaOutline | undefined;
   onStarted: (generationId: string) => void;
@@ -539,7 +544,7 @@ function OutlineWorkbench({
         fill
         meta={
           <div className="hidden items-center gap-2 lg:flex">
-            {!loading && stats.characters > OUTLINE_CHAR_WARN ? (
+            {sourceLarge ? (
               <LongDocWarning
                 message={t("ws.outline.longWarning")}
               />

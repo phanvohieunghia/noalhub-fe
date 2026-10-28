@@ -121,7 +121,6 @@
     "empty": "No datasets yet.",
     "large": "Large source",
     "chars": "{count, plural, one {# character} other {# characters}}",
-    "charWarning": "The source is large: the analyze stage rewrites the whole document, so output is roughly the size of input and the call may hit the model's output ceiling. Consider splitting it into smaller datasets.",
     "columns": {
       "title": "Title",
       "status": "Stage reached",

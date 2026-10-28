@@ -195,14 +195,6 @@ export const MAX_RUN_ITEMS = 1000;
 export const EST_TOKENS_PER_ITEM = 400;
 export const CHARS_PER_TOKEN = 3.5;
 
-/**
- * Characters in the outline editor past which a warning shows. About 100k tokens at
- * `CHARS_PER_TOKEN`, i.e. already close to the smallest context window in the
- * registry (128k) once the prompt is added. A warning only — the real block is the
- * generate dialog, which knows the model.
- */
-export const OUTLINE_CHAR_WARN = 200_000;
-
 const promptField = z
   .string()
   .min(1)

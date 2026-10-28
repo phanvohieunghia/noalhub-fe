@@ -10,7 +10,6 @@ import {
   useQaActiveGenerations,
   useQaGeneration,
 } from "@noalhub/api/qa";
-import { AlertWarning } from "@noalhub/ui/alert";
 
 import { AdminErrorState } from "../admin-error-state";
 import { QaFinalStep } from "./qa-final-step";
@@ -86,12 +85,6 @@ export function QaDatasetDetail({ datasetId }: { datasetId: string }) {
       {/* The title and its size are in the breadcrumb; the heading stays for screen readers. */}
       <h1 className="sr-only">{dataset?.title}</h1>
 
-      {dataset?.sourceCharWarning ? (
-        /* A warning, not a block: the real ceiling is computed from the model
-           picked at generate time, and it lives on the backend. */
-        <AlertWarning message={t("datasets.charWarning")} />
-      ) : null}
-
       <QaSteps
         active={step}
         onSelect={setStep}
@@ -108,6 +101,7 @@ export function QaDatasetDetail({ datasetId }: { datasetId: string }) {
         <div className={step === "outline" ? "contents" : "hidden"}>
           <OutlineStep
             datasetId={datasetId}
+            sourceLarge={dataset?.sourceCharWarning ?? false}
             generationId={generationId}
             generating={generating}
             onStarted={setGenerationId}

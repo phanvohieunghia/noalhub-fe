@@ -121,7 +121,6 @@
     "empty": "Chưa có bộ dữ liệu nào.",
     "large": "Nguồn lớn",
     "chars": "{count} ký tự",
-    "charWarning": "Nguồn khá lớn: chặng phân tích viết lại cả tài liệu nên đầu ra xấp xỉ đầu vào, và lần gọi có thể chạm trần đầu ra của model. Cân nhắc tách thành nhiều bộ nhỏ hơn.",
     "columns": {
       "title": "Tiêu đề",
       "status": "Chặng đã đạt",
