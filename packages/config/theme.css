@@ -302,47 +302,50 @@
       opacity: 0;
     }
   }
-  /* The dialog is centered with -translate-1/2, so its own transform has to be
-     part of every keyframe — otherwise it jumps to the corner while animating. */
-  /* Zoom out of nothing: scale 0 → 1, anchored on the dialog's own centre. */
+  /* The dialog is centered with Tailwind's `-translate-1/2`, which in v4 is the
+     separate CSS `translate` property — it composes with `transform` instead of being
+     replaced by it. So these keyframes animate `transform: scale()` ONLY: repeating
+     `translate(-50%, -50%)` here would apply the offset twice while the animation
+     runs (the card slides in from up-left, then snaps back when it ends), which on a
+     phone-wide card is a violent jump. */
   @keyframes popup-in {
     from {
       opacity: 0;
-      transform: translate(-50%, -50%) scale(0);
+      transform: scale(0.92);
     }
     to {
       opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
+      transform: scale(1);
     }
   }
   @keyframes popup-out {
     from {
       opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
+      transform: scale(1);
     }
     to {
       opacity: 0;
-      transform: translate(-50%, -50%) scale(0);
+      transform: scale(0.94);
     }
   }
   @keyframes verdict-in {
     from {
       opacity: 0;
-      transform: translate(-50%, -50%) scale(0.96);
+      transform: scale(0.96);
     }
     to {
       opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
+      transform: scale(1);
     }
   }
   @keyframes verdict-out {
     from {
       opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
+      transform: scale(1);
     }
     to {
       opacity: 0;
-      transform: translate(-50%, -50%) scale(0.98);
+      transform: scale(0.98);
     }
   }
   @keyframes aurora-a {

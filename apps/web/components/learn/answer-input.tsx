@@ -65,7 +65,8 @@ export function AnswerInput({
   const compact =
     options.length % 2 === 0 &&
     options.every((option) => option.text.length <= SHORT_OPTION_CHARS);
-  const single = templateKey === "true_false" || templateKey === "single_choice";
+  const single =
+    templateKey === "true_false" || templateKey === "single_choice";
 
   const send = (response: QaResponse) =>
     onSubmit(response, elapsedSince(shownAt.current));
@@ -73,14 +74,23 @@ export function AnswerInput({
   const toggle = (id: string) => {
     playSelect(single || !picked.includes(id));
     setPicked((prev) =>
-      single ? [id] : prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id],
+      single
+        ? [id]
+        : prev.includes(id)
+          ? prev.filter((value) => value !== id)
+          : [...prev, id],
     );
   };
 
   // Double click: the option joins the picks (if the first click of the pair
   // just un-picked it) and the whole set goes out.
   const submitWith = (id: string) => {
-    const next = single || picked.includes(id) ? (single ? [id] : picked) : [...picked, id];
+    const next =
+      single || picked.includes(id)
+        ? single
+          ? [id]
+          : picked
+        : [...picked, id];
     setPicked(next);
     send({ optionIds: next });
   };
@@ -138,40 +148,48 @@ export function AnswerInput({
 
   if (options.length > 0) {
     return (
-      <div className="flex flex-1 flex-col gap-5">
+      <div className="flex min-h-0 flex-1 flex-col gap-5">
         {/* Single choice needs no hint — one pick is the default. Several does. */}
         {single ? null : (
-          <Typography variant="body-4" className="text-muted-foreground">
+          <Typography
+            variant="body-4"
+            className="shrink-0 text-muted-foreground"
+          >
             {t("answer.multiHint")}
           </Typography>
         )}
-        <div
-          role={single ? "radiogroup" : "group"}
-          aria-label={single ? t("answer.singleHint") : t("answer.multiHint")}
-          // The group takes the height the question leaves over and splits it evenly
-          // between rows, so the answers fill the screen instead of huddling at the top.
-          className={`grid flex-1 auto-rows-fr gap-2 ${compact ? "grid-cols-2" : ""}`}
-        >
-          {options.map((option) => (
-            <OptionCard
-              key={option.id}
-              text={option.text}
-              role={single ? "radio" : "checkbox"}
-              shape={single ? "round" : "square"}
-              state={optionState({
-                chosen: picked.includes(option.id),
-                result,
-                pickCount: picked.length,
-              })}
-              disabled={locked}
-              centered={compact}
-              // The second click of a double click must not toggle again.
-              onClick={(event) => {
-                if (event.detail < 2) toggle(option.id);
-              }}
-              onDoubleClick={() => submitWith(option.id)}
-            />
-          ))}
+        {/* The answers get the height the question leaves over and split it evenly, so they
+            fill the screen instead of huddling at the top. When they would not fit (a phone,
+            four long options) the cards keep a readable height and only THIS box scrolls —
+            the question stays in view. The padding keeps focus rings and shadows from being
+            clipped by the scroll box. */}
+        <div className="-m-1 min-h-0 flex-1 overflow-y-auto p-1">
+          <div
+            role={single ? "radiogroup" : "group"}
+            aria-label={single ? t("answer.singleHint") : t("answer.multiHint")}
+            className={`grid min-h-full auto-rows-fr gap-2 ${compact ? "grid-cols-2" : ""}`}
+          >
+            {options.map((option) => (
+              <OptionCard
+                key={option.id}
+                text={option.text}
+                role={single ? "radio" : "checkbox"}
+                shape={single ? "round" : "square"}
+                state={optionState({
+                  chosen: picked.includes(option.id),
+                  result,
+                  pickCount: picked.length,
+                })}
+                disabled={locked}
+                centered={compact}
+                // The second click of a double click must not toggle again.
+                onClick={(event) => {
+                  if (event.detail < 2) toggle(option.id);
+                }}
+                onDoubleClick={() => submitWith(option.id)}
+              />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -294,7 +312,11 @@ function OptionCard({
           {ticked ? <Icon icon={LUCIDE.check} className="size-4" /> : null}
         </span>
       ) : null}
-      <Typography as="span" variant="body-2" className={centered ? "" : "flex-1"}>
+      <Typography
+        as="span"
+        variant="body-2"
+        className={centered ? "" : "flex-1"}
+      >
         {text}
       </Typography>
     </button>

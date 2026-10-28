@@ -198,10 +198,17 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
     set.data.items.every((item) => item.templateKey === "flashcard");
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col p-4 sm:p-6">
+    <main
+      className={`mx-auto flex w-full max-w-3xl flex-col p-4 sm:p-6 ${
+        // While answering, the screen is exactly the visible viewport (dvh follows the
+        // mobile browser's collapsing address bar): the answers scroll inside it, the
+        // page itself does not. The summary is an ordinary scrolling page.
+        done ? "flex-1" : "h-dvh"
+      }`}
+    >
       {/* The summary stands alone: its own buttons say where to go next. */}
       {done ? null : (
-        <header className="mb-6 space-y-3">
+        <header className="mb-6 shrink-0 space-y-3">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -269,7 +276,7 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
           onReview={() => void wrapUp()}
         />
       ) : current ? (
-        <article className="flex flex-1 flex-col gap-5">
+        <article className="flex min-h-0 flex-1 flex-col gap-5">
           <div className="text-body-1 font-semibold">
             <QaQuestion doc={current.question} tagIds={current.tagIds} />
           </div>
