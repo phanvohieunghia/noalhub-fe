@@ -26,10 +26,13 @@ export type MetricItem = {
 export function MetricsCard({
   title,
   items,
+  layout = "grid",
   className = "",
 }: {
   title: string;
   items: MetricItem[];
+  /** `grid` packs the metrics 2 per row; `row` keeps them on a single line. */
+  layout?: "grid" | "row";
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -44,11 +47,11 @@ export function MetricsCard({
         <div
           tabIndex={0}
           aria-label={title}
-          className={`items-center gap-3 rounded-md px-1.5 py-1 text-body-4 tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring ${className}`}
+          className={`${layout === "row" ? "flex items-center" : "grid grid-cols-2"} gap-x-2.5 gap-y-0 rounded border border-border px-1.5 py-px text-[0.625rem] leading-3.5 tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring ${className}`}
         >
           {items.map((item) => (
-            <span key={item.key} className="flex items-center gap-1">
-              <Icon icon={item.icon} className={item.iconClass ?? "text-muted-foreground"} />
+            <span key={item.key} className="flex items-center gap-0.5">
+              <Icon icon={item.icon} className={`size-2.5 ${item.iconClass ?? "text-muted-foreground"}`} />
               <span className="font-semibold text-foreground">{item.value}</span>
             </span>
           ))}

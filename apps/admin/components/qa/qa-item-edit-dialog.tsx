@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import type { BlogDoc } from "@noalhub/api/blog";
 import type { Message } from "@noalhub/api/message";
 import {
   useUpdateQaItem,
@@ -13,6 +14,7 @@ import {
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { useMessage } from "@noalhub/i18n/use-message";
 import { AlertError } from "@noalhub/ui/alert";
+import { TiptapEditor } from "@noalhub/ui/blog/tiptap-editor";
 import { Badge } from "@noalhub/ui/badge";
 import { Button } from "@noalhub/ui/button";
 import { Checkbox } from "@noalhub/ui/checkbox";
@@ -23,7 +25,7 @@ import { Textarea } from "@noalhub/ui/textarea";
 import { Typography } from "@noalhub/ui/typography";
 
 import { QaItemTagPicker } from "./qa-item-tag-picker";
-import { docToText, textToDoc } from "./qa-plain-doc";
+import { docToText, isEmptyDoc, textToDoc } from "./qa-plain-doc";
 
 const DIFFICULTIES = ["easy", "medium", "hard"] as const satisfies readonly QaDifficulty[];
 
@@ -32,7 +34,8 @@ const DIFFICULTIES = ["easy", "medium", "hard"] as const satisfies readonly QaDi
  * correct ones) or accepted answers, and the explanation. The shape is fixed — it
  * belongs to the set, so it is shown but cannot change here.
  *
- * Question and explanation are plain text. A document that holds more than
+ * The question is a full rich document, edited in Tiptap like the set page's form.
+ * The explanation and answer are plain text: a document that holds more than
  * paragraphs (a table, a list, bold) is left alone and not sent, so saving can
  * never flatten it.
  */
@@ -52,14 +55,13 @@ export function QaItemEditDialog({
   const m = useMessage();
   const update = useUpdateQaItem(item.setId);
 
-  const initialQuestion = docToText(item.question);
   const initialExplanation = docToText(item.explanation);
   const initialAnswer = docToText(item.answer);
   const isChoice = item.options !== null;
   const isSelfGraded = !isChoice && item.answerKey === null;
 
   const [difficulty, setDifficulty] = useState<QaDifficulty | "">(item.difficulty ?? "");
-  const [question, setQuestion] = useState(initialQuestion ?? "");
+  const [question, setQuestion] = useState<BlogDoc>(item.question);
   const [options, setOptions] = useState(item.options ?? []);
   const [correct, setCorrect] = useState<string[]>(
     item.answerKey && "optionIds" in item.answerKey ? item.answerKey.optionIds : [],
@@ -79,7 +81,7 @@ export function QaItemEditDialog({
       .map((line) => line.trim())
       .filter(Boolean);
 
-    if (initialQuestion !== null && question.trim() === "") return setError(t("form.needQuestion"));
+    if (isEmptyDoc(question)) return setError(t("form.needQuestion"));
     if (isChoice) {
       if (cleaned.some((option) => option.text === "")) return setError(t("sets.optionEmpty"));
       if (!cleaned.some((option) => correct.includes(option.id))) {
@@ -92,7 +94,7 @@ export function QaItemEditDialog({
     const input: PatchItemInput = {
       difficulty: difficulty === "" ? null : difficulty,
       tagIds,
-      ...(initialQuestion !== null ? { question: textToDoc(question) } : {}),
+      question,
       ...(initialExplanation !== null
         ? { explanation: explanation.trim() === "" ? null : textToDoc(explanation) }
         : {}),
@@ -143,18 +145,16 @@ export function QaItemEditDialog({
 
         <QaItemTagPicker value={tagIds} onChange={setTagIds} />
 
-        {initialQuestion === null ? (
-          <Typography variant="body-4" className="text-muted-foreground">
-            {t("form.richNote")}
+        <div className="flex flex-col gap-1.5">
+          <Typography variant="body-3" weight={500}>
+            {t("ws.final.question")}
           </Typography>
-        ) : (
-          <Textarea
-            label={t("ws.final.question")}
-            rows={2}
+          <TiptapEditor
             value={question}
-            onChange={(event) => setQuestion(event.target.value)}
+            onChange={setQuestion}
+            contentClassName="min-h-32 max-h-80 overflow-y-auto"
           />
-        )}
+        </div>
 
         {isChoice ? (
           <fieldset className="flex flex-col gap-2">

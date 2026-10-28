@@ -205,7 +205,8 @@
     "pickCredential": "Pick a key",
     "noCredential": "No enabled key",
     "noCredentialHint": "No AI key is enabled. Add or enable one on the AI keys screen first.",
-    "modelOfKey": "Runs on {label} · {context, number, ::compact-short} context · {output, number, ::compact-short} output. Change the model on the AI keys screen.",
+    "contextTooltip": "{label}: context window of {count} tokens (how much it can read at once). Change the model on the AI keys screen.",
+    "outputTooltip": "{label}: up to {count} tokens of output per call.",
     "modelUnavailable": "This key's model ({label}) is switched off or cannot return structured JSON, so the call would be refused. Assign another model to the key on the AI keys screen."
   },
   "analyze": {
@@ -328,6 +329,7 @@
     "explanation": "Explanation",
     "columns": {
       "title": "Title",
+      "dataset": "Dataset",
       "section": "Source section",
       "status": "Status",
       "items": "Questions"
@@ -351,7 +353,12 @@
     "difficultyLabel": "Difficulty",
     "noDifficulty": "Not set",
     "publishedSwitch": "Published",
-    "addQuestion": "Add question"
+    "addQuestion": "Add question",
+    "viewMode": "Question view",
+    "viewFull": "Full",
+    "viewCompact": "Compact list",
+    "viewGrid": "Grid",
+    "dragItem": "Drag question {index} to reorder"
   },
   "items": {
     "title": "Question types",
@@ -412,6 +419,8 @@
     "noTemplate": "No question prompt exists yet",
     "minCount": "Min questions",
     "maxCount": "Max questions",
+    "countTitle": "Number of questions",
+    "countLimit": "Limit the number of questions (off: the model decides)",
     "countHint": "Total for the whole run (not per section); the model spreads them across the sections and the ticked question types. The maximum depends on the model's output limit.",
     "expandChildren": "Show sub-sections",
     "collapseChildren": "Hide sub-sections",
@@ -423,6 +432,7 @@
     "countMin": "at least {min} questions",
     "countMax": "up to {max} questions",
     "countAny": "as many questions as the model sees fit",
+    "sectionTokens": "~{count} tokens",
     "allSections": "All {count, plural, one {# section} other {# sections}}",
     "costWhole": "Generating {count} from the whole outline, on key \"{key}\", model {model}. This call is billed for real.",
     "cost": "Generating {count} from {sections, plural, one {# section} other {# sections}}, on key \"{key}\", model {model}. This call is billed for real.",
@@ -520,7 +530,15 @@
     "addOption": "Add option",
     "removeOption": "Remove option {letter}",
     "needQuestion": "The question cannot be empty.",
-    "richNote": "This text has formatting (a table, list or bold). It is shown as is and kept untouched when you save."
+    "richNote": "This text has formatting (a table, list or bold). It is shown as is and kept untouched when you save.",
+    "sectionLabel": "Section",
+    "noSection": "No section",
+    "trueLabel": "True",
+    "falseLabel": "False",
+    "backLabel": "Answer (back of the card)",
+    "needBack": "The back of the card cannot be empty.",
+    "pickOne": "Tick the one correct option.",
+    "shapeLocked": "The answer type is set by the set."
   },
   "ws": {
     "chapters": "{count, plural, one {# chapter} other {# chapters}}",
@@ -638,7 +656,16 @@
         "created": "Generated",
         "questions": "Questions",
         "approved": "Approved"
-      }
+      },
+      "arrange": "Arrange",
+      "arrangeTitle": "Arrange questions — {title}",
+      "arrangeHint": "Drag the grip to reorder, or drop a question into another section to move it there. Nothing is saved until you press Save order.",
+      "arrangeSave": "Save order",
+      "arrangeReset": "Reset",
+      "sectionActions": "Section actions",
+      "arrangeSet": "Arrange: {title}",
+      "arrangeEmpty": "Drop a question here to move it into this section.",
+      "addQuestionSet": "Add question: {title}"
     },
     "final": {
       "headingCreated": "Final question set · {count} in database",

@@ -582,7 +582,11 @@ function TemplateDialog({
           <Button variant="outline" onClick={onClose}>
             {tc("actions.cancel")}
           </Button>
-          <Button onClick={() => void save()} disabled={!canSave}>
+          <Button
+            onClick={() => void save()}
+            disabled={!canSave}
+            loading={create.isPending || update.isPending}
+          >
             {tc("actions.save")}
           </Button>
         </div>
@@ -663,8 +667,7 @@ function DuplicateDialog({
 
   const canSave =
     name.trim() !== "" &&
-    (row.kind === "qa" || key.trim() !== "") &&
-    !duplicate.isPending;
+    (row.kind === "qa" || key.trim() !== "");
 
   return (
     <Dialog
@@ -698,7 +701,11 @@ function DuplicateDialog({
           <Button variant="outline" onClick={onClose}>
             {tc("actions.cancel")}
           </Button>
-          <Button onClick={() => void save()} disabled={!canSave}>
+          <Button
+            onClick={() => void save()}
+            disabled={!canSave}
+            loading={duplicate.isPending}
+          >
             {t("templates.duplicate")}
           </Button>
         </div>

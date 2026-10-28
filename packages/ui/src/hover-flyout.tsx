@@ -15,33 +15,46 @@ export function HoverFlyout({
   label,
   trigger,
   children,
+  side = "right",
+  align = "start",
+  contentClassName = "min-w-44 p-1.5",
+  canOpen,
 }: {
-  label: string;
+  /** A small heading above the content; leave it out for a bare card. */
+  label?: string;
   trigger: React.ReactNode;
   children: React.ReactNode;
+  side?: "top" | "right" | "bottom" | "left";
+  align?: "start" | "center" | "end";
+  /** Sizing and padding of the card; replaces the menu-sized default. */
+  contentClassName?: string;
+  /** Asked on every hover/focus; return `false` to keep the card shut (e.g. nothing is cut off). */
+  canOpen?: () => boolean;
 }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <HoverCard.Root open={open} onOpenChange={setOpen} openDelay={80} closeDelay={150}>
+    <HoverCard.Root open={open} onOpenChange={(next) => setOpen(next && (canOpen?.() ?? true))} openDelay={80} closeDelay={150}>
       <HoverCard.Trigger
         asChild
-        onFocus={() => setOpen(true)}
+        onFocus={() => setOpen(canOpen?.() ?? true)}
         onBlur={() => setOpen(false)}
       >
         {trigger}
       </HoverCard.Trigger>
       <HoverCard.Portal>
         <HoverCard.Content
-          side="right"
-          align="start"
+          side={side}
+          align={align}
           sideOffset={8}
           collisionPadding={8}
-          className="z-50 min-w-44 rounded-lg border border-border bg-surface p-1.5 shadow-lg"
+          className={`z-50 rounded-lg border border-border bg-surface text-foreground shadow-lg ${contentClassName}`}
         >
-          <Typography variant="body-4" weight={600} className="px-3 pt-1 pb-1.5 text-muted-foreground">
-            {label}
-          </Typography>
+          {label ? (
+            <Typography variant="body-4" weight={600} className="px-3 pt-1 pb-1.5 text-muted-foreground">
+              {label}
+            </Typography>
+          ) : null}
           {children}
         </HoverCard.Content>
       </HoverCard.Portal>

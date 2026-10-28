@@ -720,15 +720,24 @@ export const patchItemSchema = writeItemSchema
     reviewStatus: z.enum(["pending", "approved", "rejected"]).optional(),
   });
 
+/** One dragged question: it now sits right after `afterId` (`null` = first in the set). */
+export const reorderMoveSchema = z.object({
+  id: z.string().uuid(),
+  afterId: z.string().uuid().nullable(),
+  /** Only when the question changed section (`null` = no section). */
+  sectionAnchor: z.string().max(160).nullable().optional(),
+});
+
 export const reorderItemsSchema = z.object({
   version: z.number().int().min(1),
-  /** The WHOLE list of live ids, in the new order. */
-  itemIds: z.array(z.string().uuid()).min(1),
+  /** ONLY the questions that were dragged, top to bottom; the rest keep their place. */
+  moves: z.array(reorderMoveSchema).min(1).max(5000),
 });
 
 export type UpdateSetInput = z.infer<typeof updateSetSchema>;
 export type WriteItemInput = z.infer<typeof writeItemSchema>;
 export type PatchItemInput = z.infer<typeof patchItemSchema>;
+export type ReorderMove = z.infer<typeof reorderMoveSchema>;
 export type ReorderItemsInput = z.infer<typeof reorderItemsSchema>;
 
 /* ------------------------------ learner surface ---------------------------- */

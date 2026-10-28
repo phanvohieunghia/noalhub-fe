@@ -80,6 +80,7 @@ export const NAV_ITEMS: NavItem[] = [
     labelKey: "items.posts",
     icon: LUCIDE.newspaper,
     children: [
+      { href: "/posts", labelKey: "items.posts" },
       { href: "/posts/categories", labelKey: "items.categories" },
       { href: "/posts/slugs", labelKey: "items.slugs" },
     ],
@@ -99,6 +100,7 @@ export const NAV_ITEMS: NavItem[] = [
     labelKey: "items.qa",
     icon: LUCIDE.circleQuestionMark,
     children: [
+      { href: "/qa/datasets", labelKey: "items.qaDatasets" },
       { href: "/qa/sets", labelKey: "items.qaSets" },
       { href: "/qa/items", labelKey: "items.qaItems" },
       { href: "/qa/tags", labelKey: "items.qaTags" },

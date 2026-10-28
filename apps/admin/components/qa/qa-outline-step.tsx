@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import type { BlogDoc } from "@noalhub/api/blog";
+import { formatCompactNumber } from "@noalhub/core/format-number";
 import {
   CHARS_PER_TOKEN,
   OUTLINE_CHAR_WARN,
@@ -450,29 +451,31 @@ function OutlineWorkbench({
   const readMinutes = Math.max(1, Math.ceil(stats.words / 230));
   const wordsValue = stats.words.toLocaleString("en-US");
   const charsValue = stats.characters.toLocaleString("en-US");
-  const tokensValue = Math.ceil(
-    stats.characters / CHARS_PER_TOKEN,
-  ).toLocaleString("en-US");
+  const tokenCount = Math.ceil(stats.characters / CHARS_PER_TOKEN);
+  const tokensValue = tokenCount.toLocaleString("en-US");
   const statItems: MetricItem[] = [
     {
       key: "words",
       icon: LUCIDE.fileText,
       iconClass: "text-primary",
-      value: loading ? "—" : wordsValue,
+      value: loading ? "—" : formatCompactNumber(stats.words),
+      detail: wordsValue,
       label: t("ws.outline.metrics.words"),
     },
     {
       key: "characters",
       icon: LUCIDE.type,
       iconClass: "text-brand-500",
-      value: loading ? "—" : charsValue,
+      value: loading ? "—" : formatCompactNumber(stats.characters),
+      detail: charsValue,
       label: t("ws.outline.metrics.characters"),
     },
     {
       key: "tokens",
       icon: LUCIDE.zap,
       iconClass: "text-success",
-      value: loading ? "—" : tokensValue,
+      value: loading ? "—" : formatCompactNumber(tokenCount),
+      detail: tokensValue,
       label: t("ws.outline.metrics.tokens"),
     },
     {
@@ -547,7 +550,7 @@ function OutlineWorkbench({
             <MetricsCard
               title={t("ws.outline.metrics.title")}
               items={statItems}
-              className="hidden lg:flex"
+              className="hidden lg:grid"
             />
           </div>
         }

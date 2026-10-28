@@ -205,7 +205,8 @@
     "pickCredential": "Chọn khoá",
     "noCredential": "Chưa có khoá nào đang bật",
     "noCredentialHint": "Chưa có khoá AI nào đang bật. Thêm hoặc bật một khoá ở màn Khoá AI trước.",
-    "modelOfKey": "Chạy bằng {label} · cửa sổ {context, number, ::compact-short} · đầu ra {output, number, ::compact-short}. Muốn đổi model, vào màn Khoá AI.",
+    "contextTooltip": "{label}: cửa sổ ngữ cảnh {count} token (lượng model đọc được một lần). Muốn đổi model, vào màn Khoá AI.",
+    "outputTooltip": "{label}: tối đa {count} token đầu ra mỗi lần gọi.",
     "modelUnavailable": "Model của khoá này ({label}) đã tắt hoặc không trả được JSON theo schema nên lần gọi sẽ bị từ chối. Gán model khác cho khoá ở màn Khoá AI."
   },
   "analyze": {
@@ -328,6 +329,7 @@
     "explanation": "Giải thích",
     "columns": {
       "title": "Tiêu đề",
+      "dataset": "Bộ dữ liệu",
       "section": "Mục nguồn",
       "status": "Trạng thái",
       "items": "Số câu"
@@ -351,7 +353,12 @@
     "difficultyLabel": "Độ khó",
     "noDifficulty": "Chưa đặt",
     "publishedSwitch": "Đã xuất bản",
-    "addQuestion": "Thêm câu hỏi"
+    "addQuestion": "Thêm câu hỏi",
+    "viewMode": "Kiểu hiển thị câu hỏi",
+    "viewFull": "Đầy đủ",
+    "viewCompact": "Danh sách gọn",
+    "viewGrid": "Lưới",
+    "dragItem": "Kéo câu {index} để đổi thứ tự"
   },
   "items": {
     "title": "Loại câu hỏi",
@@ -412,6 +419,8 @@
     "noTemplate": "Chưa có prompt loại sinh câu hỏi nào",
     "minCount": "Số câu tối thiểu",
     "maxCount": "Số câu tối đa",
+    "countTitle": "Số câu hỏi",
+    "countLimit": "Giới hạn số câu hỏi (tắt: model tự quyết định)",
     "countHint": "Tổng số câu của cả lần chạy (không phải mỗi mục); model tự phân bổ giữa các mục và các dạng câu đã chọn. Tối đa phụ thuộc trần output của model.",
     "expandChildren": "Hiện mục con",
     "collapseChildren": "Ẩn mục con",
@@ -423,6 +432,7 @@
     "countMin": "ít nhất {min} câu",
     "countMax": "tối đa {max} câu",
     "countAny": "số câu do model tự quyết định",
+    "sectionTokens": "~{count} token",
     "allSections": "Tất cả {count} mục",
     "costWhole": "Sinh {count} từ toàn bộ nội dung outline, bằng khoá \"{key}\", model {model}. Đây là thao tác tính tiền thật.",
     "cost": "Sinh {count} từ {sections} mục, bằng khoá \"{key}\", model {model}. Đây là thao tác tính tiền thật.",
@@ -520,7 +530,15 @@
     "addOption": "Thêm lựa chọn",
     "removeOption": "Xóa lựa chọn {letter}",
     "needQuestion": "Câu hỏi không được để trống.",
-    "richNote": "Nội dung này có định dạng (bảng, danh sách hoặc chữ đậm). Nó được hiển thị nguyên trạng và giữ nguyên khi bạn lưu."
+    "richNote": "Nội dung này có định dạng (bảng, danh sách hoặc chữ đậm). Nó được hiển thị nguyên trạng và giữ nguyên khi bạn lưu.",
+    "sectionLabel": "Mục",
+    "noSection": "Không thuộc mục nào",
+    "trueLabel": "Đúng",
+    "falseLabel": "Sai",
+    "backLabel": "Đáp án (mặt sau thẻ)",
+    "needBack": "Mặt sau của thẻ không được để trống.",
+    "pickOne": "Chọn đúng một đáp án đúng.",
+    "shapeLocked": "Kiểu trả lời do bộ câu hỏi quy định."
   },
   "ws": {
     "chapters": "{count} chương",
@@ -638,7 +656,16 @@
         "created": "Sinh lúc",
         "questions": "Số câu",
         "approved": "Đã duyệt"
-      }
+      },
+      "arrange": "Sắp xếp",
+      "arrangeTitle": "Sắp xếp câu hỏi — {title}",
+      "arrangeHint": "Kéo tay nắm để đổi thứ tự, hoặc thả câu vào mục khác để chuyển mục. Chỉ lưu khi bấm Lưu thứ tự.",
+      "arrangeSave": "Lưu thứ tự",
+      "arrangeReset": "Đặt lại",
+      "sectionActions": "Thao tác với mục",
+      "arrangeSet": "Sắp xếp: {title}",
+      "arrangeEmpty": "Thả câu vào đây để chuyển nó sang mục này.",
+      "addQuestionSet": "Thêm câu hỏi: {title}"
     },
     "final": {
       "headingCreated": "Bộ câu hỏi cuối · {count} câu trong cơ sở dữ liệu",

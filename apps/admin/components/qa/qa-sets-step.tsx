@@ -52,6 +52,8 @@ import { useOutlineVersion } from "./use-outline-version";
 import { PostContentPreview } from "./post-content-preview";
 import { TruncatedTooltip } from "./truncated-tooltip";
 import { QaReviewQuestion } from "./qa-review-question";
+import { QaItemForm } from "./qa-item-form";
+import { QaSetArrangeDialog } from "./qa-set-arrange-dialog";
 
 type Section = {
   key: string;
@@ -108,6 +110,8 @@ export function SetsStep({
   // Sections toggled at least once: their body stays mounted so collapsing can animate.
   const [opened, setOpened] = useState<Set<string>>(new Set());
   const [removing, setRemoving] = useState<Section | null>(null);
+  const [arranging, setArranging] = useState<QaSet | null>(null);
+  const [adding, setAdding] = useState<QaSet | null>(null);
   const approveAll = useApproveQaSets();
   const [approvingKey, setApprovingKey] = useState<string | null>(null);
   const [view, setView] = useState<"full" | "hover">("full");
@@ -400,16 +404,50 @@ export function SetsStep({
                       </Button>
                     </Tooltip>
                   ) : null}
-                  <Tooltip label={t("ws.sets.removeSection")}>
-                    <Button
-                      variant="outline"
-                      size="icon-md"
-                      aria-label={t("ws.sets.removeSection")}
-                      onClick={() => setRemoving(section)}
+                  <DropdownMenu
+                    compact
+                    trigger={
+                      <Button
+                        variant="outline"
+                        size="icon-md"
+                        aria-label={t("ws.sets.sectionActions")}
+                      >
+                        <Icon icon={ICONS.more} />
+                      </Button>
+                    }
+                  >
+                    {group.map((set) => (
+                      <DropdownMenuItem
+                        key={`add:${set.id}`}
+                        icon={ICONS.add}
+                        onSelect={() => setAdding(set)}
+                      >
+                        {group.length > 1
+                          ? t("ws.sets.addQuestionSet", { title: set.title })
+                          : t("sets.addQuestion")}
+                      </DropdownMenuItem>
+                    ))}
+                    {group
+                      .filter((set) => set.itemCount > 1)
+                      .map((set) => (
+                        <DropdownMenuItem
+                          key={set.id}
+                          icon={LUCIDE.arrowUpDown}
+                          onSelect={() => setArranging(set)}
+                        >
+                          {group.length > 1
+                            ? t("ws.sets.arrangeSet", { title: set.title })
+                            : t("ws.sets.arrange")}
+                        </DropdownMenuItem>
+                      ))}
+                    <DropdownMenuItem
+                      icon={ICONS.delete}
+                      tone="danger"
+                      onSelect={() => setRemoving(section)}
                     >
-                      <Icon icon={ICONS.delete} />
-                    </Button>
-                  </Tooltip>
+                      {t("ws.sets.removeSection")}
+                    </DropdownMenuItem>
+                  </DropdownMenu>
                 </div>
                 <div
                   aria-hidden={!expanded}
@@ -443,6 +481,25 @@ export function SetsStep({
           })}
         </div>
       )}
+      {adding ? (
+        <Dialog open onClose={() => setAdding(null)} size="lg" title={t("sets.addQuestion")}>
+          <QaItemForm
+            setId={adding.id}
+            sections={[...anchorTitles].map(([value, label]) => ({ value, label }))}
+            defaultSection={adding.sectionAnchor ?? ""}
+            onDone={() => setAdding(null)}
+            onCancel={() => setAdding(null)}
+          />
+        </Dialog>
+      ) : null}
+      {arranging ? (
+        <QaSetArrangeDialog
+          setId={arranging.id}
+          title={arranging.title}
+          anchorTitles={anchorTitles}
+          onClose={() => setArranging(null)}
+        />
+      ) : null}
       {removing ? (
         <RemoveSectionDialog
           section={removing}
@@ -1103,7 +1160,8 @@ function SectionMetrics({
   return (
     <MetricsCard
       title={t("ws.sets.metrics.title")}
-      className="flex"
+      layout="row"
+      className="whitespace-nowrap"
       items={[
         {
           key: "created",

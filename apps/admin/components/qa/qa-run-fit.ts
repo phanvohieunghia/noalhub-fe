@@ -61,7 +61,7 @@ function qaChunkBudget(model: AiModel, maxCount: number | undefined): number {
   );
 }
 
-const tokensOf = (chars: number) => Math.ceil(chars / CHARS_PER_TOKEN);
+export const tokensOf = (chars: number) => Math.ceil(chars / CHARS_PER_TOKEN);
 
 /** Greedy, in outline order — the backend's `planSectionChunks`, counting calls only. */
 function packCount(sizes: number[], limitTokens: number): number {

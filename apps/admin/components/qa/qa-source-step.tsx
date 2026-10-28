@@ -13,6 +13,7 @@ import {
   useUpdateQaSource,
   type QaDatasetSourceFull,
 } from "@noalhub/api/qa";
+import { formatCompactNumber } from "@noalhub/core/format-number";
 import type { Message } from "@noalhub/api/message";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { useMessage } from "@noalhub/i18n/use-message";
@@ -215,26 +216,30 @@ function SourceEditor({
   const stats = useMemo(() => textStats(value), [value]);
   const readMinutes = Math.max(1, Math.ceil(stats.words / 230));
   const fmt = (n: number) => n.toLocaleString("en-US");
+  const tokenCount = Math.ceil(stats.characters / CHARS_PER_TOKEN);
   const statItems: MetricItem[] = [
     {
       key: "words",
       icon: LUCIDE.fileText,
       iconClass: "text-primary",
-      value: fmt(stats.words),
+      value: formatCompactNumber(stats.words),
+      detail: fmt(stats.words),
       label: t("ws.source.metrics.words"),
     },
     {
       key: "characters",
       icon: LUCIDE.type,
       iconClass: "text-brand-500",
-      value: fmt(stats.characters),
+      value: formatCompactNumber(stats.characters),
+      detail: fmt(stats.characters),
       label: t("ws.source.metrics.characters"),
     },
     {
       key: "tokens",
       icon: LUCIDE.zap,
       iconClass: "text-success",
-      value: fmt(Math.ceil(stats.characters / CHARS_PER_TOKEN)),
+      value: formatCompactNumber(tokenCount),
+      detail: fmt(tokenCount),
       label: t("ws.source.metrics.tokens"),
     },
     {
@@ -342,7 +347,7 @@ function SourceEditor({
           <MetricsCard
             title={t("ws.source.metrics.title")}
             items={statItems}
-            className="hidden lg:flex"
+            className="hidden lg:grid"
           />
         }
         renderEditor={({ className, fullscreen }) =>

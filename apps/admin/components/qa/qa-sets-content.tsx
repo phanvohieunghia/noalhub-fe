@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { useArchiveQaSets, useDeleteQaSet, useDeleteQaSets, useQaSets, type QaSet, type QaSetStatus } from "@noalhub/api/qa";
+import { useArchiveQaSets, useDeleteQaSet, useDeleteQaSets, useQaDatasets, useQaSets, type QaSet, type QaSetStatus } from "@noalhub/api/qa";
 import type { Message } from "@noalhub/api/message";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { useDateFormat } from "@noalhub/i18n/use-date-format";
@@ -38,14 +38,15 @@ import { Typography } from "@noalhub/ui/typography";
 
 import { AdminErrorState } from "../admin-error-state";
 
-const COLUMN_COUNT = 6;
+const COLUMN_COUNT = 7;
 const PAGE_SIZES = [10, 25, 50] as const;
 
-type SortKey = "title" | "section" | "status" | "items";
+type SortKey = "title" | "dataset" | "section" | "status" | "items";
 type SortState = { key: SortKey; dir: "asc" | "desc" } | null;
 
-const SORT_VALUES: Record<SortKey, (row: QaSet) => string | number> = {
+const SORT_VALUES: Record<SortKey, (row: QaSet, datasets: Map<string, string>) => string | number> = {
   title: (row) => row.title,
+  dataset: (row, datasets) => datasets.get(row.datasetId) ?? "",
   section: (row) => row.sectionTitle ?? "",
   status: (row) => row.status,
   items: (row) => row.itemCount,
@@ -71,6 +72,9 @@ export function QaSetsContent() {
   const t = useTranslations("admin.qa");
   const [status, setStatus] = useState<QaSetStatus | "">("");
   const sets = useQaSets(status === "" ? {} : { status });
+  // A set only carries its dataset's id; the dataset's own title is the label shown.
+  const datasetList = useQaDatasets();
+  const datasetTitles = new Map((datasetList.data ?? []).map((d) => [d.id, d.title]));
   const [removing, setRemoving] = useState<{ row: QaSet; mode: RemoveMode } | null>(null);
 
   const [sort, setSort] = useState<SortState>(null);
@@ -82,8 +86,8 @@ export function QaSetsContent() {
     const value = SORT_VALUES[sort.key];
     const sign = sort.dir === "asc" ? 1 : -1;
     return [...data].sort((a, b) => {
-      const x = value(a);
-      const y = value(b);
+      const x = value(a, datasetTitles);
+      const y = value(b, datasetTitles);
       const cmp =
         typeof x === "number" && typeof y === "number"
           ? x - y
@@ -203,6 +207,13 @@ export function QaSetsContent() {
                   {t("sets.columns.title")}
                 </TableSortHeaderCell>
                 <TableSortHeaderCell
+                  direction={sort?.key === "dataset" ? sort.dir : false}
+                  onToggle={() => toggleSort("dataset")}
+                  sortHint={t("sets.sortHint", { column: t("sets.columns.dataset") })}
+                >
+                  {t("sets.columns.dataset")}
+                </TableSortHeaderCell>
+                <TableSortHeaderCell
                   direction={sort?.key === "section" ? sort.dir : false}
                   onToggle={() => toggleSort("section")}
                   sortHint={t("sets.sortHint", { column: t("sets.columns.section") })}
@@ -235,6 +246,7 @@ export function QaSetsContent() {
                 pageRows.map((row) => <SetRow
                     key={row.id}
                     row={row}
+                    datasetTitle={datasetTitles.get(row.datasetId)}
                     selected={selected.has(row.id)}
                     onSelect={(on) => toggle(row.id, on)}
                     onRemove={(mode) => setRemoving({ row, mode })} />)
@@ -278,11 +290,14 @@ export function QaSetsContent() {
 
 function SetRow({
   row,
+  datasetTitle,
   selected,
   onSelect,
   onRemove,
 }: {
   row: QaSet;
+  /** The title of the dataset the set came from; `undefined` while the datasets load. */
+  datasetTitle: string | undefined;
   selected: boolean;
   onSelect: (on: boolean) => void;
   onRemove: (mode: RemoveMode) => void;
@@ -309,6 +324,15 @@ function SetRow({
         <Typography variant="body-4" as="span" className="block text-muted-foreground">
           {df.date(row.createdAt)}
         </Typography>
+      </TableCell>
+      <TableCell className="text-muted-foreground" onClick={(event) => event.stopPropagation()}>
+        {datasetTitle ? (
+          <Link href={`/qa/datasets/${row.datasetId}`} className="hover:underline">
+            {datasetTitle}
+          </Link>
+        ) : (
+          "—"
+        )}
       </TableCell>
       <TableCell className="text-muted-foreground">{row.sectionTitle ?? "—"}</TableCell>
       <TableCell>

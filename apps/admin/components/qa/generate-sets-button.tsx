@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
 
 import { useMe } from "@noalhub/api/auth";
 import type { Message } from "@noalhub/api/message";
@@ -15,6 +15,7 @@ import {
   type QaItemKind,
   type QaOutlineEntry,
 } from "@noalhub/api/qa";
+import { formatCompactNumber } from "@noalhub/core/format-number";
 import { applyApiError } from "@noalhub/core/forms/apply-api-error";
 import { useMessage } from "@noalhub/i18n/use-message";
 import { AlertError } from "@noalhub/ui/alert";
@@ -22,32 +23,35 @@ import { Button } from "@noalhub/ui/button";
 import { Checkbox } from "@noalhub/ui/checkbox";
 import { Dialog } from "@noalhub/ui/dialog";
 import { Icon, ICONS, LUCIDE } from "@noalhub/ui/icons";
-import { Input } from "@noalhub/ui/input";
+import { RangeSlider } from "@noalhub/ui/range-slider";
 import { Select } from "@noalhub/ui/select";
+import { Switch } from "@noalhub/ui/switch";
 import { Tooltip } from "@noalhub/ui/tooltip";
 
 import { useAiRunChoice } from "./ai-run-picker";
 import { GenerationProgress } from "./generation-progress";
-import { checkRunFit } from "./qa-run-fit";
+import { KIND_ICONS, SHAPE_ICONS } from "./qa-icons";
+import { checkRunFit, tokensOf } from "./qa-run-fit";
+
+// Fine near the bottom where a few questions matter, coarse above. The last
+// bound is what the backend caps a run at.
+const COUNT_SEGMENTS = [
+  { to: 100, step: 1 },
+  { to: 500, step: 10 },
+  { to: MAX_RUN_ITEMS, step: 50 },
+];
+const COUNT_TICKS = [
+  ...[1, 100, 500, MAX_RUN_ITEMS].map((value) => ({
+    value,
+    label: String(value),
+  })),
+  ...[10, 20, 30, 40, 50, 60, 70, 80, 90].map((value) => ({ value })),
+  ...[200, 300, 400].map((value) => ({ value })),
+  ...[550, 600, 650, 700, 750, 800, 850, 900, 950].map((value) => ({ value })),
+];
 import { Typography } from "@noalhub/ui/typography";
 
-const SHAPE_ICONS = {
-  multiple_choice: LUCIDE.listChecks,
-  single_choice: LUCIDE.circleDot,
-  true_false: LUCIDE.toggleLeft,
-  short_answer: LUCIDE.messageSquareText,
-  fill_blank: LUCIDE.textCursorInput,
-  flashcard: LUCIDE.layers,
-} as const;
-
 const ITEM_KINDS = ["theory", "practice", "recall", "analysis"] as const;
-
-const KIND_ICONS = {
-  theory: LUCIDE.bookOpen,
-  practice: LUCIDE.wrench,
-  recall: LUCIDE.brain,
-  analysis: LUCIDE.microscope,
-} as const;
 
 /**
  * The second button that spends money.
@@ -161,8 +165,9 @@ function GenerateDialog({
   // prompt can be run for flashcards today and a mixed set tomorrow. Each one pulls
   // its own rules into the prompt, and the model picks a shape per question.
   const [types, setTypes] = useState<string[]>(["single_choice"]);
-  const [minCount, setMinCount] = useState("6");
-  const [maxCount, setMaxCount] = useState("20");
+  const [range, setRange] = useState<[number, number]>([1, 10]);
+  // Off = no bounds sent, the model decides how many questions (even none).
+  const [limitCount, setLimitCount] = useState(true);
   const [picked, setPicked] = useState<string[]>(
     defaultAnchor ? [defaultAnchor] : [],
   );
@@ -193,9 +198,8 @@ function GenerateDialog({
   const allPicked = sections.length > 0 && picked.length === sections.length;
   const wholeOutline = allPicked || noSections;
   const chosenCount = picked.length;
-  // A blank bound means "no limit on this side"; the model decides.
-  const minValue = minCount.trim() === "" ? undefined : Number(minCount);
-  const maxValue = maxCount.trim() === "" ? undefined : Number(maxCount);
+  const minValue = limitCount ? range[0] : undefined;
+  const maxValue = limitCount ? range[1] : undefined;
   const inBounds = (value: number | undefined) =>
     value === undefined ||
     (Number.isInteger(value) && value >= 1 && value <= MAX_RUN_ITEMS);
@@ -269,20 +273,6 @@ function GenerateDialog({
         : [...current, anchor],
     );
 
-  // Pointer-only: the field is cleared from the keyboard by deleting its text.
-  const clearButton = (value: string, clear: () => void) =>
-    value === "" ? null : (
-      <button
-        type="button"
-        tabIndex={-1}
-        aria-label={tc("actions.clear")}
-        onClick={clear}
-        className="flex size-5 items-center justify-center rounded hover:bg-muted"
-      >
-        <Icon icon={ICONS.close} className="size-4" />
-      </button>
-    );
-
   const run = async () => {
     if (!aiRun.credential) return;
     setConfirming(false);
@@ -322,26 +312,46 @@ function GenerateDialog({
         <div className="space-y-5">
           {/* What to generate from. */}
           <div className="space-y-4">
-            {datasetId && (versions.data?.items.length ?? 0) > 1 ? (
-              <div className="sm:w-72">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {datasetId && (versions.data?.items.length ?? 0) > 1 ? (
+                <div>
+                  <Select
+                    label={t("ws.meta.versionLabel")}
+                    value={outlineId}
+                    onChange={(event) => switchOutline(event.target.value)}
+                    options={(versions.data?.items ?? []).map((outline) => ({
+                      value: outline.id,
+                      // A named version shows its name; "v*" is only the fallback.
+                      label:
+                        outline.label?.trim() ||
+                        t("outlines.versionShort", {
+                          version: outline.version,
+                        }),
+                    }))}
+                  />
+                </div>
+              ) : null}
+              <div>
                 <Select
-                  label={t("ws.meta.versionLabel")}
-                  value={outlineId}
-                  onChange={(event) => switchOutline(event.target.value)}
-                  options={(versions.data?.items ?? []).map((outline) => ({
-                    value: outline.id,
-                    // A named version shows its name; "v*" is only the fallback.
-                    label:
-                      outline.label?.trim() ||
-                      t("outlines.versionShort", { version: outline.version }),
+                  label={t("generate.template")}
+                  value={templateId}
+                  onChange={(event) => setTemplateId(event.target.value)}
+                  placeholder={
+                    usableTemplates.length === 0
+                      ? t("generate.noTemplate")
+                      : t("generate.pickTemplate")
+                  }
+                  options={usableTemplates.map((row) => ({
+                    value: row.id,
+                    label: row.name,
                   }))}
                 />
               </div>
-            ) : null}
+            </div>
             {/* No headings means nothing to pick: the run is the whole document and
               the cost confirmation says so. */}
             {noSections ? null : (
-              <fieldset className="space-y-2">
+              <fieldset className="min-w-0 space-y-2">
                 <Typography variant="title-4" as="legend">
                   {t("generate.sections")}
                 </Typography>
@@ -392,7 +402,7 @@ function GenerateDialog({
                     return (
                       <li
                         key={section.anchor}
-                        className="flex items-center gap-1"
+                        className="flex min-w-0 items-center gap-1"
                         style={{
                           paddingInlineStart: `${(section.level - 2) * 1.5}rem`,
                         }}
@@ -425,11 +435,30 @@ function GenerateDialog({
                             aria-hidden="true"
                           />
                         )}
-                        <Checkbox
-                          label={section.title}
+                        <SectionCheckbox
+                          title={section.title}
                           checked={state}
-                          onCheckedChange={() => toggleSubtree(index)}
+                          onToggle={() => toggleSubtree(index)}
                         />
+                        <Tooltip
+                          label={t("generate.sectionTokens", {
+                            count: tokensOf(
+                              section.charCount + section.title.length,
+                            ).toLocaleString("en-US"),
+                          })}
+                        >
+                          <span
+                            tabIndex={0}
+                            className="flex shrink-0 cursor-default items-center gap-0.5 pl-2 text-body-4 text-muted-foreground"
+                          >
+                            {formatCompactNumber(
+                              tokensOf(
+                                section.charCount + section.title.length,
+                              ),
+                            )}
+                            <Icon icon={LUCIDE.zap} className="size-3.5" />
+                          </span>
+                        </Tooltip>
                       </li>
                     );
                   })}
@@ -440,23 +469,6 @@ function GenerateDialog({
 
           {/* What to generate. */}
           <div className="space-y-4 border-t border-border pt-5">
-            <div>
-              <Select
-                label={t("generate.template")}
-                value={templateId}
-                onChange={(event) => setTemplateId(event.target.value)}
-                placeholder={
-                  usableTemplates.length === 0
-                    ? t("generate.noTemplate")
-                    : t("generate.pickTemplate")
-                }
-                options={usableTemplates.map((row) => ({
-                  value: row.id,
-                  label: row.name,
-                }))}
-              />
-            </div>
-
             <div className="grid gap-4 sm:grid-cols-2">
               <fieldset className="space-y-2">
                 <legend className="flex items-center gap-1">
@@ -531,29 +543,34 @@ function GenerateDialog({
               </fieldset>
             </div>
 
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-4 sm:max-w-sm">
-                <Input
-                  label={t("generate.minCount")}
-                  type="number"
-                  min={1}
-                  value={minCount}
-                  onChange={(event) => setMinCount(event.target.value)}
-                  trailing={clearButton(minCount, () => setMinCount(""))}
-                />
-                <Input
-                  label={t("generate.maxCount")}
-                  type="number"
-                  min={1}
-                  value={maxCount}
-                  onChange={(event) => setMaxCount(event.target.value)}
-                  trailing={clearButton(maxCount, () => setMaxCount(""))}
-                />
-              </div>
-              <Typography variant="body-4" className="text-muted-foreground">
-                {t("generate.countHint")}
-              </Typography>
-            </div>
+            <fieldset className="space-y-2">
+              <legend className="flex w-full items-center gap-1">
+                <Typography variant="title-4" as="span">
+                  {t("generate.countTitle")}
+                </Typography>
+                <Tooltip label={t("generate.countHint")}>
+                  <span className="flex text-muted-foreground">
+                    <Icon icon={LUCIDE.info} className="size-4" />
+                  </span>
+                </Tooltip>
+                <span className="ml-auto flex">
+                  <Switch
+                    checked={limitCount}
+                    onCheckedChange={setLimitCount}
+                    aria-label={t("generate.countLimit")}
+                  />
+                </span>
+              </legend>
+              <RangeSlider
+                disabled={!limitCount}
+                value={range}
+                onValueChange={setRange}
+                min={1}
+                segments={COUNT_SEGMENTS}
+                ticks={COUNT_TICKS}
+                thumbLabels={[t("generate.minCount"), t("generate.maxCount")]}
+              />
+            </fieldset>
           </div>
 
           {/* Who pays. */}
@@ -642,5 +659,51 @@ function GenerateDialog({
         </Dialog>
       ) : null}
     </Dialog>
+  );
+}
+
+/**
+ * A section's checkbox with a one-line label. The full title shows in a tooltip
+ * only when the line is actually cut off.
+ */
+function SectionCheckbox({
+  title,
+  checked,
+  onToggle,
+}: {
+  title: string;
+  checked: boolean | "indeterminate";
+  onToggle: () => void;
+}) {
+  const id = useId();
+  const textRef = useRef<HTMLLabelElement>(null);
+  const [open, setOpen] = useState(false);
+  const truncated = () => {
+    const el = textRef.current;
+    return el !== null && el.scrollWidth > el.clientWidth;
+  };
+
+  return (
+    <div className="flex min-w-0 flex-1 items-center gap-2.5">
+      <Checkbox
+        id={id}
+        aria-label={title}
+        checked={checked}
+        onCheckedChange={onToggle}
+      />
+      <Tooltip
+        label={title}
+        open={open}
+        onOpenChange={(next) => setOpen(next && truncated())}
+      >
+        <label
+          htmlFor={id}
+          ref={textRef}
+          className="min-w-0 flex-1 cursor-pointer select-none truncate text-body-3"
+        >
+          {title}
+        </label>
+      </Tooltip>
+    </div>
   );
 }

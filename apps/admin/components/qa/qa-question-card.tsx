@@ -1,14 +1,20 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useRef } from "react";
 
 import type { QaItemFull } from "@noalhub/api/qa";
 import { Badge } from "@noalhub/ui/badge";
 import { Button } from "@noalhub/ui/button";
-import { Icon, ICONS } from "@noalhub/ui/icons";
+import { HoverFlyout } from "@noalhub/ui/hover-flyout";
+import { Icon, ICONS, LUCIDE } from "@noalhub/ui/icons";
 
 import { PostContentPreview } from "./post-content-preview";
+import { docToText } from "./qa-plain-doc";
 import { Typography } from "@noalhub/ui/typography";
+
+/** How much of a question is drawn: everything, one line, or a short tile for a grid. */
+export type QaCardDensity = "full" | "compact" | "grid";
 
 /**
  * One question of a set, read-only: kind and difficulty on top, the numbered
@@ -32,6 +38,8 @@ export function QaQuestionCard({
   onRemove,
   onEdit,
   removing = false,
+  density = "full",
+  dragHandle,
 }: {
   item: QaItemFull;
   /** Zero-based position in the set; shown one-based in front of the question. */
@@ -44,6 +52,9 @@ export function QaQuestionCard({
   onRemove?: () => void;
   onEdit?: () => void;
   removing?: boolean;
+  density?: QaCardDensity;
+  /** The grip that starts a drag; the page owns the drag logic, the card only places it. */
+  dragHandle?: React.ReactNode;
 }) {
   const t = useTranslations("admin.qa");
 
@@ -52,51 +63,110 @@ export function QaQuestionCard({
   const accepted =
     item.answerKey && "accepted" in item.answerKey ? item.answerKey.accepted : [];
 
+  const actions = (
+    <>
+      {onMoveUp ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={t("sets.moveUp")}
+          disabled={index === 0}
+          onClick={onMoveUp}
+        >
+          ↑
+        </Button>
+      ) : null}
+      {onMoveDown ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={t("sets.moveDown")}
+          disabled={isLast}
+          onClick={onMoveDown}
+        >
+          ↓
+        </Button>
+      ) : null}
+      {onRemove ? (
+        <Button variant="ghost" size="sm" disabled={removing} onClick={onRemove}>
+          {t("sets.removeItem")}
+        </Button>
+      ) : null}
+      {onEdit ? (
+        <Button
+          variant="outline"
+          size="icon-md"
+          aria-label={t("sets.editItem")}
+          onClick={onEdit}
+        >
+          <Icon icon={ICONS.edit} />
+        </Button>
+      ) : null}
+    </>
+  );
+
+  if (density !== "full") {
+    const text = docToText(item.question);
+    const body =
+      text !== null ? (
+        <ClampedHover text={text}>
+          <Typography
+            variant="body-3"
+            as="span"
+            className={density === "grid" ? "line-clamp-2 text-body-4!" : "line-clamp-1"}
+          >
+            <TextWithImages text={text} />
+          </Typography>
+        </ClampedHover>
+      ) : (
+        <div className={density === "grid" ? "max-h-10 overflow-hidden" : "max-h-6 overflow-hidden"}>
+          <PostContentPreview doc={item.question} tagIds={item.tagIds} />
+        </div>
+      );
+    const number = (
+      <Typography variant="body-3" as="span" weight={600} className="shrink-0 tabular-nums">
+        {index + 1}.
+      </Typography>
+    );
+
+    if (density === "compact") {
+      return (
+        <article className="flex items-center gap-2 rounded-md border border-border bg-surface px-2 py-1.5">
+          {dragHandle}
+          {number}
+          <Badge size="sm" className="shrink-0">
+            {t(`items.kinds.${item.kind}`)}
+          </Badge>
+          <div className="min-w-0 flex-1">{body}</div>
+          {actions}
+        </article>
+      );
+    }
+
+    return (
+      <article className="flex h-full flex-col gap-1 rounded-md border border-border bg-surface p-2">
+        <div className="flex items-center gap-1">
+          {dragHandle}
+          {number}
+          <Badge size="sm">{t(`items.kinds.${item.kind}`)}</Badge>
+          <div className="flex-1" />
+          {actions}
+        </div>
+        <div className="min-w-0 flex-1">{body}</div>
+      </article>
+    );
+  }
+
   return (
     <article className="flex flex-col gap-2.5 rounded-lg border border-border bg-surface p-4">
       <div className="flex items-center gap-2">
+        {dragHandle}
         <Badge size="sm">{t(`items.kinds.${item.kind}`)}</Badge>
         {item.difficulty ? (
           <Badge size="sm">{t(`items.difficulty.${item.difficulty}`)}</Badge>
         ) : null}
         <div className="flex-1" />
-        {onMoveUp ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label={t("sets.moveUp")}
-            disabled={index === 0}
-            onClick={onMoveUp}
-          >
-            ↑
-          </Button>
-        ) : null}
-        {onMoveDown ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label={t("sets.moveDown")}
-            disabled={isLast}
-            onClick={onMoveDown}
-          >
-            ↓
-          </Button>
-        ) : null}
-        {onRemove ? (
-          <Button variant="ghost" size="sm" disabled={removing} onClick={onRemove}>
-            {t("sets.removeItem")}
-          </Button>
-        ) : null}
-        {onEdit ? (
-          <Button
-            variant="outline"
-            size="icon-md"
-            aria-label={t("sets.editItem")}
-            onClick={onEdit}
-          >
-            <Icon icon={ICONS.edit} />
-          </Button>
-        ) : null}
+        {actions}
       </div>
 
       <div className="flex gap-1">
@@ -148,4 +218,75 @@ export function QaQuestionCard({
       ) : null}
     </article>
   );
+}
+
+const IMAGE = /!\[([^\]]*)\]\(([^\s)]+)(?:\s+"[^"]*")?\)/g;
+
+/**
+ * A plain-text question may carry markdown images. At this size each one is a small
+ * placeholder chip; the pictures are in the hover card (`ClampedHover`), which only
+ * mounts them when open, so a screen of 100+ tiles does not fetch 100+ images.
+ */
+function TextWithImages({ text }: { text: string }) {
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  for (const match of text.matchAll(IMAGE)) {
+    const at = match.index ?? 0;
+    if (at > last) parts.push(text.slice(last, at));
+    const [, alt] = match;
+    parts.push(
+      <span
+        key={at}
+        className="mx-0.5 inline-flex items-center gap-0.5 rounded bg-muted px-1 align-middle text-body-4 text-muted-foreground"
+      >
+        <Icon icon={LUCIDE.image} className="size-3" />
+        {alt}
+      </span>,
+    );
+    last = at + match[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return <>{parts}</>;
+}
+
+/**
+ * Hovering a tile's text opens ONE card with the whole question, pictures included —
+ * the same surface card as everywhere else, not a dark tooltip. It opens only when
+ * there is something more to see: the text is cut off by `line-clamp`, or it holds an
+ * image. The card's content mounts only while open, so images load on hover.
+ */
+function ClampedHover({ text, children }: { text: string; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const hasImage = new RegExp(IMAGE.source).test(text);
+  return (
+    <HoverFlyout
+      side="top"
+      align="start"
+      contentClassName="w-[min(24rem,calc(100vw-2rem))] p-3"
+      canOpen={() => {
+        const box = ref.current?.firstElementChild;
+        return hasImage || (!!box && box.scrollHeight > box.clientHeight);
+      }}
+      trigger={<div ref={ref}>{children}</div>}
+    >
+      <FullText text={text} />
+    </HoverFlyout>
+  );
+}
+
+function FullText({ text }: { text: string }) {
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  for (const match of text.matchAll(IMAGE)) {
+    const at = match.index ?? 0;
+    if (at > last) parts.push(text.slice(last, at));
+    const [, alt, src] = match;
+    parts.push(
+      // eslint-disable-next-line @next/next/no-img-element -- an author's own URL, any origin
+      <img key={at} src={src} alt={alt} className="my-1 block max-h-60 max-w-full rounded" />,
+    );
+    last = at + match[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return <div className="text-body-3 whitespace-pre-wrap">{parts}</div>;
 }

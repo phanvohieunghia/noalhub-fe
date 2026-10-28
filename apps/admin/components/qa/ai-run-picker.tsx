@@ -9,7 +9,11 @@ import {
   type AiModel,
 } from "@noalhub/api/qa";
 import { AlertWarning } from "@noalhub/ui/alert";
+import { formatCompactNumber } from "@noalhub/core/format-number";
+import { Badge } from "@noalhub/ui/badge";
+import { LUCIDE } from "@noalhub/ui/icons";
 import { Select } from "@noalhub/ui/select";
+import { Tooltip } from "@noalhub/ui/tooltip";
 import { Typography } from "@noalhub/ui/typography";
 
 export type AiRunChoice = {
@@ -51,12 +55,48 @@ export function useAiRunChoice(): AiRunChoice {
   // Mirrors the backend's `AI_MODEL_NOT_ALLOWED`: a model that was switched off, or
   // cannot be forced into a JSON schema, is refused before the call.
   const modelUsable =
-    modelInfo !== undefined && modelInfo.enabled && modelInfo.supportsStructuredOutput;
+    modelInfo !== undefined &&
+    modelInfo.enabled &&
+    modelInfo.supportsStructuredOutput;
 
   const fields = (
     <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <Typography variant="title-4" as="span">
+          {t("run.credential")}
+        </Typography>
+        {modelInfo && modelUsable ? (
+          <div className="flex items-center gap-1.5">
+            <Tooltip
+              label={t("run.contextTooltip", {
+                label: modelInfo.label,
+                count: modelInfo.contextWindow.toLocaleString("en-US"),
+              })}
+            >
+              <span tabIndex={0} className="flex">
+                <Badge size="sm" icon={LUCIDE.scanText}>
+                  {formatCompactNumber(modelInfo.contextWindow)}
+                </Badge>
+              </span>
+            </Tooltip>
+            <Tooltip
+              label={t("run.outputTooltip", {
+                label: modelInfo.label,
+                count: modelInfo.maxOutputTokens.toLocaleString("en-US"),
+              })}
+            >
+              <span tabIndex={0} className="flex">
+                <Badge size="sm" icon={LUCIDE.fileOutput}>
+                  {formatCompactNumber(modelInfo.maxOutputTokens)}
+                </Badge>
+              </span>
+            </Tooltip>
+          </div>
+        ) : null}
+      </div>
       <Select
         label={t("run.credential")}
+        hideLabel
         value={credential?.id ?? ""}
         onChange={(event) => setPickedId(event.target.value)}
         placeholder={
@@ -71,17 +111,10 @@ export function useAiRunChoice(): AiRunChoice {
           label: `${row.label} · ${row.model.label} · …${row.keyLast4}`,
         }))}
       />
-      {modelInfo && modelUsable ? (
-        <Typography variant="body-4" className="opacity-70">
-          {t("run.modelOfKey", {
-            label: modelInfo.label,
-            context: modelInfo.contextWindow,
-            output: modelInfo.maxOutputTokens,
-          })}
-        </Typography>
-      ) : null}
       {modelInfo && !modelUsable ? (
-        <AlertWarning message={t("run.modelUnavailable", { label: modelInfo.label })} />
+        <AlertWarning
+          message={t("run.modelUnavailable", { label: modelInfo.label })}
+        />
       ) : null}
     </div>
   );

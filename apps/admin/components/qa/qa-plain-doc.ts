@@ -99,3 +99,12 @@ export function textStats(text: string): { words: number; characters: number } {
     characters: text.length,
   };
 }
+
+/** Nothing a learner could read: no text anywhere and no image. */
+export function isEmptyDoc(node: unknown): boolean {
+  if (typeof node !== "object" || node === null) return true;
+  const { type, text, content } = node as { type?: string; text?: string; content?: unknown[] };
+  if (type === "image") return false;
+  if (typeof text === "string" && text.trim() !== "") return false;
+  return (content ?? []).every(isEmptyDoc);
+}
