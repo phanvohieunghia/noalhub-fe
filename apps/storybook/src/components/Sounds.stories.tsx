@@ -1,5 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { playCorrect, playSelect, playWrong } from "@noalhub/core/sounds";
+import { useEffect } from "react";
+import {
+  playCorrect,
+  playSelect,
+  playWrong,
+  unlockSounds,
+} from "@noalhub/core/sounds";
 import { Button } from "@noalhub/ui/button";
 import { Icon, LUCIDE } from "@noalhub/ui/icons";
 import { Typography } from "@noalhub/ui/typography";
@@ -82,4 +88,32 @@ export const Sequence: Story = {
       Play a full round
     </Button>
   ),
+};
+
+function DelayedVerdict() {
+  // What the quiz screen does when it opens.
+  useEffect(() => unlockSounds(), []);
+  return (
+    <div className="flex max-w-xl flex-col gap-3">
+      <Button onClick={() => setTimeout(playCorrect, 600)}>
+        <Icon icon={LUCIDE.circleCheck} />
+        Answer right
+      </Button>
+      <Button variant="outline" onClick={() => setTimeout(playWrong, 600)}>
+        <Icon icon={LUCIDE.circleX} />
+        Answer wrong
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * A verdict as the quiz plays it: the answer goes out on a tap and the cue rings once
+ * the server has replied — after the tap is over, with no pick cue before it (a
+ * flashcard, a typed answer). Try it on a phone: a browser that starts audio only
+ * from inside a tap stays silent here unless the first tap started it, which
+ * `unlockSounds()` does.
+ */
+export const VerdictAfterAnswer: Story = {
+  render: () => <DelayedVerdict />,
 };

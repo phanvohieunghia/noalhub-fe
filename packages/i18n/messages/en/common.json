@@ -159,7 +159,16 @@
     "linkUrl": "URL",
     "uploading": "Uploading the image… {percent}%",
     "fullscreen": "Full screen",
-    "exitFullscreen": "Exit full screen"
+    "exitFullscreen": "Exit full screen",
+    "mermaidTitle": "Edit diagram",
+    "mermaidSource": "Mermaid source",
+    "mermaidPreview": "Preview",
+    "mermaidInvalid": "This diagram cannot be drawn.",
+    "mermaidEdit": "Edit",
+    "mermaidView": "Preview",
+    "mermaidZoomIn": "Zoom in",
+    "mermaidZoomOut": "Zoom out",
+    "mermaidZoomReset": "Reset zoom"
   },
   "upload": {
     "label": "Upload an image",

@@ -63,6 +63,7 @@ export const BLOG_CODE_LANGUAGES = [
   "html",
   "javascript",
   "json",
+  "mermaid",
   "php",
   "python",
   "sql",

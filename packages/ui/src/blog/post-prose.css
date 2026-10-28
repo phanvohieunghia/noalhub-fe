@@ -346,3 +346,80 @@
   margin-right: 0.25em;
   user-select: none;
 }
+
+/* A rendered ```mermaid diagram: centred, scrolls sideways rather than widening the page. */
+.post-prose .post-prose-mermaid {
+  display: flex;
+  justify-content: center;
+  max-width: 100%;
+  overflow: hidden;
+  margin-block: 1rem;
+}
+
+/* Never wider than the text column or taller than 32rem: a big diagram scales down to fit
+   (it keeps its aspect ratio) instead of widening the page or pushing the text away. */
+.post-prose .post-prose-mermaid svg {
+  max-width: 100%;
+  max-height: 32rem;
+  height: auto;
+}
+
+/*
+ * In the editor a mermaid block is its diagram: the source node is hidden and the widget
+ * stands in, outlined like a selected image once picked. A source that fails to parse shows
+ * the parser's message in the same box.
+ */
+.post-prose .post-prose-mermaid-source {
+  display: none;
+}
+
+.post-prose .post-prose-mermaid-widget {
+  position: relative;
+  cursor: pointer;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+}
+
+.post-prose .post-prose-mermaid-widget:hover {
+  outline: 1px solid var(--border);
+}
+
+.post-prose .post-prose-mermaid-widget.is-selected {
+  outline: 2px solid var(--color-primary);
+}
+
+.post-prose .post-prose-mermaid-widget.is-error {
+  justify-content: flex-start;
+  font-size: 0.875rem;
+  color: var(--danger);
+}
+
+/* The two options that float out at the cursor once a diagram is picked. */
+.post-prose .post-prose-mermaid-options {
+  position: absolute;
+  z-index: 10;
+  display: flex;
+  gap: 0.125rem;
+  padding: 0.125rem;
+  transform: translate(-50%, 0.5rem);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.12);
+}
+
+.post-prose .post-prose-mermaid-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 1.75rem;
+  padding-inline: 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.post-prose .post-prose-mermaid-option:hover {
+  background: var(--muted);
+}

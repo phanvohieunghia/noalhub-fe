@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { isValidElement } from "react";
 import Markdown, { type Components, type UrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -9,6 +10,7 @@ import {
 } from "@noalhub/api/blog";
 
 import { alignClassName, parseAlignMarker } from "./align-markdown";
+import { MermaidDiagram } from "./mermaid-diagram";
 
 import "./post-prose.css";
 
@@ -152,7 +154,13 @@ const COMPONENTS: Components = {
   },
 
   // Scrolls sideways (`post-prose.css`), so it must be keyboard-reachable.
-  pre: ({ children }) => <pre tabIndex={0}>{children}</pre>,
+  pre: ({ children }) => {
+    const code = isValidElement<{ className?: string; children?: React.ReactNode }>(children) ? children : null;
+    if (code?.props.className?.includes("language-mermaid") && typeof code.props.children === "string") {
+      return <MermaidDiagram chart={code.props.children} />;
+    }
+    return <pre tabIndex={0}>{children}</pre>;
+  },
 
   table: ({ children }) => (
     <div className="post-prose-table-scroll">

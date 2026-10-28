@@ -1,5 +1,6 @@
 "use client";
 
+import Code from "@tiptap/extension-code";
 import Heading from "@tiptap/extension-heading";
 import Image from "@tiptap/extension-image";
 import Paragraph from "@tiptap/extension-paragraph";
@@ -20,9 +21,9 @@ import {
 import { NodeSelection, Plugin } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import StarterKit from "@tiptap/starter-kit";
-// Type-only: `contentType` on the editor options is declared by this package's
-// module augmentation. Nothing is bundled — `MarkdownEditor` adds the runtime.
-import type {} from "@tiptap/markdown";
+// Also declares `contentType` on the editor options (module augmentation). The JSON editor
+// loads it too, only so a pasted Markdown source can be turned into nodes (`pasteMarkdown`).
+import { Markdown } from "@tiptap/markdown";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
@@ -53,6 +54,7 @@ import { Alert, AlertError } from "../alert";
 import { Icon, ICONS, LUCIDE, type IconName } from "../icons";
 import { Input } from "../input";
 import { Select } from "../select";
+import { Textarea } from "../textarea";
 import { Tooltip } from "../tooltip";
 
 import { ImageUploadButton } from "../media/image-upload-button";
@@ -66,6 +68,8 @@ import {
   ChangeHighlight,
   acceptChanges,
 } from "./change-highlight";
+import { MermaidPreview } from "./mermaid-preview";
+import { MermaidViewer } from "./mermaid-viewer";
 import "./post-prose.css";
 
 /**
@@ -301,6 +305,8 @@ export const BLOG_EXTENSIONS: Extensions = [
     // drops, so an author underlines something, saves, and the text comes
     // back plain.
     underline: false,
+    // Replaced below by one that can sit inside bold/italic.
+    code: false,
     link: {
       openOnClick: false,
       protocols: ["http", "https", "mailto"],
@@ -309,6 +315,12 @@ export const BLOG_EXTENSIONS: Extensions = [
       isAllowedUri: (url) => isSafeLinkHref(url),
     },
   }),
+  // Stock `code` excludes every other mark, so `**a `b` c**` — bold text holding a code
+  // span, which is everywhere in technical writing — made ProseMirror throw "Invalid
+  // collection of marks" and a pasted document landed as raw characters. The allowlist
+  // (`sanitizeBlogDoc`, the backend, the renderers) has no such rule, so the editor
+  // should not either.
+  Code.extend({ excludes: "" }),
   AlignedParagraph,
   // h1 is the Q&A outline document title; h2/h3/h4 are its levels (§6.2). h4 is
   // what the Q&A outline's third level needs — without it the backend demotes a
@@ -363,6 +375,8 @@ export const BLOG_EXTENSIONS: Extensions = [
 /** The full-screen toggle an editor can show in its toolbar; the parent owns the state. */
 export type EditorFullscreen = { active: boolean; onToggle: () => void };
 
+const JSON_EDITOR_EXTENSIONS = [Markdown];
+
 export function TiptapEditor({
   value,
   onChange,
@@ -390,6 +404,7 @@ export function TiptapEditor({
       // Sanitized RIGHT IN the editor rather than at submit time: that way the
       // preview (§8) and what will be saved are the same tree, with no "visible
       // while writing, gone after saving".
+      extensions={JSON_EDITOR_EXTENSIONS}
       onUpdate={(instance) => onChange(sanitizeBlogDoc(instance.getJSON()))}
       contentClassName={contentClassName}
       fullscreen={fullscreen}
@@ -433,6 +448,10 @@ export function RichTextEditor({
 }) {
   const t = useTranslations("common.editor");
   const [linkOpen, setLinkOpen] = useState(false);
+  // Position of the mermaid block whose source is being edited, if the dialog is open.
+  const [mermaidAt, setMermaidAt] = useState<number | null>(null);
+  // Same, for the full-size viewer.
+  const [mermaidView, setMermaidView] = useState<number | null>(null);
   const [imageMode, setImageMode] = useState<"upload" | "url" | null>(null);
   const m = useMessage();
   const [dropError, setDropError] = useState<Message | string | null>(null);
@@ -562,7 +581,16 @@ export function RichTextEditor({
   const editor = useEditor({
     // Required with Next's SSR: rendering on the first pass mismatches hydration.
     immediatelyRender: false,
-    extensions: [...BLOG_EXTENSIONS, ChangeHighlight, ...extensions],
+    extensions: [
+      ...BLOG_EXTENSIONS,
+      ChangeHighlight,
+      MermaidPreview.configure({
+        onEdit: (pos) => setMermaidAt(pos),
+        onPreview: (pos) => setMermaidView(pos),
+        labels: { edit: t("mermaidEdit"), preview: t("mermaidView") },
+      }),
+      ...extensions,
+    ],
     // Stored markdown can hold `- [ ]` too (see `flattenTaskLists`); an invalid item
     // here would throw on mount and blank the editor.
     content: contentType === "markdown" && typeof content === "string" ? flattenTaskLists(content) : content,
@@ -737,6 +765,15 @@ export function RichTextEditor({
 
       {linkOpen ? (
         <LinkDialog editor={editor} onClose={() => setLinkOpen(false)} />
+      ) : null}
+      {mermaidView !== null ? (
+        <MermaidViewer
+          chart={editor.state.doc.nodeAt(mermaidView)?.textContent ?? ""}
+          onClose={() => setMermaidView(null)}
+        />
+      ) : null}
+      {mermaidAt !== null ? (
+        <MermaidDialog editor={editor} pos={mermaidAt} onClose={() => setMermaidAt(null)} />
       ) : null}
       {imageMode ? (
         <ImageDialog
@@ -1103,29 +1140,25 @@ function Toolbar({
       {/* Shown only while the cursor is inside a code block — a select that is
           always visible but almost always inert invites misclicks. */}
       {inCodeBlock ? (
-        <select
-          aria-label={t("codeLanguage")}
-          className={`${extra ? "" : "ml-auto "}h-8 rounded-md border border-border bg-transparent px-2 text-body-4`}
-          value={active.codeBlockLanguage}
-          onChange={(event) =>
-            editor
-              .chain()
-              .focus()
-              .updateAttributes("codeBlock", {
-                language: event.target.value || null,
-              })
-              .run()
-          }
-        >
-          <option value="" className="bg-background">
-            {t("codeLanguageNone")}
-          </option>
-          {BLOG_CODE_LANGUAGES.map((language) => (
-            <option key={language} value={language} className="bg-background">
-              {language}
-            </option>
-          ))}
-        </select>
+        <div className={`${extra ? "" : "ml-auto "}w-40`}>
+          <Select
+            label={t("codeLanguage")}
+            hideLabel
+            size="sm"
+            placeholder={t("codeLanguageNone")}
+            value={active.codeBlockLanguage}
+            onChange={(event) =>
+              editor
+                .chain()
+                .focus()
+                .updateAttributes("codeBlock", {
+                  language: event.target.value || null,
+                })
+                .run()
+            }
+            options={BLOG_CODE_LANGUAGES.map((language) => ({ value: language, label: language }))}
+          />
+        </div>
       ) : null}
 
       {extra ? (
@@ -1287,6 +1320,62 @@ function ImagesDialog({
             {t("imagesApply")}
           </Button>
         </div>
+      </div>
+    </Dialog>
+  );
+}
+
+/**
+ * The source of one mermaid block as plain text — editing only; the picture is the
+ * preview option's job. Saved back into that block's text, so the document keeps the
+ * shape any code block has.
+ */
+function MermaidDialog({
+  editor,
+  pos,
+  onClose,
+}: {
+  editor: Editor;
+  pos: number;
+  onClose: () => void;
+}) {
+  const t = useTranslations("common.editor");
+  const actions = useTranslations("common.actions");
+  const [source, setSource] = useState(() => editor.state.doc.nodeAt(pos)?.textContent ?? "");
+
+  const save = () => {
+    editor
+      .chain()
+      .command(({ tr, state }) => {
+        const node = state.doc.nodeAt(pos);
+        if (!node || node.type.name !== "codeBlock") return false;
+        const from = pos + 1;
+        const to = pos + node.nodeSize - 1;
+        if (source.trim()) tr.replaceWith(from, to, state.schema.text(source));
+        else tr.delete(from, to);
+        return true;
+      })
+      .focus()
+      .run();
+    onClose();
+  };
+
+  return (
+    <Dialog open size="lg" onClose={onClose} title={t("mermaidTitle")}>
+      <Textarea
+        aria-label={t("mermaidSource")}
+        value={source}
+        onChange={(event) => setSource(event.target.value)}
+        rows={18}
+        spellCheck={false}
+        autoFocus
+        className="font-mono"
+      />
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={onClose}>
+          {actions("cancel")}
+        </Button>
+        <Button onClick={save}>{actions("save")}</Button>
       </div>
     </Dialog>
   );
@@ -1542,7 +1631,8 @@ function pasteMarkdown(
   contentType: "json" | "markdown" | undefined,
   onLocalImages: (images: LocalImage[]) => void,
 ): boolean {
-  if (contentType !== "markdown" || !editor) return false;
+  // Both editors take pasted Markdown; the JSON one still stores nodes, not text.
+  if (!editor || !editor.markdown) return false;
   if (editor.isActive("codeBlock")) return false;
 
   const data = event.clipboardData;

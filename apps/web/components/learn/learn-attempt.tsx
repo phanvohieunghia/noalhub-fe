@@ -29,7 +29,7 @@ import { Tooltip } from "@noalhub/ui/tooltip";
 import { Typography } from "@noalhub/ui/typography";
 
 import { AnswerInput } from "./answer-input";
-import { playCorrect, playWrong } from "@noalhub/core/sounds";
+import { playCorrect, playWrong, unlockSounds } from "@noalhub/core/sounds";
 
 /** Questions per progress segment. */
 const SEGMENT_SIZE = 10;
@@ -79,6 +79,10 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
     const timer = window.setTimeout(() => setTipPinned(false), 2000);
     return () => window.clearTimeout(timer);
   }, [tipPinned]);
+  // The verdict rings when the server answers, after the tap that sent the answer
+  // is over — and some browsers start audio only from inside a tap, so the
+  // sitting's first tap does it.
+  useEffect(() => unlockSounds(), []);
   // Answered here, this session. The review refetch catches up on its own, but
   // "next" can be clicked before it lands — and the question it would bring
   // back is one the backend already refuses as a duplicate.

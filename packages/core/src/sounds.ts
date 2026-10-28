@@ -1,21 +1,55 @@
 /**
  * Quiz sound cues, synthesised with Web Audio so there are no asset files.
  *
- * Browsers only let an AudioContext start after a user gesture; every cue here
- * is triggered by a tap or key press (the verdict plays right after the answer
- * was sent from one), and any failure is swallowed — sound is garnish.
+ * Browsers only let an AudioContext start after a user gesture, and some only while
+ * that gesture is still on the call stack. A cue that answers a tap or key press is
+ * fine on its own; the verdict is not one — it rings once the server has answered —
+ * so a screen that plays verdicts calls `unlockSounds()` when it opens. Any failure
+ * is swallowed — sound is garnish.
  */
 let ctx: AudioContext | null = null;
 
+/**
+ * The shared context, started or woken if it is not running. Call it from inside a
+ * gesture when you can — that is where every browser lets it start.
+ *
+ * "Not running" is more than "suspended" — iOS also reports "interrupted" (a call
+ * came in, the tab went to the background) — and a closed context cannot be revived,
+ * so it is replaced. A refused `resume()` (no gesture yet) is not worth reporting.
+ */
 function context(): AudioContext | null {
   if (typeof window === "undefined") return null;
   try {
+    if (ctx?.state === "closed") ctx = null;
     ctx ??= new window.AudioContext();
-    if (ctx.state === "suspended") void ctx.resume();
+    if (ctx.state !== "running") void ctx.resume().catch(() => undefined);
     return ctx;
   } catch {
     return null;
   }
+}
+
+const GESTURES = ["touchend", "click", "keydown"] as const;
+
+/**
+ * Keeps the audio context running while a screen is open: the first tap or key press
+ * starts it, and every later one brings it back if it has stopped. Returns the
+ * function that stops listening, which is what an effect's cleanup wants.
+ *
+ * The cues that answer a tap start the context themselves; the verdict does not
+ * answer one — it rings when the server replies. A browser that starts a context only
+ * from inside a gesture would leave it silent for a question with nothing to pick (a
+ * flashcard, a typed answer), which plays no cue on the tap that sends it. The same
+ * listeners revive the context after iOS interrupts it (a call, the tab in the
+ * background).
+ */
+export function unlockSounds() {
+  if (typeof window === "undefined") return () => undefined;
+  const wake = () => void context();
+  for (const type of GESTURES) window.addEventListener(type, wake, true);
+  return () => {
+    for (const type of GESTURES) window.removeEventListener(type, wake, true);
+  };
 }
 
 /**

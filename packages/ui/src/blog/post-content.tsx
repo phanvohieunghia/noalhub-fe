@@ -10,6 +10,7 @@ import type {
   BlogTextNode,
 } from "@noalhub/api/blog";
 import { alignClassName } from "./align-markdown";
+import { MermaidDiagram } from "./mermaid-diagram";
 import { collectHeadings } from "@noalhub/core/blog/headings";
 
 import "./post-prose.css";
@@ -102,6 +103,9 @@ function Block({
       );
 
     case "codeBlock":
+      if (node.attrs.language === "mermaid") {
+        return <MermaidDiagram chart={node.content?.map((child) => child.text).join("") ?? ""} />;
+      }
       return (
         // `tabIndex` because the block scrolls sideways (`post-prose.css`):
         // a scrollable region a keyboard cannot reach hides the end of every

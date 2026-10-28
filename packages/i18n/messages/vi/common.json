@@ -159,7 +159,16 @@
     "linkUrl": "URL",
     "uploading": "Đang tải ảnh lên… {percent}%",
     "fullscreen": "Toàn màn hình",
-    "exitFullscreen": "Thoát toàn màn hình"
+    "exitFullscreen": "Thoát toàn màn hình",
+    "mermaidTitle": "Sửa sơ đồ",
+    "mermaidSource": "Mã Mermaid",
+    "mermaidPreview": "Xem trước",
+    "mermaidInvalid": "Không vẽ được sơ đồ này.",
+    "mermaidEdit": "Sửa",
+    "mermaidView": "Xem",
+    "mermaidZoomIn": "Phóng to",
+    "mermaidZoomOut": "Thu nhỏ",
+    "mermaidZoomReset": "Đặt lại"
   },
   "upload": {
     "label": "Tải ảnh lên",
