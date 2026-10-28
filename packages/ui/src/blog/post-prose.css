@@ -103,11 +103,17 @@
   margin-top: 0.5rem;
 }
 
+/* Callout, not a pull-quote: quotes hold whole blocks (tables, lists, code),
+   so no italics/opacity, which would bleed into everything nested inside. */
 .post-prose blockquote {
-  border-left: 3px solid color-mix(in srgb, currentColor 25%, transparent);
-  padding-left: 1rem;
-  font-style: italic;
-  opacity: 0.85;
+  border-left: 4px solid var(--primary);
+  border-radius: 0 0.5rem 0.5rem 0;
+  background: var(--muted);
+  padding: 0.75rem 1rem;
+}
+
+.post-prose blockquote > * + * {
+  margin-top: 0.75rem;
 }
 
 .post-prose :not(pre) > code {

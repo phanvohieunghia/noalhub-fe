@@ -10,12 +10,12 @@ export type ProportionSegment = {
 
 const STROKES = {
   primary: "stroke-primary",
-  muted: "stroke-muted-foreground/30",
+  muted: "stroke-foreground/15",
 } as const;
 
 const DOTS = {
   primary: "bg-primary",
-  muted: "bg-muted-foreground/30",
+  muted: "bg-foreground/20",
 } as const;
 
 // A circle of radius R with its circumference as the dash unit: a segment of
@@ -51,7 +51,7 @@ export function ProportionCard({
   const firstLength = total === 0 ? 0 : (segments[0].value / total) * CIRCUMFERENCE;
 
   return (
-    <div className="border-border rounded-xl border p-6">
+    <div className="border-border bg-surface rounded-xl border p-5">
       <Typography variant="title-4" weight={500} className="text-muted-foreground uppercase tracking-wide">
         {title}
       </Typography>
@@ -87,6 +87,7 @@ export function ProportionCard({
                   fill="none"
                   strokeWidth={STROKE_WIDTH}
                   strokeDasharray={`${firstLength} ${CIRCUMFERENCE}`}
+                  strokeLinecap="round"
                   className={STROKES[segments[0].tone]}
                 />
               ) : null}

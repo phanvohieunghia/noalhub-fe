@@ -376,7 +376,7 @@ function Feedback({
 
   if (celebrate && !result.explanation) {
     return (
-      <Dialog open onClose={onNext} title={verdict} icon={LUCIDE.circleCheck} tone="success" hideClose>
+      <Dialog open onClose={onNext} title={verdict} icon={LUCIDE.circleCheck} tone="success" hideClose blurOverlay>
         {/* No button: the whole card is one — and the overlay and X already mean "next". */}
         <button
           type="button"
@@ -410,6 +410,7 @@ function Feedback({
       tone={good ? "success" : "danger"}
       hideClose
       centered
+      blurOverlay
     >
       {celebrate ? (
         <div className="relative flex justify-center">

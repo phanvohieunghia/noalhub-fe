@@ -25,7 +25,7 @@ export function RangeTabs({
   label: string;
 }) {
   return (
-    <div role="group" aria-label={label} className="border-border flex gap-1 rounded-lg border p-1">
+    <div role="group" aria-label={label} className="border-border bg-background inline-flex gap-0.5 rounded-lg border p-0.5">
       {options.map((option) => (
         <Button
           key={option.value}

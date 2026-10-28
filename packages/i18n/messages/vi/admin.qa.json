@@ -388,6 +388,12 @@
     "previewMultiHint": "Có thể có nhiều hơn một đáp án đúng — chọn tất cả đáp án phù hợp.",
     "countQuestions": "{count} câu hỏi",
     "countPublished": "{count} đã xuất bản",
+    "deviceLabel": "Thiết bị",
+    "devices": {
+      "mobile": "Điện thoại",
+      "tablet": "Máy tính bảng",
+      "laptop": "Laptop"
+    },
     "previewTitle": "Xem trước câu hỏi",
     "previewIntro": "Bản xem trước chỉ đọc của câu hỏi {shape}, đúng như người học thấy.",
     "previewSingleHint": "Chọn một đáp án.",
@@ -406,7 +412,32 @@
     "statePartial": "Xuất bản một phần ({published}/{total})",
     "previewTags": "Nhãn (chỉ để xem thử, không lưu)",
     "tagsLabel": "Nhãn",
-    "tagsHint": "Người học thấy câu hỏi trong một khung kèm nhãn ở viền."
+    "tagsHint": "Người học thấy câu hỏi trong một khung kèm nhãn ở viền.",
+    "sample": {
+      "source": "Ví dụ",
+      "real": "Câu thật",
+      "example": "Ví dụ giả lập",
+      "picture": "Hình ảnh",
+      "noPicture": "Không hình",
+      "withPicture": "Có hình",
+      "questionLength": "Câu hỏi",
+      "answerLength": "Đáp án",
+      "answerCount": "Số đáp án",
+      "short": "Ngắn",
+      "long": "Dài",
+      "questionShort": "Biển này có ý nghĩa gì?",
+      "questionLong": "Một người lái xe đang tiến gần một nút giao trong lúc trời mưa to và đã tối. Phía trước đường thu hẹp còn hai làn, một người đi xe đạp đang ra hiệu rẽ phải, còn xe phía sau liên tục nháy đèn pha. Theo quy tắc giao thông, người lái xe cần làm gì trước tiên trong tình huống này?",
+      "answerShort1": "Giảm tốc độ",
+      "answerShort2": "Dừng lại",
+      "answerShort3": "Nhường đường",
+      "answerShort4": "Đi tiếp",
+      "answerShort5": "Bấm còi",
+      "answerLong1": "Giảm tốc độ từ từ, giữ khoảng cách an toàn và để người đi xe đạp rẽ xong rồi mới đi tiếp",
+      "answerLong2": "Dừng ngay tại chỗ, bật đèn cảnh báo nguy hiểm và chờ cho xe phía sau vượt qua hết",
+      "answerLong3": "Nhường đường cho mọi phương tiện đang ở trong nút giao, chỉ đi tiếp khi đường thông thoáng cả hai hướng",
+      "answerLong4": "Giữ nguyên tốc độ và làn đường vì xe đang nháy đèn mới là xe phải nhường đường",
+      "answerLong5": "Bấm còi ngắn để cảnh báo những người tham gia giao thông khác rồi tấp vào lề đường bên phải"
+    }
   },
   "generate": {
     "button": "Sinh bộ câu hỏi",

@@ -388,6 +388,12 @@
     "previewMultiHint": "More than one answer may be correct — pick all that apply.",
     "countQuestions": "{count, plural, one {# question} other {# questions}}",
     "countPublished": "{count} published",
+    "deviceLabel": "Device",
+    "devices": {
+      "mobile": "Mobile",
+      "tablet": "Tablet",
+      "laptop": "Laptop"
+    },
     "previewTitle": "Question preview",
     "previewIntro": "Read-only preview of the {shape} question exactly as a learner sees it.",
     "previewSingleHint": "Pick one answer.",
@@ -406,7 +412,32 @@
     "statePartial": "Partly published ({published}/{total})",
     "previewTags": "Tags (preview only — nothing is saved)",
     "tagsLabel": "Tags",
-    "tagsHint": "Shown to learners as a framed card with the label on its edge."
+    "tagsHint": "Shown to learners as a framed card with the label on its edge.",
+    "sample": {
+      "source": "Example",
+      "real": "Real question",
+      "example": "Made-up example",
+      "picture": "Picture",
+      "noPicture": "No picture",
+      "withPicture": "With picture",
+      "questionLength": "Question",
+      "answerLength": "Answers",
+      "answerCount": "Number of answers",
+      "short": "Short",
+      "long": "Long",
+      "questionShort": "What does this sign mean?",
+      "questionLong": "A driver is approaching a junction in heavy rain after dark. The road ahead narrows to two lanes, a cyclist is signalling to turn right, and a vehicle behind is flashing its headlights. According to the traffic rules, what should the driver do first in this situation?",
+      "answerShort1": "Slow down",
+      "answerShort2": "Stop",
+      "answerShort3": "Give way",
+      "answerShort4": "Keep going",
+      "answerShort5": "Sound the horn",
+      "answerLong1": "Reduce speed gradually, keep a safe distance and let the cyclist complete the turn before moving on",
+      "answerLong2": "Stop at once on the spot, switch on the hazard lights and wait until the vehicle behind has passed",
+      "answerLong3": "Give way to every vehicle already in the junction, then continue only when the road is clear in both directions",
+      "answerLong4": "Keep the current speed and lane, because the vehicle that is flashing its lights is the one that must give way",
+      "answerLong5": "Sound the horn briefly to warn the other road users and then pull over to the right-hand side of the road"
+    }
   },
   "generate": {
     "button": "Generate question sets",

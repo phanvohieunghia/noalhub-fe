@@ -36,10 +36,12 @@ type DialogProps = {
    * verdict that is the whole point of the dialog (a right or wrong answer).
    */
   centered?: boolean;
+  /** Blur the page behind the overlay — for a verdict that should own the screen. */
+  blurOverlay?: boolean;
   children: React.ReactNode;
 };
 
-export type DialogSize = "md" | "lg" | "fullscreen" | "inset";
+export type DialogSize = "md" | "lg" | "xl" | "fullscreen" | "inset";
 export type DialogTone = "default" | "success" | "danger";
 
 const TITLE_TONES = {
@@ -64,6 +66,7 @@ const BODY_TONES = {
 const CONTENT_SIZES = {
   md: "top-1/2 left-1/2 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-xl shadow-xl",
   lg: "top-1/2 left-1/2 max-h-[calc(100dvh-2rem)] w-[min(45rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border shadow-xl",
+  xl: "top-1/2 left-1/2 max-h-[calc(100dvh-2rem)] w-[min(64rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border shadow-xl",
   fullscreen: "inset-0 flex flex-col",
   /** Inset from the viewport with the page showing around it. */
   inset:
@@ -73,6 +76,7 @@ const CONTENT_SIZES = {
 const BODY_SIZES = {
   md: "flex flex-col gap-4 p-5",
   lg: "flex flex-col gap-4 p-6",
+  xl: "flex flex-col gap-4 p-6",
   fullscreen: "flex min-h-0 flex-1 flex-col gap-4 p-5",
   inset: "flex min-h-0 flex-1 flex-col",
 } as const;
@@ -135,6 +139,7 @@ export function Dialog({
   actions,
   hideClose = false,
   centered = false,
+  blurOverlay = false,
   children,
 }: DialogProps) {
   const t = useTranslations("common");
@@ -146,7 +151,7 @@ export function Dialog({
       onOpenChange={(next) => !next && requestClose()}
     >
       <RadixDialog.Portal>
-        <RadixDialog.Overlay className="fixed inset-0 z-50 bg-black/40 data-[state=open]:animate-overlay-in data-[state=closed]:animate-overlay-out" />
+        <RadixDialog.Overlay className={`fixed inset-0 z-50 bg-black/40 ${blurOverlay ? "backdrop-blur-sm" : ""} data-[state=open]:animate-overlay-in data-[state=closed]:animate-overlay-out`} />
         <RadixDialog.Content
           className={`fixed z-50 ${tone === "default" ? "bg-background" : "bg-surface"} text-foreground focus:outline-none ${
             centered
