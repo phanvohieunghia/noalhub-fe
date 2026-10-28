@@ -87,6 +87,32 @@ export type AdminStats = {
   admins: number;
 };
 
+export const ADMIN_SIGNUP_RANGES = ["week", "month", "year"] as const;
+export type AdminSignupRange = (typeof ADMIN_SIGNUP_RANGES)[number];
+
+export type AdminSignupPoint = {
+  /** ISO timestamp of the bucket's start (UTC): midnight, or the 1st of the month. */
+  date: string;
+  newUsers: number;
+  /** How many of `newUsers` have a verified email *now* (not at signup time). */
+  verifiedNewUsers: number;
+};
+
+/**
+ * `AdminSignupsDto` — `GET /admin/stats/signups?range=`. Rolling windows in UTC:
+ * 7 days / 30 days / 12 months, current day or month included, so the last
+ * bucket of `year` is partial. `points` is dense (empty buckets are `0`).
+ */
+export type AdminSignups = {
+  range: AdminSignupRange;
+  /** `day` for week/month, `month` for year. */
+  granularity: "day" | "month";
+  points: AdminSignupPoint[];
+  total: number;
+  /** Total of the immediately preceding period of the same length. */
+  previousTotal: number;
+};
+
 /**
  * `StorybookAccessDto` — one email allowed into the internal Storybook at
  * `storybook-noalhub.duckdns.org/internal/`.

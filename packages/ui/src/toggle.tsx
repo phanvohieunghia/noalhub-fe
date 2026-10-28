@@ -22,8 +22,8 @@ type ToggleProps<T extends string> = {
   "aria-label": string;
   disabled?: boolean;
   className?: string;
-  /** `pill` is the muted capsule; `outline` is a bordered box with square-cornered items. */
-  variant?: "pill" | "outline";
+  /** `pill` is the muted capsule; `outline` is a bordered box with square-cornered items; `filter` is the same box on a `background` track with a primary-filled active item, for filters inside a `surface` card (where `pill` and `outline` melt into the card). */
+  variant?: "pill" | "outline" | "filter";
 };
 
 /**
@@ -58,9 +58,11 @@ function ToggleInner<T extends string>(
         if (next) onValueChange(next as T);
       }}
       className={`inline-flex items-center ${
-        variant === "outline"
-          ? "gap-0.5 rounded-lg border border-border bg-surface p-0.5"
-          : "overflow-clip rounded-full bg-muted p-0.5"
+        variant === "filter"
+          ? "gap-0.5 rounded-lg border border-border bg-background p-0.5"
+          : variant === "outline"
+            ? "gap-0.5 rounded-lg border border-border bg-surface p-0.5"
+            : "overflow-clip rounded-full bg-muted p-0.5"
       } ${className}`}
     >
       {options.map((option) => (
@@ -78,12 +80,17 @@ function ToggleInner<T extends string>(
             focus-visible:ring-2 focus-visible:ring-ring
             disabled:cursor-not-allowed disabled:opacity-50
             ${
-              variant === "outline"
-                ? "size-6 rounded-md data-[state=on]:bg-muted data-[state=on]:text-foreground"
-                : "size-7 rounded-full data-[state=on]:bg-surface data-[state=on]:text-foreground data-[state=on]:shadow-sm data-[state=on]:ring-1 data-[state=on]:ring-border"
+              variant === "filter"
+                ? "size-6 rounded-md data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                : variant === "outline"
+                  ? "size-6 rounded-md data-[state=on]:bg-muted data-[state=on]:text-foreground"
+                  : "size-7 rounded-full data-[state=on]:bg-surface data-[state=on]:text-foreground data-[state=on]:shadow-sm data-[state=on]:ring-1 data-[state=on]:ring-border"
             }`}
             >
-              <Icon icon={option.icon} className="size-4 shrink-0" />
+              <Icon
+                icon={option.icon}
+                className={`shrink-0 ${variant === "filter" ? "size-3.5" : "size-4"}`}
+              />
             </ToggleGroup.Item>
           </span>
         </Tooltip>

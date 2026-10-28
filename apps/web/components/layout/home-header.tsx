@@ -10,8 +10,8 @@ import { HeaderAccount } from "./header-account";
  * It floats over the page glow, so it has no fill or border. Brand and actions
  * are both `flex-1`, which centres the links between them from `md` up (Tablet
  * and Laptop); on Mobile there are no links, so the actions are pushed to the right.
- * The account slot never shows "Sign in" here: signed out it is search + theme
- * switch only, signed in it is just the avatar.
+ * The account slot is search + theme switch + "Sign in" when signed out, and
+ * just the avatar when signed in.
  */
 export async function HomeHeader() {
   const t = await getTranslations("nav");
@@ -44,7 +44,7 @@ export async function HomeHeader() {
         </nav>
 
         <div className="flex flex-1 items-center justify-end gap-3">
-          <HeaderAccount signInClassName="hidden" />
+          <HeaderAccount />
         </div>
       </div>
     </header>

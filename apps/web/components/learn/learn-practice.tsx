@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useBrowseQaItems, useQaAttempts } from "@noalhub/api/qa";
 import { Badge } from "@noalhub/ui/badge";
 import { Button } from "@noalhub/ui/button";
+import { Icon, LUCIDE } from "@noalhub/ui/icons";
 import { QaQuestion } from "@noalhub/ui/blog/qa-question";
 import { Skeleton } from "@noalhub/ui/skeleton";
 import { Typography } from "@noalhub/ui/typography";
@@ -30,13 +31,15 @@ export function LearnPractice() {
 
   return (
     <main className="mx-auto w-full max-w-3xl p-6">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <Typography variant="h4" as="h1">
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="icon" shape="circle" asChild className="-ml-2 shrink-0">
+          <Link href="/learn" aria-label={t("attempt.backToBrowse")}>
+            <Icon icon={LUCIDE.arrowLeft} />
+          </Link>
+        </Button>
+        <Typography variant="h4" as="h1" className="min-w-0 flex-1 break-words">
           {t("practice.title")}
         </Typography>
-        <Button variant="outline" asChild>
-          <Link href="/learn">{t("attempt.backToBrowse")}</Link>
-        </Button>
       </div>
       <Typography variant="body-3" className="mt-1 opacity-70">
         {t("practice.intro")}

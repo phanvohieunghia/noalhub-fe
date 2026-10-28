@@ -1,7 +1,7 @@
 # Đồng bộ UI lên Figma: danh sách để chọn
 
 - File Figma: [Noalhub](https://www.figma.com/design/boNAQePZ6fZE99zapQpSxx/Noalhub)
-- Quét ngày 2026-10-28, nhánh `main`. Chỉ **đọc** code và cấu trúc file Figma, chưa đẩy hay sửa gì lên Figma.
+- Quét ngày 2026-10-28, nhánh `main`. Lượt quét chỉ **đọc** code và cấu trúc file Figma; sau đó nhóm P và nhóm A đã được đẩy lên Figma cùng ngày (xem hai mục "Đã đẩy lên Figma").
 - Ngày và cờ "chưa commit" lấy từ git; cột Figma là mình đối chiếu thủ công theo tên trang / section / biến thể.
 
 ## Cách chọn
@@ -26,29 +26,41 @@
 
 ## Chọn nhanh
 
-- **Đã đẩy ngày 28/10** (nhóm P): P01, P05, P08, P09, P18, P20–P24, P26, P28–P43
-- **Có trên Figma nhưng nên đẩy lại** (lệch ➖, đang sửa dở hoặc code đổi sau 2026-10-21): A03–A10, A12, A14, A16, F05, M15, W12
+- **Đã đẩy ngày 28/10** (nhóm P và A): A03–A10, A12, A14, P01, P05, P08, P09, P14, P18, P20–P24, P26, P28–P43, P45
+- **Có trên Figma nhưng nên đẩy lại** (lệch ➖, đang sửa dở hoặc code đổi sau 2026-10-21): F05, M15, W12
 - **Chưa có trên Figma** (❌): A11, A15, A19–A27, M05–M14, P44, W05, W07, W14–W27
-- **Khớp và code không đổi sau 2026-10-21** (không cần đẩy): A01, A02, A13, A17, A18, F01–F04, F06, M01–M04, P02–P04, P06, P07, P10–P17, P19, P25, P27, W01–W04, W06, W08–W11, W13
+- **Khớp và code không đổi sau 2026-10-21** (không cần đẩy): A01, A02, A13, A16–A18, F01–F04, F06, M01–M04, P02–P04, P06, P07, P10–P13, P15–P17, P19, P25, P27, W01–W04, W06, W08–W11, W13
 
 | Nhóm | Tổng | Đã đẩy 28/10 | Nên đẩy lại | Chưa có | Không cần |
 |---|---:|---:|---:|---:|---:|
 | F · Nền tảng | 6 | 0 | 1 | 0 | 5 |
-| P · Component dùng chung | 44 | 27 | 0 | 1 | 16 |
+| P · Component dùng chung | 45 | 29 | 0 | 1 | 15 |
 | W · Màn hình web | 27 | 0 | 1 | 16 | 10 |
-| A · Màn hình admin | 27 | 0 | 11 | 11 | 5 |
+| A · Màn hình admin | 27 | 10 | 0 | 11 | 6 |
 | M · Mobile | 15 | 0 | 1 | 10 | 4 |
-| **Tổng** | **119** | **27** | **14** | **38** | **40** |
+| **Tổng** | **120** | **39** | **3** | **38** | **40** |
 
 ## Đã đẩy lên Figma ngày 28/10 (nhóm P)
 
-Nhóm P được đẩy theo working tree lúc đó, kể cả phần chưa commit (Question card, Metrics card, Range slider...). Dòng đã đẩy ghi "đẩy 28/10" ở cột Figma và không còn nằm trong "nên đẩy lại". Tổng: 13 dòng cập nhật component đã có, 14 dòng tạo mới.
+Nhóm P được đẩy theo working tree lúc đó, kể cả phần chưa commit (Question card, Metrics card, Range slider...). Dòng đã đẩy ghi "đẩy 28/10" ở cột Figma và không còn nằm trong "nên đẩy lại". Tổng: 14 dòng cập nhật component đã có, 15 dòng tạo mới.
 
-- **Tạo mới (set nào cũng có mô tả nguồn code):** Spinner, Skeleton, Textarea, Password input, Inline text field, Range slider, Image upload, Pagination, Table pagination, Stat card, Metrics card (+ Details), Tag chip, Tagged frame, Language switcher, Resize handle, Aurora background, Question card/Compact, Editor/Change mark, Scrim, Dialog, Drawer, Menu item, Menu separator, Dropdown menu, Hover flyout. Section mới `Overlays`.
-- **Cập nhật:** Button, Toggle, Admin sidebar, Bottom nav, Alert, Answer option, Question card, TOC item, Section tree. Thêm ba effect style `Shadow/sm`, `Shadow/md`, `Shadow/xl` cùng họ với `Shadow/lg`.
+- **Tạo mới (set nào cũng có mô tả nguồn code):** Spinner, Skeleton, Textarea, Password input, Inline text field, Range slider, Image upload, Pagination, Table pagination, Stat card, Metrics card (+ Details), Tag chip, Tagged frame, Language switcher, Resize handle, Aurora background, Question card/Compact, Editor/Change mark, Scrim, Dialog, Drawer, Menu item, Menu separator, Dropdown menu, Hover flyout, Review question, Review option (hai cái sau đẩy cùng lượt nhóm A). Section mới `Overlays`.
+- **Cập nhật:** Button, Toggle, Admin sidebar, Bottom nav, Alert, Answer option, Question card, TOC item, Section tree, Badge (icon tùy chọn + viền neutral, lượt nhóm A). Thêm ba effect style `Shadow/sm`, `Shadow/md`, `Shadow/xl` cùng họ với `Shadow/lg`.
 - **Cố ý không làm:** Navigation progress và Morph icon (hoạt ảnh), Truncated tooltip (dùng lại Tooltip), Toggle ba lựa chọn, `shape="circle"` của Button (đặt radius/full trên instance), lưới chấm và chuyển động của Aurora.
-- **Chưa làm:** các màn hình đã vẽ tay (modal, form, bảng) vẫn là frame cũ, chưa thay bằng component mới; đó là việc của nhóm W / A. Màn Generate dialog (A06) chưa dùng Range slider.
+- **Chưa làm:** các màn hình web (nhóm W) và các modal admin ngoài Q&A workbench vẫn là frame vẽ tay, chưa thay bằng component mới. Nhóm A đã dùng các component này (xem mục sau).
 - **Quy ước trong file Figma:** nền hoặc viền trong suốt dùng lớp `Tint` / `Border` với layer opacity (như Badge) vì paint có biến và opacity riêng bị mất opacity khi thành instance.
+
+## Đã đẩy lên Figma ngày 28/10 (nhóm A: admin Q&A)
+
+Đẩy 10 dòng A03–A10, A12, A14 theo working tree lúc đó (kể cả phần chưa commit), trên trang `Admin · Q&A`. A16 chỉ đối chiếu, không cần đẩy. A11 (dialog sắp xếp câu hỏi) không nằm trong lượt này nên vẫn chưa có.
+
+- **Frame mới:** Generate dialog bước xác nhận "Run and be billed?" (A06), Analyze dialog có chunking (A04), trang Outline editor riêng (A08), Question set detail dạng Compact và Grid (A10), Question type — its questions (A14).
+- **Frame vẽ lại:** Question sets step (bốn trạng thái), Final set step (hai trạng thái) và modal sửa câu hỏi (A07), form sửa một câu hỏi (A12). Frame "nothing generated yet" cũ của A05 và frame rail + editor cũ của A12 không có trong code nên đã được thay bằng trạng thái thật của code.
+- **Cập nhật tại chỗ:** header editor của Sources / Outline (Metrics card, Save, menu phiên bản), bảng Question sets (cột chọn, cột Dataset, Badge, Table pagination), header Question set detail (Add question, Toggle 3 chế độ, tay kéo trên thẻ).
+- **Component dùng chung phát sinh thêm:** `Review question` + `Review option` (P45), icon tùy chọn cho Badge và viền ring tone neutral (P14), slot `Content` của Dialog (P28), 21 vạch phụ của Range slider (P35).
+- **Component mới được dùng:** Dialog, Select, Input, Textarea, Checkbox, Switch, Range slider, Badge (có icon), Alert, Button, Toggle, Metrics card, Inline text field, Table pagination, Pagination, Editor, TableOfContents, Question card/Compact.
+- **Chỗ phải detach instance** (nested x/y không override được trong instance): Range slider ở dialog Generate, Toggle 3 chế độ ở Question set detail, bảng ở Question sets (chèn cột). Các instance còn lại vẫn nối với component.
+- **Chưa vẽ:** dialog sắp xếp câu hỏi (A11), dialog thêm câu hỏi và dialog xóa section trong bước 3, chế độ hover reveal, thanh bulk của bảng Question sets, form tạo câu hỏi mới (có chọn section), chế độ Markdown source của trang outline, LongDocWarning và trạng thái partial / retry khi tạo.
 
 ## Mốc đồng bộ Figma (ước lượng)
 
@@ -95,7 +107,7 @@ Nằm ở trang `Primitives` + các biến (Variables) của file Figma.
 | [ ] | P02 | Input | ✅ Actions & inputs · 72 biến thể | 2026-10-18 | Size lg/md/sm/xs khớp. | `packages/ui/src/input.tsx` |
 | [ ] | P03 | Select + Select Option | ✅ Actions & inputs · 28 + 3 biến thể | 2026-10-18 |  | `packages/ui/src/select.tsx` |
 | [ ] | P04 | Switch | ✅ Actions & inputs | 2026-10-18 |  | `packages/ui/src/switch.tsx` |
-| [ ] | P05 | Toggle (List / Grid) | ✅ Actions & inputs · Variant Pill / Outline · đẩy 28/10 | 🔶 2026-10-27 | Đã thêm Outline; mục đang chọn của Pill có ring + shadow-sm; icon chưa chọn màu muted. Toggle 3 lựa chọn (Full / Compact / Grid) chưa làm: thuộc màn Question set. | `packages/ui/src/toggle.tsx` |
+| [ ] | P05 | Toggle (List / Grid) | ✅ Actions & inputs · Variant Pill / Outline · đẩy 28/10 | 🔶 2026-10-27 | Đã thêm Outline; mục đang chọn của Pill có ring + shadow-sm; icon chưa chọn màu muted. Toggle 3 lựa chọn (Full / Compact / Grid) chưa là biến thể: màn Question set (A10) detach một Toggle rồi nhân item. | `packages/ui/src/toggle.tsx` |
 | [ ] | P06 | Checkbox | ✅ Table › Checkbox (sm/md × off/on/mixed) | 2026-09-09 |  | `packages/ui/src/checkbox.tsx` |
 | [ ] | P07 | Tabs | ✅ Navigation › Tab, Tabs | 2026-10-18 |  | `packages/ui/src/tabs.tsx` |
 | [ ] | P08 | Admin sidebar (Full / Rail) | ✅ Components (admin shell) › Admin/Sidebar · 49 biến thể · đẩy 28/10 | ⚠️ chưa commit | Đã thêm Posts (con), Datasets, Question types (trước là Question bank), Question tags và Active=Tags; sửa lỗi dòng AI bị sáng khi Datasets active. | `packages/ui/src/sidebar.tsx` (+2 file) |
@@ -104,7 +116,7 @@ Nằm ở trang `Primitives` + các biến (Variables) của file Figma.
 | [ ] | P11 | Account menu + Theme toggle | ✅ Navigation › Account menu · Data display › Theme toggle | 2026-10-18 |  | `apps/web/components/layout/header-account.tsx` (+1 file) |
 | [ ] | P12 | Footer (App / Home) | ✅ Page chrome › Footer · 7 biến thể | 2026-10-18 |  | `apps/web/components/layout/site-footer.tsx` (+1 file) |
 | [ ] | P13 | Admin topbar + breadcrumb | ✅ Components (admin shell) › Admin/Topbar | 2026-10-20 |  | `apps/admin/components/layout/admin-header.tsx` (+1 file) |
-| [ ] | P14 | Badge | ✅ Data display › Badge · 5 tone × 3 size | 2026-10-20 | Khớp tone/size; lỗi cũ "chữ trùng màu nền" của tone success/warning đã hết (nền là lớp Tint 12–15 %). | `packages/ui/src/badge.tsx` |
+| [ ] | P14 | Badge | ✅ Data display › Badge · 5 tone × 3 size + icon · đẩy 28/10 | 2026-10-20 | Thêm Show icon (Icon swap, icon 12 px) và viền ring 1 px cho tone neutral như badge.tsx; icon căn giữa. Đổi icon trong instance phải tô lại stroke theo màu chữ. | `packages/ui/src/badge.tsx` |
 | [ ] | P15 | Avatar | ✅ Data display › Avatar (sm / md / lg) | 2026-09-04 |  | `packages/ui/src/avatar.tsx` |
 | [ ] | P16 | Tooltip | ✅ Data display › Tooltip (4 hướng) | 2026-10-18 |  | `packages/ui/src/tooltip.tsx` |
 | [ ] | P17 | Toast | ✅ Feedback › Toast (4 tone) | 2026-10-18 |  | `packages/ui/src/toast.tsx` |
@@ -123,23 +135,24 @@ Nằm ở trang `Primitives` + các biến (Variables) của file Figma.
 
 | Chọn | ID | UI | Figma | Code đổi | Ghi chú | Nguồn code |
 |:---:|---|---|---|---|---|---|
-| [ ] | P28 | Dialog (Scrim + panel md / lg / fullscreen) | ✅ Overlays › Dialog · 8 biến thể, Scrim · đẩy 28/10 | 2026-10-20 | size md / lg / inset / fullscreen, tone default / success / danger. Các modal vẽ tay cũ chưa được thay bằng component này. | `packages/ui/src/dialog.tsx` |
+| [ ] | P28 | Dialog (Scrim + panel md / lg / fullscreen) | ✅ Overlays › Dialog · 8 biến thể, Scrim · đẩy 28/10 | 2026-10-20 | size md / lg / inset / fullscreen, tone default / success / danger. Có slot Content (đặt form vào instance mà không detach). Modal Generate, Run, Analyze và Edit question đã dùng instance này; các modal vẽ tay còn lại (Prompts, AI keys, AI models, Datasets...) chưa đổi. | `packages/ui/src/dialog.tsx` |
 | [ ] | P29 | Drawer / Sheet | ✅ Overlays › Drawer · 4 cạnh · đẩy 28/10 | 2026-09-05 |  | `packages/ui/src/drawer.tsx` |
 | [ ] | P30 | Dropdown menu (chung) | ✅ Overlays › Dropdown menu, Menu item, Menu separator · đẩy 28/10 | 2026-10-18 |  | `packages/ui/src/dropdown-menu.tsx` |
 | [ ] | P31 | Textarea | ✅ Actions & inputs › Textarea · 5 trạng thái · đẩy 28/10 | 2026-09-05 |  | `packages/ui/src/textarea.tsx` |
 | [ ] | P32 | Skeleton + Spinner | ✅ Feedback › Spinner (20 biến thể), Skeleton (3) · đẩy 28/10 | 2026-09-05 |  | `packages/ui/src/skeleton.tsx` (+1 file) |
 | [ ] | P33 | Pagination: số trang, link SEO, footer bảng | ✅ Navigation › Pagination, Table pagination · đẩy 28/10 | 2026-10-18 |  | `packages/ui/src/pagination.tsx` (+2 file) |
 | [ ] | P34 | Stat card + Metrics card | ✅ Data display › Stat card, Metrics card, Metrics card/Details · đẩy 28/10 | ⚠️ chưa commit |  | `packages/ui/src/stat-card.tsx` (+1 file) |
-| [ ] | P35 | Range slider (file mới) | ✅ Actions & inputs › Range slider · 4 trạng thái · đẩy 28/10 | 🆕 file mới |  | `packages/ui/src/range-slider.tsx` |
+| [ ] | P35 | Range slider (file mới) | ✅ Actions & inputs › Range slider · 4 trạng thái · đẩy 28/10 | 🆕 file mới | Có sẵn 21 vạch phụ (ẩn bớt). Vị trí thumb / vạch lồng trong instance không override được, nên màn hình cần đặt lại vị trí phải detach instance (A06 làm vậy). | `packages/ui/src/range-slider.tsx` |
 | [ ] | P36 | Password input | ✅ Actions & inputs › Password input · 8 biến thể · đẩy 28/10 | 2026-10-18 |  | `packages/ui/src/password-input.tsx` |
 | [ ] | P37 | Inline text field (tiêu đề sửa tại chỗ) | ✅ Actions & inputs › Inline text field · 4 trạng thái · đẩy 28/10 | 2026-10-20 |  | `packages/ui/src/inline-text-field.tsx` (+2 file) |
-| [ ] | P38 | Hover flyout + Truncated tooltip | ✅ Overlays › Hover flyout · đẩy 28/10 | 🔶 2026-10-27 | Truncated tooltip dùng lại component Tooltip, không cần component riêng. | `packages/ui/src/hover-flyout.tsx` (+1 file) |
+| [ ] | P38 | Hover flyout + Truncated tooltip | ✅ Overlays › Hover flyout · đẩy 28/10 | 🔶 2026-10-28 | Truncated tooltip dùng lại component Tooltip, không cần component riêng. | `packages/ui/src/hover-flyout.tsx` (+1 file) |
 | [ ] | P39 | Tag mark + chọn tag cho câu hỏi | ✅ Data display › Tag chip, Tagged frame · đẩy 28/10 | 2026-10-20 | Chưa có phần chọn tag (qa-item-tag-picker). | `packages/ui/src/tag-mark.tsx` (+1 file) |
 | [ ] | P40 | Language switcher | ✅ Navigation › Language switcher · đẩy 28/10 | 2026-09-02 |  | `packages/ui/src/language-switcher.tsx` (+2 file) |
 | [ ] | P41 | Image upload button | ✅ Actions & inputs › Image upload · 7 biến thể · đẩy 28/10 | 2026-10-20 |  | `packages/ui/src/media/image-upload-button.tsx` |
 | [ ] | P42 | Aurora background | ✅ Branding › Aurora background · đẩy 28/10 | 2026-10-18 | Chưa vẽ lưới chấm và chuyển động. | `packages/ui/src/aurora-background.tsx` |
 | [ ] | P43 | Resize handle (workbench) | ✅ Components (Q&A) › Resize handle · 3 trạng thái · đẩy 28/10 | 2026-10-18 |  | `apps/admin/components/qa/qa-resize-handle.tsx` |
 | [ ] | P44 | Navigation progress, Morph icon | ❌ chưa có | 2026-10-20 | Hoạt ảnh / thanh tiến trình, thường không cần frame tĩnh. | `packages/ui/src/navigation-progress.tsx` (+1 file) |
+| [ ] | P45 | Review question + Review option (thẻ câu hỏi duyệt ở bước 3 và bước 4 của workbench) | ✅ Components (Q&A) › Review question (Choice / Flashcard, slot Actions), Review option (Correct off / on) · đẩy 28/10 | 2026-10-20 | Thẻ câu hỏi duyệt của bước 3 và bước 4. Slot Actions nhận badge trạng thái + menu (bước 3) hoặc New / sửa / thêm / menu (bước 4). | `apps/admin/components/qa/qa-review-question.tsx` |
 
 ## W · Màn hình web (`apps/web`)
 
@@ -217,30 +230,30 @@ Frame admin rộng 1440. Cột "Figma" ghi tên trang › section/frame đang c�
 | Chọn | ID | UI | Figma | Code đổi | Ghi chú | Nguồn code |
 |:---:|---|---|---|---|---|---|
 | [ ] | A02 | Datasets: danh sách + dialog thêm | ✅ Admin · Q&A › Datasets · 2 frame | 2026-10-20 |  | `apps/admin/app/(protected)/qa/datasets/page.tsx` (+1 file) |
-| [ ] | A03 | Workbench: khung + bước 1 Sources (editor nguồn, phân đoạn nguồn dài) | ✅ Datasets › Workbench · Sources tab, Source editor fullscreen | ⚠️ chưa commit | Chunking picker (chọn cách chia nguồn dài) thêm 24/10; chưa kiểm tra có trên Figma. | `apps/admin/components/qa/qa-dataset-detail.tsx` (+5 file) |
-| [ ] | A04 | Workbench: bước 2 Outline (+ editor toàn màn hình, đang tạo) | ✅ Datasets › Workbench · Outline tab (2), Outline editor fullscreen | ⚠️ chưa commit |  | `apps/admin/components/qa/qa-outline-step.tsx` (+2 file) |
-| [ ] | A05 | Workbench: bước 3 Question sets (trống / đang tạo / sau một lượt / duyệt từng câu) | ✅ Datasets › Workbench · Question sets step · 7 frame | ⚠️ chưa commit |  | `apps/admin/components/qa/qa-sets-step.tsx` (+3 file) |
-| [ ] | A06 | Workbench: dialog Generate question sets | ✅ Datasets › Workbench · generate dialog (modal) | ⚠️ chưa commit |  | `apps/admin/components/qa/generate-sets-button.tsx` (+1 file) |
-| [ ] | A07 | Workbench: bước 4 Final set + modal sửa câu hỏi | ✅ Datasets › Workbench · Final set · 3 frame, Edit question (modal) | 🔶 2026-10-27 |  | `apps/admin/components/qa/qa-final-step.tsx` (+1 file) |
-| [ ] | A08 | Trang Outline editor riêng (`/qa/datasets/[id]/outlines/[outlineId]`) | ➖ chỉ có Outline tab và modal; chưa thấy trang riêng | ⚠️ chưa commit |  | `apps/admin/app/(protected)/qa/datasets/[id]/outlines/[outlineId]/page.tsx` (+8 file) |
+| [ ] | A03 | Workbench: khung + bước 1 Sources (editor nguồn, phân đoạn nguồn dài) | ✅ Datasets › Workbench · Sources tab, Source editor fullscreen · đẩy 28/10 | ⚠️ chưa commit | Header editor có Metrics card (số gọn 4.3k / 25k / 7.3k / 19m) và nút Save dạng icon. Chunking picker nằm trong dialog Analyze của bước Outline (xem A04). | `apps/admin/components/qa/qa-dataset-detail.tsx` (+5 file) |
+| [ ] | A04 | Workbench: bước 2 Outline (+ editor toàn màn hình, đang tạo) | ✅ Datasets › Workbench · Outline tab (2), Outline editor fullscreen, Analyze dialog (frame mới) · đẩy 28/10 | ⚠️ chưa commit | Header editor có Metrics card, menu hành động phiên bản và Save. Frame mới Analyze dialog có khối chunking (chế độ cắt, heading level, max tokens, overlap, xem trước các phần). Chưa vẽ LongDocWarning và trạng thái partial / retry của GenerationProgress. | `apps/admin/components/qa/qa-outline-step.tsx` (+2 file) |
+| [ ] | A05 | Workbench: bước 3 Question sets (trống / đang tạo / sau một lượt / duyệt từng câu) | ✅ Datasets › Workbench · Question sets step · 8 frame · đẩy 28/10 | ⚠️ chưa commit | Vẽ lại theo code: thanh header (toggle xem / nhóm, mở / thu hết, nút tạo), section card (tiêu đề sửa tại chỗ, badge phiên bản, metrics, duyệt cả section, menu), thẻ câu hỏi dùng Review question, heading nhóm theo section. Frame cũ "nothing generated yet" (mỗi section một nút Generate) không còn trong code nên đổi thành trạng thái đang tạo (inline). Chưa vẽ dialog xóa section, dialog thêm câu hỏi, chế độ hover reveal. | `apps/admin/components/qa/qa-sets-step.tsx` (+3 file) |
+| [ ] | A06 | Workbench: dialog Generate question sets | ✅ Datasets › Workbench · generate dialog + xác nhận chạy (2 frame) · đẩy 28/10 | ⚠️ chưa commit | Instance Dialog lg (slot Content): chọn bản outline và prompt, cây section có số token, icon chọn loại / kind, Range slider 1–1000 (bước 1 / 10 / 50), Switch giới hạn, AI key + badge context / output. Frame mới "Run and be billed?" (Dialog md). Range slider phải detach để đặt vạch và thumb. | `apps/admin/components/qa/generate-sets-button.tsx` (+1 file) |
+| [ ] | A07 | Workbench: bước 4 Final set + modal sửa câu hỏi | ✅ Datasets › Workbench · Final set · 3 frame, Edit question (modal) · đẩy 28/10 | 🔶 2026-10-28 | Header (toggle, nút tạo / thêm), heading nhóm có badge "N new", thẻ Review question với New / sửa / thêm / menu. Modal sửa dùng Dialog + Select + Textarea + Checkbox + Input. | `apps/admin/components/qa/qa-final-step.tsx` (+1 file) |
+| [ ] | A08 | Trang Outline editor riêng (`/qa/datasets/[id]/outlines/[outlineId]`) | ✅ Datasets › Outline editor page (frame mới) · đẩy 28/10 | ⚠️ chưa commit | Tiêu đề phiên bản, Back / Generate / Save, ô ghi chú, nhóm định dạng, Editor và Table of contents. Chưa vẽ chế độ Markdown source và cảnh báo nhiều phiên bản. | `apps/admin/app/(protected)/qa/datasets/[id]/outlines/[outlineId]/page.tsx` (+8 file) |
 
 ### Q&A: question sets & câu hỏi
 
 | Chọn | ID | UI | Figma | Code đổi | Ghi chú | Nguồn code |
 |:---:|---|---|---|---|---|---|
-| [ ] | A09 | Question sets: danh sách | ✅ Admin · Q&A › Question sets | ⚠️ chưa commit |  | `apps/admin/app/(protected)/qa/sets/page.tsx` (+1 file) |
-| [ ] | A10 | Question set: chi tiết (câu hỏi, thứ tự, publish) | ✅ Question sets › Question set detail | ⚠️ chưa commit |  | `apps/admin/app/(protected)/qa/sets/[id]/page.tsx` (+5 file) |
+| [ ] | A09 | Question sets: danh sách | ✅ Question sets › Question sets · đẩy 28/10 | ⚠️ chưa commit | Bảng thêm cột chọn và cột Dataset, trạng thái dạng Badge, footer dùng Table pagination. Bảng của frame này đã detach khỏi instance Table để chèn cột. Chưa vẽ thanh bulk khi có hàng được chọn. | `apps/admin/app/(protected)/qa/sets/page.tsx` (+1 file) |
+| [ ] | A10 | Question set: chi tiết (câu hỏi, thứ tự, publish) | ✅ Question sets › Question set detail, compact view, grid view · đẩy 28/10 | ⚠️ chưa commit | Header có Add question, Toggle 3 chế độ (Full / Compact / Grid, detach từ Toggle) và Switch Published; thẻ có tay kéo. Hai frame mới cho Compact / Grid dùng Question card/Compact. Chưa vẽ dialog Add question. | `apps/admin/app/(protected)/qa/sets/[id]/page.tsx` (+5 file) |
 | [ ] | A11 | Dialog sắp xếp câu hỏi (file mới) | ❌ chưa có | 🆕 file mới |  | `apps/admin/components/qa/qa-set-arrange-dialog.tsx` |
-| [ ] | A12 | Soạn / sửa một câu hỏi (form trang riêng) | ✅ Question sets › Question set editor | ⚠️ chưa commit |  | `apps/admin/app/(protected)/qa/sets/[id]/items/[itemId]/page.tsx` (+5 file) |
+| [ ] | A12 | Soạn / sửa một câu hỏi (form trang riêng) | ✅ Question sets › Question set editor (edit one question) · đẩy 28/10 | ⚠️ chưa commit | Vẽ lại theo qa-item-form.tsx (frame cũ là bố cục rail + editor, không có trong code): chọn loại trả lời (khóa theo set) và kind bằng icon, độ khó, tag, Editor cho câu hỏi, lựa chọn, Textarea giải thích. Chưa vẽ form tạo mới (có chọn section). | `apps/admin/app/(protected)/qa/sets/[id]/items/[itemId]/page.tsx` (+5 file) |
 | [ ] | A13 | Question types: danh sách loại + xem trước 6 loại | ✅ Question types (list, grid) + 6 modal "Question preview" | 2026-10-20 |  | `apps/admin/components/qa/qa-item-types-content.tsx` (+1 file) |
-| [ ] | A14 | Danh sách câu hỏi theo loại (tìm kiếm / lọc) | ➖ chưa chắc có: không thấy frame cùng tên | 2026-10-18 |  | `apps/admin/components/qa/qa-item-search-content.tsx` |
+| [ ] | A14 | Danh sách câu hỏi theo loại (tìm kiếm / lọc) | ✅ Question types › Question type — its questions (frame mới) · đẩy 28/10 | 2026-10-18 | Thẻ câu hỏi với Switch Published và nút Preview UI, Pagination. Modal preview dùng các frame Question preview có sẵn (A13). | `apps/admin/components/qa/qa-item-search-content.tsx` |
 | [ ] | A15 | Tags: danh mục nhãn câu hỏi | ❌ chưa có | 2026-10-20 |  | `apps/admin/app/(protected)/qa/tags/page.tsx` (+1 file) |
 
 ### Q&A: prompts & AI
 
 | Chọn | ID | UI | Figma | Code đổi | Ghi chú | Nguồn code |
 |:---:|---|---|---|---|---|---|
-| [ ] | A16 | Prompts: danh sách + dialog thêm/sửa + editor | ✅ Admin · Q&A › Prompts · 5 frame | ⚠️ chưa commit |  | `apps/admin/app/(protected)/qa/templates/page.tsx` (+1 file) |
+| [ ] | A16 | Prompts: danh sách + dialog thêm/sửa + editor | ✅ Admin · Q&A › Prompts · 5 frame | ⚠️ chưa commit | Đối chiếu 28/10: code chỉ đổi nút disabled → loading nên giao diện tĩnh vẫn khớp frame; không đẩy. Các modal còn vẽ tay, chưa đổi sang Dialog. | `apps/admin/app/(protected)/qa/templates/page.tsx` (+1 file) |
 | [ ] | A17 | AI keys: danh sách + dialog thêm/sửa | ✅ Admin · Q&A › AI keys · 3 frame | 2026-10-20 |  | `apps/admin/app/(protected)/qa/credentials/page.tsx` (+1 file) |
 | [ ] | A18 | AI models: danh sách + dialog thêm / sửa / xóa | ✅ Admin · Q&A › AI models · 4 frame | 2026-10-20 |  | `apps/admin/app/(protected)/qa/models/page.tsx` (+1 file) |
 
@@ -297,4 +310,5 @@ Expo app. Trên Figma hiện chỉ có phần Learn nằm trong trang `Q&A`.
 - ✅ nghĩa là có và khớp theo những gì mình đối chiếu được, không phải đã so từng pixel. Mục nào bạn thấy cũ thì cứ chọn, mình sẽ so lại trước khi sửa.
 - `Home` nằm trong `Primitives › Layouts` (không có trang riêng); `Q&A` có hai phiên bản Browse (`Browse` và `Browse — Study companion`).
 - Mỗi màn hình mới tốn khá nhiều thao tác Figma (3 breakpoint). Nên chọn theo lượt, vài màn hình mỗi lượt, để kiểm tra bằng ảnh chụp trước khi sang lượt sau.
+- Trang `Admin · Q&A` (kiểm tra 28/10): section `AI models` đang nằm lồng trong section `AI keys` và chồng lên section `Prompts`. Mình không đụng tới; nói mình nếu muốn tách ra lại.
 

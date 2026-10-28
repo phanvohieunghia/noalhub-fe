@@ -68,6 +68,46 @@ cộng với việc **vá lỗ hổng phân quyền ở §1** (đây là việc 
 Hết Phase 1 thì nhóm A cạn contract: **không có** ban/khoá, đổi role, xoá user, buộc
 logout, resend verify. Nếu bạn cần chúng thì đó cũng là việc backend (§3).
 
+## 2b. Chart người dùng mới theo thời gian — ✅ đã có endpoint
+
+`/overview` có hai chart (người dùng mới theo thời gian; người dùng mới theo trạng thái
+email) với bộ lọc **tuần / tháng / năm**, đọc từ `GET /admin/stats/signups` qua hook
+`useAdminSignups(range)` (`packages/api/src/admin/`). Dữ liệu mẫu và cảnh báo vàng đã bị
+xoá. Phần dưới là contract backend đã implement (`AdminService.signups`), giữ lại để biết
+vì sao các ràng buộc được chốt như vậy.
+
+- [x] `GET /admin/stats/signups?range=week|month|year` — 403, 429 như các endpoint admin khác.
+
+```jsonc
+{
+  "range": "month",
+  "granularity": "day", // "day" cho week/month, "month" cho year
+  "points": [
+    { "date": "2026-09-17T00:00:00.000Z", "newUsers": 12, "verifiedNewUsers": 9 }
+    // ...
+  ],
+  "total": 342,         // tổng newUsers của kỳ này
+  "previousTotal": 301  // tổng của kỳ liền trước, cùng độ dài — để FE tính % thay đổi
+}
+```
+
+Ràng buộc đã chốt (FE không tự đoán được):
+
+- **Mốc thời gian dày đặc.** `points` phải đủ mọi mốc trong kỳ, mốc không có ai đăng ký
+  trả `0`. Nếu thiếu mốc thì FE vẽ đường nối tắt qua khoảng trống và nói dối về xu hướng.
+- **Múi giờ.** Bucket theo UTC hay theo giờ Việt Nam? **Đã chốt UTC**, ghi rõ trong spec — cùng
+  lý do "cửa sổ 7 ngày do backend tính" ở `AdminStatsDto`.
+- **"Tuần" và "tháng" là gì.** **Đã chốt cuốn chiếu**: 7 ngày / 30 ngày gần nhất tính cả hôm
+  nay; năm = 12 tháng gần nhất tính cả tháng hiện tại. Tháng cuối của `year` chưa trọn —
+  chưa có cờ `partial`; thêm nếu FE cần vẽ khác đi.
+- **`verifiedNewUsers` là trạng thái _hiện tại_**, không phải lúc đăng ký: một người đăng
+  ký tháng trước và vừa verify hôm qua vẫn được tính là đã verify. Chart trạng thái email
+  vì thế đọc là "trong số người đăng ký ở mốc này, hiện bao nhiêu đã verify".
+- **Tài khoản đã xoá** (tombstone, `account-deletion.md` §4.6) có nằm trong `newUsers` không?
+  **Có** — cùng đếm từ bảng `users` như `AdminStatsDto.totalUsers`, để hai con số trong cùng
+  một trang không lệch nhau.
+- **Không cache** cũng như `/admin/stats`: FE dùng `staleTime` ngắn và nút làm mới.
+
 ## 3. Phase 2 — Nhóm B: cần backend trước
 
 **Chính sách đã chốt: metadata-only.** Admin **không** đọc được nội dung tin nhắn

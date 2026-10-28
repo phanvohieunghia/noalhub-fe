@@ -9,7 +9,6 @@ import {
   QA_COUNT_OPTIONS,
   useBrowseQaDatasets,
   useQaAttempts,
-  useQaStats,
   useStartQaAttempt,
   type QaAttempt,
   type QaDifficulty,
@@ -21,10 +20,11 @@ import { AlertError } from "@noalhub/ui/alert";
 import { Badge, type BadgeTone } from "@noalhub/ui/badge";
 import { Button } from "@noalhub/ui/button";
 import { Dialog } from "@noalhub/ui/dialog";
-import { ICONS } from "@noalhub/ui/icons";
+import { Icon, ICONS, LUCIDE } from "@noalhub/ui/icons";
 import { Input } from "@noalhub/ui/input";
 import { Select } from "@noalhub/ui/select";
 import { Skeleton } from "@noalhub/ui/skeleton";
+import { Tooltip } from "@noalhub/ui/tooltip";
 import { Typography } from "@noalhub/ui/typography";
 
 const KINDS = ["theory", "practice", "recall", "analysis"] as const;
@@ -63,7 +63,6 @@ export function LearnBrowse() {
 
   const datasets = useBrowseQaDatasets();
   const attempts = useQaAttempts();
-  const stats = useQaStats();
 
   // One open attempt per dataset (the backend guarantees it) → its progress by dataset id.
   const openByDataset = useMemo(() => {
@@ -85,22 +84,14 @@ export function LearnBrowse() {
   );
   const shown = rows.slice(0, visible);
 
-  // The two grading modes are never added together (see LearnStats): the
-  // accuracy figure is machine-graded only, and the card says so.
-  const statRows = stats.data ?? [];
-  const answered = statRows.reduce((sum, row) => sum + row.answered, 0);
-  const auto = statRows.filter((row) => row.grading === "auto");
-  const autoAnswered = auto.reduce((sum, row) => sum + row.answered, 0);
-  const autoCorrect = auto.reduce((sum, row) => sum + row.correct, 0);
-  const accuracy = autoAnswered > 0 ? Math.round((autoCorrect / autoAnswered) * 100) : null;
-  const wrong = autoAnswered - autoCorrect;
-
   // A filter change must start from the first page again, or "Showing 6 of 3"
   // is one keystroke away.
-  const onFilter = <T,>(set: (value: T) => void) => (value: T) => {
-    set(value);
-    setVisible(PAGE_SIZE);
-  };
+  const onFilter =
+    <T,>(set: (value: T) => void) =>
+    (value: T) => {
+      set(value);
+      setVisible(PAGE_SIZE);
+    };
 
   // The dataset the learner was last in the middle of leads the grid as the
   // featured card — but only on the unfiltered first view, or a search would
@@ -113,15 +104,29 @@ export function LearnBrowse() {
 
   return (
     <main className="mx-auto w-full max-w-6xl p-4 sm:p-6">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-8">
+      <div className="grid gap-6">
         <div className="min-w-0 space-y-5">
-          <header>
-            <Typography variant="h2" as="h1">
-              {t("browse.title")}
-            </Typography>
-            <Typography variant="body-3" className="text-muted-foreground">
-              {t("browse.intro")}
-            </Typography>
+          <header className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <Typography variant="h2" as="h1">
+                {t("browse.title")}
+              </Typography>
+              <Typography variant="body-3" className="text-muted-foreground">
+                {t("browse.intro")}
+              </Typography>
+            </div>
+            <Tooltip label={t("browse.stats")} side="bottom">
+              <Button
+                variant="outline"
+                size="icon"
+                asChild
+                className="shrink-0"
+              >
+                <Link href="/learn/stats" aria-label={t("browse.stats")}>
+                  <Icon icon={LUCIDE.chartColumn} />
+                </Link>
+              </Button>
+            </Tooltip>
           </header>
 
           <Input
@@ -139,9 +144,14 @@ export function LearnBrowse() {
               label={t("browse.filterKind")}
               hideLabel
               value={kind}
-              onChange={(event) => onFilter(setKind)(event.target.value as QaItemKind | "")}
+              onChange={(event) =>
+                onFilter(setKind)(event.target.value as QaItemKind | "")
+              }
               placeholder={t("browse.allKinds")}
-              options={KINDS.map((value) => ({ value, label: t(`kinds.${value}`) }))}
+              options={KINDS.map((value) => ({
+                value,
+                label: t(`kinds.${value}`),
+              }))}
             />
             <Select
               label={t("browse.difficultyLabel")}
@@ -168,7 +178,9 @@ export function LearnBrowse() {
             <Typography variant="body-3" className="text-muted-foreground">
               {/* Empty here means no admin has PUBLISHED anything — say that,
                   rather than "no data", which reads like something broke. */}
-              {datasets.data?.total === 0 ? t("browse.emptyNone") : t("browse.emptyFilter")}
+              {datasets.data?.total === 0
+                ? t("browse.emptyNone")
+                : t("browse.emptyFilter")}
             </Typography>
           ) : (
             <>
@@ -199,7 +211,10 @@ export function LearnBrowse() {
                   })}
                 </Typography>
                 {shown.length < rows.length ? (
-                  <Button variant="outline" onClick={() => setVisible((n) => n + PAGE_SIZE)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setVisible((n) => n + PAGE_SIZE)}
+                  >
                     {t("browse.loadMore")}
                   </Button>
                 ) : null}
@@ -207,61 +222,6 @@ export function LearnBrowse() {
             </>
           )}
         </div>
-
-        <aside className="space-y-4 lg:pt-1" aria-label={t("browse.sidebarTitle")}>
-          <Typography variant="title-2" as="h2" className="hidden lg:block">
-            {t("browse.sidebarTitle")}
-          </Typography>
-
-          <section className="rounded-xl border border-border bg-surface p-5">
-            <Typography variant="title-3" as="h3">
-              {t("browse.statAccuracy")}
-            </Typography>
-            <div className="mt-4 flex items-center gap-4">
-              <AccuracyRing percent={accuracy} pending={stats.isPending} />
-              <div className="min-w-0 space-y-1">
-                <Typography variant="h3" as="p" className="tabular-nums text-foreground">
-                  {stats.isPending ? "–" : answered}
-                </Typography>
-                <Typography variant="body-4" className="text-muted-foreground">
-                  {t("browse.statAnsweredNote")}
-                </Typography>
-                <Typography variant="body-4" className="text-muted-foreground">
-                  {t("browse.statAccuracyNote")}
-                </Typography>
-              </div>
-            </div>
-            <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-              <Typography variant="body-4" className="text-muted-foreground">
-                {t("browse.statProgress")}
-              </Typography>
-              <Typography as="span" variant="body-3" weight={600} className="tabular-nums">
-                {attempts.isPending ? "–" : openByDataset.size}
-              </Typography>
-            </div>
-          </section>
-
-          <section className="rounded-xl border border-border bg-surface p-5">
-            <Typography variant="title-3" as="h3">
-              {t("browse.vaultTitle")}
-            </Typography>
-            <div className="mt-3 flex items-center gap-3">
-              <Typography variant="h2" as="p" className="tabular-nums text-foreground">
-                {stats.isPending ? "–" : wrong}
-              </Typography>
-              <Typography variant="body-4" className="text-muted-foreground">
-                {t("browse.vaultNote")}
-              </Typography>
-            </div>
-            <Button variant="link" size="inline" asChild className="mt-3">
-              <Link href="/learn/practice">{t("browse.practiceWrong")}</Link>
-            </Button>
-          </section>
-
-          <Button variant="outline" className="w-full" asChild>
-            <Link href="/learn/stats">{t("browse.stats")}</Link>
-          </Button>
-        </aside>
       </div>
 
       {opened ? (
@@ -272,38 +232,6 @@ export function LearnBrowse() {
         />
       ) : null}
     </main>
-  );
-}
-
-/** Accuracy as a ring: the track is `muted`, the arc `primary`; `null` draws the track alone. */
-function AccuracyRing({ percent, pending }: { percent: number | null; pending: boolean }) {
-  const radius = 34;
-  const circumference = 2 * Math.PI * radius;
-  const value = percent ?? 0;
-  return (
-    <div className="relative size-24 shrink-0">
-      <svg viewBox="0 0 80 80" className="size-full -rotate-90" aria-hidden>
-        <circle cx="40" cy="40" r={radius} fill="none" strokeWidth="8" className="stroke-muted" />
-        <circle
-          cx="40"
-          cy="40"
-          r={radius}
-          fill="none"
-          strokeWidth="8"
-          strokeLinecap="round"
-          className="stroke-primary"
-          strokeDasharray={circumference}
-          strokeDashoffset={circumference * (1 - value / 100)}
-        />
-      </svg>
-      <Typography
-        as="span"
-        variant="title-2"
-        className="absolute inset-0 flex items-center justify-center tabular-nums"
-      >
-        {pending || percent === null ? "–" : `${percent}%`}
-      </Typography>
-    </div>
   );
 }
 
@@ -330,7 +258,9 @@ function DatasetDialog({
   // Only sizes smaller than the bank are offered — "20" of 12 questions is just "all".
   const sizes = QA_COUNT_OPTIONS.filter((size) => size < dataset.itemCount);
   // `null` = all of them. Ten is a sitting; a bank smaller than that is taken whole.
-  const [count, setCount] = useState<number | null>(sizes.includes(10) ? 10 : null);
+  const [count, setCount] = useState<number | null>(
+    sizes.includes(10) ? 10 : null,
+  );
   // An open attempt already has its questions — the picker would be a lie.
   const resuming = attempt !== undefined;
 
@@ -352,7 +282,9 @@ function DatasetDialog({
       ) : null}
 
       <div className="flex flex-wrap gap-1.5">
-        <Badge tone="neutral">{t("browse.itemCount", { count: dataset.itemCount })}</Badge>
+        <Badge tone="neutral">
+          {t("browse.itemCount", { count: dataset.itemCount })}
+        </Badge>
         {dataset.templateKeys.map((value) => (
           <Badge key={value} tone="neutral">
             {t(`shapes.${value}`)}
@@ -375,14 +307,19 @@ function DatasetDialog({
           label={t("browse.countLabel")}
           value={count === null ? "all" : String(count)}
           onChange={(event) =>
-            setCount(event.target.value === "all" ? null : Number(event.target.value))
+            setCount(
+              event.target.value === "all" ? null : Number(event.target.value),
+            )
           }
           options={[
             ...sizes.map((value) => ({
               value: String(value),
               label: t("browse.countOption", { count: value }),
             })),
-            { value: "all", label: t("browse.countAll", { count: dataset.itemCount }) },
+            {
+              value: "all",
+              label: t("browse.countAll", { count: dataset.itemCount }),
+            },
           ]}
         />
       ) : null}
@@ -423,7 +360,10 @@ function DatasetCard({
   const df = useDateFormat();
   const percent =
     attempt && attempt.itemCount > 0
-      ? Math.min(100, Math.round((attempt.answeredCount / attempt.itemCount) * 100))
+      ? Math.min(
+          100,
+          Math.round((attempt.answeredCount / attempt.itemCount) * 100),
+        )
       : 0;
 
   return (
@@ -442,19 +382,28 @@ function DatasetCard({
           ))}
         </div>
         <Typography variant="title-2" as="h2">
-          <button type="button" onClick={onOpen} className="text-left hover:underline">
+          <button
+            type="button"
+            onClick={onOpen}
+            className="text-left hover:underline"
+          >
             {dataset.title}
           </button>
         </Typography>
         {dataset.description ? (
-          <Typography variant="body-3" className="line-clamp-2 text-muted-foreground">
+          <Typography
+            variant="body-3"
+            className="line-clamp-2 text-muted-foreground"
+          >
             {dataset.description}
           </Typography>
         ) : null}
       </div>
 
       <div className="flex flex-wrap gap-1.5">
-        <Badge tone="neutral">{t("browse.itemCount", { count: dataset.itemCount })}</Badge>
+        <Badge tone="neutral">
+          {t("browse.itemCount", { count: dataset.itemCount })}
+        </Badge>
         {dataset.templateKeys.map((value) => (
           <Badge key={value} tone="neutral">
             {t(`shapes.${value}`)}
@@ -470,10 +419,18 @@ function DatasetCard({
       {attempt ? (
         <div className="space-y-1.5">
           <div className="flex items-start">
-            <Typography as="span" variant="body-4" className="flex-1 text-primary">
+            <Typography
+              as="span"
+              variant="body-4"
+              className="flex-1 text-primary"
+            >
               {t("browse.inProgress")}
             </Typography>
-            <Typography as="span" variant="body-4" className="text-muted-foreground">
+            <Typography
+              as="span"
+              variant="body-4"
+              className="text-muted-foreground"
+            >
               {t("browse.answeredOf", {
                 answered: attempt.answeredCount,
                 total: attempt.itemCount,
@@ -488,24 +445,38 @@ function DatasetCard({
             aria-label={t("attempt.progressLabel")}
             className="h-1.5 overflow-hidden rounded-full bg-muted"
           >
-            <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
+            <div
+              className="h-full rounded-full bg-primary"
+              style={{ width: `${percent}%` }}
+            />
           </div>
         </div>
       ) : null}
 
-      <div className="mt-auto flex items-center gap-3">
-        <Typography variant="body-4" className="flex-1 text-muted-foreground">
+      <div className="mt-auto flex items-center gap-3 border-t border-border pt-4">
+        <Typography
+          variant="body-4"
+          className="flex flex-1 items-center gap-1.5 text-muted-foreground"
+        >
+          <Icon
+            icon={attempt ? LUCIDE.clock : LUCIDE.circleDashed}
+            className="size-3.5 shrink-0"
+          />
           {attempt
             ? t("browse.startedOn", { date: df.date(attempt.startedAt) })
             : t("browse.notStarted")}
         </Typography>
         {/* Continue skips the modal: there is nothing left to decide. */}
         {attempt ? (
-          <Button asChild>
-            <Link href={`/learn/attempts/${attempt.id}`}>{t("browse.continue")}</Link>
+          <Button asChild shape="circle" className="pr-4 pl-5">
+            <Link href={`/learn/attempts/${attempt.id}`}>
+              {t("browse.continue")}
+              <Icon icon={LUCIDE.arrowRight} />
+            </Link>
           </Button>
         ) : (
-          <Button variant="outline" onClick={onOpen}>
+          <Button shape="circle" onClick={onOpen} className="pr-5 pl-4">
+            <Icon icon={LUCIDE.play} className="size-4 fill-current" />
             {t("browse.start")}
           </Button>
         )}

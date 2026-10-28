@@ -4,7 +4,6 @@
     "intro": "Published question banks. Pick one to take.",
     "filterKind": "Filter by question kind",
     "allKinds": "All kinds",
-    "practiceWrong": "Review what you got wrong",
     "stats": "Statistics",
     "itemCount": "{count, plural, one {# question} other {# questions}}",
     "start": "Start",
@@ -15,11 +14,7 @@
     "searchPlaceholder": "Search question banks…",
     "difficultyLabel": "Difficulty",
     "anyDifficulty": "Any difficulty",
-    "statAnswered": "Answered",
     "statAnsweredNote": "questions in total",
-    "statAccuracy": "Accuracy",
-    "statAccuracyNote": "machine-graded only",
-    "statProgress": "In progress",
     "statProgressNote": "banks to continue",
     "inProgress": "In progress",
     "answeredOf": "{answered} of {total} answered",
@@ -27,10 +22,7 @@
     "startedOn": "Started {date}",
     "showing": "Showing {shown} of {total, plural, one {# bank} other {# banks}}",
     "loadMore": "Load more",
-    "sidebarTitle": "Study companion",
     "featured": "Pick up where you left off",
-    "vaultTitle": "Mistakes vault",
-    "vaultNote": "wrong answers to review",
     "countLabel": "How many questions?",
     "countOption": "{count} questions",
     "countAll": "All ({count})"
@@ -107,20 +99,39 @@
   },
   "stats": {
     "title": "Statistics",
-    "empty": "Nothing yet — you have not answered a question.",
-    "groups": {
-      "auto": "Machine-graded",
-      "self": "Self-assessed"
-    },
-    "groupHints": {
-      "auto": "Checked against a stored answer key.",
-      "self": "Flashcards: you told it whether you remembered. The two groups are deliberately never added together — the sum would mean nothing."
-    },
-    "columns": {
-      "kind": "Kind",
-      "answered": "Answered",
-      "correct": "Correct",
-      "rate": "Rate"
+    "bySet": {
+      "title": "By question set",
+      "pick": "Question set",
+      "questions": "Questions in the set",
+      "correctOverall": "Correct overall",
+      "empty": "You have not done this set yet.",
+      "chartLabel": "Times each question was answered and answered correctly",
+      "legendAnswered": "Answered",
+      "legendCorrect": "Correct",
+      "periodLabel": "Period",
+      "periods": {
+        "day": "Today",
+        "week": "7 days",
+        "month": "30 days",
+        "all": "All time"
+      },
+      "range": "{from} – {to}",
+      "answeredOnly": "Only answered questions",
+      "answers": "Times answered",
+      "questionN": "Question {n}",
+      "never": "not answered in this period",
+      "times": "answered {answered}×, {correct} correct ({rate}%)",
+      "metricLabel": "Y axis",
+      "metrics": {
+        "count": "Count",
+        "percent": "Percent"
+      },
+      "zoomLabel": "Questions in view",
+      "zoomAll": "All",
+      "visibleRange": "Questions {from} → {to}",
+      "loadError": "Could not load the statistics. Try again in a moment.",
+      "navStart": "Start of the visible range",
+      "navEnd": "End of the visible range"
     }
   },
   "kinds": {

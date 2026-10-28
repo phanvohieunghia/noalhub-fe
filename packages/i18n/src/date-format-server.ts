@@ -1,4 +1,9 @@
-import { formatDate, formatDateTime } from "@noalhub/core/format-date";
+import {
+  formatDate,
+  formatDateTime,
+  formatDayMonth,
+  formatMonthYear,
+} from "@noalhub/core/format-date";
 import { getLocale } from "next-intl/server";
 
 import { DEFAULT_LOCALE, isLocale } from "./config";
@@ -18,5 +23,7 @@ export async function getDateFormat() {
   return {
     date: (value?: string | null) => formatDate(tag, value),
     dateTime: (value?: string | null) => formatDateTime(tag, value),
+    dayMonth: (value?: string | null) => formatDayMonth(tag, value),
+    monthYear: (value?: string | null) => formatMonthYear(tag, value),
   };
 }

@@ -1,4 +1,9 @@
-import { formatDate, formatDateTime } from "@noalhub/core/format-date";
+import {
+  formatDate,
+  formatDateTime,
+  formatDayMonth,
+  formatMonthYear,
+} from "@noalhub/core/format-date";
 import { useLocale } from "next-intl";
 
 import { intlLocale } from "./formats";
@@ -22,5 +27,7 @@ export function useDateFormat() {
   return {
     date: (value?: string | null) => formatDate(tag, value),
     dateTime: (value?: string | null) => formatDateTime(tag, value),
+    dayMonth: (value?: string | null) => formatDayMonth(tag, value),
+    monthYear: (value?: string | null) => formatMonthYear(tag, value),
   };
 }

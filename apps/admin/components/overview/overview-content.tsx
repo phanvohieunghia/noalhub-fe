@@ -7,6 +7,8 @@ import { Button } from "@noalhub/ui/button";
 import { StatCard } from "@noalhub/ui/stat-card";
 
 import { AdminErrorState } from "../admin-error-state";
+import { ProportionCard } from "./proportion-card";
+import { SignupsSection } from "./signups-section";
 import { Typography } from "@noalhub/ui/typography";
 
 /**
@@ -20,6 +22,15 @@ export function OverviewContent() {
   const t = useTranslations("admin.overview");
   const df = useDateFormat();
   const stats = useAdminStats();
+
+  // Derived counts. Clamped at 0: the four figures come from separate queries on
+  // the backend, so a signup landing between them can make a part exceed the
+  // total by one — a negative "unverified" would be worse than an off-by-one.
+  const total = stats.data?.totalUsers ?? 0;
+  const verified = stats.data?.verifiedUsers ?? 0;
+  const recent = stats.data?.newUsersLast7Days ?? 0;
+  const unverified = Math.max(total - verified, 0);
+  const earlier = Math.max(total - recent, 0);
 
   if (stats.isError) {
     return (
@@ -76,6 +87,31 @@ export function OverviewContent() {
           isLoading={stats.isPending}
         />
       </div>
+
+      {/* Everything below is derived from the same four numbers — no extra
+          endpoint, so it is exactly as fresh (and as unfresh) as the cards above. */}
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <ProportionCard
+          title={t("verificationRate")}
+          isLoading={stats.isPending}
+          segments={[
+            { label: t("verified"), value: verified, tone: "primary" },
+            { label: t("unverified"), value: unverified, tone: "muted" },
+          ]}
+          summary={t("verificationSummary", { verified, total })}
+        />
+        <ProportionCard
+          title={t("recentShare")}
+          isLoading={stats.isPending}
+          segments={[
+            { label: t("newLabel"), value: recent, tone: "primary" },
+            { label: t("earlier"), value: earlier, tone: "muted" },
+          ]}
+          summary={t("recentShareSummary", { recent, total })}
+        />
+      </div>
+
+      <SignupsSection />
     </main>
   );
 }

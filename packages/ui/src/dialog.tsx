@@ -31,6 +31,11 @@ type DialogProps = {
    * (an editor's exit-full-screen button). `Esc` and the overlay still close it.
    */
   hideClose?: boolean;
+  /**
+   * Stack the header in the middle — a large icon above a larger title — for a
+   * verdict that is the whole point of the dialog (a right or wrong answer).
+   */
+  centered?: boolean;
   children: React.ReactNode;
 };
 
@@ -129,6 +134,7 @@ export function Dialog({
   tone = "default",
   actions,
   hideClose = false,
+  centered = false,
   children,
 }: DialogProps) {
   const t = useTranslations("common");
@@ -142,24 +148,37 @@ export function Dialog({
       <RadixDialog.Portal>
         <RadixDialog.Overlay className="fixed inset-0 z-50 bg-black/40 data-[state=open]:animate-overlay-in data-[state=closed]:animate-overlay-out" />
         <RadixDialog.Content
-          className={`fixed z-50 ${tone === "default" ? "bg-background" : "bg-surface"} text-foreground focus:outline-none data-[state=open]:animate-popup-in data-[state=closed]:animate-popup-out ${CONTENT_SIZES[size]} ${CARD_TONES[tone]}`}
+          className={`fixed z-50 ${tone === "default" ? "bg-background" : "bg-surface"} text-foreground focus:outline-none ${
+            centered
+              ? "will-change-[transform,opacity] data-[state=open]:animate-verdict-in data-[state=closed]:animate-verdict-out"
+              : "data-[state=open]:animate-popup-in data-[state=closed]:animate-popup-out"
+          } ${CONTENT_SIZES[size]} ${CARD_TONES[tone]}`}
         >
           <div className={`${BODY_SIZES[size]} ${BODY_TONES[tone]}`}>
             <div
               className={
                 size === "inset"
                   ? "flex items-center justify-between gap-4 border-b border-border px-4 py-3"
-                  : "flex items-start justify-between gap-4"
+                  : centered
+                    ? "flex flex-col items-center gap-3 text-center"
+                    : "flex items-start justify-between gap-4"
               }
             >
               {/* Radix requires a Title — it is the source of aria-labelledby. */}
               <RadixDialog.Title asChild>
                 <Typography
-                  variant={size === "inset" ? "title-3" : "h6"}
+                  variant={size === "inset" ? "title-3" : centered ? "h4" : "h6"}
                   as="h2"
-                  className={`flex min-w-0 flex-1 items-center gap-2 truncate ${TITLE_TONES[tone]}`}
+                  className={`flex min-w-0 items-center gap-2 ${
+                    centered ? "flex-col" : "flex-1 truncate"
+                  } ${TITLE_TONES[tone]}`}
                 >
-                  {icon ? <Icon icon={icon} className="size-5 shrink-0" /> : null}
+                  {icon ? (
+                    <Icon
+                      icon={icon}
+                      className={`shrink-0 ${centered ? "size-16" : "size-5"}`}
+                    />
+                  ) : null}
                   {title}
                 </Typography>
               </RadixDialog.Title>

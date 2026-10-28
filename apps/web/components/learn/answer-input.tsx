@@ -9,7 +9,7 @@ import { Icon, LUCIDE } from "@noalhub/ui/icons";
 import { Input } from "@noalhub/ui/input";
 import { Typography } from "@noalhub/ui/typography";
 
-import { playSelect } from "./sounds";
+import { playSelect } from "@noalhub/core/sounds";
 
 /** Milliseconds since `start` — module scope, so it is never mistaken for render-time work. */
 function elapsedSince(start: number) {
@@ -60,15 +60,18 @@ export function AnswerInput({
   const locked = result !== null || disabled === true;
   const options = templateKey !== "flashcard" ? (item.options ?? []) : [];
   // Short answers sit in a 2-wide grid; one long answer sends the whole set back
-  // to full-width rows so the text never gets squeezed into half a card.
-  const compact = options.every((option) => option.text.length <= SHORT_OPTION_CHARS);
+  // to full-width rows so the text never gets squeezed into half a card. An odd count
+  // (3, 5…) would leave a lone card in the last row, so it stays a list too.
+  const compact =
+    options.length % 2 === 0 &&
+    options.every((option) => option.text.length <= SHORT_OPTION_CHARS);
   const single = templateKey === "true_false" || templateKey === "single_choice";
 
   const send = (response: QaResponse) =>
     onSubmit(response, elapsedSince(shownAt.current));
 
   const toggle = (id: string) => {
-    playSelect();
+    playSelect(single || !picked.includes(id));
     setPicked((prev) =>
       single ? [id] : prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id],
     );
@@ -135,7 +138,7 @@ export function AnswerInput({
 
   if (options.length > 0) {
     return (
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-1 flex-col gap-5">
         {/* Single choice needs no hint — one pick is the default. Several does. */}
         {single ? null : (
           <Typography variant="body-4" className="text-muted-foreground">
@@ -145,9 +148,9 @@ export function AnswerInput({
         <div
           role={single ? "radiogroup" : "group"}
           aria-label={single ? t("answer.singleHint") : t("answer.multiHint")}
-          // Rows size to their content (equal height within a row, never stretched to
-          // fill the screen) so the answers read like the admin preview.
-          className={`grid gap-2 ${compact ? "grid-cols-2" : ""}`}
+          // The group takes the height the question leaves over and splits it evenly
+          // between rows, so the answers fill the screen instead of huddling at the top.
+          className={`grid flex-1 auto-rows-fr gap-2 ${compact ? "grid-cols-2" : ""}`}
         >
           {options.map((option) => (
             <OptionCard

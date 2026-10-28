@@ -271,6 +271,10 @@
   --animate-overlay-out: overlay-out 140ms ease-in;
   --animate-popup-in: popup-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
   --animate-popup-out: popup-out 150ms ease-in;
+  /* The answer verdict: a result card is large and arrives while the page behind it is
+     still repainting, so it fades up from 96% instead of zooming out of nothing. */
+  --animate-verdict-in: verdict-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-verdict-out: verdict-out 120ms ease-in;
   /* The `bars` spinner: each bar breathes, staggered by an inline delay. */
   --animate-bar: bar-scale 900ms ease-in-out infinite;
   /* Slow ambient drift for the auth screens' background blobs. Three durations
@@ -319,6 +323,26 @@
     to {
       opacity: 0;
       transform: translate(-50%, -50%) scale(0);
+    }
+  }
+  @keyframes verdict-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+  @keyframes verdict-out {
+    from {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.98);
     }
   }
   @keyframes aurora-a {
@@ -438,6 +462,8 @@
   :root {
     --animate-popup-in: overlay-in 120ms ease-out;
     --animate-popup-out: overlay-out 100ms ease-in;
+    --animate-verdict-in: overlay-in 120ms ease-out;
+    --animate-verdict-out: overlay-out 100ms ease-in;
     /* The drawer keeps its slide even here — it is what tells the reader the
        panel came from the edge — just shorter. */
     --animate-slide-in-right: slide-in-right 140ms ease-out;

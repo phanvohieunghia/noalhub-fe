@@ -1,6 +1,7 @@
 import { IntlProvider } from "@noalhub/i18n/provider";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Suspense } from "react";
 
 import { LearnStats } from "@/components/learn/learn-stats";
 
@@ -12,13 +13,18 @@ export async function generateMetadata({
   return { title: t("stats.title") };
 }
 
-export default async function Page({ params }: PageProps<"/[locale]/learn/stats">) {
+export default async function Page({
+  params,
+}: PageProps<"/[locale]/learn/stats">) {
   const { locale } = await params;
   setRequestLocale(locale);
 
   return (
     <IntlProvider namespace="web.learn">
-      <LearnStats />
+      {/* LearnStats reads the filters from the URL (useSearchParams), which needs a Suspense boundary. */}
+      <Suspense>
+        <LearnStats />
+      </Suspense>
     </IntlProvider>
   );
 }

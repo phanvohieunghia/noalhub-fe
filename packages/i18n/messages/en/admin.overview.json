@@ -8,5 +8,28 @@
   "verifiedUsers": "Verified email",
   "newUsers": "New in 7 days",
   "newUsersHint": "The 7-day window is computed by the backend",
-  "admins": "Administrators"
+  "admins": "Administrators",
+  "verificationRate": "Verification rate",
+  "verified": "Verified",
+  "unverified": "Unverified",
+  "verificationSummary": "{verified} of {total} users have verified their email",
+  "recentShare": "Joined in 7 days",
+  "newLabel": "New",
+  "earlier": "Earlier",
+  "recentShareSummary": "{recent} of {total} users joined in the last 7 days",
+  "signups": {
+    "title": "New users over time",
+    "total": "{count, plural, one {# new user} other {# new users}} in this period",
+    "change": "{percent} vs. previous period",
+    "rangeLabel": "Time range",
+    "ranges": {
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    },
+    "newUsersTitle": "New users",
+    "newUsersSummary": "Area chart of new users per time bucket over the selected range",
+    "statusTitle": "New users by email status",
+    "statusSummary": "Stacked bar chart splitting each time bucket's new users into verified and unverified email"
+  }
 }

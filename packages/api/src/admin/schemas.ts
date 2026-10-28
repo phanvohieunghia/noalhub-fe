@@ -49,6 +49,20 @@ export const adminStatsSchema = z.object({
   admins: z.number(),
 });
 
+export const adminSignupsSchema = z.object({
+  range: z.enum(["week", "month", "year"]),
+  granularity: z.enum(["day", "month"]),
+  points: z.array(
+    z.object({
+      date: z.string(),
+      newUsers: z.number(),
+      verifiedNewUsers: z.number(),
+    }),
+  ),
+  total: z.number(),
+  previousTotal: z.number(),
+});
+
 /**
  * The input schema for the user table's filters. It parses **URL searchParams**
  * (the source of truth for filters, so links stay shareable) — hence every

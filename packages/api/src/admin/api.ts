@@ -1,5 +1,6 @@
 import { http } from "../client";
 import {
+  adminSignupsSchema,
   adminStatsSchema,
   adminUserListSchema,
   adminUserSchema,
@@ -7,6 +8,8 @@ import {
 } from "./schemas";
 import { z } from "zod";
 import type {
+  AdminSignupRange,
+  AdminSignups,
   AdminStats,
   AdminUser,
   AdminUserList,
@@ -33,6 +36,24 @@ export async function getAdminStats(signal?: AbortSignal): Promise<AdminStats> {
   const { data } = await http.get<AdminStats>("/admin/stats", {
     authRequired: true,
     schema: adminStatsSchema,
+    signal,
+  });
+  return data;
+}
+
+/**
+ * GET /admin/stats/signups?range= → 200 AdminSignupsDto. 400 (bad `range`), 403, 429.
+ *
+ * Not cached by the backend either.
+ */
+export async function getAdminSignups(
+  range: AdminSignupRange,
+  signal?: AbortSignal,
+): Promise<AdminSignups> {
+  const { data } = await http.get<AdminSignups>("/admin/stats/signups", {
+    params: { range },
+    authRequired: true,
+    schema: adminSignupsSchema,
     signal,
   });
   return data;

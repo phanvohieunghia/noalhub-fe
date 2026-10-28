@@ -4,7 +4,6 @@
     "intro": "Các bộ câu hỏi đã đăng. Chọn một bộ để làm.",
     "filterKind": "Lọc theo dạng câu",
     "allKinds": "Mọi dạng",
-    "practiceWrong": "Ôn câu đang sai",
     "stats": "Thống kê",
     "itemCount": "{count} câu",
     "start": "Bắt đầu",
@@ -15,11 +14,7 @@
     "searchPlaceholder": "Tìm bộ câu hỏi…",
     "difficultyLabel": "Độ khó",
     "anyDifficulty": "Mọi độ khó",
-    "statAnswered": "Đã trả lời",
     "statAnsweredNote": "câu hỏi tổng cộng",
-    "statAccuracy": "Độ chính xác",
-    "statAccuracyNote": "chỉ tính câu máy chấm",
-    "statProgress": "Đang làm",
     "statProgressNote": "bộ để làm tiếp",
     "inProgress": "Đang làm",
     "answeredOf": "Đã trả lời {answered}/{total}",
@@ -27,10 +22,7 @@
     "startedOn": "Bắt đầu {date}",
     "showing": "Hiển thị {shown}/{total} bộ",
     "loadMore": "Xem thêm",
-    "sidebarTitle": "Bên cạnh bạn",
     "featured": "Làm tiếp bộ đang dở",
-    "vaultTitle": "Kho câu sai",
-    "vaultNote": "câu trả lời sai để ôn lại",
     "countLabel": "Làm bao nhiêu câu?",
     "countOption": "{count} câu",
     "countAll": "Tất cả ({count})"
@@ -107,20 +99,39 @@
   },
   "stats": {
     "title": "Thống kê",
-    "empty": "Chưa có dữ liệu — bạn chưa trả lời câu nào.",
-    "groups": {
-      "auto": "Máy chấm",
-      "self": "Bạn tự đánh giá"
-    },
-    "groupHints": {
-      "auto": "Đối chiếu với đáp án đã lưu.",
-      "self": "Thẻ ghi nhớ: bạn tự nói mình đã nhớ hay chưa. Hai nhóm cố ý không cộng lại — gộp chúng ra một con số không có nghĩa."
-    },
-    "columns": {
-      "kind": "Dạng câu",
-      "answered": "Đã trả lời",
-      "correct": "Đúng",
-      "rate": "Tỉ lệ"
+    "bySet": {
+      "title": "Theo bộ câu hỏi",
+      "pick": "Bộ câu hỏi",
+      "questions": "Số câu trong bộ",
+      "correctOverall": "Tổng số câu đúng",
+      "empty": "Bạn chưa làm bộ này lần nào.",
+      "chartLabel": "Số lần mỗi câu được trả lời và trả lời đúng",
+      "legendAnswered": "Đã trả lời",
+      "legendCorrect": "Đúng",
+      "periodLabel": "Khoảng thời gian",
+      "periods": {
+        "day": "Hôm nay",
+        "week": "7 ngày",
+        "month": "30 ngày",
+        "all": "Tất cả"
+      },
+      "range": "{from} – {to}",
+      "answeredOnly": "Chỉ câu đã trả lời",
+      "answers": "Lượt trả lời",
+      "questionN": "Câu {n}",
+      "never": "chưa trả lời trong khoảng này",
+      "times": "trả lời {answered} lần, đúng {correct} ({rate}%)",
+      "metricLabel": "Trục Y",
+      "metrics": {
+        "count": "Số lượng",
+        "percent": "Phần trăm"
+      },
+      "zoomLabel": "Số câu đang xem",
+      "zoomAll": "Tất cả",
+      "visibleRange": "Câu {from} → {to}",
+      "loadError": "Không tải được thống kê. Hãy thử lại sau ít phút.",
+      "navStart": "Đầu vùng đang xem",
+      "navEnd": "Cuối vùng đang xem"
     }
   },
   "kinds": {

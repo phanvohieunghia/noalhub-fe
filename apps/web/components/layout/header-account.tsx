@@ -17,12 +17,12 @@ import { WebLanguageSwitcher } from "./language-switcher";
 /**
  * The account slot shared by `SiteHeader` and `HomeHeader`, picked from the
  * auth store. Signed out shows search, the light/dark switch and a "Sign in"
- * button (`signInClassName` lets a caller hide it at some widths); signed in swaps those for the avatar,
+ * button (`showSignIn={false}` omits it); signed in swaps those for the avatar,
  * which opens a menu with the user's info, the theme switch and "Sign out".
  * While the session is still being restored (`idle`/`loading`) it renders
  * nothing rather than flashing the signed-out controls at a signed-in user.
  */
-export function HeaderAccount({ signInClassName = "" }: { signInClassName?: string }) {
+export function HeaderAccount({ showSignIn = true }: { showSignIn?: boolean }) {
   const t = useTranslations("nav");
   const status = useAuthStore((s) => s.status);
   const user = useAuthStore((s) => s.user);
@@ -99,9 +99,11 @@ export function HeaderAccount({ signInClassName = "" }: { signInClassName?: stri
           </Link>
         </Button>
         <ThemeToggle />
-        <Button asChild variant="ghost" size="sm" className={signInClassName}>
-          <Link href="/login">{t("login")}</Link>
-        </Button>
+        {showSignIn && (
+          <Button asChild variant="ghost" size="sm" className="shrink-0 whitespace-nowrap">
+            <Link href="/login">{t("login")}</Link>
+          </Button>
+        )}
       </>
     );
   }

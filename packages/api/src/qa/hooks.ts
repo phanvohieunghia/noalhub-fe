@@ -3,6 +3,7 @@
 import {
   useInfiniteQuery,
   useMutation,
+  useQueries,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -34,6 +35,7 @@ import type {
 import type {
   BrowseItemsQuery,
   QaGeneration,
+  QaItemPlay,
   QaItemsQuery,
   QaOutline,
   QaPromptKind,
@@ -97,6 +99,8 @@ export const qaKeys = {
   attemptPlay: (id: string) => [...qaKeys.play(), "attempt", id] as const,
   attempts: (datasetId?: string) =>
     [...qaKeys.play(), "attempts", datasetId ?? "all"] as const,
+  datasetItems: (datasetId: string) =>
+    [...qaKeys.play(), "dataset-items", datasetId] as const,
   attemptReview: (id: string) => [...qaKeys.play(), "review", id] as const,
   stats: () => [...qaKeys.play(), "stats"] as const,
   playTags: () => [...qaKeys.play(), "item-tags"] as const,
@@ -960,6 +964,61 @@ export function useBrowseQaItems(query: BrowseItemsQuery = {}) {
     queryKey: qaKeys.playItems(query),
     queryFn: ({ signal }) => qaApi.browseItems(query, signal),
   });
+}
+
+/** One answer to one question, flattened out of an attempt's review. */
+export type QaQuestionAnswer = {
+  itemId: string;
+  isCorrect: boolean;
+  answeredAt: string;
+};
+
+/**
+ * Every published question of a dataset plus every answer ever given to them,
+ * for the per-question statistics chart. The backend has no per-question
+ * aggregate, so this pages the bank (100 per request) and reads each attempt's
+ * review; both are cached per id, so the cost is paid once.
+ */
+export function useQaDatasetQuestionStats(datasetId: string | undefined) {
+  const items = useQuery({
+    queryKey: qaKeys.datasetItems(datasetId ?? ""),
+    enabled: Boolean(datasetId),
+    // The bank is paged (up to a dozen requests): do not refetch it on every mount.
+    staleTime: 5 * 60_000,
+    queryFn: async ({ signal }) => {
+      const limit = 100;
+      const all: QaItemPlay[] = [];
+      for (let offset = 0; ; offset += limit) {
+        const page = await qaApi.browseItems({ datasetId, limit, offset }, signal);
+        all.push(...page.items);
+        if (all.length >= page.total || page.items.length === 0) break;
+      }
+      return all.sort((a, b) => a.order - b.order);
+    },
+  });
+  const attempts = useQaAttempts(datasetId);
+  const reviews = useQueries({
+    queries: (attempts.data ?? []).map((attempt) => ({
+      queryKey: qaKeys.attemptReview(attempt.id),
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        qaApi.reviewAttempt(attempt.id, signal),
+      staleTime: 60_000,
+    })),
+  });
+
+  const answers: QaQuestionAnswer[] = reviews.flatMap((review) =>
+    (review.data ?? []).map((row) => ({
+      itemId: row.itemId,
+      isCorrect: row.isCorrect,
+      answeredAt: row.answeredAt,
+    })),
+  );
+  return {
+    items: items.data ?? [],
+    answers,
+    isPending: items.isPending || attempts.isPending || reviews.some((r) => r.isPending),
+    isError: items.isError || attempts.isError || reviews.some((r) => r.isError),
+  };
 }
 
 export function useQaStats() {

@@ -56,8 +56,11 @@ body {
 @media (prefers-reduced-motion: no-preference) {
   .confetti-piece {
     display: block;
-    animation: confetti-burst 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    animation-delay: var(--d, 0ms);
+    /* Hidden until its delay is over: `both` would paint the first keyframe meanwhile. */
+    opacity: 0;
+    animation: confetti-burst 900ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    /* Wait for the verdict card to finish arriving (200ms) so the two never animate together. */
+    animation-delay: calc(var(--d, 0ms) + 200ms);
   }
   @keyframes confetti-burst {
     from {

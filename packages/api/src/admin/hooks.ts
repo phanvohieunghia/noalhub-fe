@@ -8,12 +8,14 @@ import {
 } from "@tanstack/react-query";
 
 import * as adminApi from "./api";
-import type { AdminUserListQuery, GrantStorybookAccessInput } from "./types";
+import type { AdminSignupRange, AdminUserListQuery, GrantStorybookAccessInput } from "./types";
 
 /** Query key factory — the ONLY source of truth for the admin feature's keys. */
 export const adminKeys = {
   all: ["admin"] as const,
   stats: () => [...adminKeys.all, "stats"] as const,
+  signups: (range: AdminSignupRange) =>
+    [...adminKeys.all, "signups", range] as const,
   users: () => [...adminKeys.all, "users"] as const,
   userList: (query: AdminUserListQuery) =>
     [...adminKeys.users(), "list", query] as const,
@@ -33,6 +35,20 @@ export function useAdminStats() {
     queryKey: adminKeys.stats(),
     queryFn: ({ signal }) => adminApi.getAdminStats(signal),
     staleTime: 15_000,
+  });
+}
+
+/**
+ * New users over time, for the overview charts. Same freshness policy as
+ * `useAdminStats`; the previous range stays on screen while a new one loads so
+ * switching week / month / year does not flash a skeleton.
+ */
+export function useAdminSignups(range: AdminSignupRange) {
+  return useQuery({
+    queryKey: adminKeys.signups(range),
+    queryFn: ({ signal }) => adminApi.getAdminSignups(range, signal),
+    staleTime: 15_000,
+    placeholderData: keepPreviousData,
   });
 }
 

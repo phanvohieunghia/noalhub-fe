@@ -14,6 +14,7 @@
     "@hookform/resolvers": "^5.4.2",
     "@noalhub/api": "workspace:*",
     "@noalhub/config": "workspace:*",
+    "@noalhub/core": "workspace:*",
     "@noalhub/i18n": "workspace:*",
     "@noalhub/ui": "workspace:*",
     "next": "16.2.11",

@@ -29,7 +29,7 @@ import { Tooltip } from "@noalhub/ui/tooltip";
 import { Typography } from "@noalhub/ui/typography";
 
 import { AnswerInput } from "./answer-input";
-import { playCorrect, playWrong } from "./sounds";
+import { playCorrect, playWrong } from "@noalhub/core/sounds";
 
 /** Questions per progress segment. */
 const SEGMENT_SIZE = 10;
@@ -206,6 +206,7 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
             <Button
               variant="ghost"
               size="icon"
+              shape="circle"
               aria-label={t("attempt.back")}
               className="-ml-2 shrink-0"
               // Nothing is lost by leaving (answers are saved as they go), but a
@@ -214,9 +215,12 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
             >
               <Icon icon={LUCIDE.arrowLeft} />
             </Button>
-            <Typography variant="h4" as="h1" className="min-w-0 flex-1 break-words">
-              {set.data.datasetTitle}
-            </Typography>
+            {/* One line with an ellipsis; the full title is the tooltip. */}
+            <Tooltip label={set.data.datasetTitle} side="bottom">
+              <Typography variant="h4" as="h1" className="min-w-0 flex-1 truncate">
+                {set.data.datasetTitle}
+              </Typography>
+            </Tooltip>
           </div>
 
           <Tooltip
@@ -315,6 +319,8 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
   );
 }
 
+const PANEL = "rounded-lg border bg-background/40 p-3";
+
 /** The verdict, the answer and the explanation — then the way forward. */
 function Feedback({
   result,
@@ -333,9 +339,35 @@ function Feedback({
     ? t(good ? "attempt.selfKnown" : "attempt.selfUnknown")
     : t(good ? "attempt.correct" : "attempt.wrong");
 
-  // A machine-graded right answer is a moment to enjoy, not to study: the
-  // explanation only earns its space when the learner got it wrong.
-  if (good && !self) {
+  // A machine-graded right answer with nothing to explain is a moment to enjoy: one
+  // tap to move on. When there is an explanation it is shown too (below), so a
+  // right answer is still something to learn from.
+  const celebrate = good && !self;
+  // The answer and the explanation sit in bordered panels tinted by the verdict.
+  const panelTone = good ? "border-success/40" : "border-danger/40";
+
+  // With an explanation there is no button (a right answer is not a decision), so the
+  // card says "tap anywhere": Enter, or a click inside it, moves on — as the overlay
+  // and Esc already do. A click that ends a text selection is the learner copying
+  // the explanation, not asking to leave.
+  useEffect(() => {
+    if (!celebrate) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Enter" && !event.repeat) onNext();
+    };
+    const onClick = (event: MouseEvent) => {
+      const inside = (event.target as Element | null)?.closest('[role="dialog"]');
+      if (inside && !window.getSelection()?.toString()) onNext();
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("click", onClick);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("click", onClick);
+    };
+  }, [celebrate, onNext]);
+
+  if (celebrate && !result.explanation) {
     return (
       <Dialog open onClose={onNext} title={verdict} icon={LUCIDE.circleCheck} tone="success" hideClose>
         {/* No button: the whole card is one — and the overlay and X already mean "next". */}
@@ -370,9 +402,19 @@ function Feedback({
       icon={good ? LUCIDE.circleCheck : LUCIDE.circleX}
       tone={good ? "success" : "danger"}
       hideClose
+      centered
     >
-      {result.answer ? (
-        <div className="space-y-1">
+      {celebrate ? (
+        <div className="relative flex justify-center">
+          <Confetti />
+          <Typography variant="body-3" as="p" className="text-center text-muted-foreground">
+            {t("attempt.celebrate")}
+          </Typography>
+        </div>
+      ) : null}
+
+      {result.answer && !celebrate ? (
+        <div className={`space-y-1 ${PANEL} ${panelTone}`}>
           <Typography variant="title-4" as="h3">
             {t("attempt.answer")}
           </Typography>
@@ -381,7 +423,7 @@ function Feedback({
       ) : null}
 
       {result.explanation ? (
-        <div className="space-y-1">
+        <div className={`space-y-1 ${PANEL} ${panelTone}`}>
           <Typography variant="title-4" as="h3">
             {t("attempt.explanation")}
           </Typography>
@@ -389,12 +431,18 @@ function Feedback({
         </div>
       ) : null}
 
-      <div>
-        <Button onClick={onNext} autoFocus className="w-full">
-          {last ? t("attempt.seeResult") : t("attempt.next")}
-          <Icon icon={LUCIDE.arrowRight} />
-        </Button>
-      </div>
+      {celebrate ? (
+        <Typography variant="body-4" as="p" className="text-center text-muted-foreground">
+          {t(last ? "attempt.tapSeeResult" : "attempt.tapNext")}
+        </Typography>
+      ) : (
+        <div>
+          <Button onClick={onNext} autoFocus className="w-full">
+            {last ? t("attempt.seeResult") : t("attempt.next")}
+            <Icon icon={LUCIDE.arrowRight} />
+          </Button>
+        </div>
+      )}
     </Dialog>
   );
 }
