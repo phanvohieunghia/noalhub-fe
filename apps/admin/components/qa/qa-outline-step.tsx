@@ -541,10 +541,7 @@ function OutlineWorkbench({
           <div className="hidden items-center gap-2 lg:flex">
             {!loading && stats.characters > OUTLINE_CHAR_WARN ? (
               <LongDocWarning
-                message={t("ws.outline.longWarning", {
-                  chars: stats.characters,
-                  tokens: tokensValue,
-                })}
+                message={t("ws.outline.longWarning")}
               />
             ) : null}
             <MetricsCard

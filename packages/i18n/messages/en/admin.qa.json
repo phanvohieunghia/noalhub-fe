@@ -610,7 +610,7 @@
       "generatingHeading": "Outline · generating",
       "generatingTitle": "Generating outline from {count, plural, one {# chapter} other {# chapters}}…",
       "fullscreen": "Full screen",
-      "longWarning": "This document is {chars, plural, one {# character} other {# characters}} (≈ {tokens} tokens). It may not fit smaller models' context window when generating questions — pick fewer sections per run or use a larger model."
+      "longWarning": "Large source: it may not fit smaller models' context window when generating questions. Pick fewer sections per run or use a model with a larger context window."
     },
     "sets": {
       "generatingTitle": "Generating question sets…",

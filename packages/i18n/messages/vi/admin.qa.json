@@ -610,7 +610,7 @@
       "generatingHeading": "Mục lục · đang tạo",
       "generatingTitle": "Đang tạo mục lục từ {count} chương…",
       "fullscreen": "Toàn màn hình",
-      "longWarning": "Tài liệu đã dài {chars} ký tự (≈ {tokens} token). Có thể không vừa cửa sổ của các model nhỏ khi sinh câu hỏi — khi đó hãy chọn ít mục mỗi lần hoặc dùng model lớn hơn."
+      "longWarning": "Nguồn lớn: có thể không vừa cửa sổ ngữ cảnh của các model nhỏ khi sinh câu hỏi. Hãy chọn ít mục mỗi lần hoặc dùng model có cửa sổ lớn hơn."
     },
     "sets": {
       "generatingTitle": "Đang sinh bộ câu hỏi…",
