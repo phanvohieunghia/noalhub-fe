@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-query";
 
 import * as adminApi from "./api";
-import type { AdminSignupRange, AdminUserListQuery, GrantStorybookAccessInput } from "./types";
+import type { AdminQaPeriod, AdminSignupRange, AdminUserListQuery, GrantStorybookAccessInput } from "./types";
 
 /** Query key factory — the ONLY source of truth for the admin feature's keys. */
 export const adminKeys = {
@@ -16,6 +16,8 @@ export const adminKeys = {
   stats: () => [...adminKeys.all, "stats"] as const,
   signups: (range: AdminSignupRange) =>
     [...adminKeys.all, "signups", range] as const,
+  qaQuestions: (datasetId: string, period: AdminQaPeriod, userId?: string) =>
+    [...adminKeys.all, "qa-questions", datasetId, period, userId ?? "all"] as const,
   users: () => [...adminKeys.all, "users"] as const,
   userList: (query: AdminUserListQuery) =>
     [...adminKeys.users(), "list", query] as const,
@@ -47,6 +49,27 @@ export function useAdminSignups(range: AdminSignupRange) {
   return useQuery({
     queryKey: adminKeys.signups(range),
     queryFn: ({ signal }) => adminApi.getAdminSignups(range, signal),
+    staleTime: 15_000,
+    placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * Per-question answer counts of one dataset, summed over every user (or
+ * only `userId`'s). Same
+ * freshness policy as `useAdminStats`; switching period keeps the old bars up
+ * until the new ones arrive.
+ */
+export function useAdminQaQuestionStats(
+  datasetId: string | undefined,
+  period: AdminQaPeriod,
+  userId?: string,
+) {
+  return useQuery({
+    queryKey: adminKeys.qaQuestions(datasetId ?? "", period, userId),
+    queryFn: ({ signal }) =>
+      adminApi.getAdminQaQuestionStats(datasetId!, period, userId, signal),
+    enabled: Boolean(datasetId),
     staleTime: 15_000,
     placeholderData: keepPreviousData,
   });

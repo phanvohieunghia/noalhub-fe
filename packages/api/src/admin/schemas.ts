@@ -63,6 +63,19 @@ export const adminSignupsSchema = z.object({
   previousTotal: z.number(),
 });
 
+export const adminQaQuestionStatsSchema = z.object({
+  items: z.array(
+    z.object({
+      itemId: z.string(),
+      question: z.unknown(),
+      answered: z.number(),
+      correct: z.number(),
+    }),
+  ),
+  totalAnswers: z.number(),
+  totalCorrect: z.number(),
+});
+
 /**
  * The input schema for the user table's filters. It parses **URL searchParams**
  * (the source of truth for filters, so links stay shareable) — hence every

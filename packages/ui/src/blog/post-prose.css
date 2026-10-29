@@ -151,6 +151,48 @@
   margin-block: 1.75rem;
 }
 
+/* Q&A text: a picture sits close to the sentence that introduces it. */
+.post-prose-tight figure {
+  margin-block: 0.5rem;
+}
+
+/*
+ * Fitting a question into a height: when an ancestor caps the height, the text keeps
+ * its size and the picture is what gives. Every level from the cap down to the
+ * picture is a shrinkable flex column (`min-height: 0`), and the picture is held to
+ * what its figure was left with. Without a cap nothing here changes the layout.
+ */
+.post-prose-tight {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.post-prose-tight > * {
+  flex: none;
+}
+.post-prose-tight > figure {
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.post-prose.post-prose-tight img {
+  min-height: 0;
+  max-height: 100%;
+}
+
+/*
+ * The edges of the prose belong to the container. Inside a padded frame (a quiz
+ * question card) a trailing figure's margin does not collapse out, and shows up as a
+ * blank band under the picture.
+ */
+.post-prose > figure:first-child {
+  margin-top: 0;
+}
+.post-prose > :last-child {
+  margin-bottom: 0;
+}
+
 /*
  * Never wider than the column nor taller than the screen. `object-fit` is what
  * makes the two caps safe: the editor writes both `width` and `height` in px

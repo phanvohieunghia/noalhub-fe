@@ -9,14 +9,9 @@
   "newUsers": "New in 7 days",
   "newUsersHint": "The 7-day window is computed by the backend",
   "admins": "Administrators",
-  "verificationRate": "Verification rate",
   "verified": "Verified",
   "unverified": "Unverified",
   "verificationSummary": "{verified} of {total} users have verified their email",
-  "recentShare": "Joined in 7 days",
-  "newLabel": "New",
-  "earlier": "Earlier",
-  "recentShareSummary": "{recent} of {total} users joined in the last 7 days",
   "signups": {
     "title": "New users over time",
     "total": "{count, plural, one {# new user} other {# new users}} in this period",
@@ -31,5 +26,42 @@
     "newUsersSummary": "Area chart of new users per time bucket over the selected range",
     "statusTitle": "New users by email status",
     "statusSummary": "Stacked bar chart splitting each time bucket's new users into verified and unverified email"
+  },
+  "qaAnswers": {
+    "title": "Answers by question set",
+    "pick": "Question set",
+    "noDatasets": "There are no question sets yet.",
+    "questions": "Questions in the set",
+    "answers": "Times answered",
+    "correctOverall": "Correct overall",
+    "empty": "Nobody has done this set in this period.",
+    "legendAnswered": "Answered",
+    "legendCorrect": "Correct",
+    "periodLabel": "Period",
+    "periods": {
+      "day": "Today",
+      "week": "7 days",
+      "month": "30 days",
+      "all": "All time"
+    },
+    "range": "{from} – {to}",
+    "answeredOnly": "Only answered questions",
+    "questionN": "Question {n}",
+    "never": "nobody answered it in this period",
+    "times": "answered {answered}×, {correct} correct ({rate}%)",
+    "metricLabel": "Y axis",
+    "metrics": {
+      "count": "Count",
+      "percent": "Percent"
+    },
+    "zoomLabel": "Questions in view",
+    "zoomAll": "All",
+    "visibleRange": "Questions {from} → {to}",
+    "loadError": "Could not load the statistics. Try again in a moment.",
+    "navStart": "Start of the visible range",
+    "navEnd": "End of the visible range",
+    "titleUser": "Answered questions by question set",
+    "emptyUser": "This user has not done this set in this period.",
+    "neverUser": "this user did not answer it in this period"
   }
 }

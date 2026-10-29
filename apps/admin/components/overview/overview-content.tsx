@@ -8,7 +8,7 @@ import { Icon, LUCIDE } from "@noalhub/ui/icons";
 import { StatCard } from "@noalhub/ui/stat-card";
 
 import { AdminErrorState } from "../admin-error-state";
-import { ProportionCard } from "./proportion-card";
+import { QaAnswersSection } from "./qa-answers-section";
 import { SignupsSection } from "./signups-section";
 import { Typography } from "@noalhub/ui/typography";
 
@@ -30,8 +30,6 @@ export function OverviewContent() {
   const total = stats.data?.totalUsers ?? 0;
   const verified = stats.data?.verifiedUsers ?? 0;
   const recent = stats.data?.newUsersLast7Days ?? 0;
-  const unverified = Math.max(total - verified, 0);
-  const earlier = Math.max(total - recent, 0);
 
   if (stats.isError) {
     return (
@@ -65,28 +63,34 @@ export function OverviewContent() {
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
+          compact
           label={t("totalUsers")}
           icon={LUCIDE.users}
-          value={stats.data?.totalUsers ?? 0}
+          value={total}
           isLoading={stats.isPending}
           hint={t("totalUsersHint")}
         />
         <StatCard
+          compact
           label={t("verifiedUsers")}
           icon={LUCIDE.userCheck}
-          value={stats.data?.verifiedUsers ?? 0}
+          value={`${verified} / ${total}`}
+          progress={total > 0 ? Math.round((verified / total) * 100) : 0}
           isLoading={stats.isPending}
+          hint={t("verificationSummary", { verified, total })}
         />
         <StatCard
+          compact
           label={t("newUsers")}
           icon={LUCIDE.userPlus}
-          value={stats.data?.newUsersLast7Days ?? 0}
+          value={recent}
           isLoading={stats.isPending}
           hint={t("newUsersHint")}
         />
         <StatCard
+          compact
           label={t("admins")}
           icon={LUCIDE.shieldCheck}
           value={stats.data?.admins ?? 0}
@@ -94,30 +98,8 @@ export function OverviewContent() {
         />
       </div>
 
-      {/* Everything below is derived from the same four numbers — no extra
-          endpoint, so it is exactly as fresh (and as unfresh) as the cards above. */}
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <ProportionCard
-          title={t("verificationRate")}
-          isLoading={stats.isPending}
-          segments={[
-            { label: t("verified"), value: verified, tone: "primary" },
-            { label: t("unverified"), value: unverified, tone: "muted" },
-          ]}
-          summary={t("verificationSummary", { verified, total })}
-        />
-        <ProportionCard
-          title={t("recentShare")}
-          isLoading={stats.isPending}
-          segments={[
-            { label: t("newLabel"), value: recent, tone: "primary" },
-            { label: t("earlier"), value: earlier, tone: "muted" },
-          ]}
-          summary={t("recentShareSummary", { recent, total })}
-        />
-      </div>
-
       <SignupsSection />
+      <QaAnswersSection />
     </main>
   );
 }

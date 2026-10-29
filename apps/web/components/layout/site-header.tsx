@@ -22,7 +22,7 @@ export function SiteHeader() {
   ] as const;
 
   return (
-    <header className="hidden h-16 shrink-0 border-b border-border bg-surface md:block">
+    <header className="sticky top-0 z-30 hidden h-16 shrink-0 border-b border-border bg-surface md:block">
       <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between px-4 md:px-12">
         <Link href="/" aria-label="Noalhub" className="flex items-center">
           <LogoLockup className="text-title-3" />

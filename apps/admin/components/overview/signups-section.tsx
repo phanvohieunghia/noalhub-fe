@@ -6,23 +6,21 @@ import { ADMIN_SIGNUP_RANGES, useAdminSignups, type AdminSignupRange } from "@no
 import { useDateFormat } from "@noalhub/i18n/use-date-format";
 import { useTranslations } from "next-intl";
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
-  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 import { Badge } from "@noalhub/ui/badge";
+import { LUCIDE } from "@noalhub/ui/icons";
 import { Skeleton } from "@noalhub/ui/skeleton";
+import { Toggle } from "@noalhub/ui/toggle";
 import { Typography } from "@noalhub/ui/typography";
 
 import { AdminErrorState } from "../admin-error-state";
-import { RangeTabs } from "./range-tabs";
 
 // Charts are the one place theme scale tokens are fine (`docs/theme.md`), but
 // semantic tokens are used anyway: they already flip with light/dark, so no
@@ -40,7 +38,13 @@ const TOOLTIP_STYLE = {
   fontSize: 12,
 } as const;
 
-const CHART_HEIGHT = 280;
+const RANGE_ICONS = {
+  week: LUCIDE.calendarDays,
+  month: LUCIDE.calendarRange,
+  year: LUCIDE.calendar,
+} as const;
+
+const CHART_HEIGHT = 200;
 
 /**
  * New-user charts with a week / month / year filter, from
@@ -111,98 +115,52 @@ export function SignupsSection() {
             )}
           </div>
         </div>
-        <RangeTabs
+        <Toggle
+          variant="filter"
           value={range}
-          onChange={setRange}
-          label={t("signups.rangeLabel")}
-          options={ADMIN_SIGNUP_RANGES.map((value) => ({ value, label: t(`signups.ranges.${value}`) }))}
+          onValueChange={setRange}
+          aria-label={t("signups.rangeLabel")}
+          options={ADMIN_SIGNUP_RANGES.map((value) => ({
+            value,
+            icon: RANGE_ICONS[value],
+            label: t(`signups.ranges.${value}`),
+          }))}
         />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <ChartCard title={t("signups.newUsersTitle")} summary={t("signups.newUsersSummary")}>
-          <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-            <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-              <defs>
-                <linearGradient id="signups-area" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="3 4" />
-              <XAxis dataKey="date" tickFormatter={tick} tick={AXIS} minTickGap={24} tickLine={false} axisLine={false} tickMargin={6} />
-              <YAxis allowDecimals={false} tick={AXIS} width={32} tickLine={false} axisLine={false} />
-              <Tooltip labelFormatter={tooltipLabel} contentStyle={TOOLTIP_STYLE} cursor={{ stroke: "var(--border)" }} />
-              <Area
-                type="monotone"
-                dataKey="newUsers"
-                name={t("signups.newUsersTitle")}
-                stroke="var(--primary)"
-                strokeWidth={2}
-                fill="url(#signups-area)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
-        <ChartCard title={t("signups.statusTitle")} summary={t("signups.statusSummary")}>
-          <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-            <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barCategoryGap="18%">
-              <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="3 4" />
-              <XAxis dataKey="date" tickFormatter={tick} tick={AXIS} minTickGap={24} tickLine={false} axisLine={false} tickMargin={6} />
-              <YAxis allowDecimals={false} tick={AXIS} width={32} tickLine={false} axisLine={false} />
-              <Tooltip
-                labelFormatter={tooltipLabel}
-                contentStyle={TOOLTIP_STYLE}
-                cursor={{ fill: "var(--foreground)", fillOpacity: 0.06, radius: 6 }}
-              />
-              <Legend
-                wrapperStyle={{ fontSize: 12 }}
-                // Recharts paints the label in the series colour, which for the
-                // translucent "unverified" series is nearly unreadable text.
-                formatter={(value) => <span style={{ color: "var(--muted-foreground)" }}>{value}</span>}
-              />
-              <Bar dataKey="verified" name={t("verified")} stackId="status" fill="var(--primary)" />
-              <Bar
-                dataKey="unverified"
-                name={t("unverified")}
-                stackId="status"
-                // color-mix rather than `fillOpacity`: Recharts' legend swatch ignores
-                // opacity, so the swatch came out darker than the bars it labels.
-                fill="color-mix(in srgb, var(--foreground) 28%, transparent)"
-                radius={ROUND_TOP}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
+      <div role="img" aria-label={t("signups.statusSummary")} className="border-border bg-background/40 rounded-lg border p-3">
+        <div className="text-body-4 text-muted-foreground mb-2 flex flex-wrap justify-end gap-x-4 gap-y-1">
+          <span className="flex items-center gap-1.5">
+            <span className="bg-primary size-3 rounded-sm" aria-hidden />
+            {t("verified")}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="bg-foreground/20 size-3 rounded-sm" aria-hidden />
+            {t("unverified")}
+          </span>
+        </div>
+        <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+          <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }} barCategoryGap="22%">
+            <CartesianGrid vertical={false} stroke={GRID} strokeDasharray="3 4" />
+            <XAxis dataKey="date" tickFormatter={tick} tick={AXIS} minTickGap={24} tickLine={false} axisLine={false} tickMargin={6} />
+            <YAxis allowDecimals={false} tick={AXIS} width={28} tickLine={false} axisLine={false} />
+            <Tooltip
+              labelFormatter={tooltipLabel}
+              contentStyle={TOOLTIP_STYLE}
+              cursor={{ fill: "var(--foreground)", fillOpacity: 0.06, radius: 6 }}
+            />
+            <Bar dataKey="verified" name={t("verified")} stackId="status" fill="var(--primary)" />
+            <Bar
+              dataKey="unverified"
+              name={t("unverified")}
+              stackId="status"
+              // color-mix rather than `fillOpacity`, so the legend swatch matches the bars.
+              fill="color-mix(in srgb, var(--foreground) 28%, transparent)"
+              radius={ROUND_TOP}
+            />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </section>
-  );
-}
-
-/**
- * `role="img"` + a text label rather than leaving the SVG to a screen reader:
- * hundreds of unnamed rects and paths are noise. The numbers are still
- * reachable through the tooltip for sighted keyboard-less users, and the
- * summary line states what the picture shows.
- */
-function ChartCard({
-  title,
-  summary,
-  children,
-}: {
-  title: string;
-  summary: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="border-border bg-background/40 rounded-lg border p-3">
-      <Typography variant="title-4" weight={500} className="text-muted-foreground uppercase tracking-wide">
-        {title}
-      </Typography>
-      <div role="img" aria-label={summary} className="mt-4">
-        {children}
-      </div>
-    </div>
   );
 }

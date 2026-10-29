@@ -44,7 +44,6 @@ export function QaOptionCard({
   disabled,
   centered,
   onClick,
-  onDoubleClick,
 }: {
   text: string;
   role: "radio" | "checkbox";
@@ -54,8 +53,7 @@ export function QaOptionCard({
   disabled: boolean;
   /** Grid cards (short answers) centre their content; full-width rows stay left-aligned. */
   centered: boolean;
-  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
-  onDoubleClick: () => void;
+  onClick: () => void;
 }) {
   const look = CARD_STATES[state];
   const checked = state !== "idle" && state !== "dimmed";
@@ -70,8 +68,7 @@ export function QaOptionCard({
       aria-checked={checked}
       disabled={disabled}
       onClick={onClick}
-      onDoubleClick={onDoubleClick}
-      className={`flex h-full min-h-14 w-full items-center gap-3 rounded-lg border-2 px-4 py-3 shadow-sm ${centered ? "justify-center text-center" : "text-left"} transition-[color,background-color,border-color,box-shadow] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-default ${look.card}`}
+      className={`flex h-full min-h-11 w-full items-center gap-3 rounded-lg border-2 px-3 py-2 shadow-sm ${centered ? "justify-center text-center" : "text-left"} transition-[color,background-color,border-color,box-shadow] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-default ${look.card}`}
     >
       {shape === "square" ? (
         <span

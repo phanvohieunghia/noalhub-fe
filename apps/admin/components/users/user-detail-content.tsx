@@ -10,6 +10,7 @@ import { Badge } from "@noalhub/ui/badge";
 import { Skeleton } from "@noalhub/ui/skeleton";
 
 import { AdminErrorState } from "../admin-error-state";
+import { QaAnswersSection } from "../overview/qa-answers-section";
 import { Typography } from "@noalhub/ui/typography";
 
 export function UserDetailContent({ userId }: { userId: string }) {
@@ -107,6 +108,8 @@ export function UserDetailContent({ userId }: { userId: string }) {
           </Typography>
         </Typography>
       </dl>
+
+      <QaAnswersSection userId={userId} />
 
       {/* Having no action buttons reflects reality: the backend has no ban/lock,
           role change, user deletion or forced logout yet

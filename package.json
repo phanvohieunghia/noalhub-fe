@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "dev:web": "pnpm --filter @noalhub/web dev",
+    "dev:web:lan": "set -a && . apps/web/.env.lan && set +a && pnpm dev:web",
     "dev:admin": "pnpm --filter @noalhub/admin dev",
     "dev:storybook": "pnpm --filter @noalhub/storybook dev",
     "dev:mobile": "pnpm --filter @noalhub/mobile start",

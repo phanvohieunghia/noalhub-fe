@@ -37,6 +37,8 @@
   },
   "attempt": {
     "back": "Quay lại",
+    "showHeader": "Hiện thanh tiêu đề",
+    "hideHeader": "Ẩn thanh tiêu đề",
     "leaveTitle": "Rời khỏi bộ câu hỏi?",
     "leaveBody": "Các câu bạn đã trả lời được lưu lại. Bạn có thể làm tiếp từ danh sách bộ.",
     "leaveStay": "Làm tiếp",
@@ -79,8 +81,17 @@
     "selfNote": "Thẻ ghi nhớ do bạn tự đánh giá, nên kết quả được tính riêng khỏi nhóm máy chấm.",
     "selfPrompt": "Nhớ lại câu trả lời trong đầu trước, rồi tự đánh giá thật lòng là bạn đã nhớ hay chưa. Mặt sau của thẻ hiện ra sau khi bạn chọn.",
     "singleHint": "Chọn một đáp án.",
+    "submit": "Trả lời",
     "multiHint": "Có thể có nhiều đáp án đúng — chọn tất cả các ý đúng.",
     "shortcuts": "Nhấn 1–{max} để chọn, Enter để trả lời"
+  },
+  "history": {
+    "title": "Lịch sử",
+    "intro": "Các bộ bạn đã trả lời. Mở một bộ để xem lại.",
+    "empty": "Bạn chưa trả lời bộ nào. Làm một bộ và nó sẽ hiện ở đây.",
+    "unknownSet": "Bộ câu hỏi không còn nữa",
+    "score": "Đúng {correct}/{answered}",
+    "open": "Lịch sử"
   },
   "review": {
     "title": "Xem lại lượt làm bài",

@@ -8,6 +8,37 @@
  * is swallowed — sound is garnish.
  */
 let ctx: AudioContext | null = null;
+let sessionSet = false;
+
+/**
+ * iOS routes Web Audio through the "ringer" channel, so the silent switch mutes it —
+ * until some page plays a media element (a YouTube embed), which flips the audio
+ * session to "playback". Do that ourselves: `navigator.audioSession` on Safari 16.4+,
+ * and on older iOS a looping silent clip, which makes WebKit switch the same way.
+ * Must run inside a gesture.
+ */
+function claimPlaybackSession() {
+  if (sessionSet) return;
+  try {
+    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+    if (session) {
+      session.type = "playback";
+      sessionSet = true;
+      return;
+    }
+    if (!/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
+    const silent = new Audio(SILENT_WAV);
+    silent.loop = true;
+    silent.setAttribute("playsinline", "");
+    void silent.play().then(() => (sessionSet = true), () => undefined);
+  } catch {
+    // Sound is garnish.
+  }
+}
+
+/** 0.1s of 8-bit mono silence. */
+const SILENT_WAV =
+  "data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ4AAACAgICAgICAgICAgICA";
 
 /**
  * The shared context, started or woken if it is not running. Call it from inside a
@@ -45,7 +76,10 @@ const GESTURES = ["touchend", "click", "keydown"] as const;
  */
 export function unlockSounds() {
   if (typeof window === "undefined") return () => undefined;
-  const wake = () => void context();
+  const wake = () => {
+    claimPlaybackSession();
+    void context();
+  };
   for (const type of GESTURES) window.addEventListener(type, wake, true);
   return () => {
     for (const type of GESTURES) window.removeEventListener(type, wake, true);

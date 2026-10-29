@@ -275,6 +275,9 @@
      still repainting, so it fades up from 96% instead of zooming out of nothing. */
   --animate-verdict-in: verdict-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
   --animate-verdict-out: verdict-out 120ms ease-in;
+  /* A notice pinned to the top edge: it fades in while dropping a few pixels, rather
+     than sliding the whole way in from off-screen like a drawer. */
+  --animate-notice-in: notice-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
   /* The `bars` spinner: each bar breathes, staggered by an inline delay. */
   --animate-bar: bar-scale 900ms ease-in-out infinite;
   /* Slow ambient drift for the auth screens' background blobs. Three durations
@@ -434,6 +437,16 @@
       transform: translateY(calc(-100% - 1rem));
     }
   }
+  @keyframes notice-in {
+    from {
+      opacity: 0;
+      transform: translateY(-0.75rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
   @keyframes slide-in-bottom {
     from {
       transform: translateY(calc(100% + 1rem));
@@ -465,6 +478,7 @@
   :root {
     --animate-popup-in: overlay-in 120ms ease-out;
     --animate-popup-out: overlay-out 100ms ease-in;
+    --animate-notice-in: overlay-in 120ms ease-out;
     --animate-verdict-in: overlay-in 120ms ease-out;
     --animate-verdict-out: overlay-out 100ms ease-in;
     /* The drawer keeps its slide even here — it is what tells the reader the

@@ -141,3 +141,24 @@ export type GrantStorybookAccessInput = {
   email: string;
   note?: string;
 };
+
+export const ADMIN_QA_PERIODS = ["day", "week", "month", "all"] as const;
+export type AdminQaPeriod = (typeof ADMIN_QA_PERIODS)[number];
+
+/**
+ * `AdminQaQuestionStatsDto` — `GET /admin/stats/qa-questions?datasetId=&period=`.
+ * What the learner's own statistics page shows, but summed over everyone.
+ * `items` is every published question of the dataset in play order (unanswered
+ * ones are `0`); the totals also count answers to questions since removed.
+ */
+export type AdminQaQuestionStats = {
+  items: {
+    itemId: string;
+    /** TipTap/ProseMirror JSON. */
+    question: unknown;
+    answered: number;
+    correct: number;
+  }[];
+  totalAnswers: number;
+  totalCorrect: number;
+};

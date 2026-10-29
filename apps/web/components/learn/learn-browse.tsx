@@ -115,18 +115,22 @@ export function LearnBrowse() {
                 {t("browse.intro")}
               </Typography>
             </div>
-            <Tooltip label={t("browse.stats")} side="bottom">
-              <Button
-                variant="outline"
-                size="icon"
-                asChild
-                className="shrink-0"
-              >
-                <Link href="/learn/stats" aria-label={t("browse.stats")}>
-                  <Icon icon={LUCIDE.chartColumn} />
-                </Link>
-              </Button>
-            </Tooltip>
+            <div className="flex shrink-0 gap-2">
+              <Tooltip label={t("history.open")} side="bottom">
+                <Button variant="outline" size="icon" asChild>
+                  <Link href="/learn/history" aria-label={t("history.open")}>
+                    <Icon icon={LUCIDE.history} />
+                  </Link>
+                </Button>
+              </Tooltip>
+              <Tooltip label={t("browse.stats")} side="bottom">
+                <Button variant="outline" size="icon" asChild>
+                  <Link href="/learn/stats" aria-label={t("browse.stats")}>
+                    <Icon icon={LUCIDE.chartColumn} />
+                  </Link>
+                </Button>
+              </Tooltip>
+            </div>
           </header>
 
           <Input
@@ -270,7 +274,7 @@ function DatasetDialog({
         datasetId: dataset.id,
         count: resuming ? undefined : (count ?? undefined),
       },
-      { onSuccess: (attempt) => router.push(`/learn/attempts/${attempt.id}`) },
+      { onSuccess: () => router.push(`/learn/sets/${dataset.id}`) },
     );
 
   return (
@@ -469,7 +473,7 @@ function DatasetCard({
         {/* Continue skips the modal: there is nothing left to decide. */}
         {attempt ? (
           <Button asChild shape="circle" className="pr-4 pl-5">
-            <Link href={`/learn/attempts/${attempt.id}`}>
+            <Link href={`/learn/sets/${attempt.datasetId}`}>
               {t("browse.continue")}
               <Icon icon={LUCIDE.arrowRight} />
             </Link>

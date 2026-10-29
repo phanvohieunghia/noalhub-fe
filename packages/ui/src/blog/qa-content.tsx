@@ -8,5 +8,5 @@ import { PostContent } from "./post-content";
  * same way. Read-only: use the editor, not this, for content being written.
  */
 export function QaContent({ doc }: { doc: BlogDoc }) {
-  return <PostContent doc={expandMarkdownImages(doc)} />;
+  return <PostContent doc={expandMarkdownImages(doc)} className="post-prose-tight" />;
 }

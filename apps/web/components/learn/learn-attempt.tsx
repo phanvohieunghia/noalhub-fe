@@ -10,6 +10,7 @@ import {
   useFinishQaAttempt,
   useQaAttemptPlay,
   useQaAttemptReview,
+  useStartQaAttempt,
   useSubmitQaAnswer,
   type QaAnswerResult,
   type QaAttempt,
@@ -31,8 +32,10 @@ import { Typography } from "@noalhub/ui/typography";
 import { AnswerInput } from "./answer-input";
 import { playCorrect, playWrong, unlockSounds } from "@noalhub/core/sounds";
 
-/** Questions per progress segment. */
-const SEGMENT_SIZE = 10;
+/** Questions per progress section, once the set is long enough to need sections. */
+const SECTION_SIZE = 10;
+/** Up to this many questions the progress is one bar of per-question cells. */
+const SINGLE_BAR_MAX = 10;
 
 /**
  * Taking a dataset, one question at a time.
@@ -51,7 +54,41 @@ const SEGMENT_SIZE = 10;
  * publishes more mid-attempt. A question unpublished mid-attempt just stops
  * being served; nothing the learner did is lost — the log only ever appends.
  */
-export function LearnAttempt({ attemptId }: { attemptId: string }) {
+/** How long the header stays down before it folds away again. */
+const HEADER_VISIBLE_MS = 3000;
+
+/**
+ * The URL names the **set**, not an attempt: the attempt is resolved on every load
+ * (starting one is idempotent — an open attempt comes back as itself), so a reload,
+ * or another device, always lands on whatever is currently open for this set instead
+ * of an attempt id that may have been finished elsewhere.
+ */
+export function LearnAttempt({ datasetId }: { datasetId: string }) {
+  const t = useTranslations("web.learn");
+  const start = useStartQaAttempt();
+  const { mutate } = start;
+  useEffect(() => mutate({ datasetId }), [mutate, datasetId]);
+
+  if (start.data) return <LearnAttemptRun attemptId={start.data.id} />;
+  if (start.isError) {
+    return (
+      <main className="mx-auto w-full max-w-3xl p-4 sm:p-6">
+        <Typography variant="h5" as="h1">
+          {t("attempt.notFound")}
+        </Typography>
+      </main>
+    );
+  }
+  return (
+    <main className="mx-auto w-full max-w-3xl space-y-4 p-4 sm:p-6">
+      <Skeleton className="h-8 w-64" />
+      <Skeleton className="h-2 w-full" />
+      <Skeleton className="h-72 w-full rounded-xl" />
+    </main>
+  );
+}
+
+function LearnAttemptRun({ attemptId }: { attemptId: string }) {
   const t = useTranslations("web.learn");
   const m = useMessage();
   const router = useRouter();
@@ -79,6 +116,17 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
     const timer = window.setTimeout(() => setTipPinned(false), 2000);
     return () => window.clearTimeout(timer);
   }, [tipPinned]);
+  // The header is there on arrival, folds away after a few seconds to give the
+  // question the room, and the handle brings it back for the same few seconds.
+  const [headerOpen, setHeaderOpen] = useState(true);
+  useEffect(() => {
+    if (!headerOpen) return;
+    const timer = window.setTimeout(
+      () => setHeaderOpen(false),
+      HEADER_VISIBLE_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [headerOpen]);
   // The verdict rings when the server answers, after the tap that sent the answer
   // is over — and some browsers start audio only from inside a tap, so the
   // sitting's first tap does it.
@@ -90,7 +138,10 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
 
   const answeredIds = useMemo(
     () =>
-      new Set([...(answered.data ?? []).map((row) => row.itemId), ...justAnswered]),
+      new Set([
+        ...(answered.data ?? []).map((row) => row.itemId),
+        ...justAnswered,
+      ]),
     [answered.data, justAnswered],
   );
   const remaining = (set.data?.items ?? []).filter(
@@ -116,7 +167,10 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
       // "in progress" set that has nothing left to continue. If this call fails,
       // `wrapUp` retries it.
       const last = result.attempt;
-      if (last.status === "in_progress" && last.answeredCount >= last.itemCount) {
+      if (
+        last.status === "in_progress" &&
+        last.answeredCount >= last.itemCount
+      ) {
         try {
           await finish.mutateAsync(attemptId);
           setLatest({ ...last, status: "finished" });
@@ -136,7 +190,8 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
     try {
       // A finished attempt answers 409 to a second finish; there is nothing to
       // close, so go straight to the review.
-      if (attempt?.status === "in_progress") await finish.mutateAsync(attemptId);
+      if (attempt?.status === "in_progress")
+        await finish.mutateAsync(attemptId);
       router.push(`/learn/attempts/${attemptId}/review`);
     } catch (err) {
       setError(applyApiError(err, () => undefined, []));
@@ -190,11 +245,17 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
   // that must not swap the question (and its explanation) for the summary.
   const done = !shown && (attempt.status !== "in_progress" || !current);
   const position = Math.min(total, attempt.answeredCount + (shown ? 0 : 1));
-  // Past ten questions the bar is cut into sittings of ten, one segment each.
-  const segments = Array.from({ length: Math.max(1, Math.ceil(total / SEGMENT_SIZE)) }, (_, i) => ({
-    start: i * SEGMENT_SIZE,
-    size: Math.max(1, Math.min(SEGMENT_SIZE, total - i * SEGMENT_SIZE)),
-  }));
+  // Every question is one cell. A short set is a single bar; past ten the bar
+  // is cut into sections of ten cells each.
+  const sectionSize =
+    total <= SINGLE_BAR_MAX ? Math.max(1, total) : SECTION_SIZE;
+  const sections = Array.from(
+    { length: Math.max(1, Math.ceil(total / sectionSize)) },
+    (_, i) => ({
+      start: i * sectionSize,
+      size: Math.max(1, Math.min(sectionSize, total - i * sectionSize)),
+    }),
+  );
   // Self-graded wording only when the whole bank is flashcards; a mixed bank
   // counts "correct", since most of its answers are machine-graded.
   const selfGraded =
@@ -207,67 +268,115 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
         // While answering, the screen is exactly the visible viewport (dvh follows the
         // mobile browser's collapsing address bar): the answers scroll inside it, the
         // page itself does not. The summary is an ordinary scrolling page.
-        done ? "flex-1" : "h-dvh"
+        done ? "flex-1" : "h-dvh pt-2 sm:pt-3"
       }`}
     >
       {/* The summary stands alone: its own buttons say where to go next. */}
       {done ? null : (
-        <header className="mb-6 shrink-0 space-y-3">
-          <div className="flex items-center gap-2">
+        <header className="shrink-0">
+          {/* The title row folds with a grid-row transition so the question below slides
+            up with it; `inert` keeps the folded controls out of the tab order. The
+            progress bar stays. */}
+          <div
+            inert={!headerOpen}
+            className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:duration-200 ${
+              headerOpen
+                ? "grid-rows-[1fr] opacity-100"
+                : "grid-rows-[0fr] opacity-0"
+            }`}
+          >
+            {/* The fold clips (overflow-hidden), so the padding must cover the back button's
+                -ml-2 and its hover circle, or the circle is cut off on the left. */}
+            <div className="-mx-3 -my-1 min-h-0 overflow-hidden px-3 py-1">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  shape="circle"
+                  aria-label={t("attempt.back")}
+                  className="-ml-2 shrink-0"
+                  // Nothing is lost by leaving (answers are saved as they go), but a
+                  // stray tap should not end the sitting — only ask while it is open.
+                  onClick={() =>
+                    done ? router.push("/learn") : setConfirmLeave(true)
+                  }
+                >
+                  <Icon icon={LUCIDE.arrowLeft} />
+                </Button>
+                {/* One line with an ellipsis; the full title is the tooltip. */}
+                <Tooltip label={set.data.datasetTitle} side="bottom">
+                  <Typography
+                    variant="h4"
+                    as="h1"
+                    className="min-w-0 flex-1 truncate"
+                  >
+                    {set.data.datasetTitle}
+                  </Typography>
+                </Tooltip>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <Tooltip
+              label={
+                done
+                  ? t("attempt.progressLabel")
+                  : t("attempt.questionOf", { current: position, total })
+              }
+              open={tipHover || tipPinned}
+              onOpenChange={setTipHover}
+            >
+              <div
+                role="progressbar"
+                tabIndex={0}
+                aria-label={t("attempt.progressLabel")}
+                aria-valuemin={0}
+                aria-valuemax={total}
+                aria-valuenow={attempt.answeredCount}
+                aria-valuetext={t("attempt.questionOf", {
+                  current: position,
+                  total,
+                })}
+                onClick={() => setTipPinned(true)}
+                className="flex min-w-0 flex-1 cursor-pointer gap-1.5 rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              >
+                {sections.map(({ start, size }) => (
+                  <div
+                    key={start}
+                    // A section is as wide as the questions it holds, so a short
+                    // last one does not read as a full stretch of the set.
+                    style={{ flexGrow: size, flexBasis: 0 }}
+                    className="flex gap-0.5 rounded-md border border-border p-0.5"
+                  >
+                    {Array.from({ length: size }, (_, i) => (
+                      <div
+                        key={i}
+                        className={`h-2 flex-1 rounded-xs transition-colors duration-300 ${
+                          start + i < attempt.answeredCount
+                            ? "bg-primary"
+                            : "bg-muted"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </Tooltip>
             <Button
               variant="ghost"
               size="icon"
               shape="circle"
-              aria-label={t("attempt.back")}
-              className="-ml-2 shrink-0"
-              // Nothing is lost by leaving (answers are saved as they go), but a
-              // stray tap should not end the sitting — only ask while it is open.
-              onClick={() => (done ? router.push("/learn") : setConfirmLeave(true))}
+              aria-label={t(
+                headerOpen ? "attempt.hideHeader" : "attempt.showHeader",
+              )}
+              aria-expanded={headerOpen}
+              onClick={() => setHeaderOpen((open) => !open)}
+              className="-mr-2 shrink-0"
             >
-              <Icon icon={LUCIDE.arrowLeft} />
+              <Icon icon={headerOpen ? LUCIDE.chevronUp : LUCIDE.chevronDown} />
             </Button>
-            {/* One line with an ellipsis; the full title is the tooltip. */}
-            <Tooltip label={set.data.datasetTitle} side="bottom">
-              <Typography variant="h4" as="h1" className="min-w-0 flex-1 truncate">
-                {set.data.datasetTitle}
-              </Typography>
-            </Tooltip>
           </div>
-
-          <Tooltip
-            label={done ? t("attempt.progressLabel") : t("attempt.questionOf", { current: position, total })}
-            open={tipHover || tipPinned}
-            onOpenChange={setTipHover}
-          >
-            <div
-              role="progressbar"
-              tabIndex={0}
-              aria-label={t("attempt.progressLabel")}
-              aria-valuemin={0}
-              aria-valuemax={total}
-              aria-valuenow={attempt.answeredCount}
-              aria-valuetext={t("attempt.questionOf", { current: position, total })}
-              onClick={() => setTipPinned(true)}
-              className="flex w-full cursor-pointer gap-1.5 rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-            >
-              {segments.map(({ start, size }) => (
-                <div
-                  key={start}
-                  // A segment is as wide as the questions it holds, so a short
-                  // last one does not read as a full stretch of the set.
-                  style={{ flexGrow: size, flexBasis: 0 }}
-                  className="h-2 overflow-hidden rounded-full bg-muted"
-                >
-                  <div
-                    className="h-full rounded-full bg-primary transition-[width] duration-300"
-                    style={{
-                      width: `${Math.min(1, Math.max(0, (attempt.answeredCount - start) / size)) * 100}%`,
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-          </Tooltip>
         </header>
       )}
 
@@ -281,7 +390,9 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
         />
       ) : current ? (
         <article className="flex min-h-0 flex-1 flex-col gap-5">
-          <div className="text-body-1 font-semibold">
+          {/* The whole question (text, frame, picture) stays under half the screen, and the
+              picture is what shrinks to make it so — the answers keep their room. */}
+          <div className="flex max-h-[45vh] min-h-0 shrink-0 flex-col text-body-1 font-semibold [&>div]:flex [&>div]:min-h-0 [&>div]:flex-col">
             <QaQuestion doc={current.question} tagIds={current.tagIds} />
           </div>
 
@@ -297,13 +408,40 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
             <Feedback result={shown.result} onNext={next} last={isLast} />
           ) : null}
 
-          {error ? <AlertError message={m(error)} /> : null}
         </article>
       ) : null}
 
-      {error && done ? (
-        <div className="mt-4">
-          <AlertError message={m(error)} />
+      {/* Pinned to the top so it never shifts the question or the answers. `key` replays
+          the fade when a second message replaces the first. */}
+      {error ? (
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-50 mx-auto w-full max-w-3xl px-4 pt-3 sm:px-6">
+          {/* The alert tint is translucent; over the page it needs an opaque base to sit on. */}
+          <div
+            key={m(error)}
+            className="pointer-events-auto animate-notice-in rounded-md bg-background shadow-md"
+          >
+            <AlertError
+              message={m(error)}
+              onDismiss={() => setError(null)}
+              autoDismissMs={5000}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      {/* The verdict is in, so the next question's pictures start loading now rather
+          than on "next". They are optimised by `next/image`, so only rendering the real
+          thing warms the right file; it is clipped to a pixel and invisible. */}
+      {shown && !isLast && remaining[0] ? (
+        <div
+          aria-hidden
+          inert
+          className="pointer-events-none fixed top-0 left-0 -z-10 h-px w-full overflow-hidden opacity-0"
+        >
+          <QaQuestion
+            doc={remaining[0].question}
+            tagIds={remaining[0].tagIds}
+          />
         </div>
       ) : null}
 
@@ -322,7 +460,9 @@ export function LearnAttempt({ attemptId }: { attemptId: string }) {
             <Button variant="outline" onClick={() => setConfirmLeave(false)}>
               {t("attempt.leaveStay")}
             </Button>
-            <Button onClick={() => router.push("/learn")}>{t("attempt.leaveConfirm")}</Button>
+            <Button onClick={() => router.push("/learn")}>
+              {t("attempt.leaveConfirm")}
+            </Button>
           </div>
         </Dialog>
       ) : null}
@@ -367,7 +507,9 @@ function Feedback({
       if (event.key === "Enter" && !event.repeat) onNext();
     };
     const onClick = (event: MouseEvent) => {
-      const inside = (event.target as Element | null)?.closest('[role="dialog"]');
+      const inside = (event.target as Element | null)?.closest(
+        '[role="dialog"]',
+      );
       if (inside && !window.getSelection()?.toString()) onNext();
     };
     window.addEventListener("keydown", onKey);
@@ -380,7 +522,15 @@ function Feedback({
 
   if (celebrate && !result.explanation) {
     return (
-      <Dialog open onClose={onNext} title={verdict} icon={LUCIDE.circleCheck} tone="success" hideClose blurOverlay>
+      <Dialog
+        open
+        onClose={onNext}
+        title={verdict}
+        icon={LUCIDE.circleCheck}
+        tone="success"
+        hideClose
+        blurOverlay
+      >
         {/* No button: the whole card is one — and the overlay and X already mean "next". */}
         <button
           type="button"
@@ -419,7 +569,11 @@ function Feedback({
       {celebrate ? (
         <div className="relative flex justify-center">
           <Confetti />
-          <Typography variant="body-3" as="p" className="text-center text-muted-foreground">
+          <Typography
+            variant="body-3"
+            as="p"
+            className="text-center text-muted-foreground"
+          >
             {t("attempt.celebrate")}
           </Typography>
         </div>
@@ -444,7 +598,11 @@ function Feedback({
       ) : null}
 
       {celebrate ? (
-        <Typography variant="body-4" as="p" className="text-center text-muted-foreground">
+        <Typography
+          variant="body-4"
+          as="p"
+          className="text-center text-muted-foreground"
+        >
           {t(last ? "attempt.tapSeeResult" : "attempt.tapNext")}
         </Typography>
       ) : (
@@ -459,12 +617,21 @@ function Feedback({
   );
 }
 
-const CONFETTI_COLORS = ["bg-success", "bg-primary", "bg-warning", "bg-brand-300", "bg-danger"];
+const CONFETTI_COLORS = [
+  "bg-success",
+  "bg-primary",
+  "bg-warning",
+  "bg-brand-300",
+  "bg-danger",
+];
 
 /** A one-off burst from the centre of its parent; decorative, so hidden from assistive tech. */
 function Confetti() {
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-x-0 top-8 flex justify-center">
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-x-0 top-8 flex justify-center"
+    >
       {Array.from({ length: 18 }, (_, i) => {
         const angle = (i / 18) * Math.PI * 2;
         const reach = 90 + (i % 3) * 30;
@@ -527,7 +694,9 @@ function Summary({
           <span className="text-muted-foreground">/{answered}</span>
         </Typography>
         <Typography variant="body-3" className="text-muted-foreground">
-          {t(selfGraded ? "attempt.summaryKnown" : "attempt.summaryCorrect", { rate })}
+          {t(selfGraded ? "attempt.summaryKnown" : "attempt.summaryCorrect", {
+            rate,
+          })}
         </Typography>
       </div>
       <div className="flex flex-wrap justify-center gap-2">

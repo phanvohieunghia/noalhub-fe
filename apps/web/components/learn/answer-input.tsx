@@ -29,9 +29,10 @@ const SHORT_OPTION_CHARS = 40;
  * flashcard has no options either, and inferring from their absence would give
  * it a text box instead of "I knew it / I didn't".
  *
- * There is no confirm button. One click makes an option active; a double click
- * (or Enter) sends it. For a multi-answer question the double click sends every
- * active option, the one under the pointer included.
+ * One tap makes an option active. A single-answer question sends on a second tap of
+ * the active option (or Enter); a multi-answer question sends from its "Answer"
+ * button (or Enter), since a second tap there takes the pick back. There is no
+ * double click: it is not something a thumb does reliably.
  *
  * It stays mounted after the answer comes back (`result`), locked, so the
  * learner sees their own pick next to the verdict. Mount it with `key={item.id}`:
@@ -81,19 +82,6 @@ export function AnswerInput({
           ? prev.filter((value) => value !== id)
           : [...prev, id],
     );
-  };
-
-  // Double click: the option joins the picks (if the first click of the pair
-  // just un-picked it) and the whole set goes out.
-  const submitWith = (id: string) => {
-    const next =
-      single || picked.includes(id)
-        ? single
-          ? [id]
-          : picked
-        : [...picked, id];
-    setPicked(next);
-    send({ optionIds: next });
   };
 
   // 1–8 activates an option, Enter answers. Skipped while typing in a field or when
@@ -159,16 +147,17 @@ export function AnswerInput({
             {t("answer.multiHint")}
           </Typography>
         )}
-        {/* The answers get the height the question leaves over and split it evenly, so they
+        {/* The answers get the height the question leaves over and split it evenly (no card taller
+            than 40vh, unless its text needs more), so they
             fill the screen instead of huddling at the top. When they would not fit (a phone,
             four long options) the cards keep a readable height and only THIS box scrolls —
             the question stays in view. The padding keeps focus rings and shadows from being
             clipped by the scroll box. */}
-        <div className="-m-1 min-h-0 flex-1 overflow-y-auto p-1">
+        <div className="-m-1 min-h-0 flex-1 overflow-y-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div
             role={single ? "radiogroup" : "group"}
             aria-label={single ? t("answer.singleHint") : t("answer.multiHint")}
-            className={`grid min-h-full auto-rows-fr gap-2 ${compact ? "grid-cols-2" : ""}`}
+            className={`grid min-h-full auto-rows-fr gap-2 [&>*]:max-h-[40vh] [&>*]:self-center ${compact ? "grid-cols-2" : ""}`}
           >
             {options.map((option) => (
               <QaOptionCard
@@ -183,15 +172,25 @@ export function AnswerInput({
                 })}
                 disabled={locked}
                 centered={compact}
-                // The second click of a double click must not toggle again.
-                onClick={(event) => {
-                  if (event.detail < 2) toggle(option.id);
-                }}
-                onDoubleClick={() => submitWith(option.id)}
+                // Single-answer: tapping the active option again sends it.
+                onClick={() =>
+                  single && picked.includes(option.id)
+                    ? send({ optionIds: [option.id] })
+                    : toggle(option.id)
+                }
               />
             ))}
           </div>
         </div>
+        {single || locked ? null : (
+          <Button
+            className="shrink-0"
+            disabled={picked.length === 0}
+            onClick={() => send({ optionIds: picked })}
+          >
+            {t("answer.submit")}
+          </Button>
+        )}
       </div>
     );
   }

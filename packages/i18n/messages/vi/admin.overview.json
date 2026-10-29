@@ -9,14 +9,9 @@
   "newUsers": "Mới trong 7 ngày",
   "newUsersHint": "Cửa sổ 7 ngày do backend tính",
   "admins": "Quản trị viên",
-  "verificationRate": "Tỉ lệ verify email",
   "verified": "Đã verify",
   "unverified": "Chưa verify",
   "verificationSummary": "{verified} trên {total} người dùng đã verify email",
-  "recentShare": "Tham gia trong 7 ngày",
-  "newLabel": "Mới",
-  "earlier": "Trước đó",
-  "recentShareSummary": "{recent} trên {total} người dùng tham gia trong 7 ngày qua",
   "signups": {
     "title": "Người dùng mới theo thời gian",
     "total": "{count, number} người dùng mới trong kỳ này",
@@ -31,5 +26,42 @@
     "newUsersSummary": "Biểu đồ vùng số người dùng mới theo từng mốc thời gian trong khoảng đã chọn",
     "statusTitle": "Người dùng mới theo trạng thái email",
     "statusSummary": "Biểu đồ cột chồng chia người dùng mới của mỗi mốc thời gian thành đã verify và chưa verify email"
+  },
+  "qaAnswers": {
+    "title": "Câu hỏi được trả lời theo bộ câu hỏi",
+    "pick": "Bộ câu hỏi",
+    "noDatasets": "Chưa có bộ câu hỏi nào.",
+    "questions": "Số câu trong bộ",
+    "answers": "Lượt trả lời",
+    "correctOverall": "Tổng số câu đúng",
+    "empty": "Chưa có ai làm bộ này trong khoảng này.",
+    "legendAnswered": "Đã trả lời",
+    "legendCorrect": "Đúng",
+    "periodLabel": "Khoảng thời gian",
+    "periods": {
+      "day": "Hôm nay",
+      "week": "7 ngày",
+      "month": "30 ngày",
+      "all": "Tất cả"
+    },
+    "range": "{from} – {to}",
+    "answeredOnly": "Chỉ câu đã trả lời",
+    "questionN": "Câu {n}",
+    "never": "chưa ai trả lời trong khoảng này",
+    "times": "trả lời {answered} lần, đúng {correct} ({rate}%)",
+    "metricLabel": "Trục Y",
+    "metrics": {
+      "count": "Số lượng",
+      "percent": "Phần trăm"
+    },
+    "zoomLabel": "Số câu đang xem",
+    "zoomAll": "Tất cả",
+    "visibleRange": "Câu {from} → {to}",
+    "loadError": "Không tải được thống kê. Hãy thử lại sau ít phút.",
+    "navStart": "Đầu vùng đang xem",
+    "navEnd": "Cuối vùng đang xem",
+    "titleUser": "Câu hỏi đã trả lời theo bộ câu hỏi",
+    "emptyUser": "Người dùng này chưa làm bộ này trong khoảng này.",
+    "neverUser": "người này chưa trả lời trong khoảng này"
   }
 }

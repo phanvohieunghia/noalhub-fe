@@ -118,8 +118,8 @@ const COMPONENTS: Components = {
   },
 
   /*
-   * Without a stored size, the `aspect-video` + `fill` frame `PostContent`
-   * falls back to (no CLS). A `<span>`, not `<figure>`: markdown
+   * Without a stored size the image takes the column width and its own height
+   * (a fixed 16:9 frame left a blank band under any other ratio). A `<span>`, not `<figure>`: markdown
    * images sit inside a `<p>`, where a block element breaks hydration.
    */
   img: ({ src, alt, title }) => {
@@ -141,12 +141,13 @@ const COMPONENTS: Components = {
       );
     }
     return (
-      <span className="relative block aspect-video w-full">
+      <span className="block">
         <Image
           src={src}
           alt={alt ?? ""}
-          fill
-          className="object-contain"
+          width={0}
+          height={0}
+          style={{ width: "100%", height: "auto" }}
           sizes="(max-width: 768px) 100vw, 768px"
         />
       </span>

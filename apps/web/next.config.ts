@@ -9,11 +9,12 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
   /**
-   * Dev only: lets a phone reach `next dev` through an ngrok tunnel. Without it
-   * Next blocks `/_next/*` dev resources from a non-localhost origin and the page
-   * never hydrates. Wildcards cover the random URL ngrok free hands out per run.
+   * Dev only: lets a phone reach `next dev` through an ngrok tunnel or the LAN.
+   * Without it Next blocks `/_next/*` dev resources from a non-localhost origin and
+   * the page never hydrates. Wildcards cover the random URL ngrok free hands out per
+   * run, and any private 192.168.x.x address.
    */
-  allowedDevOrigins: ["*.ngrok-free.app", "*.ngrok-free.dev"],
+  allowedDevOrigins: ["*.ngrok-free.app", "*.ngrok-free.dev", "192.168.*.*"],
 
   /**
    * Docker: `standalone` emits `.next/standalone` — a pre-traced copy of the

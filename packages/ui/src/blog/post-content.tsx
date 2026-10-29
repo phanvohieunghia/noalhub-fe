@@ -36,14 +36,14 @@ import "./post-prose.css";
  * fetch, cache, editor state) and one path forgetting to filter is enough for
  * stored XSS (§3.1a).
  */
-export function PostContent({ doc }: { doc: BlogDoc }) {
+export function PostContent({ doc, className }: { doc: BlogDoc; className?: string }) {
   // Walk the tree ONCE for de-duplicated ids — the same function the table of
   // contents uses, so anchors and the TOC cannot diverge (§3.3).
   const headings = collectHeadings(doc);
   let headingCursor = 0;
 
   return (
-    <div className="post-prose">
+    <div className={className ? `post-prose ${className}` : "post-prose"}>
       {doc.content.map((node, index) => {
         const headingId =
           node.type === "heading" ? headings[headingCursor++]?.id : undefined;
@@ -183,10 +183,10 @@ function ListItems({ items }: { items: BlogListItemNode[] }) {
  * An image inside a post.
  *
  * With real `width`/`height` → `next/image` uses the exact dimensions. With
- * `null` (the editor could not measure: dead image, CORS) → an `aspect-video`
- * frame plus `fill` and `object-contain`: the image is not distorted and, more
- * importantly, there is **no CLS** — a Core Web Vitals metric, and therefore
- * squarely inside this plan's SEO goal (§3.1b).
+ * `null` (the editor could not measure: dead image, CORS; Q&A images that were
+ * never measured) → the column width and the image's own height. A fixed 16:9
+ * frame reserved space against CLS, but left a blank band under any other ratio;
+ * sized images (the blog editor always measures) still reserve theirs.
  */
 function ContentImage({
   node,
@@ -214,8 +214,15 @@ function ContentImage({
   }
 
   return (
-    <figure className="relative aspect-video w-full">
-      <Image src={src} alt={alt} fill className="object-contain" sizes="(max-width: 768px) 100vw, 768px" />
+    <figure>
+      <Image
+        src={src}
+        alt={alt}
+        width={0}
+        height={0}
+        style={{ width: "100%", height: "auto" }}
+        sizes="(max-width: 768px) 100vw, 768px"
+      />
     </figure>
   );
 }

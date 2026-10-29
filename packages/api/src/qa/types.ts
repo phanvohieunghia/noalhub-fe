@@ -579,6 +579,8 @@ export type QaAnswerReview = {
   isCorrect: boolean;
   grading: QaGradingMode;
   answer: BlogDoc | null;
+  /** Option ids that were right; empty for typed and flashcard answers. */
+  correctOptionIds: string[];
   explanation: BlogDoc | null;
   answeredAt: string;
 };

@@ -37,6 +37,8 @@
   },
   "attempt": {
     "back": "Back",
+    "showHeader": "Show header",
+    "hideHeader": "Hide header",
     "leaveTitle": "Leave this set?",
     "leaveBody": "Your answers so far are saved. You can pick the set up again from the list.",
     "leaveStay": "Keep answering",
@@ -79,8 +81,17 @@
     "selfNote": "Flashcards are self-assessed, so the result is counted apart from machine-graded questions.",
     "selfPrompt": "Recall the answer in your head first, then say honestly whether you knew it. The back of the card shows after you choose.",
     "singleHint": "Pick one answer.",
+    "submit": "Answer",
     "multiHint": "More than one answer may be correct — pick all that apply.",
     "shortcuts": "Press 1–{max} to pick, Enter to answer"
+  },
+  "history": {
+    "title": "History",
+    "intro": "The sets you have answered. Open one to look back at it.",
+    "empty": "Nothing answered yet. Take a set and it will show up here.",
+    "unknownSet": "Question bank no longer available",
+    "score": "{correct}/{answered} correct",
+    "open": "History"
   },
   "review": {
     "title": "Attempt review",

@@ -862,6 +862,11 @@ export const qaAnswerReviewListSchema = z.array(
       .unknown()
       .nullish()
       .transform((v) => (v == null ? null : sanitizeBlogDoc(v))),
+    // Option ids that were right; empty for typed/flashcard answers.
+    correctOptionIds: z
+      .array(z.string())
+      .nullish()
+      .transform((v) => v ?? []),
     explanation: z
       .unknown()
       .nullish()

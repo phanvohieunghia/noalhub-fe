@@ -65,7 +65,8 @@ câu lúc người học đang làm dở. Nếu không snapshot, FE chấp nhậ
 |---|---|---|
 | Danh sách bộ câu hỏi | `/learn` | `/learn` |
 | Giới thiệu bộ + chọn số câu + Start/Continue | modal trên `/learn` (không có route riêng) | `/learn/datasets/[id]` |
-| Làm bài / xem lại | `/learn/attempts/[id]` | `/learn/attempts/[id]` |
+| Làm bài | `/learn/sets/[id]` (id của **bộ câu hỏi**; mỗi lần mở gọi `startAttempt` — idempotent — để lấy lượt đang mở, nên reload hoặc đổi thiết bị luôn đồng bộ) | `/learn/attempts/[id]` |
+| Xem lại | `/learn/attempts/[id]/review` | `/learn/attempts/[id]` |
 
 - Hook: `useBrowseQaDatasets`, `usePlayQaDataset`, `useQaAttempts(datasetId?)`, `useStartQaAttempt`.
 - `AnswerInput` (web) lấy `templateKey` từ item. Câu trả lời dạng "tự chấm" (flashcard) hiển thị bằng wording "đã biết"

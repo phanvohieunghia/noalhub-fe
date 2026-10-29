@@ -99,6 +99,8 @@ export const rootMetadata: Metadata = {
     default: "Noalhub",
     template: "%s · Noalhub",
   },
+  // Home-screen launch on iOS runs without Safari's bars (see `manifest.ts`).
+  appleWebApp: { capable: true, title: "Noalhub", statusBarStyle: "black-translucent" },
 };
 
 export function RootHtml({

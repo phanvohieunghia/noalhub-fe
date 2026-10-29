@@ -1,5 +1,6 @@
 import { http } from "../client";
 import {
+  adminQaQuestionStatsSchema,
   adminSignupsSchema,
   adminStatsSchema,
   adminUserListSchema,
@@ -8,6 +9,8 @@ import {
 } from "./schemas";
 import { z } from "zod";
 import type {
+  AdminQaPeriod,
+  AdminQaQuestionStats,
   AdminSignupRange,
   AdminSignups,
   AdminStats,
@@ -56,6 +59,28 @@ export async function getAdminSignups(
     schema: adminSignupsSchema,
     signal,
   });
+  return data;
+}
+
+/**
+ * GET /admin/stats/qa-questions?datasetId=&period=&userId= → (`userId` optional: one user instead of everyone) 200 AdminQaQuestionStatsDto.
+ * 400 (bad query), 403, 429. Not cached by the backend.
+ */
+export async function getAdminQaQuestionStats(
+  datasetId: string,
+  period: AdminQaPeriod,
+  userId?: string,
+  signal?: AbortSignal,
+): Promise<AdminQaQuestionStats> {
+  const { data } = await http.get<AdminQaQuestionStats>(
+    "/admin/stats/qa-questions",
+    {
+      params: userId ? { datasetId, period, userId } : { datasetId, period },
+      authRequired: true,
+      schema: adminQaQuestionStatsSchema,
+      signal,
+    },
+  );
   return data;
 }
 

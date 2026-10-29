@@ -180,7 +180,6 @@ export function QaLearnerPreview({
                                   : [...now, option.id],
                             )
                           }
-                          onDoubleClick={() => undefined}
                         />
                       ))}
                     </div>
