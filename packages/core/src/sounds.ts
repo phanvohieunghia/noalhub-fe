@@ -20,7 +20,9 @@ let sessionSet = false;
 function claimPlaybackSession() {
   if (sessionSet) return;
   try {
-    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+    const session = (
+      navigator as Navigator & { audioSession?: { type: string } }
+    ).audioSession;
     if (session) {
       session.type = "playback";
       sessionSet = true;
@@ -30,7 +32,10 @@ function claimPlaybackSession() {
     const silent = new Audio(SILENT_WAV);
     silent.loop = true;
     silent.setAttribute("playsinline", "");
-    void silent.play().then(() => (sessionSet = true), () => undefined);
+    void silent.play().then(
+      () => (sessionSet = true),
+      () => undefined,
+    );
   } catch {
     // Sound is garnish.
   }
@@ -233,43 +238,35 @@ export function playCorrect() {
 }
 
 /**
- * A wrong answer: a clarinet-like "uh-oh" — two steady reed notes falling a minor
- * third (G4 then E4).
+ * A wrong answer: a harsh double "eh-eh" buzz — two short square-wave bursts on
+ * the same pitch (C4), the second a little longer.
  *
  * Deliberately not a bell: the correct cue is a high, bright glockenspiel, so a
- * wrong answer is told apart by timbre as well as by direction. The notes are held
- * (no glide, no noise) in the 300–400Hz range, where the ear hears pitch most easily.
- * The reed's hollow sound comes from odd harmonics only — a square wave through a
- * lowpass at ~1kHz.
+ * wrong answer is told apart by timbre as well as by direction. The square wave is
+ * left bright (lowpass at 3kHz) so it cuts through without being shrill.
  */
 export function playWrong() {
   const audio = context();
   if (!audio) return;
 
-  const note = (
-    freq: number,
-    start: number,
-    duration: number,
-    cutoff: number,
-    release: number,
-  ) => {
+  const buzz = (start: number, duration: number) => {
     const t0 = audio.currentTime + start;
     const osc = audio.createOscillator();
     osc.type = "square";
-    osc.frequency.value = freq;
+    osc.frequency.value = 262;
     const filter = audio.createBiquadFilter();
     filter.type = "lowpass";
-    filter.frequency.value = cutoff;
+    filter.frequency.value = 3000;
     const amp = audio.createGain();
     amp.gain.setValueAtTime(0.0001, t0);
-    amp.gain.linearRampToValueAtTime(0.1, t0 + 0.03);
-    amp.gain.setValueAtTime(0.1, t0 + duration - release);
+    amp.gain.linearRampToValueAtTime(0.09, t0 + 0.005);
+    amp.gain.setValueAtTime(0.09, t0 + duration - 0.05);
     amp.gain.linearRampToValueAtTime(0.0001, t0 + duration);
     osc.connect(filter).connect(amp).connect(audio.destination);
     osc.start(t0);
     osc.stop(t0 + duration + 0.02);
   };
 
-  note(392, 0, 0.2, 1100, 0.06);
-  note(330, 0.2, 0.34, 1000, 0.14);
+  buzz(0, 0.13);
+  buzz(0.19, 0.2);
 }

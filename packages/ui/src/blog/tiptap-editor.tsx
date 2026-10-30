@@ -7,6 +7,7 @@ import Paragraph from "@tiptap/extension-paragraph";
 import TextAlign from "@tiptap/extension-text-align";
 import {
   EditorContent,
+  Node as TiptapNode,
   useEditor,
   useEditorState,
   type Editor,
@@ -68,6 +69,7 @@ import {
   ChangeHighlight,
   acceptChanges,
 } from "./change-highlight";
+import { INLINE_MAX_HEIGHT, prepareInlineImages } from "./inline-image-markdown";
 import { MermaidPreview } from "./mermaid-preview";
 import { MermaidViewer } from "./mermaid-viewer";
 import "./post-prose.css";
@@ -94,6 +96,44 @@ function pixelStyle(attributes: ImageAttrs) {
     ? { style: `width:${attributes.width}px;height:${attributes.height}px` }
     : {};
 }
+
+/** Appended to an image title to say "this one stays in the line"; never reaches the saved markdown. */
+const INLINE_MARK = /(?:^|\s)~inline$/;
+
+/**
+ * A small picture inside a sentence, as tall as the text. A separate node from the block
+ * `image`: a paragraph cannot hold a block, so one image node could not be both. Only the
+ * pixel size is kept (for the ratio); alignment and share-of-column mean nothing in a line.
+ */
+const InlineImage = TiptapNode.create({
+  name: "inlineImage",
+  inline: true,
+  group: "inline",
+  atom: true,
+  draggable: true,
+  addAttributes() {
+    return {
+      src: { default: null },
+      alt: { default: "" },
+      width: { default: null },
+      height: { default: null },
+    };
+  },
+  parseHTML() {
+    return [{ tag: "img[data-inline-image]" }];
+  },
+  renderHTML({ node }) {
+    const { src, alt, width, height } = node.attrs;
+    return [
+      "img",
+      { src, alt, width, height, "data-inline-image": "", class: "post-prose-inline-image" },
+    ];
+  },
+  renderMarkdown: (node) => {
+    const { src = "", alt = "", width, height } = node.attrs ?? {};
+    return `![${alt}](${src} "${formatImageTitle(null, width, height, null, null)}")`;
+  },
+});
 
 const BlogImage = Image.extend({
   addAttributes() {
@@ -237,7 +277,15 @@ const BlogImage = Image.extend({
    * drop `width`/`height`, so a resize would be lost on the next load.
    */
   parseMarkdown: (token, helpers) => {
-    const { title, width, height, align, widthPercent } = parseImageTitle(token.title);
+    // `markInlineImages` (markdown-editor.tsx) tags a small picture that shares its line with text.
+    const raw: string = token.title ?? "";
+    const inline = INLINE_MARK.test(raw);
+    const { title, width, height, align, widthPercent } = parseImageTitle(
+      inline ? raw.replace(INLINE_MARK, "") : raw,
+    );
+    if (inline && width && height) {
+      return helpers.createNode("inlineImage", { src: token.href, alt: token.text, width, height });
+    }
     return helpers.createNode("image", {
       src: token.href,
       alt: token.text,
@@ -348,6 +396,7 @@ export const BLOG_EXTENSIONS: Extensions = [
       alwaysPreserveAspectRatio: true,
     },
   }),
+  InlineImage,
   /*
    * `resizable: false` — column widths would be a `colwidth` attribute the
    * backend sanitizer does not keep, so the author drags a column, saves,
@@ -498,15 +547,20 @@ export function RichTextEditor({
             const file = byName.get(image.name)!;
             const asset = await dropUpload.mutateAsync(file);
             const size = await measureImage(asset.url);
-            replaceToken(editorInstance, image.token, {
-              type: "image",
-              attrs: {
-                src: asset.url,
-                alt: image.alt || suggestAltFrom(image.name),
-                width: size?.width ?? null,
-                height: size?.height ?? null,
-              },
-            });
+            const alt = image.alt || suggestAltFrom(image.name);
+            // Among words and small → stays in the line; anything else is a block, which
+            // splits the paragraph around the token.
+            const stays = image.inline && size && size.height <= INLINE_MAX_HEIGHT;
+            replaceToken(
+              editorInstance,
+              image.token,
+              stays
+                ? { type: "inlineImage", attrs: { src: asset.url, alt, width: size.width, height: size.height } }
+                : {
+                    type: "image",
+                    attrs: { src: asset.url, alt, width: size?.width ?? null, height: size?.height ?? null },
+                  },
+            );
           } catch (error) {
             failed = [...failed, image];
             setDropError(messageOf(error));
@@ -539,10 +593,9 @@ export function RichTextEditor({
             editorInstance,
             image.token,
             keepText
-              ? {
-                  type: "paragraph",
-                  content: [{ type: "text", text: image.raw }],
-                }
+              ? image.inline
+                ? { type: "text", text: image.raw }
+                : { type: "paragraph", content: [{ type: "text", text: image.raw }] }
               : null,
           );
       }
@@ -593,7 +646,10 @@ export function RichTextEditor({
     ],
     // Stored markdown can hold `- [ ]` too (see `flattenTaskLists`); an invalid item
     // here would throw on mount and blank the editor.
-    content: contentType === "markdown" && typeof content === "string" ? flattenTaskLists(content) : content,
+    content:
+      contentType === "markdown" && typeof content === "string"
+        ? prepareInlineImages(flattenTaskLists(content))
+        : content,
     contentType,
     editorProps: {
       attributes: {
@@ -1643,7 +1699,7 @@ function pasteMarkdown(
   if (data.types.includes("text/html") && !fromCodeEditor) return false;
 
   event.preventDefault();
-  const { markdown, images } = extractLocalImages(flattenTaskLists(text));
+  const { markdown, images } = extractLocalImages(prepareInlineImages(flattenTaskLists(text)));
   try {
     editor.commands.insertContent(markdown, { contentType: "markdown" });
   } catch {
@@ -1663,6 +1719,8 @@ type LocalImage = {
   alt: string;
   /** The `![alt](path)` as pasted, for "skip" to put back as plain text. */
   raw: string;
+  /** It shares its line with words, so the token stays in that line and a small picture can too. */
+  inline: boolean;
 };
 
 /**
@@ -1686,7 +1744,7 @@ function extractLocalImages(markdown: string): {
         ? part
         : part.replace(
             /!\[([^\]]*)\]\(\s*<?([^)>]*?)>?\s*\)/g,
-            (whole, alt: string, src: string) => {
+            (whole, alt: string, src: string, offset: number, text: string) => {
               if (
                 /^([a-z][a-z0-9+.-]*:)?\/\//i.test(src) ||
                 /^(data|blob):/i.test(src)
@@ -1706,8 +1764,13 @@ function extractLocalImages(markdown: string): {
               // keep it as plain text instead of asking for a folder.
               if (!IMAGE_FILE.test(name)) return whole.replace(/^!/, "\\!").replace(/</g, "\\<");
               const token = `NOALHUBIMG${crypto.randomUUID().replace(/-/g, "")}END`;
-              images.push({ token, name, alt, raw: whole });
-              return `\n\n${token}\n\n`;
+              // Words on the same line: keep the token among them instead of giving it a paragraph.
+              const lineStart = text.lastIndexOf("\n", offset - 1) + 1;
+              const lineEnd = text.indexOf("\n", offset + whole.length);
+              const line = text.slice(lineStart, lineEnd === -1 ? undefined : lineEnd);
+              const inline = line.replace(/!\[[^\]]*\]\([^)]*\)/g, "").trim() !== "";
+              images.push({ token, name, alt, raw: whole, inline });
+              return inline ? token : `\n\n${token}\n\n`;
             },
           ),
     )

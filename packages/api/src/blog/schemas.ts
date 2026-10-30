@@ -329,6 +329,19 @@ function sanitizeInline(value: unknown): BlogInlineNode[] {
       nodes.push({ type: "hardBreak" });
       continue;
     }
+    if (raw.type === "inlineImage") {
+      const attrs = isRecord(raw.attrs) ? raw.attrs : {};
+      const width = toPositiveInt(attrs.width);
+      const height = toPositiveInt(attrs.height);
+      // No size → no way to size it to the line; no safe src → nothing to keep (§3.1a).
+      if (isSafeImageSrc(attrs.src) && width && height) {
+        nodes.push({
+          type: "inlineImage",
+          attrs: { src: attrs.src, alt: typeof attrs.alt === "string" ? attrs.alt : "", width, height },
+        });
+      }
+      continue;
+    }
     if (raw.type !== "text" || typeof raw.text !== "string") continue;
     if (raw.text.length === 0) continue;
 

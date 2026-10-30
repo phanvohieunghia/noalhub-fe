@@ -207,9 +207,29 @@
   object-fit: contain;
 }
 
+/* A small picture inside a sentence: as tall as the text, sitting on its baseline. */
+.post-prose img.post-prose-inline-image {
+  display: inline;
+  height: 1.25em;
+  width: auto;
+  max-height: none;
+  vertical-align: text-bottom;
+  border-radius: 0;
+}
+
 /* The editor's resize wrapper hugs the image, so it must obey the same cap. */
 .post-prose [data-resize-wrapper] {
   max-width: 100%;
+}
+
+/*
+ * The resize view paints the stored pixel size inline (`width:1905px;height:866px`). A
+ * picture wider than the column is then cut to the column by `max-width` while its height
+ * stays 866px, so it sits letterboxed at the top of a tall box. The height follows the
+ * width instead — the ratio is locked anyway, so a drag still looks right.
+ */
+.post-prose [data-resize-wrapper] > img {
+  height: auto !important;
 }
 
 /*

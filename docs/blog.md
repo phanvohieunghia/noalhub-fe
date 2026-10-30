@@ -347,6 +347,20 @@ Nên attrs phải được allowlist **theo giá trị**, ở cả ba chỗ (zod
 | `codeBlock` | `language` | `string \| null`, trong danh sách cố định — xem §3.1c |
 | Mọi node | attr khác | **Loại bỏ khi ghi.** Tiptap tự thêm attr theo bản (`class`, `style`…; riêng `textAlign` trên paragraph/heading đã được cho phép ở trên); `style`/`class` đi thẳng vào DOM là một lối defacement/XSS khác |
 
+**Ảnh cùng dòng với chữ (`inlineImage`).** Node inline riêng, tách khỏi `image` (block): paragraph
+không chứa được block nên một node không thể làm cả hai việc. Chỉ lưu `src`, `alt`, `width`,
+`height` (cần cho tỉ lệ); không có `align`/`widthPercent` vì ảnh cao bằng chữ (`1.25em`). Được
+allowlist ở cả ba nơi: `sanitizeBlogDoc` (FE), `rich-doc.ts` (BE, kiểm host như `image`) và
+renderer. Thiếu kích thước hoặc `src` sai host → bỏ hẳn ảnh.
+
+Markdown chỉ có một cú pháp ảnh, nên `prepareInlineImages` (`inline-image-markdown.ts`) quyết
+định trước khi editor parse: ảnh (SVG hay raster) có `=WxH` với `height ≤ 200` và có chữ cùng
+dòng thì được gắn nhãn ẩn ` ~inline` trong title (`BlogImage.parseMarkdown` đọc rồi bỏ, không
+vào markdown lưu) và thành `inlineImage`. Ảnh nhỏ nằm ở đoạn riêng **ngay sau một dòng chưa kết
+thúc câu** (`c1 hoặc⏎⏎![](…)`, dòng trước không kết thúc bằng `. ! ? : ; …`) cũng được dán vào
+dòng đó. Ảnh lớn, ảnh không có `=WxH` hoặc ảnh đứng riêng một dòng vẫn là block. Nội dung cũ chưa
+qua editor thì `expandMarkdownImages` áp cùng quy tắc lúc hiển thị.
+
 Renderer gặp attr sai ràng buộc thì **không render thẻ đó nhưng giữ text con** (link hỏng
 thành chữ thường, ảnh hỏng thì bỏ) — cùng tinh thần "bỏ qua im lặng" ở §3.1, không throw.
 

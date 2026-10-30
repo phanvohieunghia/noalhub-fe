@@ -5,6 +5,7 @@ import { isSafeImageSrc, isSafeLinkHref } from "@noalhub/api/blog";
 import type {
   BlogBlockNode,
   BlogDoc,
+  BlogInlineImageNode,
   BlogInlineNode,
   BlogListItemNode,
   BlogTextNode,
@@ -227,16 +228,30 @@ function ContentImage({
   );
 }
 
+/** A small picture inside a sentence: as tall as the text, sitting on its baseline. */
+function InlineImage({ node }: { node: BlogInlineImageNode }) {
+  const { src, alt, width, height } = node.attrs;
+  if (!isSafeImageSrc(src)) return null;
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      // Preflight makes `img` a block; the inline style also beats `.post-prose img`.
+      style={{ display: "inline", height: "1.25em", width: "auto", verticalAlign: "text-bottom" }}
+    />
+  );
+}
+
 function Inline({ nodes }: { nodes: BlogInlineNode[] }) {
   return (
     <>
-      {nodes.map((node, index) =>
-        node.type === "hardBreak" ? (
-          <br key={index} />
-        ) : (
-          <Text key={index} node={node} />
-        ),
-      )}
+      {nodes.map((node, index) => {
+        if (node.type === "hardBreak") return <br key={index} />;
+        if (node.type === "inlineImage") return <InlineImage key={index} node={node} />;
+        return <Text key={index} node={node} />;
+      })}
     </>
   );
 }

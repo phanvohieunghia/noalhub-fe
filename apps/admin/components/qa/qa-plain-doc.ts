@@ -41,6 +41,7 @@ export function docToText(doc: BlogDoc | null): string | null {
     let line = "";
     for (const node of block.content ?? []) {
       if (node.type === "hardBreak") line += "\n";
+      else if (node.type === "inlineImage") return null;
       else if (node.marks && node.marks.length > 0) return null;
       else line += node.text;
     }

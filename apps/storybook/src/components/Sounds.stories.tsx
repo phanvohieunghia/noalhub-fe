@@ -32,7 +32,7 @@ const CUES = [
   },
   {
     name: "Wrong",
-    when: "A wrong answer: a clarinet-like falling minor third (G4 then E4).",
+    when: 'A wrong answer: a harsh double "eh-eh" square-wave buzz on C4.',
     play: playWrong,
   },
 ] as const;

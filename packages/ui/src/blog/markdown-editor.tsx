@@ -11,6 +11,7 @@ import {
   flattenTaskLists,
   type EditorFullscreen,
 } from "./tiptap-editor";
+import { prepareInlineImages } from "./inline-image-markdown";
 
 /** Re-exported so apps need not depend on Tiptap just to type `onReady`. */
 export type { Editor };
@@ -98,7 +99,7 @@ function isolateImages(markdown: string): string {
 
 /** The reverse of `blogDocToMarkdown`, sanitized like every other doc write. */
 export function markdownToBlogDoc(markdown: string): BlogDoc {
-  return withHeadlessEditor(isolateImages(flattenTaskLists(markdown)), "markdown", (editor) =>
+  return withHeadlessEditor(isolateImages(prepareInlineImages(flattenTaskLists(markdown))), "markdown", (editor) =>
     sanitizeBlogDoc(editor.getJSON()),
   );
 }

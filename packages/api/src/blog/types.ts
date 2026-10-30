@@ -48,7 +48,18 @@ export type BlogTextNode = {
 
 export type BlogHardBreakNode = { type: "hardBreak" };
 
-export type BlogInlineNode = BlogTextNode | BlogHardBreakNode;
+/**
+ * A small picture sitting in a line of text. Unlike the block `image` it has no
+ * alignment or share-of-column size: it is drawn as tall as the text, so only the
+ * pixel size (needed for the ratio) is stored. `expandMarkdownImages` also builds it, for
+ * display, from `![alt](url "=WxH")` found inside a sentence of older content.
+ */
+export type BlogInlineImageNode = {
+  type: "inlineImage";
+  attrs: { src: string; alt: string; width: number; height: number };
+};
+
+export type BlogInlineNode = BlogTextNode | BlogHardBreakNode | BlogInlineImageNode;
 
 /**
  * Block alignment. Left is the default and is never stored: a missing

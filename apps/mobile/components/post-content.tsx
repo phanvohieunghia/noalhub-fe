@@ -158,6 +158,18 @@ function NativeInline({ inline }: { inline: BlogInlineNode }) {
     return <Text>{"\n"}</Text>;
   }
 
+  if (inline.type === "inlineImage") {
+    const { src, alt, width, height } = inline.attrs;
+    // Nested in `<Text>`, a fixed-size image flows with the words.
+    return (
+      <Image
+        source={{ uri: src }}
+        style={{ width: (20 * width) / height, height: 20 }}
+        accessibilityLabel={alt}
+      />
+    );
+  }
+
   const marks = inline.marks ?? [];
   const isBold = marks.some((m) => m.type === "bold");
   const isItalic = marks.some((m) => m.type === "italic");
