@@ -16,7 +16,6 @@ import {
   type QaDatasetSummary,
 } from '@noalhub/api/qa'
 import {useDateFormat} from '@noalhub/i18n/use-date-format'
-import {AlertError} from '@noalhub/ui/alert'
 import {Badge, type BadgeTone} from '@noalhub/ui/badge'
 import {Button} from '@noalhub/ui/button'
 import {Dialog} from '@noalhub/ui/dialog'
@@ -26,6 +25,7 @@ import {Select} from '@noalhub/ui/select'
 import {Skeleton} from '@noalhub/ui/skeleton'
 import {Tooltip} from '@noalhub/ui/tooltip'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 const KINDS = ['theory', 'practice', 'recall', 'analysis'] as const
 const DIFFICULTIES = ['easy', 'medium', 'hard'] as const
@@ -327,7 +327,7 @@ function DatasetDialog({
         />
       ) : null}
 
-      {start.isError ? <AlertError message={t('dataset.startFailed')} /> : null}
+      {start.isError ? <ToastError message={t('dataset.startFailed')} /> : null}
 
       <div className="space-y-2">
         <Button className="w-full" onClick={begin} loading={start.isPending}>

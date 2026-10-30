@@ -8,13 +8,13 @@ import {useState} from 'react'
 import {useForm} from 'react-hook-form'
 
 import {Button} from '@noalhub/ui/button'
-import {AlertError, AlertSuccess} from '@noalhub/ui/alert'
 import {Input} from '@noalhub/ui/input'
 import {useForgotPassword} from '@noalhub/api/auth'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {Typography} from '@noalhub/ui/typography'
 import type {Message} from '@noalhub/api/message'
 import {forgotPasswordSchema, type ForgotPasswordInput} from '@noalhub/api/auth'
+import {ToastError, ToastSuccess} from '@noalhub/ui/toast'
 
 export function ForgotPasswordForm() {
   const t = useTranslations('web.auth.forgotPassword')
@@ -55,10 +55,10 @@ export function ForgotPasswordForm() {
 
       {sent ? (
         // Never reveal whether the email exists — this prevents account enumeration.
-        <AlertSuccess message={t('sent')} />
+        <ToastSuccess message={t('sent')} />
       ) : (
         <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-          <AlertError message={m(formError)} />
+          <ToastError message={m(formError)} />
 
           <Input
             label={t('email')}

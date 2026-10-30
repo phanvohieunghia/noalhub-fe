@@ -19,7 +19,6 @@ import {
 } from '@noalhub/api/qa'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {useMessage} from '@noalhub/i18n/use-message'
-import {AlertError} from '@noalhub/ui/alert'
 import {QaContent} from '@noalhub/ui/blog/qa-content'
 import {QaQuestion} from '@noalhub/ui/blog/qa-question'
 import {Button} from '@noalhub/ui/button'
@@ -31,6 +30,7 @@ import {Typography} from '@noalhub/ui/typography'
 
 import {AnswerInput} from './answer-input'
 import {playCorrect, playWrong, unlockSounds} from '@noalhub/core/sounds'
+import {ToastError} from '@noalhub/ui/toast'
 
 /** Questions per progress section, once the set is long enough to need sections. */
 const SECTION_SIZE = 10
@@ -401,22 +401,7 @@ function LearnAttemptRun({attemptId}: {attemptId: string}) {
         </article>
       ) : null}
 
-      {/* Pinned to the top so it never shifts the question or the answers. `key` replays
-          the fade when a second message replaces the first. */}
-      {error ? (
-        <div className="pointer-events-none fixed inset-x-0 top-0 z-50 mx-auto w-full max-w-3xl px-4 pt-3 sm:px-6">
-          {/* The alert tint is translucent; over the page it needs an opaque base to sit on. */}
-          <div
-            key={m(error)}
-            className="pointer-events-auto animate-notice-in rounded-md bg-background shadow-md">
-            <AlertError
-              message={m(error)}
-              onDismiss={() => setError(null)}
-              autoDismissMs={5000}
-            />
-          </div>
-        </div>
-      ) : null}
+      <ToastError message={error ? m(error) : null} />
 
       {/* The verdict is in, so the next question's pictures start loading now rather
           than on "next". They are optimised by `next/image`, so only rendering the real

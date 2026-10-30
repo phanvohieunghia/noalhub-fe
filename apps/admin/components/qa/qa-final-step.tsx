@@ -12,7 +12,6 @@ import {
   useUpdateQaItem,
   type QaFinalEntry,
 } from '@noalhub/api/qa'
-import {AlertError} from '@noalhub/ui/alert'
 import {Badge} from '@noalhub/ui/badge'
 import {Button} from '@noalhub/ui/button'
 import {DropdownMenu, DropdownMenuItem} from '@noalhub/ui/dropdown-menu'
@@ -21,6 +20,7 @@ import {Skeleton} from '@noalhub/ui/skeleton'
 import {Toggle} from '@noalhub/ui/toggle'
 import {Tooltip} from '@noalhub/ui/tooltip'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 import {QaItemEditDialog} from './qa-item-edit-dialog'
 import {QaReviewQuestion} from './qa-review-question'
@@ -114,7 +114,7 @@ export function QaFinalStep({datasetId}: {datasetId: string}) {
   if (summary.isPending || entriesQuery.isPending)
     return <Skeleton className="h-64 w-full" />
   if (summary.isError || entriesQuery.isError)
-    return <AlertError message={t('ws.sets.loadFailed')} />
+    return <ToastError message={t('ws.sets.loadFailed')} />
 
   const {hasFinal, added: inDatabase, waiting, total} = summary.data
 
@@ -222,7 +222,7 @@ export function QaFinalStep({datasetId}: {datasetId: string}) {
         ) : null}
       </div>
 
-      {add.isError ? <AlertError message={t('ws.final.saveFailed')} /> : null}
+      {add.isError ? <ToastError message={t('ws.final.saveFailed')} /> : null}
 
       <div
         ref={listRef}

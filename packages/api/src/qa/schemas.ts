@@ -284,7 +284,7 @@ export const updateDatasetSchema = createDatasetSchema
   .extend({archived: z.boolean().optional()})
 
 /** `MAX_SOURCE_CHARS` on the backend — the form stops the paste before the 400. */
-export const MAX_SOURCE_CHARS = 300_000
+export const MAX_SOURCE_CHARS = 400_000
 
 export const addSourceSchema = z.object({
   kind: z.literal('text'),

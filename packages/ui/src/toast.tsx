@@ -173,3 +173,29 @@ export function ToastHost({closeLabel}: {closeLabel: string}) {
     />
   )
 }
+
+/**
+ * Declarative form of `toast.error` / `toast.success`, for the places that hold an
+ * error in state and used to render it as an in-flow banner. Errors and results of
+ * an action are not drawn in the layout: they go to the top-centre toast stack.
+ * Only a field's own error stays inline, under its input (`input.tsx`).
+ *
+ * Fires when `message` changes to a non-empty value. The message doubles as the
+ * toast id, so remounting (or the same failure twice in a row) replaces the toast
+ * instead of stacking a copy.
+ */
+function useToastOnMessage(tone: 'error' | 'success', message?: string | null) {
+  useEffect(() => {
+    if (message) toast[tone](message, {id: `${tone}:${message}`})
+  }, [tone, message])
+}
+
+export function ToastError({message}: {message?: string | null}) {
+  useToastOnMessage('error', message)
+  return null
+}
+
+export function ToastSuccess({message}: {message?: string | null}) {
+  useToastOnMessage('success', message)
+  return null
+}

@@ -16,7 +16,6 @@ import type {Message} from '@noalhub/api/message'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {useDateFormat} from '@noalhub/i18n/use-date-format'
 import {useMessage} from '@noalhub/i18n/use-message'
-import {AlertError} from '@noalhub/ui/alert'
 import {Badge, type BadgeTone} from '@noalhub/ui/badge'
 import {Button} from '@noalhub/ui/button'
 import {Dialog} from '@noalhub/ui/dialog'
@@ -37,6 +36,7 @@ import {
 } from '@noalhub/ui/table'
 import {Tooltip} from '@noalhub/ui/tooltip'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 import {AdminErrorState} from '../admin-error-state'
 
@@ -210,7 +210,7 @@ function CreateDialog({onClose}: {onClose: () => void}) {
           value={description}
           onChange={(event) => setDescription(event.target.value)}
         />
-        {formError ? <AlertError message={m(formError)} /> : null}
+        {formError ? <ToastError message={m(formError)} /> : null}
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
@@ -254,7 +254,7 @@ function DeleteDialog({row, onClose}: {row: QaDataset; onClose: () => void}) {
       title={t('datasets.deleteTitle', {title: row.title})}>
       <div className="space-y-4">
         <Typography variant="body-3">{t('datasets.deleteBody')}</Typography>
-        {formError ? <AlertError message={m(formError)} /> : null}
+        {formError ? <ToastError message={m(formError)} /> : null}
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>

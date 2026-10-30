@@ -21,7 +21,8 @@ import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import type {Message} from '@noalhub/api/message'
 import {useMessage} from '@noalhub/i18n/use-message'
 import {useDateFormat} from '@noalhub/i18n/use-date-format'
-import {AlertError, AlertWarning} from '@noalhub/ui/alert'
+import {AlertWarning} from '@noalhub/ui/alert'
+import {ToastError} from '@noalhub/ui/toast'
 import {Badge} from '@noalhub/ui/badge'
 import {Button} from '@noalhub/ui/button'
 import {Dialog} from '@noalhub/ui/dialog'
@@ -339,7 +340,7 @@ function CreateDialog({onClose}: {onClose: () => void}) {
         </Typography>
         {/* `useMessage` turns the error KEY into text at render time — the api
             layer returns a key so the sentence follows the reader's locale. */}
-        {formError ? <AlertError message={m(formError)} /> : null}
+        {formError ? <ToastError message={m(formError)} /> : null}
 
         {/* Nút ở CUỐI nội dung, không phải ở `actions` — `actions` của Dialog là
             thanh công cụ cạnh nút đóng trên header. Khuôn có sẵn: màn Storybook. */}
@@ -456,7 +457,7 @@ function EditDialog({row, onClose}: {row: AiCredential; onClose: () => void}) {
         </Typography>
         {/* `useMessage` turns the error KEY into text at render time — the api
             layer returns a key so the sentence follows the reader's locale. */}
-        {formError ? <AlertError message={m(formError)} /> : null}
+        {formError ? <ToastError message={m(formError)} /> : null}
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
@@ -503,7 +504,7 @@ function DeleteDialog({
       title={t('credentials.deleteTitle', {label: row.label})}>
       <div className="space-y-4">
         <Typography variant="body-3">{t('credentials.deleteBody')}</Typography>
-        {formError ? <AlertError message={m(formError)} /> : null}
+        {formError ? <ToastError message={m(formError)} /> : null}
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>

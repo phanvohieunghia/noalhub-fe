@@ -33,13 +33,13 @@ import {
 } from '@noalhub/api/qa'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {useMessage} from '@noalhub/i18n/use-message'
-import {AlertError} from '@noalhub/ui/alert'
 import {Button} from '@noalhub/ui/button'
 import {Dialog} from '@noalhub/ui/dialog'
 import {Icon, ICONS, LUCIDE} from '@noalhub/ui/icons'
 import {Skeleton} from '@noalhub/ui/skeleton'
 import {Toggle} from '@noalhub/ui/toggle'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 import {AdminErrorState} from '../admin-error-state'
 import {QaQuestionCard, type QaCardDensity} from './qa-question-card'
@@ -330,7 +330,7 @@ function ArrangeBody({
         </DndContext>
       </div>
 
-      {error ? <AlertError message={m(error)} /> : null}
+      {error ? <ToastError message={m(error)} /> : null}
 
       <div className="flex justify-end gap-2 border-t border-border pt-3">
         <Button variant="outline" onClick={onClose}>

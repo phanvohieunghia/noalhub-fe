@@ -34,7 +34,8 @@ import {
 } from '@noalhub/api/qa'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {useMessage} from '@noalhub/i18n/use-message'
-import {AlertError, AlertWarning} from '@noalhub/ui/alert'
+import {AlertWarning} from '@noalhub/ui/alert'
+import {ToastError} from '@noalhub/ui/toast'
 import {Badge} from '@noalhub/ui/badge'
 import {Button} from '@noalhub/ui/button'
 import {Dialog} from '@noalhub/ui/dialog'
@@ -235,7 +236,7 @@ export function QaSetDetail({setId}: {setId: string}) {
           a message nobody can act on. */}
       {actionError ? (
         <div className="mt-3">
-          <AlertError message={m(actionError)} />
+          <ToastError message={m(actionError)} />
         </div>
       ) : null}
 

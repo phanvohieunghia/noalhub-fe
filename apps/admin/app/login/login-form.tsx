@@ -17,7 +17,8 @@ import {useMessage} from '@noalhub/i18n/use-message'
 import {safeRedirect} from '@noalhub/core/auth/redirect'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {Button} from '@noalhub/ui/button'
-import {AlertError, AlertWarning} from '@noalhub/ui/alert'
+import {AlertWarning} from '@noalhub/ui/alert'
+import {ToastError} from '@noalhub/ui/toast'
 import {Icon, ICONS, LUCIDE} from '@noalhub/ui/icons'
 import {Input} from '@noalhub/ui/input'
 import {Typography} from '@noalhub/ui/typography'
@@ -88,7 +89,7 @@ export function AdminLoginForm() {
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <AlertWarning message={t('restricted')} />
-        <AlertError message={m(formError)} />
+        <ToastError message={m(formError)} />
         <Input
           size="lg"
           label={t('email')}

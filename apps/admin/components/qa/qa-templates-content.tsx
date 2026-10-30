@@ -16,8 +16,8 @@ import {
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import type {Message} from '@noalhub/api/message'
 import {useMessage} from '@noalhub/i18n/use-message'
-import {AlertError, AlertWarning} from '@noalhub/ui/alert'
-import {toast} from '@noalhub/ui/toast'
+import {AlertWarning} from '@noalhub/ui/alert'
+import {ToastError, toast} from '@noalhub/ui/toast'
 import {EditorShell} from './qa-editor-shell'
 import {MarkdownEditor} from '@noalhub/ui/blog/markdown-editor'
 import {Badge} from '@noalhub/ui/badge'
@@ -420,7 +420,7 @@ function BulkDisableDialog({
           {t('templates.disableSelectedIntro')}
         </Typography>
         {failedCount > 0 ? (
-          <AlertError
+          <ToastError
             message={t('templates.disableSelectedFailed', {
               count: failedCount,
             })}
@@ -589,7 +589,7 @@ function TemplateDialog({
 
         {/* `useMessage` turns the error KEY into text at render time — the api
             layer returns a key so the sentence follows the reader's locale. */}
-        {formError ? <AlertError message={m(formError)} /> : null}
+        {formError ? <ToastError message={m(formError)} /> : null}
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
@@ -672,7 +672,7 @@ function DuplicateDialog({
           />
         ) : null}
 
-        {formError ? <AlertError message={m(formError)} /> : null}
+        {formError ? <ToastError message={m(formError)} /> : null}
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>

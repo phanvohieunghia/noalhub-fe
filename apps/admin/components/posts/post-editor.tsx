@@ -30,7 +30,6 @@ import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {PostContent} from '@noalhub/ui/blog/post-content'
 import {TableOfContents} from '@noalhub/ui/blog/table-of-contents'
 import {Button} from '@noalhub/ui/button'
-import {AlertError} from '@noalhub/ui/alert'
 import {Icon, ICONS, LUCIDE, type IconName} from '@noalhub/ui/icons'
 import {Input} from '@noalhub/ui/input'
 import {Skeleton} from '@noalhub/ui/skeleton'
@@ -46,6 +45,7 @@ import {TagMultiselect} from './tag-multiselect'
 import {TiptapEditor} from '@noalhub/ui/blog/tiptap-editor'
 import {useUnsavedChanges} from './use-unsaved-changes'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 /**
  * The field names the first token of an `ErrorResponseDto.details` sentence may
@@ -293,7 +293,7 @@ function EditorForm({post, categories, tags, onReloadPost}: EditorFormProps) {
           </div>
         ) : null}
 
-        <AlertError message={m(formError)} />
+        <ToastError message={m(formError)} />
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="flex flex-col gap-4">
@@ -499,7 +499,7 @@ function CoverImageField({
         </div>
       )}
 
-      <AlertError message={error} />
+      <ToastError message={error} />
     </div>
   )
 }

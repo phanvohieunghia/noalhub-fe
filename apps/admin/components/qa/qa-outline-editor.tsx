@@ -15,7 +15,8 @@ import {
 } from '@noalhub/api/qa'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {useMessage} from '@noalhub/i18n/use-message'
-import {AlertError, AlertWarning} from '@noalhub/ui/alert'
+import {AlertWarning} from '@noalhub/ui/alert'
+import {ToastError} from '@noalhub/ui/toast'
 import {Button} from '@noalhub/ui/button'
 import {Input} from '@noalhub/ui/input'
 import {Skeleton} from '@noalhub/ui/skeleton'
@@ -224,7 +225,7 @@ function Loaded({
 
       {saveError ? (
         <div className="mt-3">
-          <AlertError message={m(saveError)} />
+          <ToastError message={m(saveError)} />
         </div>
       ) : null}
 

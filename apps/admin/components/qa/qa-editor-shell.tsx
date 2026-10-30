@@ -8,6 +8,7 @@ import {Button} from '@noalhub/ui/button'
 import {Dialog} from '@noalhub/ui/dialog'
 import {Icon, ICONS} from '@noalhub/ui/icons'
 import {Switch} from '@noalhub/ui/switch'
+import {ToastError} from '@noalhub/ui/toast'
 import {Tooltip} from '@noalhub/ui/tooltip'
 import {Typography} from '@noalhub/ui/typography'
 
@@ -201,14 +202,7 @@ export function EditorShell({
           <div className="min-h-0 overflow-hidden" inert={collapsed}>
             <div className="h-px bg-border" />
             <div className="flex flex-col gap-3 p-4">
-              {error ? (
-                <Typography
-                  variant="body-4"
-                  className="text-danger"
-                  role="alert">
-                  {error}
-                </Typography>
-              ) : null}
+              <ToastError message={error} />
               {full ? null : (
                 <div key={`inline-${generation}`} ref={inlineRef}>
                   {renderEditor({

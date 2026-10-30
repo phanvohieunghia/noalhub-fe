@@ -10,10 +10,10 @@ import {FriendRequestsDialog} from './friend-requests-dialog'
 import {Avatar} from '@noalhub/ui/avatar'
 import {Button} from '@noalhub/ui/button'
 import {Icon, ICONS} from '@noalhub/ui/icons'
-import {AlertError} from '@noalhub/ui/alert'
 import {Spinner} from '@noalhub/ui/spinner'
 import {useFriendRequests, useFriends} from '@noalhub/api/friends'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 /**
  * The friend list.
@@ -71,7 +71,7 @@ export function FriendListContent() {
           {t('loading')}
         </Typography>
       ) : error ? (
-        <AlertError message={t('loadFailed')} />
+        <ToastError message={t('loadFailed')} />
       ) : data.items.length === 0 ? (
         <Typography
           as="div"

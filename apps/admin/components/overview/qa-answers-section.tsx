@@ -10,7 +10,6 @@ import {
 import {useQaDatasets} from '@noalhub/api/qa'
 import {useDateFormat} from '@noalhub/i18n/use-date-format'
 import {useTranslations} from 'next-intl'
-import {AlertError} from '@noalhub/ui/alert'
 import {Icon, LUCIDE} from '@noalhub/ui/icons'
 import {QuestionStatsChart} from '@noalhub/ui/question-stats-chart'
 import {Select} from '@noalhub/ui/select'
@@ -18,6 +17,7 @@ import {Skeleton} from '@noalhub/ui/skeleton'
 import {Toggle} from '@noalhub/ui/toggle'
 import {Tooltip} from '@noalhub/ui/tooltip'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 const PERIOD_ICONS = {
   day: LUCIDE.calendar1,
@@ -212,7 +212,7 @@ export function QaAnswersSection({userId}: {userId?: string} = {}) {
       {stats.isPending ? (
         <Skeleton className="h-64 w-full" />
       ) : stats.isError ? (
-        <AlertError message={t('loadError')} />
+        <ToastError message={t('loadError')} />
       ) : shown.length === 0 ? (
         <Typography variant="body-3" className="text-muted-foreground">
           {t(userId ? 'emptyUser' : 'empty')}

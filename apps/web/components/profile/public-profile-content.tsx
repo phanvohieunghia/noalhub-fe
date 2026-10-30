@@ -4,7 +4,6 @@ import {useRouter} from 'next/navigation'
 
 import {Avatar} from '@noalhub/ui/avatar'
 import {Button} from '@noalhub/ui/button'
-import {AlertError} from '@noalhub/ui/alert'
 import {Spinner} from '@noalhub/ui/spinner'
 import {useDateFormat} from '@noalhub/i18n/use-date-format'
 import {useMessage} from '@noalhub/i18n/use-message'
@@ -18,6 +17,7 @@ import {useCreateDirectConversation} from '@noalhub/api/chat'
 import {usePublicProfile} from '@noalhub/api/users'
 import type {PublicProfile} from '@noalhub/api/users'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 /**
  * Someone else's public profile (`GET /users/{username}`).
@@ -47,7 +47,7 @@ export function PublicProfileContent({username}: {username: string}) {
       error instanceof ApiError && error.code === ERROR_CODES.userNotFound
     return (
       <main className="mx-auto w-full max-w-3xl p-4 md:p-8">
-        <AlertError
+        <ToastError
           message={
             notFound ? t('public.notFound', {username}) : t('loadFailed')
           }

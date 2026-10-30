@@ -5,6 +5,7 @@ import {useEffect, useId, useRef, useState} from 'react'
 import {ApiError, ERROR_CODES} from '@noalhub/api/errors'
 import {messageOf, type Message} from '@noalhub/api/message'
 import {useMessage} from '@noalhub/i18n/use-message'
+import {ToastError} from '../toast'
 import {useTranslations} from 'next-intl'
 import {
   MEDIA_IMAGE_MIMES,
@@ -14,7 +15,6 @@ import {
   type MediaAsset,
 } from '@noalhub/api/media'
 import {Button} from '../button'
-import {AlertError} from '../alert'
 import {Icon, LUCIDE} from '../icons'
 
 /**
@@ -179,7 +179,7 @@ export function ImageUploadButton({
         </div>
       ) : null}
 
-      <AlertError message={m(error)} />
+      <ToastError message={m(error)} />
     </div>
   )
 }

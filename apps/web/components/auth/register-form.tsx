@@ -9,7 +9,6 @@ import {useForm} from 'react-hook-form'
 
 import {OAuthButtons} from './oauth-buttons'
 import {Button} from '@noalhub/ui/button'
-import {AlertError} from '@noalhub/ui/alert'
 import {Input} from '@noalhub/ui/input'
 import {PasswordInput} from '@noalhub/ui/password-input'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
@@ -18,6 +17,7 @@ import type {Message} from '@noalhub/api/message'
 import {registerSchema, type RegisterInput} from '@noalhub/api/auth'
 import {useRegister} from '@noalhub/api/auth'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 export function RegisterForm() {
   const t = useTranslations('web.auth.register')
@@ -58,7 +58,7 @@ export function RegisterForm() {
       </header>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-        <AlertError message={m(formError)} />
+        <ToastError message={m(formError)} />
 
         <Input
           label={t('displayName')}

@@ -5,12 +5,12 @@ import {useTranslations} from 'next-intl'
 
 import {ChangeUsernameForm} from '@/components/profile/change-username-form'
 import {Avatar} from '@noalhub/ui/avatar'
-import {AlertError} from '@noalhub/ui/alert'
 import {Spinner} from '@noalhub/ui/spinner'
 import {useAuthStore} from '@noalhub/api/auth'
 import {useMe} from '@noalhub/api/auth'
 import type {User} from '@noalhub/api/users'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 /**
  * Your own profile.
@@ -40,7 +40,7 @@ export function ProfileContent() {
     }
     return (
       <main className="mx-auto w-full max-w-3xl p-4 md:p-8">
-        <AlertError message={error ? t('loadFailed') : t('noData')} />
+        <ToastError message={error ? t('loadFailed') : t('noData')} />
       </main>
     )
   }

@@ -31,8 +31,8 @@ import {
   TableRoot,
   TableRow,
 } from '@noalhub/ui/table'
-import {AlertError} from '@noalhub/ui/alert'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 import {useTranslations} from 'next-intl'
 
 import {AdminErrorState} from '../admin-error-state'
@@ -224,7 +224,7 @@ function GrantDialog({onClose}: {onClose: () => void}) {
           {t('noteHint')}
         </Typography>
 
-        <AlertError message={m(formError)} />
+        <ToastError message={m(formError)} />
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
@@ -259,7 +259,7 @@ function RevokeDialog({
           {t('revokeBody')}
         </Typography>
 
-        <AlertError message={m(error)} />
+        <ToastError message={m(error)} />
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>

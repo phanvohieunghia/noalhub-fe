@@ -12,7 +12,7 @@ import {
   useUpdateQaOutline,
   type QaOutline,
 } from '@noalhub/api/qa'
-import {AlertError, AlertWarning} from '@noalhub/ui/alert'
+import {AlertWarning} from '@noalhub/ui/alert'
 import {ICONS, Icon, LUCIDE} from '@noalhub/ui/icons'
 import {MetricsCard, type MetricItem} from '@noalhub/ui/metrics-card'
 import {
@@ -22,7 +22,7 @@ import {
 import {TiptapEditor} from '@noalhub/ui/blog/tiptap-editor'
 import {Skeleton} from '@noalhub/ui/skeleton'
 import {Spinner} from '@noalhub/ui/spinner'
-import {toast} from '@noalhub/ui/toast'
+import {ToastError, toast} from '@noalhub/ui/toast'
 import {Tooltip} from '@noalhub/ui/tooltip'
 import {Typography} from '@noalhub/ui/typography'
 
@@ -586,7 +586,7 @@ function OutlineWorkbench({
         )}
       </QaOutlineDrawer>
       {update.isError ? (
-        <AlertError message={t('ws.outline.saveFailed')} />
+        <ToastError message={t('ws.outline.saveFailed')} />
       ) : null}
     </div>
   )

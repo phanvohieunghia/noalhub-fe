@@ -8,10 +8,10 @@ import type {Message} from '@noalhub/api/message'
 import {useMessage} from '@noalhub/i18n/use-message'
 import {useTranslations} from 'next-intl'
 import {slugify} from '@noalhub/core/blog/slugify'
-import {AlertError} from '@noalhub/ui/alert'
 import {Button} from '@noalhub/ui/button'
 import {Input} from '@noalhub/ui/input'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 const MAX_SUGGESTIONS = 8
 
@@ -142,7 +142,7 @@ export function TagMultiselect({
         </div>
       ) : null}
 
-      <AlertError message={m(error)} />
+      <ToastError message={m(error)} />
     </div>
   )
 }

@@ -18,7 +18,8 @@ import {
 } from '@noalhub/api/qa'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {useMessage} from '@noalhub/i18n/use-message'
-import {AlertError, AlertInfo} from '@noalhub/ui/alert'
+import {AlertInfo} from '@noalhub/ui/alert'
+import {ToastError} from '@noalhub/ui/toast'
 import {Button} from '@noalhub/ui/button'
 import {Input} from '@noalhub/ui/input'
 import {Select} from '@noalhub/ui/select'
@@ -256,7 +257,7 @@ export function useChunkingChoice({
 
       {visiblePreview ? <PreviewList preview={visiblePreview} /> : null}
 
-      {error ? <AlertError message={m(error)} /> : null}
+      {error ? <ToastError message={m(error)} /> : null}
     </fieldset>
   )
 

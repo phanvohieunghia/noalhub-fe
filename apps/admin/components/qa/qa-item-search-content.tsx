@@ -16,6 +16,7 @@ import {Button} from '@noalhub/ui/button'
 import {Pagination} from '@noalhub/ui/pagination'
 import {Skeleton} from '@noalhub/ui/skeleton'
 import {Switch} from '@noalhub/ui/switch'
+import {ToastError} from '@noalhub/ui/toast'
 import {Typography} from '@noalhub/ui/typography'
 
 import {AdminErrorState} from '../admin-error-state'
@@ -127,9 +128,7 @@ export function QaItemSearchContent({type}: {type: string}) {
             ))}
           </ul>
           {setPublished.isError ? (
-            <Typography variant="body-4" className="text-danger" role="alert">
-              {t('items.publishFailed')}
-            </Typography>
+            <ToastError message={t('items.publishFailed')} />
           ) : null}
           <Pagination
             page={page}

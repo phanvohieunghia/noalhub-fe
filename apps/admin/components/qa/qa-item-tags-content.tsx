@@ -15,7 +15,7 @@ import {
 import type {Message} from '@noalhub/api/message'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {useMessage} from '@noalhub/i18n/use-message'
-import {AlertError, AlertWarning} from '@noalhub/ui/alert'
+import {AlertWarning} from '@noalhub/ui/alert'
 import {Badge} from '@noalhub/ui/badge'
 import {Button} from '@noalhub/ui/button'
 import {Dialog} from '@noalhub/ui/dialog'
@@ -38,7 +38,7 @@ import {
 } from '@noalhub/ui/table'
 import {pickTagLabel} from '@noalhub/ui/tag-mark'
 import {Textarea} from '@noalhub/ui/textarea'
-import {toast} from '@noalhub/ui/toast'
+import {ToastError, toast} from '@noalhub/ui/toast'
 import {Typography} from '@noalhub/ui/typography'
 
 import {AdminErrorState} from '../admin-error-state'
@@ -323,7 +323,7 @@ function TagDialog({row, onClose}: {row?: QaItemTag; onClose: () => void}) {
             touched && iconInvalid ? t('tags.fields.iconInvalid') : undefined
           }
         />
-        {formError ? <AlertError message={m(formError)} /> : null}
+        {formError ? <ToastError message={m(formError)} /> : null}
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>

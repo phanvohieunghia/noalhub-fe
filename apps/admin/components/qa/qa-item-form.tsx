@@ -18,7 +18,6 @@ import {
 } from '@noalhub/api/qa'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {useMessage} from '@noalhub/i18n/use-message'
-import {AlertError} from '@noalhub/ui/alert'
 import {TiptapEditor} from '@noalhub/ui/blog/tiptap-editor'
 import {Button} from '@noalhub/ui/button'
 import {Checkbox} from '@noalhub/ui/checkbox'
@@ -28,6 +27,7 @@ import {Select} from '@noalhub/ui/select'
 import {Tooltip} from '@noalhub/ui/tooltip'
 import {Textarea} from '@noalhub/ui/textarea'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 import {KIND_ICONS, SHAPE_ICONS} from './qa-icons'
 import {QaItemTagPicker} from './qa-item-tag-picker'
@@ -381,7 +381,7 @@ export function QaItemForm({
         />
       )}
 
-      {error ? <AlertError message={m(error)} /> : null}
+      {error ? <ToastError message={m(error)} /> : null}
 
       <div className="flex justify-end gap-2 border-t border-border pt-4">
         <Button

@@ -3,7 +3,6 @@
 import {Avatar} from '@noalhub/ui/avatar'
 import {Button} from '@noalhub/ui/button'
 import {Dialog} from '@noalhub/ui/dialog'
-import {AlertError} from '@noalhub/ui/alert'
 import {Spinner} from '@noalhub/ui/spinner'
 import {useDateFormat} from '@noalhub/i18n/use-date-format'
 import {useTranslations} from 'next-intl'
@@ -14,6 +13,7 @@ import {
 } from '@noalhub/api/friends'
 import type {Friend} from '@noalhub/api/friends'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 /**
  * Pending friend requests.
@@ -48,7 +48,7 @@ export function FriendRequestsDialog({
           {t('loading')}
         </Typography>
       ) : error ? (
-        <AlertError message={t('loadFailed')} />
+        <ToastError message={t('loadFailed')} />
       ) : empty ? (
         <Typography variant="body-3" className="py-4 opacity-70">
           {t('empty')}

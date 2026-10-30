@@ -17,7 +17,7 @@ import {formatCompactNumber} from '@noalhub/core/format-number'
 import type {Message} from '@noalhub/api/message'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {useMessage} from '@noalhub/i18n/use-message'
-import {AlertError, AlertWarning} from '@noalhub/ui/alert'
+import {AlertWarning} from '@noalhub/ui/alert'
 import {MarkdownEditor} from '@noalhub/ui/blog/markdown-editor'
 import {Button} from '@noalhub/ui/button'
 import {Dialog} from '@noalhub/ui/dialog'
@@ -27,7 +27,7 @@ import {InlineTextField} from '@noalhub/ui/inline-text-field'
 import {Input} from '@noalhub/ui/input'
 import {MetricsCard, type MetricItem} from '@noalhub/ui/metrics-card'
 import {Skeleton} from '@noalhub/ui/skeleton'
-import {toast} from '@noalhub/ui/toast'
+import {ToastError, toast} from '@noalhub/ui/toast'
 import {Tooltip} from '@noalhub/ui/tooltip'
 import {Typography} from '@noalhub/ui/typography'
 
@@ -143,7 +143,7 @@ function OpenSource({
   const t = useTranslations('admin.qa')
   const full = useQaSource(id)
 
-  if (full.isError) return <AlertError message={t('ws.source.loadFailed')} />
+  if (full.isError) return <ToastError message={t('ws.source.loadFailed')} />
   if (full.isPending || !full.data) return <Skeleton className="h-96 w-full" />
   return (
     <SourceEditor
@@ -439,7 +439,7 @@ function AddSourceForm({
       {tooLong ? (
         <AlertWarning message={t('sources.tooLong', {max: MAX_SOURCE_CHARS})} />
       ) : null}
-      {formError ? <AlertError message={m(formError)} /> : null}
+      {formError ? <ToastError message={m(formError)} /> : null}
     </div>
   )
 }

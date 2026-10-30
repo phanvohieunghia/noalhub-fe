@@ -11,13 +11,13 @@ import {
 } from '@noalhub/api/qa'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {useMessage} from '@noalhub/i18n/use-message'
-import {AlertError} from '@noalhub/ui/alert'
 import {Button} from '@noalhub/ui/button'
 import {Dialog} from '@noalhub/ui/dialog'
 import {DropdownMenu, DropdownMenuItem} from '@noalhub/ui/dropdown-menu'
 import {ICONS, Icon} from '@noalhub/ui/icons'
 import {Select} from '@noalhub/ui/select'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 /**
  * Which outline version a step looks at. Versions are history: there is no "active"
@@ -169,7 +169,7 @@ export function OutlineVersionMenu({
         <Dialog open onClose={close} title={t('outlines.deleteTitle', {name})}>
           <div className="space-y-4">
             <Typography variant="body-3">{t('outlines.deleteBody')}</Typography>
-            {error ? <AlertError message={m(error)} /> : null}
+            {error ? <ToastError message={m(error)} /> : null}
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={close}>
                 {tc('actions.cancel')}

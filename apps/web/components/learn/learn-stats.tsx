@@ -9,7 +9,6 @@ import {usePathname, useRouter} from '@noalhub/i18n/navigation'
 import {useDateFormat} from '@noalhub/i18n/use-date-format'
 import {Button} from '@noalhub/ui/button'
 import {Icon, LUCIDE} from '@noalhub/ui/icons'
-import {AlertError} from '@noalhub/ui/alert'
 import {Select} from '@noalhub/ui/select'
 import {Skeleton} from '@noalhub/ui/skeleton'
 import {Toggle} from '@noalhub/ui/toggle'
@@ -17,6 +16,7 @@ import {Tooltip} from '@noalhub/ui/tooltip'
 import {Typography} from '@noalhub/ui/typography'
 
 import {QuestionStatsChart} from '@noalhub/ui/question-stats-chart'
+import {ToastError} from '@noalhub/ui/toast'
 
 /**
  * The statistics page: per question set, how often each question was answered
@@ -251,7 +251,7 @@ function SetStats() {
       {data.isPending ? (
         <Skeleton className="h-64 w-full" />
       ) : data.isError ? (
-        <AlertError message={t('stats.bySet.loadError')} />
+        <ToastError message={t('stats.bySet.loadError')} />
       ) : shown.length === 0 ? (
         <Typography variant="body-3" className="text-muted-foreground">
           {t('stats.bySet.empty')}

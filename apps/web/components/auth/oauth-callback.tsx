@@ -6,12 +6,12 @@ import {useTranslations} from 'next-intl'
 import {useSearchParams} from 'next/navigation'
 import {useEffect, useMemo, useRef} from 'react'
 
-import {AlertError} from '@noalhub/ui/alert'
 import {useOAuthExchange} from '@noalhub/api/auth'
 import {takeOAuthNext} from '@noalhub/core/auth/redirect'
 import {ApiError} from '@noalhub/api/errors'
 import type {Message} from '@noalhub/api/message'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 type CallbackParams = {ok: true; code: string} | {ok: false; error: Message}
 
@@ -66,7 +66,7 @@ export function OAuthCallback() {
   if (error) {
     return (
       <div className="flex w-full max-w-sm flex-col gap-4">
-        <AlertError message={m(error)} />
+        <ToastError message={m(error)} />
         <Link
           href="/login"
           className="text-body-3 underline underline-offset-4">

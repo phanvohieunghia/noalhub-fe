@@ -46,7 +46,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '../dropdown-menu'
-import {Alert, AlertError} from '../alert'
+import {Alert} from '../alert'
+import {ToastError} from '../toast'
 import {Icon, ICONS, LUCIDE, type IconName} from '../icons'
 import {Input} from '../input'
 import {Select} from '../select'
@@ -818,7 +819,7 @@ export function RichTextEditor({
           })}
         </Typography>
       ) : null}
-      <AlertError message={m(dropError)} />
+      <ToastError message={m(dropError)} />
 
       {/*
         A modal rather than a strip above the page: the author has to decide
@@ -1569,7 +1570,7 @@ function LinkDialog({editor, onClose}: {editor: Editor; onClose: () => void}) {
             code: (chunks) => <code className="mx-1">{chunks}</code>,
           })}
         </Typography>
-        <AlertError message={error} />
+        <ToastError message={error} />
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
             {tc('actions.cancel')}
@@ -1688,7 +1689,7 @@ function ImageDialog({
           onChange={(event) => setAlt(event.target.value)}
           placeholder={t('imageAltPlaceholder')}
         />
-        <AlertError message={error} />
+        <ToastError message={error} />
         <Alert tone="warning" message={notice} />
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>

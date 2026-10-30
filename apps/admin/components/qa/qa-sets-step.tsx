@@ -30,7 +30,6 @@ import {
   type QaSet,
 } from '@noalhub/api/qa'
 import {useDateFormat} from '@noalhub/i18n/use-date-format'
-import {AlertError} from '@noalhub/ui/alert'
 import {Badge} from '@noalhub/ui/badge'
 import {Button} from '@noalhub/ui/button'
 import {Dialog} from '@noalhub/ui/dialog'
@@ -41,7 +40,7 @@ import {MetricsCard} from '@noalhub/ui/metrics-card'
 import {Skeleton} from '@noalhub/ui/skeleton'
 import {Spinner} from '@noalhub/ui/spinner'
 import {Toggle} from '@noalhub/ui/toggle'
-import {toast} from '@noalhub/ui/toast'
+import {ToastError, toast} from '@noalhub/ui/toast'
 import {Tooltip} from '@noalhub/ui/tooltip'
 import {Typography} from '@noalhub/ui/typography'
 
@@ -560,7 +559,7 @@ function RemoveSectionDialog({
           {t('ws.sets.removeIntro')}
         </Typography>
         {failed > 0 ? (
-          <AlertError message={t('ws.sets.removeFailed', {count: failed})} />
+          <ToastError message={t('ws.sets.removeFailed', {count: failed})} />
         ) : null}
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
@@ -975,7 +974,7 @@ function ReviewSet({
     : ''
 
   if (items.isPending) return <Skeleton className="h-32 w-full" />
-  if (items.isError) return <AlertError message={t('ws.sets.loadFailed')} />
+  if (items.isError) return <ToastError message={t('ws.sets.loadFailed')} />
 
   const renderHeading = (
     entry: Extract<ReviewRow, {kind: 'header'}>,

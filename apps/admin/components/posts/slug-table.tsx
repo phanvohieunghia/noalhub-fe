@@ -18,7 +18,6 @@ import {Button} from '@noalhub/ui/button'
 import {Dialog} from '@noalhub/ui/dialog'
 import {DropdownMenuItem} from '@noalhub/ui/dropdown-menu'
 import {ICONS} from '@noalhub/ui/icons'
-import {AlertError} from '@noalhub/ui/alert'
 import {Input} from '@noalhub/ui/input'
 import {Pagination} from '@noalhub/ui/pagination'
 import {Skeleton} from '@noalhub/ui/skeleton'
@@ -35,6 +34,7 @@ import {
   TableSortHeaderCell,
 } from '@noalhub/ui/table'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 import {useTranslations} from 'next-intl'
 
 import {AdminErrorState} from '../admin-error-state'
@@ -297,7 +297,7 @@ function EditSlugDialog({
             onChange={(event) => setConfirmValue(event.target.value)}
           />
 
-          <AlertError message={m(error)} />
+          <ToastError message={m(error)} />
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setPhase('edit')}>
@@ -354,7 +354,7 @@ function DeleteSlugDialog({
           {t('delete.postStaysReachable', {url: `/blogs/${row.post.slug}`})}
         </Typography>
 
-        <AlertError message={m(error)} />
+        <ToastError message={m(error)} />
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>

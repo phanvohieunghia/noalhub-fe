@@ -8,10 +8,10 @@ import {
   useQaGeneration,
   useRetryQaGeneration,
 } from '@noalhub/api/qa'
-import {AlertError, AlertInfo, AlertWarning} from '@noalhub/ui/alert'
+import {AlertInfo, AlertWarning} from '@noalhub/ui/alert'
 import {Button} from '@noalhub/ui/button'
 import {Spinner} from '@noalhub/ui/spinner'
-import {toast} from '@noalhub/ui/toast'
+import {ToastError, toast} from '@noalhub/ui/toast'
 import {Typography} from '@noalhub/ui/typography'
 
 /**
@@ -74,7 +74,7 @@ export function GenerationProgress({
   }, [running, status])
 
   if (generation.isError) {
-    return <AlertError message={t('generation.pollFailed')} />
+    return <ToastError message={t('generation.pollFailed')} />
   }
 
   if (running) {
@@ -134,7 +134,7 @@ export function GenerationProgress({
       <div className="space-y-2">
         {/* The backend's message already names the cause — a truncated response
             says "output ceiling", not "invalid JSON". Show it verbatim. */}
-        <AlertError message={data.error ?? t('generation.failed')} />
+        <ToastError message={data.error ?? t('generation.failed')} />
         {retryButton}
       </div>
     )

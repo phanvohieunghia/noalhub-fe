@@ -18,7 +18,6 @@ import {
 import {formatCompactNumber} from '@noalhub/core/format-number'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {useMessage} from '@noalhub/i18n/use-message'
-import {AlertError} from '@noalhub/ui/alert'
 import {Button} from '@noalhub/ui/button'
 import {Checkbox} from '@noalhub/ui/checkbox'
 import {Dialog} from '@noalhub/ui/dialog'
@@ -50,6 +49,7 @@ const COUNT_TICKS = [
   ...[550, 600, 650, 700, 750, 800, 850, 900, 950].map((value) => ({value})),
 ]
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 const ITEM_KINDS = ['theory', 'practice', 'recall', 'analysis'] as const
 
@@ -572,9 +572,9 @@ function GenerateDialog({
           {/* State the price before the click: how many sections × how many
               questions, on which key and model. */}
           {aiRun.empty ? (
-            <AlertError message={t('run.noCredentialHint')} />
+            <ToastError message={t('run.noCredentialHint')} />
           ) : !fit.ok ? (
-            <AlertError
+            <ToastError
               message={
                 fit.reason === 'section'
                   ? t('generate.sectionTooLong', {
@@ -601,7 +601,7 @@ function GenerateDialog({
             </Typography>
           ) : null}
 
-          {formError ? <AlertError message={m(formError)} /> : null}
+          {formError ? <ToastError message={m(formError)} /> : null}
         </div>
       )}
 

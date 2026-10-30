@@ -15,7 +15,6 @@ import {
 import type {Message} from '@noalhub/api/message'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {useMessage} from '@noalhub/i18n/use-message'
-import {AlertError} from '@noalhub/ui/alert'
 import {Badge} from '@noalhub/ui/badge'
 import {Button} from '@noalhub/ui/button'
 import {Dialog} from '@noalhub/ui/dialog'
@@ -36,6 +35,7 @@ import {
   TableRowActions,
 } from '@noalhub/ui/table'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 import {AdminErrorState} from '../admin-error-state'
 
@@ -363,7 +363,7 @@ function ModelDialog({row, onClose}: {row?: AiModel; onClose: () => void}) {
           />
           {t('models.fields.enabled')}
         </Typography>
-        {formError ? <AlertError message={m(formError)} /> : null}
+        {formError ? <ToastError message={m(formError)} /> : null}
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
@@ -406,7 +406,7 @@ function DeleteDialog({row, onClose}: {row: AiModel; onClose: () => void}) {
       title={t('models.deleteTitle', {label: row.label})}>
       <div className="space-y-4">
         <Typography variant="body-3">{t('models.deleteBody')}</Typography>
-        {formError ? <AlertError message={m(formError)} /> : null}
+        {formError ? <ToastError message={m(formError)} /> : null}
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>

@@ -8,7 +8,8 @@ import type {Message} from '@noalhub/api/message'
 import {useQaSources, useQaTemplates, useStartAnalyze} from '@noalhub/api/qa'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {useMessage} from '@noalhub/i18n/use-message'
-import {AlertError, AlertInfo} from '@noalhub/ui/alert'
+import {AlertInfo} from '@noalhub/ui/alert'
+import {ToastError} from '@noalhub/ui/toast'
 import {Button} from '@noalhub/ui/button'
 import {Checkbox} from '@noalhub/ui/checkbox'
 import {Dialog} from '@noalhub/ui/dialog'
@@ -243,7 +244,7 @@ function AnalyzeDialog({
 
         {/* State the price before the click: which key, which model. */}
         {aiRun.empty ? (
-          <AlertError message={t('run.noCredentialHint')} />
+          <ToastError message={t('run.noCredentialHint')} />
         ) : aiRun.credential && aiRun.ready ? (
           <AlertInfo
             message={t('analyze.cost', {
@@ -253,7 +254,7 @@ function AnalyzeDialog({
           />
         ) : null}
 
-        {formError ? <AlertError message={m(formError)} /> : null}
+        {formError ? <ToastError message={m(formError)} /> : null}
       </div>
 
       {/* Nút ở CUỐI nội dung, không phải ở `actions` — `actions` của Dialog là

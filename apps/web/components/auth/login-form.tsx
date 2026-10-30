@@ -11,7 +11,6 @@ import {useForm} from 'react-hook-form'
 
 import {OAuthButtons} from './oauth-buttons'
 import {Button} from '@noalhub/ui/button'
-import {AlertError} from '@noalhub/ui/alert'
 import {Input} from '@noalhub/ui/input'
 import {PasswordInput} from '@noalhub/ui/password-input'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
@@ -20,6 +19,7 @@ import type {Message} from '@noalhub/api/message'
 import {loginSchema, type LoginInput} from '@noalhub/api/auth'
 import {useLogin} from '@noalhub/api/auth'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 /**
  * `AuthGuard` builds `?next=` from the raw pathname (`/en/learn`), but this
@@ -74,7 +74,7 @@ export function LoginForm() {
       </header>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-        <AlertError message={m(formError)} />
+        <ToastError message={m(formError)} />
 
         <Input
           label={t('email')}

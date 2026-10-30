@@ -18,7 +18,6 @@ import type {Message} from '@noalhub/api/message'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {useDateFormat} from '@noalhub/i18n/use-date-format'
 import {useMessage} from '@noalhub/i18n/use-message'
-import {AlertError} from '@noalhub/ui/alert'
 import {Badge, type BadgeTone} from '@noalhub/ui/badge'
 import {Button} from '@noalhub/ui/button'
 import {Checkbox} from '@noalhub/ui/checkbox'
@@ -43,6 +42,7 @@ import {
 } from '@noalhub/ui/table'
 import {TablePagination} from '@noalhub/ui/table-pagination'
 import {Typography} from '@noalhub/ui/typography'
+import {ToastError} from '@noalhub/ui/toast'
 
 import {AdminErrorState} from '../admin-error-state'
 
@@ -442,7 +442,7 @@ function BulkDeleteDialog({
       <div className="space-y-4">
         <Typography variant="body-3">{t('sets.deleteBody')}</Typography>
         {failed > 0 ? (
-          <AlertError message={t('sets.bulkDeleteFailed', {count: failed})} />
+          <ToastError message={t('sets.bulkDeleteFailed', {count: failed})} />
         ) : null}
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onClose(false)}>
@@ -511,7 +511,7 @@ function RemoveDialog({
         <Typography variant="body-3">
           {t(mode === 'delete' ? 'sets.deleteBody' : 'sets.removeBody')}
         </Typography>
-        {formError ? <AlertError message={m(formError)} /> : null}
+        {formError ? <ToastError message={m(formError)} /> : null}
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
             {tc('actions.cancel')}
