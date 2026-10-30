@@ -1,4 +1,4 @@
-import { ICONS, LUCIDE } from "@noalhub/ui/icons";
+import {ICONS, LUCIDE} from '@noalhub/ui/icons'
 
 /**
  * The single source of truth for admin navigation — the sidebar and the
@@ -19,53 +19,54 @@ import { ICONS, LUCIDE } from "@noalhub/ui/icons";
  * mistyped key is a compile error instead of odd text in the sidebar (§9).
  */
 export type NavLabelKey =
-  | "items.overview"
-  | "items.users"
-  | "items.storybook"
-  | "items.posts"
-  | "items.conversations"
-  | "items.reports"
-  | "items.categories"
-  | "items.slugs"
-  | "items.new"
-  | "items.qa"
-  | "items.qaDatasets"
-  | "items.qaSets"
-  | "items.qaItems"
-  | "items.qaTags"
-  | "items.qaTemplates"
-  | "items.qaCredentials"
-  | "items.qaModels"
-  | "items.qaOutlines"
-  | "items.ai"
-  | "items.edit";
+  | 'items.overview'
+  | 'items.users'
+  | 'items.storybook'
+  | 'items.posts'
+  | 'items.conversations'
+  | 'items.reports'
+  | 'items.categories'
+  | 'items.slugs'
+  | 'items.new'
+  | 'items.qa'
+  | 'items.qaDatasets'
+  | 'items.qaSets'
+  | 'items.qaItems'
+  | 'items.qaTags'
+  | 'items.qaTemplates'
+  | 'items.qaCredentials'
+  | 'items.qaModels'
+  | 'items.qaOutlines'
+  | 'items.ai'
+  | 'items.edit'
 
-export type NavReasonKey = "disabled.conversations" | "disabled.reports" | "disabled.requiresSuperAdmin";
+export type NavReasonKey =
+  'disabled.conversations' | 'disabled.reports' | 'disabled.requiresSuperAdmin'
 
 export type NavItem = {
-  href: string;
-  labelKey: NavLabelKey;
+  href: string
+  labelKey: NavLabelKey
   /** An iconify name for top-level rows. Children are drawn without one. */
-  icon?: string;
-  disabled?: boolean;
+  icon?: string
+  disabled?: boolean
   /** Why it is locked, shown as a tooltip. */
-  reasonKey?: NavReasonKey;
+  reasonKey?: NavReasonKey
   /**
    * A capability the account must hold for the item to be usable. Without it
    * the item is still shown, but locked. Absent means everyone who got past the
    * auth gate can use it.
    */
-  requires?: "canGenerateAi";
+  requires?: 'canGenerateAi'
   /**
    * Sub-screens of this section, rendered indented under it. One level only —
    * a second would be a menu, and this sidebar has five sections.
    */
-  children?: NavItem[];
-};
+  children?: NavItem[]
+}
 
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/overview", labelKey: "items.overview", icon: LUCIDE.layoutDashboard },
-  { href: "/users", labelKey: "items.users", icon: ICONS.users },
+  {href: '/overview', labelKey: 'items.overview', icon: LUCIDE.layoutDashboard},
+  {href: '/users', labelKey: 'items.users', icon: ICONS.users},
   /*
    * Blog's two configuration screens sit UNDER "Posts" rather than beside it:
    * both are settings for the same section, used a few times a year. Buried
@@ -76,13 +77,13 @@ export const NAV_ITEMS: NavItem[] = [
    * first prefix hit: a plain `startsWith` lights up "Posts" on these too.
    */
   {
-    href: "/posts",
-    labelKey: "items.posts",
+    href: '/posts',
+    labelKey: 'items.posts',
     icon: LUCIDE.newspaper,
     children: [
-      { href: "/posts", labelKey: "items.posts" },
-      { href: "/posts/categories", labelKey: "items.categories" },
-      { href: "/posts/slugs", labelKey: "items.slugs" },
+      {href: '/posts', labelKey: 'items.posts'},
+      {href: '/posts/categories', labelKey: 'items.categories'},
+      {href: '/posts/slugs', labelKey: 'items.slugs'},
     ],
   },
   /*
@@ -96,14 +97,14 @@ export const NAV_ITEMS: NavItem[] = [
    * from them, and the bank that searches across all of it.
    */
   {
-    href: "/qa/datasets",
-    labelKey: "items.qa",
+    href: '/qa/datasets',
+    labelKey: 'items.qa',
     icon: LUCIDE.circleQuestionMark,
     children: [
-      { href: "/qa/datasets", labelKey: "items.qaDatasets" },
-      { href: "/qa/sets", labelKey: "items.qaSets" },
-      { href: "/qa/items", labelKey: "items.qaItems" },
-      { href: "/qa/tags", labelKey: "items.qaTags" },
+      {href: '/qa/datasets', labelKey: 'items.qaDatasets'},
+      {href: '/qa/sets', labelKey: 'items.qaSets'},
+      {href: '/qa/items', labelKey: 'items.qaItems'},
+      {href: '/qa/tags', labelKey: 'items.qaTags'},
     ],
   },
   /*
@@ -116,45 +117,45 @@ export const NAV_ITEMS: NavItem[] = [
    * an `admin` sees it is there and why it is locked. The backend still refuses.
    */
   {
-    href: "/qa/templates",
-    labelKey: "items.ai",
+    href: '/qa/templates',
+    labelKey: 'items.ai',
     icon: LUCIDE.sparkles,
     children: [
-      { href: "/qa/templates", labelKey: "items.qaTemplates" },
+      {href: '/qa/templates', labelKey: 'items.qaTemplates'},
       {
-        href: "/qa/credentials",
-        labelKey: "items.qaCredentials",
-        requires: "canGenerateAi",
+        href: '/qa/credentials',
+        labelKey: 'items.qaCredentials',
+        requires: 'canGenerateAi',
       },
       {
-        href: "/qa/models",
-        labelKey: "items.qaModels",
-        requires: "canGenerateAi",
+        href: '/qa/models',
+        labelKey: 'items.qaModels',
+        requires: 'canGenerateAi',
       },
     ],
   },
-  { href: "/storybook", labelKey: "items.storybook", icon: ICONS.palette },
+  {href: '/storybook', labelKey: 'items.storybook', icon: ICONS.palette},
   {
-    href: "/conversations",
-    labelKey: "items.conversations",
+    href: '/conversations',
+    labelKey: 'items.conversations',
     icon: LUCIDE.messagesSquare,
     disabled: true,
-    reasonKey: "disabled.conversations",
+    reasonKey: 'disabled.conversations',
   },
   {
-    href: "/reports",
-    labelKey: "items.reports",
+    href: '/reports',
+    labelKey: 'items.reports',
     icon: LUCIDE.flag,
     disabled: true,
-    reasonKey: "disabled.reports",
+    reasonKey: 'disabled.reports',
   },
-];
+]
 
 /** Every item, parents and children alike — for lookups by href. */
 export const FLAT_NAV_ITEMS: NavItem[] = NAV_ITEMS.flatMap((item) => [
   item,
   ...(item.children ?? []),
-]);
+])
 
 /**
  * Labels keyed by the segment itself — the breadcrumb's FIRST lookup layer,
@@ -165,19 +166,19 @@ export const FLAT_NAV_ITEMS: NavItem[] = NAV_ITEMS.flatMap((item) => [
  * individual post — plainly wrong.
  */
 export const SEGMENT_LABEL_KEYS: Record<string, NavLabelKey> = {
-  new: "items.new",
-  edit: "items.edit",
-  outlines: "items.qaOutlines",
-  items: "items.qaItems",
+  new: 'items.new',
+  edit: 'items.edit',
+  outlines: 'items.qaOutlines',
+  items: 'items.qaItems',
   /*
    * `qa` and `datasets` are here rather than resolved from the nav because the
    * sidebar's Q&A entry points at `/qa/datasets` under the label "Q&A": read
    * off the nav, the trail comes out as "qa / Q&A" — the group segment raw and
    * the leaf named after its parent.
    */
-  qa: "items.qa",
-  datasets: "items.qaDatasets",
-};
+  qa: 'items.qa',
+  datasets: 'items.qaDatasets',
+}
 
 /**
  * Segments that group routes but have no `page.tsx` of their own —
@@ -185,4 +186,7 @@ export const SEGMENT_LABEL_KEYS: Record<string, NavLabelKey> = {
  * dataset, and `/qa` only to group the five Q&A screens. The breadcrumb must
  * show them as plain text: a link there is a 404.
  */
-export const NON_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(["outlines", "qa"]);
+export const NON_ROUTE_SEGMENTS: ReadonlySet<string> = new Set([
+  'outlines',
+  'qa',
+])

@@ -1,9 +1,9 @@
-"use client";
+'use client'
 
-import { useAuthStore } from "@noalhub/api/auth";
-import type { Conversation } from "@noalhub/api/chat";
+import {useAuthStore} from '@noalhub/api/auth'
+import type {Conversation} from '@noalhub/api/chat'
 
-import { useChatFormat } from "./use-chat-format";
+import {useChatFormat} from './use-chat-format'
 
 /**
  * The conversation's name. A DM has no `title`, so the name comes from the other
@@ -12,13 +12,15 @@ import { useChatFormat } from "./use-chat-format";
  */
 export function ConversationTitle({
   conversation,
-  className = "",
+  className = '',
 }: {
-  conversation: Conversation;
-  className?: string;
+  conversation: Conversation
+  className?: string
 }) {
-  const currentUserId = useAuthStore((state) => state.user?.id ?? null);
+  const currentUserId = useAuthStore((state) => state.user?.id ?? null)
   return (
-    <span className={className}>{useChatFormat().conversationName(conversation, currentUserId)}</span>
-  );
+    <span className={className}>
+      {useChatFormat().conversationName(conversation, currentUserId)}
+    </span>
+  )
 }

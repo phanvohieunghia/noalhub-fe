@@ -1,14 +1,14 @@
-import { http } from "../client";
-import { getApiBaseUrl } from "../config";
-import { sessionSchema, tokenPairSchema, userSchema } from "./schemas";
+import {http} from '../client'
+import {getApiBaseUrl} from '../config'
+import {sessionSchema, tokenPairSchema, userSchema} from './schemas'
 import type {
   ChangePasswordInput,
   ForgotPasswordInput,
   LoginInput,
   RegisterInput,
   ResetPasswordInput,
-} from "./schemas";
-import type { AuthSession, AuthTokens, OAuthProvider, User } from "./types";
+} from './schemas'
+import type {AuthSession, AuthTokens, OAuthProvider, User} from './types'
 
 /**
  * The entire contact surface with the auth backend, mapping 1-to-1 to the
@@ -22,22 +22,22 @@ import type { AuthSession, AuthTokens, OAuthProvider, User } from "./types";
 
 /** POST /auth/register → 201 AuthSessionDto. 409 EMAIL_TAKEN. */
 export async function register(input: RegisterInput): Promise<AuthSession> {
-  const { email, password, displayName } = input;
-  const { data } = await http.post<AuthSession>(
-    "/auth/register",
+  const {email, password, displayName} = input
+  const {data} = await http.post<AuthSession>(
+    '/auth/register',
     // displayName is optional — sending an empty string differs from omitting it.
-    displayName ? { email, password, displayName } : { email, password },
-    { schema: sessionSchema },
-  );
-  return data;
+    displayName ? {email, password, displayName} : {email, password},
+    {schema: sessionSchema},
+  )
+  return data
 }
 
 /** POST /auth/login → 200 AuthSessionDto. 401 INVALID_CREDENTIALS. */
 export async function login(input: LoginInput): Promise<AuthSession> {
-  const { data } = await http.post<AuthSession>("/auth/login", input, {
+  const {data} = await http.post<AuthSession>('/auth/login', input, {
     schema: sessionSchema,
-  });
-  return data;
+  })
+  return data
 }
 
 /**
@@ -48,42 +48,42 @@ export async function login(input: LoginInput): Promise<AuthSession> {
  * session.
  */
 export async function refresh(refreshToken: string): Promise<AuthTokens> {
-  const { data } = await http.post<AuthTokens>(
-    "/auth/refresh",
-    { refreshToken },
-    { schema: tokenPairSchema },
-  );
-  return data;
+  const {data} = await http.post<AuthTokens>(
+    '/auth/refresh',
+    {refreshToken},
+    {schema: tokenPairSchema},
+  )
+  return data
 }
 
 /** POST /auth/logout → 204. Revokes only the refresh token that was sent. */
 export async function logout(refreshToken: string): Promise<void> {
-  await http.post("/auth/logout", { refreshToken });
+  await http.post('/auth/logout', {refreshToken})
 }
 
 /** POST /auth/logout-all → 204. Invalidates outstanding access tokens too. */
 export async function logoutAll(): Promise<void> {
-  await http.post("/auth/logout-all", undefined, { authRequired: true });
+  await http.post('/auth/logout-all', undefined, {authRequired: true})
 }
 
 /** GET /auth/me → 200 UserDto (the user directly, not wrapped in `{ user }`). */
 export async function me(signal?: AbortSignal): Promise<User> {
-  const { data } = await http.get<User>("/auth/me", {
+  const {data} = await http.get<User>('/auth/me', {
     authRequired: true,
     schema: userSchema,
     signal,
-  });
-  return data;
+  })
+  return data
 }
 
 /** POST /auth/verify-email → 204. 400 INVALID_TOKEN. */
 export async function verifyEmail(token: string): Promise<void> {
-  await http.post("/auth/verify-email", { token });
+  await http.post('/auth/verify-email', {token})
 }
 
 /** POST /auth/verify-email/resend → 204 even when the email does not exist. */
 export async function resendVerifyEmail(email: string): Promise<void> {
-  await http.post("/auth/verify-email/resend", { email });
+  await http.post('/auth/verify-email/resend', {email})
 }
 
 /**
@@ -94,7 +94,7 @@ export async function resendVerifyEmail(email: string): Promise<void> {
 export async function forgotPassword(
   input: ForgotPasswordInput,
 ): Promise<void> {
-  await http.post("/auth/forgot-password", input);
+  await http.post('/auth/forgot-password', input)
 }
 
 /** POST /auth/reset-password → 204. Invalidates every open session. */
@@ -102,10 +102,10 @@ export async function resetPassword(
   token: string,
   input: ResetPasswordInput,
 ): Promise<void> {
-  await http.post("/auth/reset-password", {
+  await http.post('/auth/reset-password', {
     token,
     newPassword: input.newPassword,
-  });
+  })
 }
 
 /**
@@ -116,13 +116,13 @@ export async function resetPassword(
 export async function changePassword(
   input: ChangePasswordInput,
 ): Promise<AuthSession> {
-  const { currentPassword, newPassword } = input;
-  const { data } = await http.post<AuthSession>(
-    "/auth/change-password",
-    { currentPassword, newPassword },
-    { authRequired: true, schema: sessionSchema },
-  );
-  return data;
+  const {currentPassword, newPassword} = input
+  const {data} = await http.post<AuthSession>(
+    '/auth/change-password',
+    {currentPassword, newPassword},
+    {authRequired: true, schema: sessionSchema},
+  )
+  return data
 }
 
 /**
@@ -134,7 +134,7 @@ export async function changePassword(
  * backend, and the spec takes no `redirect_uri`.
  */
 export function oauthStartUrl(provider: OAuthProvider): string {
-  return `${getApiBaseUrl()}/auth/oauth/${provider}`;
+  return `${getApiBaseUrl()}/auth/oauth/${provider}`
 }
 
 /**
@@ -142,10 +142,10 @@ export function oauthStartUrl(provider: OAuthProvider): string {
  * The handoff code is single-use and expires after 60 seconds.
  */
 export async function oauthExchange(code: string): Promise<AuthSession> {
-  const { data } = await http.post<AuthSession>(
-    "/auth/oauth/exchange",
-    { code },
-    { schema: sessionSchema },
-  );
-  return data;
+  const {data} = await http.post<AuthSession>(
+    '/auth/oauth/exchange',
+    {code},
+    {schema: sessionSchema},
+  )
+  return data
 }

@@ -1,11 +1,11 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
+import {useTranslations} from 'next-intl'
 
-import { Button } from "./button";
-import { Icon, ICONS } from "./icons";
-import { Select } from "./select";
-import { Typography } from "./typography";
+import {Button} from './button'
+import {Icon, ICONS} from './icons'
+import {Select} from './select'
+import {Typography} from './typography'
 
 /**
  * The footer of a table frame (`TableRoot`'s `footer` slot): a summary on the
@@ -26,21 +26,23 @@ export function TablePagination({
   onPageChange,
   onPageSizeChange,
 }: {
-  summary: string;
-  page: number;
-  pageCount: number;
-  pageSize: number;
-  pageSizes: readonly number[];
-  perPageLabel: string;
-  formatPageSize: (size: number) => string;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
+  summary: string
+  page: number
+  pageCount: number
+  pageSize: number
+  pageSizes: readonly number[]
+  perPageLabel: string
+  formatPageSize: (size: number) => string
+  onPageChange: (page: number) => void
+  onPageSizeChange: (size: number) => void
 }) {
-  const tp = useTranslations("common.pagination");
+  const tp = useTranslations('common.pagination')
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-      <Typography variant="body-4" className="text-muted-foreground tabular-nums">
+      <Typography
+        variant="body-4"
+        className="text-muted-foreground tabular-nums">
         {summary}
       </Typography>
       <div className="flex items-center gap-3">
@@ -55,30 +57,30 @@ export function TablePagination({
             label: formatPageSize(size),
           }))}
         />
-        <Typography variant="body-4" className="text-muted-foreground tabular-nums">
-          {tp("current", { page, total: pageCount })}
+        <Typography
+          variant="body-4"
+          className="text-muted-foreground tabular-nums">
+          {tp('current', {page, total: pageCount})}
         </Typography>
         <div className="flex gap-1">
           <Button
             variant="outline"
             size="icon-md"
-            aria-label={tp("previous")}
+            aria-label={tp('previous')}
             disabled={page <= 1}
-            onClick={() => onPageChange(page - 1)}
-          >
+            onClick={() => onPageChange(page - 1)}>
             <Icon icon={ICONS.chevronLeft} />
           </Button>
           <Button
             variant="outline"
             size="icon-md"
-            aria-label={tp("next")}
+            aria-label={tp('next')}
             disabled={page >= pageCount}
-            onClick={() => onPageChange(page + 1)}
-          >
+            onClick={() => onPageChange(page + 1)}>
             <Icon icon={ICONS.chevronRight} />
           </Button>
         </div>
       </div>
     </div>
-  );
+  )
 }

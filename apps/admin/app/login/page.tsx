@@ -1,8 +1,8 @@
-import { IntlProvider } from "@noalhub/i18n/provider";
-import { Suspense } from "react";
+import {IntlProvider} from '@noalhub/i18n/provider'
+import {Suspense} from 'react'
 
-import { AdminLoginForm } from "./login-form";
-import { LoginShell } from "./login-shell";
+import {AdminLoginForm} from './login-form'
+import {LoginShell} from './login-shell'
 
 export default function AdminLoginPage() {
   return (
@@ -16,5 +16,5 @@ export default function AdminLoginPage() {
         </Suspense>
       </LoginShell>
     </IntlProvider>
-  );
+  )
 }

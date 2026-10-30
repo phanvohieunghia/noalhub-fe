@@ -1,8 +1,11 @@
-import type { MetadataRoute } from "next";
+import type {MetadataRoute} from 'next'
 
-import { getBlogCategories, getBlogSitemapEntries } from "@noalhub/api/blog/server";
-import { absoluteUrl } from "@noalhub/core/blog/seo";
-import { DEFAULT_LOCALE, LOCALES } from "@noalhub/i18n/config";
+import {
+  getBlogCategories,
+  getBlogSitemapEntries,
+} from '@noalhub/api/blog/server'
+import {absoluteUrl} from '@noalhub/core/blog/seo'
+import {DEFAULT_LOCALE, LOCALES} from '@noalhub/i18n/config'
 
 /**
  * **Built at runtime, not at build time.**
@@ -18,7 +21,7 @@ import { DEFAULT_LOCALE, LOCALES } from "@noalhub/i18n/config";
  * `blog-sitemap` tag, so the §5.2 webhook can still invalidate it — only the XML
  * assembly is redone per request, and that costs next to nothing.
  */
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic'
 
 /**
  * The sitemap contains: `/blogs`, each post, and each category (§6.3).
@@ -43,38 +46,42 @@ export const dynamic = "force-dynamic";
 function languagesFor(path: string) {
   return {
     languages: {
-      ...Object.fromEntries(LOCALES.map((locale) => [locale, absoluteUrl(`/${locale}${path}`)])),
-      "x-default": absoluteUrl(`/${DEFAULT_LOCALE}${path}`),
+      ...Object.fromEntries(
+        LOCALES.map((locale) => [locale, absoluteUrl(`/${locale}${path}`)]),
+      ),
+      'x-default': absoluteUrl(`/${DEFAULT_LOCALE}${path}`),
     },
-  };
+  }
 }
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [entries, categories] = await Promise.all([
     safe(getBlogSitemapEntries, []),
     safe(getBlogCategories, []),
-  ]);
+  ])
 
   return LOCALES.flatMap((locale) => [
     {
       url: absoluteUrl(`/${locale}/blogs`),
-      lastModified: entries[0]?.updatedAt ? new Date(entries[0].updatedAt) : new Date(),
-      changeFrequency: "daily" as const,
+      lastModified: entries[0]?.updatedAt
+        ? new Date(entries[0].updatedAt)
+        : new Date(),
+      changeFrequency: 'daily' as const,
       priority: 0.8,
-      alternates: languagesFor("/blogs"),
+      alternates: languagesFor('/blogs'),
     },
     ...categories.map((category) => ({
       url: absoluteUrl(`/${locale}/blogs/category/${category.slug}`),
-      changeFrequency: "weekly" as const,
+      changeFrequency: 'weekly' as const,
       priority: 0.6,
       alternates: languagesFor(`/blogs/category/${category.slug}`),
     })),
     ...entries.map((entry) => ({
       url: absoluteUrl(`/${locale}/blogs/${entry.slug}`),
       lastModified: new Date(entry.updatedAt),
-      changeFrequency: "monthly" as const,
+      changeFrequency: 'monthly' as const,
       priority: 0.7,
     })),
-  ]);
+  ])
 }
 
 /**
@@ -84,6 +91,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
  * empty array) and keeps a tidy signature for `Promise.all`.
  */
 async function safe<T>(load: () => Promise<T[]>, fallback: T[]): Promise<T[]> {
-  const result = await load();
-  return result.length ? result : fallback;
+  const result = await load()
+  return result.length ? result : fallback
 }

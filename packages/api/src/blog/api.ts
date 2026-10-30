@@ -1,4 +1,4 @@
-import { http } from "../client";
+import {http} from '../client'
 import {
   adminBlogPostListSchema,
   blogCategoryListSchema,
@@ -9,9 +9,9 @@ import {
   blogTagSchema,
   adminBlogSlugListSchema,
   blogPostSlugSchema,
-} from "./schemas";
-import { toBlogPostPayload } from "./schemas";
-import type { BlogCategoryFormValues } from "./schemas";
+} from './schemas'
+import {toBlogPostPayload} from './schemas'
+import type {BlogCategoryFormValues} from './schemas'
 import type {
   AdminBlogPostList,
   AdminBlogPostQuery,
@@ -23,7 +23,7 @@ import type {
   AdminBlogSlugList,
   AdminBlogSlugQuery,
   BlogPostSlug,
-} from "./types";
+} from './types'
 
 /**
  * The blog feature's **client** path — used only by `apps/admin` (§4 and §7.3
@@ -48,10 +48,10 @@ import type {
  * declarations of one shape drift sooner or later, and drift here means sending
  * the wrong thing to the backend.
  */
-export type BlogPostWritePayload = ReturnType<typeof toBlogPostPayload>;
+export type BlogPostWritePayload = ReturnType<typeof toBlogPostPayload>
 
 /** `PATCH` sends the `version` being held — a mismatch is a 409 `POST_CONFLICT` (§7.3). */
-export type UpdateBlogPostInput = BlogPostWritePayload & { version: number };
+export type UpdateBlogPostInput = BlogPostWritePayload & {version: number}
 
 /**
  * GET /admin/blog/posts → 200 `{ items, total, page, limit }`. 403, 429.
@@ -65,19 +65,19 @@ export async function listAdminBlogPosts(
   query: AdminBlogPostQuery = {},
   signal?: AbortSignal,
 ): Promise<AdminBlogPostList> {
-  const params: Record<string, string | number> = {};
-  if (query.page !== undefined) params.page = query.page;
-  if (query.limit !== undefined) params.limit = query.limit;
-  if (query.q) params.q = query.q;
-  if (query.status) params.status = query.status;
+  const params: Record<string, string | number> = {}
+  if (query.page !== undefined) params.page = query.page
+  if (query.limit !== undefined) params.limit = query.limit
+  if (query.q) params.q = query.q
+  if (query.status) params.status = query.status
 
-  const { data } = await http.get<AdminBlogPostList>("/admin/blog/posts", {
+  const {data} = await http.get<AdminBlogPostList>('/admin/blog/posts', {
     params,
     authRequired: true,
     schema: adminBlogPostListSchema,
     signal,
-  });
-  return data;
+  })
+  return data
 }
 
 /**
@@ -89,11 +89,11 @@ export async function getAdminBlogPost(
   id: string,
   signal?: AbortSignal,
 ): Promise<BlogPost> {
-  const { data } = await http.get<BlogPost>(
+  const {data} = await http.get<BlogPost>(
     `/admin/blog/posts/${encodeURIComponent(id)}`,
-    { authRequired: true, schema: blogPostSchema, signal },
-  );
-  return data;
+    {authRequired: true, schema: blogPostSchema, signal},
+  )
+  return data
 }
 
 /**
@@ -105,13 +105,13 @@ export async function getAdminBlogPost(
  * frontend does not guess it.
  */
 export async function createBlogPost(
-  input: { title: string } = { title: "Bài viết không tên" },
+  input: {title: string} = {title: 'Bài viết không tên'},
 ): Promise<BlogPost> {
-  const { data } = await http.post<BlogPost>("/admin/blog/posts", input, {
+  const {data} = await http.post<BlogPost>('/admin/blog/posts', input, {
     authRequired: true,
     schema: blogPostSchema,
-  });
-  return data;
+  })
+  return data
 }
 
 /**
@@ -122,12 +122,12 @@ export async function updateBlogPost(
   id: string,
   input: UpdateBlogPostInput,
 ): Promise<BlogPost> {
-  const { data } = await http.patch<BlogPost>(
+  const {data} = await http.patch<BlogPost>(
     `/admin/blog/posts/${encodeURIComponent(id)}`,
     input,
-    { authRequired: true, schema: blogPostSchema },
-  );
-  return data;
+    {authRequired: true, schema: blogPostSchema},
+  )
+  return data
 }
 
 /**
@@ -140,22 +140,22 @@ export async function updateBlogPost(
  * (§5.2). The frontend does **not** call that webhook — see §5.2.
  */
 export async function publishBlogPost(id: string): Promise<BlogPost> {
-  const { data } = await http.post<BlogPost>(
+  const {data} = await http.post<BlogPost>(
     `/admin/blog/posts/${encodeURIComponent(id)}/publish`,
     undefined,
-    { authRequired: true, schema: blogPostSchema },
-  );
-  return data;
+    {authRequired: true, schema: blogPostSchema},
+  )
+  return data
 }
 
 /** POST /admin/blog/posts/{id}/unpublish → 200. Takes it off the public site, keeps the content. */
 export async function unpublishBlogPost(id: string): Promise<BlogPost> {
-  const { data } = await http.post<BlogPost>(
+  const {data} = await http.post<BlogPost>(
     `/admin/blog/posts/${encodeURIComponent(id)}/unpublish`,
     undefined,
-    { authRequired: true, schema: blogPostSchema },
-  );
-  return data;
+    {authRequired: true, schema: blogPostSchema},
+  )
+  return data
 }
 
 /**
@@ -168,7 +168,7 @@ export async function unpublishBlogPost(id: string): Promise<BlogPost> {
 export async function archiveBlogPost(id: string): Promise<void> {
   await http.delete(`/admin/blog/posts/${encodeURIComponent(id)}`, {
     authRequired: true,
-  });
+  })
 }
 
 /**
@@ -182,21 +182,21 @@ export async function listAdminBlogSlugs(
   query: AdminBlogSlugQuery = {},
   signal?: AbortSignal,
 ): Promise<AdminBlogSlugList> {
-  const params: Record<string, string | number> = {};
-  if (query.page !== undefined) params.page = query.page;
-  if (query.limit !== undefined) params.limit = query.limit;
-  if (query.q) params.q = query.q;
-  if (query.postId) params.postId = query.postId;
-  if (query.sort) params.sort = query.sort;
-  if (query.order) params.order = query.order;
+  const params: Record<string, string | number> = {}
+  if (query.page !== undefined) params.page = query.page
+  if (query.limit !== undefined) params.limit = query.limit
+  if (query.q) params.q = query.q
+  if (query.postId) params.postId = query.postId
+  if (query.sort) params.sort = query.sort
+  if (query.order) params.order = query.order
 
-  const { data } = await http.get<AdminBlogSlugList>("/admin/blog/slugs", {
+  const {data} = await http.get<AdminBlogSlugList>('/admin/blog/slugs', {
     params,
     authRequired: true,
     schema: adminBlogSlugListSchema,
     signal,
-  });
-  return data;
+  })
+  return data
 }
 
 /**
@@ -213,12 +213,12 @@ export async function updateAdminBlogSlug(
   id: string,
   slug: string,
 ): Promise<BlogPostSlug> {
-  const { data } = await http.patch<BlogPostSlug>(
+  const {data} = await http.patch<BlogPostSlug>(
     `/admin/blog/slugs/${encodeURIComponent(id)}`,
-    { slug },
-    { authRequired: true, schema: blogPostSlugSchema },
-  );
-  return data;
+    {slug},
+    {authRequired: true, schema: blogPostSlugSchema},
+  )
+  return data
 }
 
 /**
@@ -230,7 +230,7 @@ export async function updateAdminBlogSlug(
 export async function deleteAdminBlogSlug(id: string): Promise<void> {
   await http.delete(`/admin/blog/slugs/${encodeURIComponent(id)}`, {
     authRequired: true,
-  });
+  })
 }
 
 /* -------------------------------- Categories ------------------------------- */
@@ -242,24 +242,24 @@ export async function deleteAdminBlogSlug(id: string): Promise<void> {
 export async function listAdminBlogCategories(
   signal?: AbortSignal,
 ): Promise<BlogCategory[]> {
-  const { data } = await http.get<BlogCategory[]>("/admin/blog/categories", {
+  const {data} = await http.get<BlogCategory[]>('/admin/blog/categories', {
     authRequired: true,
     schema: blogCategoryListSchema,
     signal,
-  });
-  return data;
+  })
+  return data
 }
 
 /** POST /admin/blog/categories → 201. 409 `CATEGORY_SLUG_TAKEN`. */
 export async function createBlogCategory(
   input: BlogCategoryFormValues,
 ): Promise<BlogCategory> {
-  const { data } = await http.post<BlogCategory>(
-    "/admin/blog/categories",
+  const {data} = await http.post<BlogCategory>(
+    '/admin/blog/categories',
     input,
-    { authRequired: true, schema: blogCategorySchema },
-  );
-  return data;
+    {authRequired: true, schema: blogCategorySchema},
+  )
+  return data
 }
 
 /**
@@ -274,12 +274,12 @@ export async function updateBlogCategory(
   id: string,
   input: BlogCategoryFormValues,
 ): Promise<BlogCategory> {
-  const { data } = await http.patch<BlogCategory>(
+  const {data} = await http.patch<BlogCategory>(
     `/admin/blog/categories/${encodeURIComponent(id)}`,
     input,
-    { authRequired: true, schema: blogCategorySchema },
-  );
-  return data;
+    {authRequired: true, schema: blogCategorySchema},
+  )
+  return data
 }
 
 /**
@@ -290,9 +290,13 @@ export async function updateBlogCategory(
  * 400 `VALIDATION_FAILED`.
  */
 export async function reorderBlogCategories(ids: string[]): Promise<void> {
-  await http.put("/admin/blog/categories/reorder", { ids }, {
-    authRequired: true,
-  });
+  await http.put(
+    '/admin/blog/categories/reorder',
+    {ids},
+    {
+      authRequired: true,
+    },
+  )
 }
 
 /**
@@ -304,7 +308,7 @@ export async function reorderBlogCategories(ids: string[]): Promise<void> {
 export async function deleteBlogCategory(id: string): Promise<void> {
   await http.delete(`/admin/blog/categories/${encodeURIComponent(id)}`, {
     authRequired: true,
-  });
+  })
 }
 
 /* ----------------------------------- Tags ---------------------------------- */
@@ -313,12 +317,12 @@ export async function deleteBlogCategory(id: string): Promise<void> {
 export async function listAdminBlogTags(
   signal?: AbortSignal,
 ): Promise<BlogTag[]> {
-  const { data } = await http.get<BlogTag[]>("/admin/blog/tags", {
+  const {data} = await http.get<BlogTag[]>('/admin/blog/tags', {
     authRequired: true,
     schema: blogTagListSchema,
     signal,
-  });
-  return data;
+  })
+  return data
 }
 
 /**
@@ -329,12 +333,12 @@ export async function listAdminBlogTags(
  * does not care whether it is new (§2.2).
  */
 export async function createBlogTag(name: string): Promise<BlogTag> {
-  const { data } = await http.post<BlogTag>(
-    "/admin/blog/tags",
-    { name },
-    { authRequired: true, schema: blogTagSchema },
-  );
-  return data;
+  const {data} = await http.post<BlogTag>(
+    '/admin/blog/tags',
+    {name},
+    {authRequired: true, schema: blogTagSchema},
+  )
+  return data
 }
 
 /* --------------------------------- Public ---------------------------------- */
@@ -347,12 +351,12 @@ export async function listPublishedBlogPosts(
   query: BlogPostQuery = {},
   signal?: AbortSignal,
 ): Promise<BlogPostList> {
-  const { data } = await http.get<BlogPostList>("/blog/posts", {
+  const {data} = await http.get<BlogPostList>('/blog/posts', {
     params: query,
     schema: blogPostListSchema,
     signal,
-  });
-  return data;
+  })
+  return data
 }
 
 /**
@@ -363,14 +367,14 @@ export async function getPublishedBlogPost(
   slug: string,
   signal?: AbortSignal,
 ): Promise<BlogPost> {
-  const { data } = await http.get<BlogPost>(
+  const {data} = await http.get<BlogPost>(
     `/blog/posts/${encodeURIComponent(slug)}`,
     {
       schema: blogPostSchema,
       signal,
     },
-  );
-  return data;
+  )
+  return data
 }
 
 /**
@@ -380,9 +384,9 @@ export async function getPublishedBlogPost(
 export async function listBlogCategories(
   signal?: AbortSignal,
 ): Promise<BlogCategory[]> {
-  const { data } = await http.get<BlogCategory[]>("/blog/categories", {
+  const {data} = await http.get<BlogCategory[]>('/blog/categories', {
     schema: blogCategoryListSchema,
     signal,
-  });
-  return data;
+  })
+  return data
 }

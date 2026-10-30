@@ -276,7 +276,9 @@
  * they have no size, so they exist but cannot be seen or grabbed. They show
  * only while the image is selected.
  */
-.post-prose [data-resize-container].ProseMirror-selectednode [data-resize-wrapper] {
+.post-prose
+  [data-resize-container].ProseMirror-selectednode
+  [data-resize-wrapper] {
   outline: 2px solid var(--color-primary);
 }
 
@@ -290,26 +292,28 @@
   background: var(--color-surface);
 }
 
-.post-prose [data-resize-container].ProseMirror-selectednode [data-resize-handle] {
+.post-prose
+  [data-resize-container].ProseMirror-selectednode
+  [data-resize-handle] {
   display: block;
 }
 
-.post-prose [data-resize-handle="top-left"] {
+.post-prose [data-resize-handle='top-left'] {
   transform: translate(-50%, -50%);
   cursor: nwse-resize;
 }
 
-.post-prose [data-resize-handle="bottom-right"] {
+.post-prose [data-resize-handle='bottom-right'] {
   transform: translate(50%, 50%);
   cursor: nwse-resize;
 }
 
-.post-prose [data-resize-handle="top-right"] {
+.post-prose [data-resize-handle='top-right'] {
   transform: translate(50%, -50%);
   cursor: nesw-resize;
 }
 
-.post-prose [data-resize-handle="bottom-left"] {
+.post-prose [data-resize-handle='bottom-left'] {
   transform: translate(-50%, 50%);
   cursor: nesw-resize;
 }
@@ -332,11 +336,11 @@
  * inline image, so `text-align` is enough; in the editor the resize view's
  * container is a flex row, so it is `justify-content` there.
  */
-.post-prose [data-image-align="center"] {
+.post-prose [data-image-align='center'] {
   text-align: center;
 }
 
-.post-prose [data-image-align="right"] {
+.post-prose [data-image-align='right'] {
   text-align: right;
 }
 
@@ -344,19 +348,19 @@
  * Tailwind's preflight makes every `img` a block, and `text-align` does not move a
  * block — so the image itself takes the auto margin that does.
  */
-.post-prose [data-image-align="center"] > img {
+.post-prose [data-image-align='center'] > img {
   margin-inline: auto;
 }
 
-.post-prose [data-image-align="right"] > img {
+.post-prose [data-image-align='right'] > img {
   margin-inline-start: auto;
 }
 
-.post-prose [data-resize-container]:has(img[data-image-align="center"]) {
+.post-prose [data-resize-container]:has(img[data-image-align='center']) {
   justify-content: center;
 }
 
-.post-prose [data-resize-container]:has(img[data-image-align="right"]) {
+.post-prose [data-resize-container]:has(img[data-image-align='right']) {
   justify-content: flex-end;
 }
 
@@ -364,8 +368,10 @@
  * An image inside a text selection gets the same tint as the text around it —
  * the system selection colour, so it matches whatever the browser paints.
  */
-.post-prose [data-resize-container].image-in-selection [data-resize-wrapper]::after {
-  content: "";
+.post-prose
+  [data-resize-container].image-in-selection
+  [data-resize-wrapper]::after {
+  content: '';
   position: absolute;
   inset: 0;
   border-radius: 0.5rem;

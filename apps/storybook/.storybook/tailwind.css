@@ -1,10 +1,10 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /*
  * The shared color tokens. Imported by relative path — the CSS `@import` is
  * resolved by Tailwind against the file system, not against package exports.
  */
-@import "../../../packages/config/theme.css";
+@import '../../../packages/config/theme.css';
 
 /* `@noalhub/ui` lives outside this app's root, so Tailwind has to be told to
  * scan it or every class used only inside the package is tree-shaken away. */

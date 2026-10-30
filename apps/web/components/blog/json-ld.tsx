@@ -9,13 +9,13 @@
  * leaving the HTML parser with no tag to see. This is Next's own documented
  * recommendation.
  */
-export function JsonLd({ data }: { data: Record<string, unknown> }) {
+export function JsonLd({data}: {data: Record<string, unknown>}) {
   return (
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(data).replace(/</g, "\\u003c"),
+        __html: JSON.stringify(data).replace(/</g, '\\u003c'),
       }}
     />
-  );
+  )
 }

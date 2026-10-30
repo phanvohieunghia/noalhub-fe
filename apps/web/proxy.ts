@@ -1,5 +1,5 @@
-import { routing } from "@noalhub/i18n/routing";
-import createMiddleware from "next-intl/middleware";
+import {routing} from '@noalhub/i18n/routing'
+import createMiddleware from 'next-intl/middleware'
 
 /**
  * As of Next 16, `middleware.ts` is renamed `proxy.ts` — the same mechanism,
@@ -10,7 +10,7 @@ import createMiddleware from "next-intl/middleware";
  * one, and set the `NOALHUB_LOCALE` cookie following §4.2's priority order
  * (URL → cookie → `Accept-Language` → `vi`).
  */
-export const proxy = createMiddleware(routing);
+export const proxy = createMiddleware(routing)
 
 export const config = {
   /*
@@ -22,5 +22,5 @@ export const config = {
    *   `sitemap.xml`, and `blogs/rss.xml` too — there is only one Vietnamese
    *   feed, §8).
    */
-  matcher: "/((?!api|_next|_vercel|auth/callback|.*\\..*).*)",
-};
+  matcher: '/((?!api|_next|_vercel|auth/callback|.*\\..*).*)',
+}

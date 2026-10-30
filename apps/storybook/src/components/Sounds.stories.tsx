@@ -1,14 +1,14 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { useEffect } from "react";
+import type {Meta, StoryObj} from '@storybook/nextjs-vite'
+import {useEffect} from 'react'
 import {
   playCorrect,
   playSelect,
   playWrong,
   unlockSounds,
-} from "@noalhub/core/sounds";
-import { Button } from "@noalhub/ui/button";
-import { Icon, LUCIDE } from "@noalhub/ui/icons";
-import { Typography } from "@noalhub/ui/typography";
+} from '@noalhub/core/sounds'
+import {Button} from '@noalhub/ui/button'
+import {Icon, LUCIDE} from '@noalhub/ui/icons'
+import {Typography} from '@noalhub/ui/typography'
 
 /**
  * Every quiz sound cue, synthesised with Web Audio (no asset files). Browsers only
@@ -16,34 +16,34 @@ import { Typography } from "@noalhub/ui/typography";
  */
 const CUES = [
   {
-    name: "Pick",
-    when: "An option is chosen (single choice, or ticked in a multiple-choice question).",
+    name: 'Pick',
+    when: 'An option is chosen (single choice, or ticked in a multiple-choice question).',
     play: () => playSelect(true),
   },
   {
-    name: "Un-pick",
-    when: "A multiple-choice option is un-ticked: the same pop, lower and softer.",
+    name: 'Un-pick',
+    when: 'A multiple-choice option is un-ticked: the same pop, lower and softer.',
     play: () => playSelect(false),
   },
   {
-    name: "Correct",
-    when: "A right answer: a glockenspiel ding-ding (A6 then D7).",
+    name: 'Correct',
+    when: 'A right answer: a glockenspiel ding-ding (A6 then D7).',
     play: playCorrect,
   },
   {
-    name: "Wrong",
+    name: 'Wrong',
     when: 'A wrong answer: a harsh double "eh-eh" square-wave buzz on C4.',
     play: playWrong,
   },
-] as const;
+] as const
 
 const meta: Meta = {
-  title: "UI/Feedback/Sounds",
-  parameters: { layout: "padded" },
-};
+  title: 'UI/Feedback/Sounds',
+  parameters: {layout: 'padded'},
+}
 
-export default meta;
-type Story = StoryObj;
+export default meta
+type Story = StoryObj
 
 export const QuizCues: Story = {
   render: () => (
@@ -51,14 +51,12 @@ export const QuizCues: Story = {
       {CUES.map((cue) => (
         <div
           key={cue.name}
-          className="flex items-center gap-4 rounded-lg border border-border bg-surface p-3"
-        >
+          className="flex items-center gap-4 rounded-lg border border-border bg-surface p-3">
           <Button
             size="icon"
             shape="circle"
             aria-label={`Play ${cue.name}`}
-            onClick={() => cue.play()}
-          >
+            onClick={() => cue.play()}>
             <Icon icon={LUCIDE.play} />
           </Button>
           <div className="min-w-0">
@@ -71,28 +69,27 @@ export const QuizCues: Story = {
       ))}
     </div>
   ),
-};
+}
 
 /** A whole question: pick, then a right answer, then pick again, then a wrong one. */
 export const Sequence: Story = {
   render: () => (
     <Button
       onClick={() => {
-        playSelect(true);
-        setTimeout(playCorrect, 700);
-        setTimeout(() => playSelect(true), 2400);
-        setTimeout(playWrong, 3100);
-      }}
-    >
+        playSelect(true)
+        setTimeout(playCorrect, 700)
+        setTimeout(() => playSelect(true), 2400)
+        setTimeout(playWrong, 3100)
+      }}>
       <Icon icon={LUCIDE.play} />
       Play a full round
     </Button>
   ),
-};
+}
 
 function DelayedVerdict() {
   // What the quiz screen does when it opens.
-  useEffect(() => unlockSounds(), []);
+  useEffect(() => unlockSounds(), [])
   return (
     <div className="flex max-w-xl flex-col gap-3">
       <Button onClick={() => setTimeout(playCorrect, 600)}>
@@ -104,7 +101,7 @@ function DelayedVerdict() {
         Answer wrong
       </Button>
     </div>
-  );
+  )
 }
 
 /**
@@ -116,4 +113,4 @@ function DelayedVerdict() {
  */
 export const VerdictAfterAnswer: Story = {
   render: () => <DelayedVerdict />,
-};
+}

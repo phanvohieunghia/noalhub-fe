@@ -1,17 +1,22 @@
-"use client";
+'use client'
 
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 
-import * as blogApi from "./api";
-import type { UpdateBlogPostInput } from "./api";
-import type { BlogCategoryFormValues } from "./schemas";
+import * as blogApi from './api'
+import type {UpdateBlogPostInput} from './api'
+import type {BlogCategoryFormValues} from './schemas'
 import type {
   AdminBlogPostQuery,
   AdminBlogSlugQuery,
   BlogCategory,
   BlogPost,
   BlogPostQuery,
-} from "./types";
+} from './types'
 
 /**
  * The **client** path — used only by `apps/admin`. The public pages of
@@ -22,21 +27,21 @@ import type {
  * The query key factory is the ONLY source of truth for this feature's keys.
  */
 export const blogKeys = {
-  all: ["blog"] as const,
-  posts: () => [...blogKeys.all, "posts"] as const,
+  all: ['blog'] as const,
+  posts: () => [...blogKeys.all, 'posts'] as const,
   postList: (query: AdminBlogPostQuery) =>
-    [...blogKeys.posts(), "list", query] as const,
-  postDetail: (id: string) => [...blogKeys.posts(), "detail", id] as const,
+    [...blogKeys.posts(), 'list', query] as const,
+  postDetail: (id: string) => [...blogKeys.posts(), 'detail', id] as const,
   publishedPosts: (query: BlogPostQuery = {}) =>
-    [...blogKeys.posts(), "published", query] as const,
+    [...blogKeys.posts(), 'published', query] as const,
   publishedPost: (slug: string) =>
-    [...blogKeys.posts(), "detail-slug", slug] as const,
-  categories: () => [...blogKeys.all, "categories"] as const,
-  tags: () => [...blogKeys.all, "tags"] as const,
-  slugs: () => [...blogKeys.all, "slugs"] as const,
+    [...blogKeys.posts(), 'detail-slug', slug] as const,
+  categories: () => [...blogKeys.all, 'categories'] as const,
+  tags: () => [...blogKeys.all, 'tags'] as const,
+  slugs: () => [...blogKeys.all, 'slugs'] as const,
   slugList: (query: AdminBlogSlugQuery) =>
-    [...blogKeys.slugs(), "list", query] as const,
-};
+    [...blogKeys.slugs(), 'list', query] as const,
+}
 
 /**
  * The post table. `keepPreviousData` keeps it from flashing back to a skeleton
@@ -45,15 +50,15 @@ export const blogKeys = {
 export function useAdminBlogPosts(query: AdminBlogPostQuery = {}) {
   return useQuery({
     queryKey: blogKeys.postList(query),
-    queryFn: ({ signal }) => blogApi.listAdminBlogPosts(query, signal),
+    queryFn: ({signal}) => blogApi.listAdminBlogPosts(query, signal),
     placeholderData: keepPreviousData,
-  });
+  })
 }
 
 export function useAdminBlogPost(id: string | undefined) {
   return useQuery({
-    queryKey: blogKeys.postDetail(id ?? ""),
-    queryFn: ({ signal }) => blogApi.getAdminBlogPost(id!, signal),
+    queryKey: blogKeys.postDetail(id ?? ''),
+    queryFn: ({signal}) => blogApi.getAdminBlogPost(id!, signal),
     enabled: Boolean(id),
     // The editor edits the live record and does not autosave (§7.3): a
     // background refetch would overwrite the half-typed draft with the server's
@@ -61,30 +66,31 @@ export function useAdminBlogPost(id: string | undefined) {
     // refetching.
     staleTime: Infinity,
     refetchOnMount: false,
-  });
+  })
 }
 
 export function useCreateBlogPost() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input?: { title: string }) => blogApi.createBlogPost(input),
+    mutationFn: (input?: {title: string}) => blogApi.createBlogPost(input),
     onSuccess: (post) => {
       // Write the detail straight into the cache: `/posts/new` replaces to
       // `/posts/[id]` right after, so the new post need not be fetched again.
-      queryClient.setQueryData(blogKeys.postDetail(post.id), post);
-      queryClient.invalidateQueries({ queryKey: blogKeys.posts() });
+      queryClient.setQueryData(blogKeys.postDetail(post.id), post)
+      queryClient.invalidateQueries({queryKey: blogKeys.posts()})
     },
-  });
+  })
 }
 
 export function useUpdateBlogPost(id: string) {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input: UpdateBlogPostInput) => blogApi.updateBlogPost(id, input),
+    mutationFn: (input: UpdateBlogPostInput) =>
+      blogApi.updateBlogPost(id, input),
     onSuccess: (post) => writePostToCache(queryClient, post),
-  });
+  })
 }
 
 /**
@@ -92,75 +98,75 @@ export function useUpdateBlogPost(id: string) {
  * of those lists must be invalidated — not just the post list.
  */
 export function usePublishBlogPost(id: string) {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: () => blogApi.publishBlogPost(id),
     onSuccess: (post) => {
-      writePostToCache(queryClient, post);
-      queryClient.invalidateQueries({ queryKey: blogKeys.categories() });
-      queryClient.invalidateQueries({ queryKey: blogKeys.tags() });
+      writePostToCache(queryClient, post)
+      queryClient.invalidateQueries({queryKey: blogKeys.categories()})
+      queryClient.invalidateQueries({queryKey: blogKeys.tags()})
     },
-  });
+  })
 }
 
 export function useUnpublishBlogPost(id: string) {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: () => blogApi.unpublishBlogPost(id),
     onSuccess: (post) => {
-      writePostToCache(queryClient, post);
-      queryClient.invalidateQueries({ queryKey: blogKeys.categories() });
-      queryClient.invalidateQueries({ queryKey: blogKeys.tags() });
+      writePostToCache(queryClient, post)
+      queryClient.invalidateQueries({queryKey: blogKeys.categories()})
+      queryClient.invalidateQueries({queryKey: blogKeys.tags()})
     },
-  });
+  })
 }
 
 /** A **soft** delete (`status = archived`, §2.2) — the record remains, so only invalidate. */
 export function useArchiveBlogPost() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (id: string) => blogApi.archiveBlogPost(id),
     onSuccess: (_data, id) => {
-      queryClient.invalidateQueries({ queryKey: blogKeys.postDetail(id) });
-      queryClient.invalidateQueries({ queryKey: blogKeys.posts() });
-      queryClient.invalidateQueries({ queryKey: blogKeys.categories() });
+      queryClient.invalidateQueries({queryKey: blogKeys.postDetail(id)})
+      queryClient.invalidateQueries({queryKey: blogKeys.posts()})
+      queryClient.invalidateQueries({queryKey: blogKeys.categories()})
     },
-  });
+  })
 }
 
 export function useAdminBlogCategories() {
   return useQuery({
     queryKey: blogKeys.categories(),
-    queryFn: ({ signal }) => blogApi.listAdminBlogCategories(signal),
-  });
+    queryFn: ({signal}) => blogApi.listAdminBlogCategories(signal),
+  })
 }
 
 export function useCreateBlogCategory() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (input: BlogCategoryFormValues) =>
       blogApi.createBlogCategory(input),
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: blogKeys.categories() }),
-  });
+      queryClient.invalidateQueries({queryKey: blogKeys.categories()}),
+  })
 }
 
 export function useUpdateBlogCategory() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: BlogCategoryFormValues }) =>
+    mutationFn: ({id, input}: {id: string; input: BlogCategoryFormValues}) =>
       blogApi.updateBlogCategory(id, input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: blogKeys.categories() });
+      queryClient.invalidateQueries({queryKey: blogKeys.categories()})
       // Renaming a category changes the `category.name` expanded into every cached post.
-      queryClient.invalidateQueries({ queryKey: blogKeys.posts() });
+      queryClient.invalidateQueries({queryKey: blogKeys.posts()})
     },
-  });
+  })
 }
 
 /**
@@ -171,72 +177,74 @@ export function useUpdateBlogCategory() {
  * snapshot is restored.
  */
 export function useReorderBlogCategories() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (ids: string[]) => blogApi.reorderBlogCategories(ids),
     onMutate: async (ids) => {
-      await queryClient.cancelQueries({ queryKey: blogKeys.categories() });
+      await queryClient.cancelQueries({queryKey: blogKeys.categories()})
       const previous = queryClient.getQueryData<BlogCategory[]>(
         blogKeys.categories(),
-      );
+      )
 
       if (previous) {
-        const byId = new Map(previous.map((category) => [category.id, category]));
+        const byId = new Map(
+          previous.map((category) => [category.id, category]),
+        )
         const next = ids
           .map((id, index) => {
-            const category = byId.get(id);
-            return category ? { ...category, order: index } : null;
+            const category = byId.get(id)
+            return category ? {...category, order: index} : null
           })
-          .filter((category): category is BlogCategory => category !== null);
-        queryClient.setQueryData(blogKeys.categories(), next);
+          .filter((category): category is BlogCategory => category !== null)
+        queryClient.setQueryData(blogKeys.categories(), next)
       }
 
-      return { previous };
+      return {previous}
     },
     onError: (_error, _ids, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(blogKeys.categories(), context.previous);
+        queryClient.setQueryData(blogKeys.categories(), context.previous)
       }
     },
     onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: blogKeys.categories() }),
-  });
+      queryClient.invalidateQueries({queryKey: blogKeys.categories()}),
+  })
 }
 
 export function useDeleteBlogCategory() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (id: string) => blogApi.deleteBlogCategory(id),
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: blogKeys.categories() }),
-  });
+      queryClient.invalidateQueries({queryKey: blogKeys.categories()}),
+  })
 }
 
 export function useAdminBlogTags() {
   return useQuery({
     queryKey: blogKeys.tags(),
-    queryFn: ({ signal }) => blogApi.listAdminBlogTags(signal),
-  });
+    queryFn: ({signal}) => blogApi.listAdminBlogTags(signal),
+  })
 }
 
 /** Create a tag from inside the editor; on a slug collision the backend returns the existing one (§2.2). */
 export function useCreateBlogTag() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (name: string) => blogApi.createBlogTag(name),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: blogKeys.tags() }),
-  });
+    onSuccess: () => queryClient.invalidateQueries({queryKey: blogKeys.tags()}),
+  })
 }
 
 function writePostToCache(
   queryClient: ReturnType<typeof useQueryClient>,
   post: BlogPost,
 ) {
-  queryClient.setQueryData(blogKeys.postDetail(post.id), post);
-  queryClient.invalidateQueries({ queryKey: blogKeys.posts() });
+  queryClient.setQueryData(blogKeys.postDetail(post.id), post)
+  queryClient.invalidateQueries({queryKey: blogKeys.posts()})
 }
 
 /**
@@ -246,9 +254,9 @@ function writePostToCache(
 export function useAdminBlogSlugs(query: AdminBlogSlugQuery = {}) {
   return useQuery({
     queryKey: blogKeys.slugList(query),
-    queryFn: ({ signal }) => blogApi.listAdminBlogSlugs(query, signal),
+    queryFn: ({signal}) => blogApi.listAdminBlogSlugs(query, signal),
     placeholderData: keepPreviousData,
-  });
+  })
 }
 
 /**
@@ -257,24 +265,24 @@ export function useAdminBlogSlugs(query: AdminBlogSlugQuery = {}) {
  * single cached page would leave the table showing a row that is no longer there.
  */
 export function useUpdateAdminBlogSlug() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, slug }: { id: string; slug: string }) =>
+    mutationFn: ({id, slug}: {id: string; slug: string}) =>
       blogApi.updateAdminBlogSlug(id, slug),
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: blogKeys.slugs() }),
-  });
+      queryClient.invalidateQueries({queryKey: blogKeys.slugs()}),
+  })
 }
 
 export function useDeleteAdminBlogSlug() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (id: string) => blogApi.deleteAdminBlogSlug(id),
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: blogKeys.slugs() }),
-  });
+      queryClient.invalidateQueries({queryKey: blogKeys.slugs()}),
+  })
 }
 
 /* --------------------------------- Public ---------------------------------- */
@@ -282,22 +290,22 @@ export function useDeleteAdminBlogSlug() {
 export function usePublishedPosts(query: BlogPostQuery = {}) {
   return useQuery({
     queryKey: blogKeys.publishedPosts(query),
-    queryFn: ({ signal }) => blogApi.listPublishedBlogPosts(query, signal),
+    queryFn: ({signal}) => blogApi.listPublishedBlogPosts(query, signal),
     placeholderData: keepPreviousData,
-  });
+  })
 }
 
 export function usePublishedPost(slug: string | undefined) {
   return useQuery({
-    queryKey: blogKeys.publishedPost(slug ?? ""),
-    queryFn: ({ signal }) => blogApi.getPublishedBlogPost(slug!, signal),
+    queryKey: blogKeys.publishedPost(slug ?? ''),
+    queryFn: ({signal}) => blogApi.getPublishedBlogPost(slug!, signal),
     enabled: Boolean(slug),
-  });
+  })
 }
 
 export function useBlogCategories() {
   return useQuery({
     queryKey: blogKeys.categories(),
-    queryFn: ({ signal }) => blogApi.listBlogCategories(signal),
-  });
+    queryFn: ({signal}) => blogApi.listBlogCategories(signal),
+  })
 }

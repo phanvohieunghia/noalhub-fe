@@ -1,8 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import React, { useState } from "react";
-import { LanguageSwitcher } from "@noalhub/ui/language-switcher";
-import { QueryProvider } from "@noalhub/ui/query-provider";
-import { Typography } from "@noalhub/ui/typography";
+import type {Meta, StoryObj} from '@storybook/nextjs-vite'
+import React, {useState} from 'react'
+import {LanguageSwitcher} from '@noalhub/ui/language-switcher'
+import {QueryProvider} from '@noalhub/ui/query-provider'
+import {Typography} from '@noalhub/ui/typography'
 
 /**
  * The active language comes from `NextIntlClientProvider` — use the globe in
@@ -14,9 +14,9 @@ import { Typography } from "@noalhub/ui/typography";
  * request simply fails and is swallowed, which is the signed-out path.
  */
 const meta: Meta<typeof LanguageSwitcher> = {
-  title: "UI/Navigation/LanguageSwitcher",
+  title: 'UI/Navigation/LanguageSwitcher',
   component: LanguageSwitcher,
-  parameters: { layout: "centered" },
+  parameters: {layout: 'centered'},
   decorators: [
     (Story) => (
       <QueryProvider>
@@ -24,29 +24,29 @@ const meta: Meta<typeof LanguageSwitcher> = {
       </QueryProvider>
     ),
   ],
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof LanguageSwitcher>;
+export default meta
+type Story = StoryObj<typeof LanguageSwitcher>
 
 export const Default: Story = {
   args: {
     onSwitch: () => {},
   },
-};
+}
 
 /** Shows what the call site receives when a language is picked. */
 export const WithCallback: Story = {
   render: () => {
-    const [picked, setPicked] = useState<string | null>(null);
+    const [picked, setPicked] = useState<string | null>(null)
 
     return (
       <div className="flex flex-col items-center gap-3">
         <LanguageSwitcher onSwitch={(locale) => setPicked(locale)} />
         <Typography variant="body-3" className="text-muted-foreground">
-          onSwitch: {picked ?? "—"}
+          onSwitch: {picked ?? '—'}
         </Typography>
       </div>
-    );
+    )
   },
-};
+}

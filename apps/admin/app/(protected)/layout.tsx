@@ -1,8 +1,8 @@
-import { AuthGuard } from "@noalhub/ui/auth/auth-guard";
-import { RoleGuard } from "@noalhub/ui/auth/role-guard";
+import {AuthGuard} from '@noalhub/ui/auth/auth-guard'
+import {RoleGuard} from '@noalhub/ui/auth/role-guard'
 
-import { AdminHeader } from "../../components/layout/admin-header";
-import { AdminSidebar } from "../../components/layout/admin-sidebar";
+import {AdminHeader} from '../../components/layout/admin-header'
+import {AdminSidebar} from '../../components/layout/admin-sidebar'
 
 /**
  * Two layers stacked, not substituted: `AuthGuard` answers "is there a
@@ -14,7 +14,7 @@ import { AdminSidebar } from "../../components/layout/admin-sidebar";
 export default function ProtectedLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <AuthGuard>
@@ -28,5 +28,5 @@ export default function ProtectedLayout({
         </div>
       </RoleGuard>
     </AuthGuard>
-  );
+  )
 }

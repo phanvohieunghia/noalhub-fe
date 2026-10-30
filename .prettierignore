@@ -1,0 +1,12 @@
+node_modules
+.next
+.turbo
+.expo
+dist
+build
+out
+coverage
+storybook-static
+pnpm-lock.yaml
+docs
+packages/i18n/messages

@@ -1,31 +1,31 @@
-"use client";
+'use client'
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "@noalhub/i18n/navigation";
-import { useMessage } from "@noalhub/i18n/use-message";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import {zodResolver} from '@hookform/resolvers/zod'
+import {Link} from '@noalhub/i18n/navigation'
+import {useMessage} from '@noalhub/i18n/use-message'
+import {useTranslations} from 'next-intl'
+import {useState} from 'react'
+import {useForm} from 'react-hook-form'
 
-import { Avatar } from "@noalhub/ui/avatar";
-import { Button } from "@noalhub/ui/button";
-import { Dialog } from "@noalhub/ui/dialog";
-import { AlertError, AlertSuccess } from "@noalhub/ui/alert";
-import { Input } from "@noalhub/ui/input";
-import { Spinner } from "@noalhub/ui/spinner";
-import { useAuthStore } from "@noalhub/api/auth";
-import { ApiError, ERROR_CODES } from "@noalhub/api/errors";
-import type { Message } from "@noalhub/api/message";
+import {Avatar} from '@noalhub/ui/avatar'
+import {Button} from '@noalhub/ui/button'
+import {Dialog} from '@noalhub/ui/dialog'
+import {AlertError, AlertSuccess} from '@noalhub/ui/alert'
+import {Input} from '@noalhub/ui/input'
+import {Spinner} from '@noalhub/ui/spinner'
+import {useAuthStore} from '@noalhub/api/auth'
+import {ApiError, ERROR_CODES} from '@noalhub/api/errors'
+import type {Message} from '@noalhub/api/message'
 import {
   useFindUserByUsername,
   useFriendRequests,
   useFriends,
   useSendFriendRequest,
-} from "@noalhub/api/friends";
-import { findFriendSchema, type FindFriendInput } from "@noalhub/api/friends";
-import type { FriendState } from "@noalhub/api/friends";
-import type { PublicProfile } from "@noalhub/api/users";
-import { Typography } from "@noalhub/ui/typography";
+} from '@noalhub/api/friends'
+import {findFriendSchema, type FindFriendInput} from '@noalhub/api/friends'
+import type {FriendState} from '@noalhub/api/friends'
+import type {PublicProfile} from '@noalhub/api/users'
+import {Typography} from '@noalhub/ui/typography'
 
 /**
  * Find a friend by username.
@@ -34,69 +34,81 @@ import { Typography } from "@noalhub/ui/typography";
  * anyone, since the backend has no fuzzy search. So it searches on submit only —
  * firing on every keystroke is both wasteful and always a 404.
  */
-export function FindFriendDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const t = useTranslations("web.friends");
-  const m = useMessage();
-  const [submitted, setSubmitted] = useState<string | undefined>();
-  const { data, isFetching, error } = useFindUserByUsername(submitted);
-  const state = useFriendState(data?.username);
+export function FindFriendDialog({
+  open,
+  onClose,
+}: {
+  open: boolean
+  onClose: () => void
+}) {
+  const t = useTranslations('web.friends')
+  const m = useMessage()
+  const [submitted, setSubmitted] = useState<string | undefined>()
+  const {data, isFetching, error} = useFindUserByUsername(submitted)
+  const state = useFriendState(data?.username)
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
-  } = useForm<FindFriendInput>({ resolver: zodResolver(findFriendSchema) });
+    formState: {errors},
+  } = useForm<FindFriendInput>({resolver: zodResolver(findFriendSchema)})
 
-  const onSubmit = handleSubmit((values) => setSubmitted(values.username));
+  const onSubmit = handleSubmit((values) => setSubmitted(values.username))
 
   function close() {
     // Reopening starts a fresh search — do not leave the previous person's result behind.
-    setSubmitted(undefined);
-    reset();
-    onClose();
+    setSubmitted(undefined)
+    reset()
+    onClose()
   }
 
-  const notFound = error instanceof ApiError && error.code === ERROR_CODES.userNotFound;
+  const notFound =
+    error instanceof ApiError && error.code === ERROR_CODES.userNotFound
 
   return (
-    <Dialog open={open} onClose={close} title={t("search.title")}>
+    <Dialog open={open} onClose={close} title={t('search.title')}>
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <div className="flex items-end gap-2">
           <span className="flex-1">
             <Input
-              label={t("search.usernameLabel")}
-              placeholder={t("search.usernamePlaceholder")}
+              label={t('search.usernameLabel')}
+              placeholder={t('search.usernamePlaceholder')}
               autoComplete="off"
               spellCheck={false}
               error={m(errors.username?.message)}
-              {...register("username")}
+              {...register('username')}
             />
           </span>
           <Button type="submit" disabled={isFetching} className="mb-[1px]">
-            {isFetching ? t("search.submitting") : t("search.submit")}
+            {isFetching ? t('search.submitting') : t('search.submit')}
           </Button>
         </div>
 
         <Typography variant="body-4" className="opacity-60">
-          {t("search.hint")}
+          {t('search.hint')}
         </Typography>
       </form>
 
       {isFetching ? (
-        <Typography variant="body-3" role="status" className="flex items-center gap-2 opacity-70">
+        <Typography
+          variant="body-3"
+          role="status"
+          className="flex items-center gap-2 opacity-70">
           <Spinner />
-          {t("search.submitting")}
+          {t('search.submitting')}
         </Typography>
       ) : notFound ? (
-        <AlertError message={t("search.notFound", { username: submitted ?? "" })} />
+        <AlertError
+          message={t('search.notFound', {username: submitted ?? ''})}
+        />
       ) : error ? (
-        <AlertError message={t("search.failed")} />
+        <AlertError message={t('search.failed')} />
       ) : data ? (
         <SearchResult user={data} state={state} />
       ) : null}
     </Dialog>
-  );
+  )
 }
 
 /**
@@ -106,28 +118,34 @@ export function FindFriendDialog({ open, onClose }: { open: boolean; onClose: ()
  * three lists already in the cache. `null` means it is you, not "not connected".
  */
 function useFriendState(username: string | undefined): FriendState | null {
-  const me = useAuthStore((s) => s.user?.username ?? null);
-  const friends = useFriends();
-  const incoming = useFriendRequests("incoming");
-  const outgoing = useFriendRequests("outgoing");
+  const me = useAuthStore((s) => s.user?.username ?? null)
+  const friends = useFriends()
+  const incoming = useFriendRequests('incoming')
+  const outgoing = useFriendRequests('outgoing')
 
-  if (!username) return "none";
-  if (username === me) return null;
+  if (!username) return 'none'
+  if (username === me) return null
 
-  const has = (list: { items: { user: { username: string } }[] } | undefined) =>
-    Boolean(list?.items.some((item) => item.user.username === username));
+  const has = (list: {items: {user: {username: string}}[]} | undefined) =>
+    Boolean(list?.items.some((item) => item.user.username === username))
 
-  if (has(friends.data)) return "friends";
-  if (has(incoming.data)) return "pending_incoming";
-  if (has(outgoing.data)) return "pending_outgoing";
-  return "none";
+  if (has(friends.data)) return 'friends'
+  if (has(incoming.data)) return 'pending_incoming'
+  if (has(outgoing.data)) return 'pending_outgoing'
+  return 'none'
 }
 
-function SearchResult({ user, state }: { user: PublicProfile; state: FriendState | null }) {
-  const t = useTranslations("web.friends");
-  const m = useMessage();
-  const sendRequest = useSendFriendRequest();
-  const name = user.displayName ?? user.username;
+function SearchResult({
+  user,
+  state,
+}: {
+  user: PublicProfile
+  state: FriendState | null
+}) {
+  const t = useTranslations('web.friends')
+  const m = useMessage()
+  const sendRequest = useSendFriendRequest()
+  const name = user.displayName ?? user.username
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-black/10 p-3 dark:border-white/15">
@@ -139,8 +157,7 @@ function SearchResult({ user, state }: { user: PublicProfile; state: FriendState
           </Typography>
           <Link
             href={`/profile/${user.username}`}
-            className="truncate font-mono text-body-4 opacity-60 underline-offset-4 hover:underline"
-          >
+            className="truncate font-mono text-body-4 opacity-60 underline-offset-4 hover:underline">
             @{user.username}
           </Link>
         </div>
@@ -153,7 +170,9 @@ function SearchResult({ user, state }: { user: PublicProfile; state: FriendState
         // read the response's `state` rather than assuming "pending".
         <AlertSuccess
           message={
-            sendRequest.data.state === "friends" ? t("request.nowFriends") : t("request.sent")
+            sendRequest.data.state === 'friends'
+              ? t('request.nowFriends')
+              : t('request.sent')
           }
         />
       ) : null}
@@ -164,23 +183,23 @@ function SearchResult({ user, state }: { user: PublicProfile; state: FriendState
         onSend={() => sendRequest.mutate(user.username)}
       />
     </div>
-  );
+  )
 }
 
 function sendErrorText(error: unknown): Message {
   if (error instanceof ApiError) {
     switch (error.code) {
       case ERROR_CODES.alreadyFriends:
-        return { key: "web.friends.request.errors.alreadyFriends" };
+        return {key: 'web.friends.request.errors.alreadyFriends'}
       case ERROR_CODES.friendRequestExists:
-        return { key: "web.friends.request.errors.exists" };
+        return {key: 'web.friends.request.errors.exists'}
       case ERROR_CODES.cannotFriendSelf:
-        return { key: "web.friends.request.errors.self" };
+        return {key: 'web.friends.request.errors.self'}
       case ERROR_CODES.rateLimited:
-        return { key: "web.friends.request.errors.rateLimited" };
+        return {key: 'web.friends.request.errors.rateLimited'}
     }
   }
-  return { key: "web.friends.request.errors.failed" };
+  return {key: 'web.friends.request.errors.failed'}
 }
 
 /** The relationship state decides what to show — it is not always "Add friend". */
@@ -189,44 +208,44 @@ function FriendshipAction({
   pending,
   onSend,
 }: {
-  state: FriendState | null;
-  pending: boolean;
-  onSend: () => void;
+  state: FriendState | null
+  pending: boolean
+  onSend: () => void
 }) {
-  const t = useTranslations("web.friends");
+  const t = useTranslations('web.friends')
 
   switch (state) {
     case null:
       return (
         <Typography variant="body-3" className="opacity-70">
-          {t("request.isYou")}
+          {t('request.isYou')}
         </Typography>
-      );
-    case "friends":
+      )
+    case 'friends':
       return (
         <Typography variant="body-3" className="opacity-70">
-          {t("request.alreadyFriends")}
+          {t('request.alreadyFriends')}
         </Typography>
-      );
-    case "pending_outgoing":
+      )
+    case 'pending_outgoing':
       return (
         <Typography variant="body-3" className="opacity-70">
-          {t("request.waitingReply")}
+          {t('request.waitingReply')}
         </Typography>
-      );
-    case "pending_incoming":
+      )
+    case 'pending_incoming':
       return (
         <Typography variant="body-3" className="opacity-70">
-          {t("request.theySentYou")}
+          {t('request.theySentYou')}
         </Typography>
-      );
+      )
     default:
       return (
         <div>
           <Button onClick={onSend} loading={pending}>
-            {pending ? t("request.sending") : t("request.send")}
+            {pending ? t('request.sending') : t('request.send')}
           </Button>
         </div>
-      );
+      )
   }
 }

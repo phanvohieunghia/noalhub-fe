@@ -1,21 +1,21 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import React, { useState } from "react";
-import { Pagination } from "@noalhub/ui/pagination";
+import type {Meta, StoryObj} from '@storybook/nextjs-vite'
+import React, {useState} from 'react'
+import {Pagination} from '@noalhub/ui/pagination'
 
 const meta: Meta<typeof Pagination> = {
-  title: "UI/Navigation/Pagination",
+  title: 'UI/Navigation/Pagination',
   component: Pagination,
   parameters: {
-    layout: "padded",
+    layout: 'padded',
   },
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof Pagination>;
+export default meta
+type Story = StoryObj<typeof Pagination>
 
 export const Interactive: Story = {
   render: function InteractiveStory() {
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(1)
 
     return (
       <div className="w-full max-w-xl">
@@ -26,31 +26,42 @@ export const Interactive: Story = {
           onPageChange={(newPage) => setPage(newPage)}
         />
       </div>
-    );
+    )
   },
-};
+}
 
 /** Many pages: the page-number window is elided with "…" at both ends. */
 export const ManyPages: Story = {
   render: function ManyPagesStory() {
-    const [page, setPage] = useState(8);
+    const [page, setPage] = useState(8)
 
     return (
       <div className="w-full max-w-xl">
-        <Pagination page={page} limit={10} total={1240} onPageChange={setPage} />
+        <Pagination
+          page={page}
+          limit={10}
+          total={1240}
+          onPageChange={setPage}
+        />
       </div>
-    );
+    )
   },
-};
+}
 
 /** Loading a new page: every button locks so clicks cannot pile up. */
 export const Loading: Story = {
   render: () => (
     <div className="w-full max-w-xl">
-      <Pagination page={3} limit={10} total={95} onPageChange={() => {}} isLoading />
+      <Pagination
+        page={3}
+        limit={10}
+        total={95}
+        onPageChange={() => {}}
+        isLoading
+      />
     </div>
   ),
-};
+}
 
 export const Empty: Story = {
   render: () => (
@@ -58,4 +69,4 @@ export const Empty: Story = {
       <Pagination page={1} limit={10} total={0} onPageChange={() => {}} />
     </div>
   ),
-};
+}

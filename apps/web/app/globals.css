@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /**
  * The palette plus the class-based `dark` variant: see
@@ -6,7 +6,7 @@
  * package name because `@noalhub/config` declares no `exports`, and Tailwind
  * resolves `@import` by file path.
  */
-@import "../../../packages/config/theme.css";
+@import '../../../packages/config/theme.css';
 
 /**
  * Tailwind v4 only auto-scans the directory tree containing this CSS file, and
@@ -41,7 +41,9 @@ body {
  */
 @media (prefers-reduced-motion: no-preference) {
   body {
-    transition: background-color 150ms ease, color 150ms ease;
+    transition:
+      background-color 150ms ease,
+      color 150ms ease;
   }
 }
 

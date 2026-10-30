@@ -1,13 +1,13 @@
-import { IntlProvider } from "@noalhub/i18n/provider";
-import { RoleGuard } from "@noalhub/ui/auth/role-guard";
-import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import {IntlProvider} from '@noalhub/i18n/provider'
+import {RoleGuard} from '@noalhub/ui/auth/role-guard'
+import type {Metadata} from 'next'
+import {getTranslations} from 'next-intl/server'
 
-import { AiCredentialsContent } from "@/components/qa/ai-credentials-content";
+import {AiCredentialsContent} from '@/components/qa/ai-credentials-content'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("admin.qa");
-  return { title: t("credentials.title") };
+  const t = await getTranslations('admin.qa')
+  return {title: t('credentials.title')}
 }
 
 /**
@@ -25,5 +25,5 @@ export default function AiCredentialsPage() {
         <AiCredentialsContent />
       </RoleGuard>
     </IntlProvider>
-  );
+  )
 }

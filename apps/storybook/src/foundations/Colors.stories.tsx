@@ -1,9 +1,9 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { useTranslations } from "next-intl";
-import React from "react";
+import type {Meta, StoryObj} from '@storybook/nextjs-vite'
+import {useTranslations} from 'next-intl'
+import React from 'react'
 
-import { useTokens } from "./use-token";
-import { Typography } from "@noalhub/ui/typography";
+import {useTokens} from './use-token'
+import {Typography} from '@noalhub/ui/typography'
 
 /**
  * The color system of `packages/config/theme.css`.
@@ -18,19 +18,19 @@ import { Typography } from "@noalhub/ui/typography";
  * `bg-brand-700` in a component (`docs/theme.md`).
  */
 const meta: Meta = {
-  title: "Foundations/Colors",
+  title: 'Foundations/Colors',
   parameters: {
-    layout: "fullscreen",
+    layout: 'fullscreen',
     // A page of swatches has no "component", so the props panel would only ever
     // be empty.
-    controls: { disable: true },
+    controls: {disable: true},
   },
-};
+}
 
-export default meta;
-type Story = StoryObj;
+export default meta
+type Story = StoryObj
 
-const { semantic, scales } = __THEME_TOKENS__;
+const {semantic, scales} = __THEME_TOKENS__
 
 /**
  * Semantic tokens are grouped the way a reader picks one: "what surface am I
@@ -40,80 +40,83 @@ const { semantic, scales } = __THEME_TOKENS__;
  * declares that no group claims falls into "Other", so a new token can never go
  * missing from this page just because nobody updated the list.
  */
-const SEMANTIC_GROUPS: { title: string; note: string; tokens: string[] }[] = [
+const SEMANTIC_GROUPS: {title: string; note: string; tokens: string[]}[] = [
   {
-    title: "Surfaces",
-    note: "In dark mode `surface` is LIGHTER than `background`, not white.",
-    tokens: ["--background", "--surface", "--muted", "--highlight", "--border"],
+    title: 'Surfaces',
+    note: 'In dark mode `surface` is LIGHTER than `background`, not white.',
+    tokens: ['--background', '--surface', '--muted', '--highlight', '--border'],
   },
   {
-    title: "Text",
-    note: "Each one is paired with the surface of the same name.",
+    title: 'Text',
+    note: 'Each one is paired with the surface of the same name.',
     tokens: [
-      "--foreground",
-      "--surface-foreground",
-      "--muted-foreground",
-      "--highlight-foreground",
-      "--accent",
+      '--foreground',
+      '--surface-foreground',
+      '--muted-foreground',
+      '--highlight-foreground',
+      '--accent',
     ],
   },
   {
-    title: "Interactive",
-    note: "`ring` is for focus rings only — never for text.",
-    tokens: ["--primary", "--primary-hover", "--primary-foreground", "--ring"],
+    title: 'Interactive',
+    note: '`ring` is for focus rings only — never for text.',
+    tokens: ['--primary', '--primary-hover', '--primary-foreground', '--ring'],
   },
   {
-    title: "Status",
-    note: "Deliberately outside the brand scale: a teal `success` would read as the brand color.",
-    tokens: ["--danger", "--success", "--warning"],
+    title: 'Status',
+    note: 'Deliberately outside the brand scale: a teal `success` would read as the brand color.',
+    tokens: ['--danger', '--success', '--warning'],
   },
-];
+]
 
 const GROUPED = (() => {
-  const claimed = new Set(SEMANTIC_GROUPS.flatMap((group) => group.tokens));
+  const claimed = new Set(SEMANTIC_GROUPS.flatMap((group) => group.tokens))
   // A group keeps only tokens that really exist, so a renamed token disappears
   // from its group instead of rendering an empty swatch.
   const groups = SEMANTIC_GROUPS.map((group) => ({
     ...group,
     tokens: group.tokens.filter((token) => semantic.includes(token)),
-  })).filter((group) => group.tokens.length > 0);
+  })).filter((group) => group.tokens.length > 0)
 
-  const rest = semantic.filter((token) => !claimed.has(token));
+  const rest = semantic.filter((token) => !claimed.has(token))
   return rest.length > 0
     ? [
         ...groups,
         {
-          title: "Other",
-          note: "Declared in `theme.css` but not sorted into a group above — give it a home in `Colors.stories.tsx`.",
+          title: 'Other',
+          note: 'Declared in `theme.css` but not sorted into a group above — give it a home in `Colors.stories.tsx`.',
           tokens: rest,
         },
       ]
-    : groups;
-})();
+    : groups
+})()
 
 /** Notes for the scales that have one; a scale without a note still renders. */
 const SCALE_NOTES: Record<string, string> = {
   brand:
-    "Raw material for the semantic tokens. 500→950 are our extension: all four source colors are too light to carry text.",
-  neutral: "Grays tinted with the brand hue — overrides Tailwind's own `neutral`.",
-  blush: "Off the teal axis; the background of highlight and callout areas.",
-};
+    'Raw material for the semantic tokens. 500→950 are our extension: all four source colors are too light to carry text.',
+  neutral:
+    "Grays tinted with the brand hue — overrides Tailwind's own `neutral`.",
+  blush: 'Off the teal axis; the background of highlight and callout areas.',
+}
 
-const ALL_TOKENS = [...semantic, ...Object.values(scales).flat()];
+const ALL_TOKENS = [...semantic, ...Object.values(scales).flat()]
 
-function Swatch({ name, value }: { name: string; value: string }) {
+function Swatch({name, value}: {name: string; value: string}) {
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
       <div
         className="h-14 rounded-lg border border-border"
-        style={{ background: `var(${name})` }}
+        style={{background: `var(${name})`}}
       />
       <code className="truncate text-body-4">
-        {name.replace("--color-", "").replace("--", "")}
+        {name.replace('--color-', '').replace('--', '')}
       </code>
-      <code className="truncate text-body-4 text-muted-foreground">{value || "—"}</code>
+      <code className="truncate text-body-4 text-muted-foreground">
+        {value || '—'}
+      </code>
     </div>
-  );
+  )
 }
 
 function Section({
@@ -122,10 +125,10 @@ function Section({
   tokens,
   values,
 }: {
-  title: string;
-  note?: string;
-  tokens: string[];
-  values: Record<string, string>;
+  title: string
+  note?: string
+  tokens: string[]
+  values: Record<string, string>
 }) {
   return (
     <section className="flex flex-col gap-3">
@@ -134,44 +137,48 @@ function Section({
           {title}
         </Typography>
         {note ? (
-          <Typography variant="body-4" className="max-w-2xl text-muted-foreground">
+          <Typography
+            variant="body-4"
+            className="max-w-2xl text-muted-foreground">
             {note}
           </Typography>
         ) : null}
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
         {tokens.map((name) => (
-          <Swatch key={name} name={name} value={values[name] ?? ""} />
+          <Swatch key={name} name={name} value={values[name] ?? ''} />
         ))}
       </div>
     </section>
-  );
+  )
 }
 
 function Palette() {
-  const t = useTranslations("sb.foundations");
-  const values = useTokens(ALL_TOKENS);
+  const t = useTranslations('sb.foundations')
+  const values = useTokens(ALL_TOKENS)
 
   return (
     <div className="flex flex-col gap-10 bg-background p-8 text-foreground">
       <div className="flex flex-col gap-2">
         <Typography variant="h3" as="h1">
-          {t("colorsTitle")}
+          {t('colorsTitle')}
         </Typography>
-        <Typography variant="body-3" className="max-w-2xl text-muted-foreground">
+        <Typography
+          variant="body-3"
+          className="max-w-2xl text-muted-foreground">
           {/* `t.rich` plus the `<file>…</file>` tag syntax inside the message: that
               is how next-intl injects a React element into the middle of a sentence
               while preserving each language's own word order. */}
-          {t.rich("colorsNote", { file: (chunks) => <code>{chunks}</code> })}
+          {t.rich('colorsNote', {file: (chunks) => <code>{chunks}</code>})}
         </Typography>
       </div>
 
       <div>
         <Typography variant="title-1" as="h2">
-          {t("colorsSemantic")}
+          {t('colorsSemantic')}
         </Typography>
         <Typography variant="body-4" className="text-muted-foreground">
-          {t("colorsSemanticHint")}
+          {t('colorsSemanticHint')}
         </Typography>
       </div>
       {GROUPED.map((group) => (
@@ -190,10 +197,10 @@ function Palette() {
         />
       ))}
     </div>
-  );
+  )
 }
 
 export const Palette_: Story = {
-  name: "Palette",
+  name: 'Palette',
   render: () => <Palette />,
-};
+}

@@ -1,24 +1,28 @@
-import { useTranslations } from "next-intl";
+import {useTranslations} from 'next-intl'
 
-import { Skeleton } from "@noalhub/ui/skeleton";
+import {Skeleton} from '@noalhub/ui/skeleton'
 
 /** Placeholder bubbles alternating left/right so the shell resembles real content. */
 export function MessageListSkeleton() {
-  const t = useTranslations("web.chat.messages");
-  const widths = ["w-40", "w-56", "w-32", "w-48", "w-24"];
+  const t = useTranslations('web.chat.messages')
+  const widths = ['w-40', 'w-56', 'w-32', 'w-48', 'w-24']
 
   return (
-    <div role="status" aria-busy className="flex flex-1 flex-col justify-end gap-3 p-4">
-      <span className="sr-only">{t("loading")}</span>
+    <div
+      role="status"
+      aria-busy
+      className="flex flex-1 flex-col justify-end gap-3 p-4">
+      <span className="sr-only">{t('loading')}</span>
       {widths.map((width, index) => (
         <div
           key={index}
-          className={index % 2 === 0 ? "flex gap-2" : "flex justify-end"}
-        >
-          {index % 2 === 0 ? <Skeleton className="size-8 shrink-0 rounded-full" /> : null}
+          className={index % 2 === 0 ? 'flex gap-2' : 'flex justify-end'}>
+          {index % 2 === 0 ? (
+            <Skeleton className="size-8 shrink-0 rounded-full" />
+          ) : null}
           <Skeleton className={`h-9 rounded-2xl ${width}`} />
         </div>
       ))}
     </div>
-  );
+  )
 }

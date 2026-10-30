@@ -1,4 +1,4 @@
-import { http } from "../client";
+import {http} from '../client'
 import {
   adminQaQuestionStatsSchema,
   adminSignupsSchema,
@@ -6,8 +6,8 @@ import {
   adminUserListSchema,
   adminUserSchema,
   storybookAccessSchema,
-} from "./schemas";
-import { z } from "zod";
+} from './schemas'
+import {z} from 'zod'
 import type {
   AdminQaPeriod,
   AdminQaQuestionStats,
@@ -19,7 +19,7 @@ import type {
   AdminUserListQuery,
   GrantStorybookAccessInput,
   StorybookAccess,
-} from "./types";
+} from './types'
 
 /**
  * The contact surface with the admin backend, mapping 1-to-1 to the OpenAPI
@@ -36,12 +36,12 @@ import type {
  * The backend does **not** cache; call frequency is the hooks layer's decision.
  */
 export async function getAdminStats(signal?: AbortSignal): Promise<AdminStats> {
-  const { data } = await http.get<AdminStats>("/admin/stats", {
+  const {data} = await http.get<AdminStats>('/admin/stats', {
     authRequired: true,
     schema: adminStatsSchema,
     signal,
-  });
-  return data;
+  })
+  return data
 }
 
 /**
@@ -53,13 +53,13 @@ export async function getAdminSignups(
   range: AdminSignupRange,
   signal?: AbortSignal,
 ): Promise<AdminSignups> {
-  const { data } = await http.get<AdminSignups>("/admin/stats/signups", {
-    params: { range },
+  const {data} = await http.get<AdminSignups>('/admin/stats/signups', {
+    params: {range},
     authRequired: true,
     schema: adminSignupsSchema,
     signal,
-  });
-  return data;
+  })
+  return data
 }
 
 /**
@@ -72,16 +72,16 @@ export async function getAdminQaQuestionStats(
   userId?: string,
   signal?: AbortSignal,
 ): Promise<AdminQaQuestionStats> {
-  const { data } = await http.get<AdminQaQuestionStats>(
-    "/admin/stats/qa-questions",
+  const {data} = await http.get<AdminQaQuestionStats>(
+    '/admin/stats/qa-questions',
     {
-      params: userId ? { datasetId, period, userId } : { datasetId, period },
+      params: userId ? {datasetId, period, userId} : {datasetId, period},
       authRequired: true,
       schema: adminQaQuestionStatsSchema,
       signal,
     },
-  );
-  return data;
+  )
+  return data
 }
 
 /**
@@ -95,21 +95,21 @@ export async function listAdminUsers(
   query: AdminUserListQuery = {},
   signal?: AbortSignal,
 ): Promise<AdminUserList> {
-  const params: Record<string, string | number> = {};
-  if (query.page !== undefined) params.page = query.page;
-  if (query.limit !== undefined) params.limit = query.limit;
-  if (query.q) params.q = query.q;
-  if (query.role) params.role = query.role;
-  if (query.sort) params.sort = query.sort;
-  if (query.order) params.order = query.order;
+  const params: Record<string, string | number> = {}
+  if (query.page !== undefined) params.page = query.page
+  if (query.limit !== undefined) params.limit = query.limit
+  if (query.q) params.q = query.q
+  if (query.role) params.role = query.role
+  if (query.sort) params.sort = query.sort
+  if (query.order) params.order = query.order
 
-  const { data } = await http.get<AdminUserList>("/admin/users", {
+  const {data} = await http.get<AdminUserList>('/admin/users', {
     params,
     authRequired: true,
     schema: adminUserListSchema,
     signal,
-  });
-  return data;
+  })
+  return data
 }
 
 /**
@@ -123,11 +123,11 @@ export async function getAdminUser(
   id: string,
   signal?: AbortSignal,
 ): Promise<AdminUser> {
-  const { data } = await http.get<AdminUser>(
+  const {data} = await http.get<AdminUser>(
     `/admin/users/${encodeURIComponent(id)}`,
-    { authRequired: true, schema: adminUserSchema, signal },
-  );
-  return data;
+    {authRequired: true, schema: adminUserSchema, signal},
+  )
+  return data
 }
 
 /**
@@ -140,12 +140,12 @@ export async function getAdminUser(
 export async function listStorybookAccess(
   signal?: AbortSignal,
 ): Promise<StorybookAccess[]> {
-  const { data } = await http.get<StorybookAccess[]>("/admin/storybook-access", {
+  const {data} = await http.get<StorybookAccess[]>('/admin/storybook-access', {
     authRequired: true,
     schema: z.array(storybookAccessSchema),
     signal,
-  });
-  return data;
+  })
+  return data
 }
 
 /**
@@ -159,15 +159,15 @@ export async function listStorybookAccess(
 export async function grantStorybookAccess(
   input: GrantStorybookAccessInput,
 ): Promise<StorybookAccess> {
-  const body: GrantStorybookAccessInput = { email: input.email };
-  if (input.note) body.note = input.note;
+  const body: GrantStorybookAccessInput = {email: input.email}
+  if (input.note) body.note = input.note
 
-  const { data } = await http.post<StorybookAccess>(
-    "/admin/storybook-access",
+  const {data} = await http.post<StorybookAccess>(
+    '/admin/storybook-access',
     body,
-    { authRequired: true, schema: storybookAccessSchema },
-  );
-  return data;
+    {authRequired: true, schema: storybookAccessSchema},
+  )
+  return data
 }
 
 /**
@@ -180,5 +180,5 @@ export async function grantStorybookAccess(
 export async function revokeStorybookAccess(id: string): Promise<void> {
   await http.delete(`/admin/storybook-access/${encodeURIComponent(id)}`, {
     authRequired: true,
-  });
+  })
 }

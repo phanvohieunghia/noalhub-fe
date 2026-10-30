@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import type { Locale } from "@noalhub/i18n/config";
-import { getPathname, usePathname } from "@noalhub/i18n/navigation";
-import { LanguageSwitcher } from "@noalhub/ui/language-switcher";
+import type {Locale} from '@noalhub/i18n/config'
+import {getPathname, usePathname} from '@noalhub/i18n/navigation'
+import {LanguageSwitcher} from '@noalhub/ui/language-switcher'
 
 /**
  * The web `LanguageSwitcher`: web URLs carry a locale prefix, so changing the
@@ -24,12 +24,12 @@ import { LanguageSwitcher } from "@noalhub/ui/language-switcher";
  * (which is what Googlebot reads) and lets the theme script run normally.
  * Changing language is a rare action; one reload here is cheap.
  */
-export function WebLanguageSwitcher({ className }: { className?: string }) {
-  const pathname = usePathname();
+export function WebLanguageSwitcher({className}: {className?: string}) {
+  const pathname = usePathname()
 
   const onSwitch = (locale: Locale) => {
-    window.location.assign(getPathname({ href: pathname, locale }));
-  };
+    window.location.assign(getPathname({href: pathname, locale}))
+  }
 
-  return <LanguageSwitcher onSwitch={onSwitch} className={className} />;
+  return <LanguageSwitcher onSwitch={onSwitch} className={className} />
 }

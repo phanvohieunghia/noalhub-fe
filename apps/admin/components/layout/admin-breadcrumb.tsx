@@ -1,13 +1,17 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import {useTranslations} from 'next-intl'
+import Link from 'next/link'
+import {usePathname} from 'next/navigation'
 
-import { FLAT_NAV_ITEMS, NON_ROUTE_SEGMENTS, SEGMENT_LABEL_KEYS } from "./nav-items";
-import { Typography } from "@noalhub/ui/typography";
+import {
+  FLAT_NAV_ITEMS,
+  NON_ROUTE_SEGMENTS,
+  SEGMENT_LABEL_KEYS,
+} from './nav-items'
+import {Typography} from '@noalhub/ui/typography'
 
-import { DatasetTitleField } from "../qa/dataset-title-field";
+import {DatasetTitleField} from '../qa/dataset-title-field'
 
 /**
  * The breadcrumb is derived from the pathname, not from separate state — so
@@ -30,32 +34,32 @@ import { DatasetTitleField } from "../qa/dataset-title-field";
  * stays in the trail for orientation but is not a link.
  */
 export function AdminBreadcrumb() {
-  const t = useTranslations("nav.admin");
-  const pathname = usePathname();
-  const segments = pathname.split("/").filter(Boolean);
+  const t = useTranslations('nav.admin')
+  const pathname = usePathname()
+  const segments = pathname.split('/').filter(Boolean)
 
   const datasetId =
-    segments.length === 3 && segments[0] === "qa" && segments[1] === "datasets"
+    segments.length === 3 && segments[0] === 'qa' && segments[1] === 'datasets'
       ? segments[2]
-      : null;
+      : null
 
   const crumbs = segments.map((segment, index) => {
-    const href = `/${segments.slice(0, index + 1).join("/")}`;
+    const href = `/${segments.slice(0, index + 1).join('/')}`
     const key =
       SEGMENT_LABEL_KEYS[segment] ??
-      FLAT_NAV_ITEMS.find((item) => item.href === href)?.labelKey;
+      FLAT_NAV_ITEMS.find((item) => item.href === href)?.labelKey
     return {
       href,
       // A first segment matching no key is shown verbatim: it is a meaningful
       // path segment, and turning it into "Detail" loses information.
-      label: key ? t(key) : index === 0 ? segment : t("detail"),
+      label: key ? t(key) : index === 0 ? segment : t('detail'),
       isLast: index === segments.length - 1,
       isRoute: !NON_ROUTE_SEGMENTS.has(segment),
-    };
-  });
+    }
+  })
 
   return (
-    <nav aria-label={t("breadcrumb")} className="text-body-3">
+    <nav aria-label={t('breadcrumb')} className="text-body-3">
       <ol className="flex items-center gap-1.5">
         {crumbs.map((crumb) => (
           <li key={crumb.href} className="flex items-center gap-1.5">
@@ -65,7 +69,11 @@ export function AdminBreadcrumb() {
                   <DatasetTitleField datasetId={datasetId} />
                 </span>
               ) : (
-                <Typography variant="body-3" as="span" weight={500} aria-current="page">
+                <Typography
+                  variant="body-3"
+                  as="span"
+                  weight={500}
+                  aria-current="page">
                   {crumb.label}
                 </Typography>
               )
@@ -92,5 +100,5 @@ export function AdminBreadcrumb() {
         ))}
       </ol>
     </nav>
-  );
+  )
 }

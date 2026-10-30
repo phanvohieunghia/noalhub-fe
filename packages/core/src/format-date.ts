@@ -12,48 +12,48 @@
  * it.
  */
 
-type Style = "date" | "dateTime" | "dayMonth" | "monthYear";
+type Style = 'date' | 'dateTime' | 'dayMonth' | 'monthYear'
 
 const OPTIONS: Record<Style, Intl.DateTimeFormatOptions> = {
-  date: { dateStyle: "long" },
-  dateTime: { dateStyle: "long", timeStyle: "short" },
+  date: {dateStyle: 'long'},
+  dateTime: {dateStyle: 'long', timeStyle: 'short'},
   /** Chart axis ticks: "16/10" / "10/16" — no year, the axis already implies it. */
-  dayMonth: { day: "numeric", month: "numeric" },
+  dayMonth: {day: 'numeric', month: 'numeric'},
   /** Chart axis ticks for monthly buckets: "thg 10 2026" / "Oct 2026". */
-  monthYear: { month: "short", year: "numeric" },
-};
+  monthYear: {month: 'short', year: 'numeric'},
+}
 
-const cache = new Map<string, Intl.DateTimeFormat>();
+const cache = new Map<string, Intl.DateTimeFormat>()
 
 function formatter(locale: string, style: Style): Intl.DateTimeFormat {
-  const key = `${locale}:${style}`;
-  let found = cache.get(key);
+  const key = `${locale}:${style}`
+  let found = cache.get(key)
   if (!found) {
-    found = new Intl.DateTimeFormat(locale, OPTIONS[style]);
-    cache.set(key, found);
+    found = new Intl.DateTimeFormat(locale, OPTIONS[style])
+    cache.set(key, found)
   }
-  return found;
+  return found
 }
 
 /** The backend returns ISO strings; null or unparsable values render as "—". */
 export function formatDate(locale: string, value?: string | null): string {
-  return format(formatter(locale, "date"), value);
+  return format(formatter(locale, 'date'), value)
 }
 
 export function formatDateTime(locale: string, value?: string | null): string {
-  return format(formatter(locale, "dateTime"), value);
+  return format(formatter(locale, 'dateTime'), value)
 }
 
 export function formatDayMonth(locale: string, value?: string | null): string {
-  return format(formatter(locale, "dayMonth"), value);
+  return format(formatter(locale, 'dayMonth'), value)
 }
 
 export function formatMonthYear(locale: string, value?: string | null): string {
-  return format(formatter(locale, "monthYear"), value);
+  return format(formatter(locale, 'monthYear'), value)
 }
 
 function format(formatter: Intl.DateTimeFormat, value?: string | null): string {
-  if (!value) return "—";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "—" : formatter.format(date);
+  if (!value) return '—'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? '—' : formatter.format(date)
 }

@@ -1,29 +1,40 @@
-"use client";
+'use client'
 
 import {
   keepPreviousData,
   useMutation,
   useQuery,
   useQueryClient,
-} from "@tanstack/react-query";
+} from '@tanstack/react-query'
 
-import * as adminApi from "./api";
-import type { AdminQaPeriod, AdminSignupRange, AdminUserListQuery, GrantStorybookAccessInput } from "./types";
+import * as adminApi from './api'
+import type {
+  AdminQaPeriod,
+  AdminSignupRange,
+  AdminUserListQuery,
+  GrantStorybookAccessInput,
+} from './types'
 
 /** Query key factory — the ONLY source of truth for the admin feature's keys. */
 export const adminKeys = {
-  all: ["admin"] as const,
-  stats: () => [...adminKeys.all, "stats"] as const,
+  all: ['admin'] as const,
+  stats: () => [...adminKeys.all, 'stats'] as const,
   signups: (range: AdminSignupRange) =>
-    [...adminKeys.all, "signups", range] as const,
+    [...adminKeys.all, 'signups', range] as const,
   qaQuestions: (datasetId: string, period: AdminQaPeriod, userId?: string) =>
-    [...adminKeys.all, "qa-questions", datasetId, period, userId ?? "all"] as const,
-  users: () => [...adminKeys.all, "users"] as const,
+    [
+      ...adminKeys.all,
+      'qa-questions',
+      datasetId,
+      period,
+      userId ?? 'all',
+    ] as const,
+  users: () => [...adminKeys.all, 'users'] as const,
   userList: (query: AdminUserListQuery) =>
-    [...adminKeys.users(), "list", query] as const,
-  userDetail: (id: string) => [...adminKeys.users(), "detail", id] as const,
-  storybookAccess: () => [...adminKeys.all, "storybook-access"] as const,
-};
+    [...adminKeys.users(), 'list', query] as const,
+  userDetail: (id: string) => [...adminKeys.users(), 'detail', id] as const,
+  storybookAccess: () => [...adminKeys.all, 'storybook-access'] as const,
+}
 
 /**
  * Overview statistics.
@@ -35,9 +46,9 @@ export const adminKeys = {
 export function useAdminStats() {
   return useQuery({
     queryKey: adminKeys.stats(),
-    queryFn: ({ signal }) => adminApi.getAdminStats(signal),
+    queryFn: ({signal}) => adminApi.getAdminStats(signal),
     staleTime: 15_000,
-  });
+  })
 }
 
 /**
@@ -48,10 +59,10 @@ export function useAdminStats() {
 export function useAdminSignups(range: AdminSignupRange) {
   return useQuery({
     queryKey: adminKeys.signups(range),
-    queryFn: ({ signal }) => adminApi.getAdminSignups(range, signal),
+    queryFn: ({signal}) => adminApi.getAdminSignups(range, signal),
     staleTime: 15_000,
     placeholderData: keepPreviousData,
-  });
+  })
 }
 
 /**
@@ -66,13 +77,13 @@ export function useAdminQaQuestionStats(
   userId?: string,
 ) {
   return useQuery({
-    queryKey: adminKeys.qaQuestions(datasetId ?? "", period, userId),
-    queryFn: ({ signal }) =>
+    queryKey: adminKeys.qaQuestions(datasetId ?? '', period, userId),
+    queryFn: ({signal}) =>
       adminApi.getAdminQaQuestionStats(datasetId!, period, userId, signal),
     enabled: Boolean(datasetId),
     staleTime: 15_000,
     placeholderData: keepPreviousData,
-  });
+  })
 }
 
 /**
@@ -85,17 +96,17 @@ export function useAdminQaQuestionStats(
 export function useAdminUsers(query: AdminUserListQuery = {}) {
   return useQuery({
     queryKey: adminKeys.userList(query),
-    queryFn: ({ signal }) => adminApi.listAdminUsers(query, signal),
+    queryFn: ({signal}) => adminApi.listAdminUsers(query, signal),
     placeholderData: keepPreviousData,
-  });
+  })
 }
 
 export function useAdminUser(id: string | undefined) {
   return useQuery({
-    queryKey: adminKeys.userDetail(id ?? ""),
-    queryFn: ({ signal }) => adminApi.getAdminUser(id!, signal),
+    queryKey: adminKeys.userDetail(id ?? ''),
+    queryFn: ({signal}) => adminApi.getAdminUser(id!, signal),
     enabled: Boolean(id),
-  });
+  })
 }
 
 /**
@@ -108,27 +119,27 @@ export function useAdminUser(id: string | undefined) {
 export function useStorybookAccess() {
   return useQuery({
     queryKey: adminKeys.storybookAccess(),
-    queryFn: ({ signal }) => adminApi.listStorybookAccess(signal),
-  });
+    queryFn: ({signal}) => adminApi.listStorybookAccess(signal),
+  })
 }
 
 export function useGrantStorybookAccess() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (input: GrantStorybookAccessInput) =>
       adminApi.grantStorybookAccess(input),
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: adminKeys.storybookAccess() }),
-  });
+      queryClient.invalidateQueries({queryKey: adminKeys.storybookAccess()}),
+  })
 }
 
 export function useRevokeStorybookAccess() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (id: string) => adminApi.revokeStorybookAccess(id),
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: adminKeys.storybookAccess() }),
-  });
+      queryClient.invalidateQueries({queryKey: adminKeys.storybookAccess()}),
+  })
 }

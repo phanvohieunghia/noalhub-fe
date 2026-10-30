@@ -1,7 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import React from "react";
-import { ThemeProvider } from "@noalhub/ui/theme/theme-provider";
-import { ThemeToggle } from "@noalhub/ui/theme/theme-toggle";
+import type {Meta, StoryObj} from '@storybook/nextjs-vite'
+import React from 'react'
+import {ThemeProvider} from '@noalhub/ui/theme/theme-provider'
+import {ThemeToggle} from '@noalhub/ui/theme/theme-toggle'
 
 /**
  * `ThemeToggle` reads its state from `ThemeProvider`, which is mounted in each
@@ -12,9 +12,9 @@ import { ThemeToggle } from "@noalhub/ui/theme/theme-toggle";
  * the toolbar. The last one clicked wins.
  */
 const meta: Meta<typeof ThemeToggle> = {
-  title: "UI/Theme/ThemeToggle",
+  title: 'UI/Theme/ThemeToggle',
   component: ThemeToggle,
-  parameters: { layout: "centered" },
+  parameters: {layout: 'centered'},
   decorators: [
     (Story) => (
       <ThemeProvider>
@@ -22,12 +22,12 @@ const meta: Meta<typeof ThemeToggle> = {
       </ThemeProvider>
     ),
   ],
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof ThemeToggle>;
+export default meta
+type Story = StoryObj<typeof ThemeToggle>
 
-export const Default: Story = {};
+export const Default: Story = {}
 
 export const OnSurface: Story = {
   render: () => (
@@ -35,4 +35,4 @@ export const OnSurface: Story = {
       <ThemeToggle />
     </div>
   ),
-};
+}

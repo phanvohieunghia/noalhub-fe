@@ -1,5 +1,5 @@
-import { getStorage } from "../storage";
-import type { AuthTokens } from "./types";
+import {getStorage} from '../storage'
+import type {AuthTokens} from './types'
 
 /**
  * AN ISOLATION BOUNDARY — the module managing auth token lifecycle.
@@ -13,22 +13,22 @@ import type { AuthTokens } from "./types";
  * component has to change.
  */
 
-const REFRESH_KEY = "nh.refresh";
+const REFRESH_KEY = 'nh.refresh'
 
-let accessToken: string | null = null;
+let accessToken: string | null = null
 
 /**
  * Listeners for access-token changes. The socket layer needs them so it can
  * emit `auth:refresh` — a socket connection outlives the access token (15 min
  * TTL), and without a renewal the backend disconnects it with TOKEN_EXPIRED.
  */
-const accessListeners = new Set<(token: string | null) => void>();
+const accessListeners = new Set<(token: string | null) => void>()
 
 function notify() {
   for (const listener of accessListeners) {
     // One listener throwing must not block the remaining listeners.
     try {
-      listener(accessToken);
+      listener(accessToken)
     } catch {
       /* ignored */
     }
@@ -39,24 +39,24 @@ export const tokenStore = {
   getAccess: (): string | null => accessToken,
 
   setAccess(token: string) {
-    accessToken = token;
-    notify();
+    accessToken = token
+    notify()
   },
 
   setTokens(tokens: AuthTokens) {
-    accessToken = tokens.accessToken;
-    getStorage().set(REFRESH_KEY, tokens.refreshToken);
-    notify();
+    accessToken = tokens.accessToken
+    getStorage().set(REFRESH_KEY, tokens.refreshToken)
+    notify()
   },
 
   getRefresh(): string | null {
-    return getStorage().get(REFRESH_KEY);
+    return getStorage().get(REFRESH_KEY)
   },
 
   clear() {
-    accessToken = null;
-    getStorage().remove(REFRESH_KEY);
-    notify();
+    accessToken = null
+    getStorage().remove(REFRESH_KEY)
+    notify()
   },
 
   /**
@@ -66,8 +66,8 @@ export const tokenStore = {
    * do with null is the listener's call, do not filter it out here.
    */
   subscribe(callback: (token: string | null) => void): () => void {
-    accessListeners.add(callback);
-    return () => accessListeners.delete(callback);
+    accessListeners.add(callback)
+    return () => accessListeners.delete(callback)
   },
 
   /**
@@ -75,13 +75,13 @@ export const tokenStore = {
    * must sign out too. Returns an unsubscribe function.
    */
   onExternalClear(callback: () => void): () => void {
-    const storage = getStorage();
-    if (!storage.subscribeExternalClear) return () => {};
+    const storage = getStorage()
+    if (!storage.subscribeExternalClear) return () => {}
 
     return storage.subscribeExternalClear(REFRESH_KEY, () => {
-      accessToken = null;
-      notify();
-      callback();
-    });
+      accessToken = null
+      notify()
+      callback()
+    })
   },
-};
+}

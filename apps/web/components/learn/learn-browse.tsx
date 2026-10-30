@@ -1,9 +1,9 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import {useTranslations} from 'next-intl'
+import Link from 'next/link'
+import {useRouter} from 'next/navigation'
+import {useMemo, useState} from 'react'
 
 import {
   QA_COUNT_OPTIONS,
@@ -14,29 +14,29 @@ import {
   type QaDifficulty,
   type QaItemKind,
   type QaDatasetSummary,
-} from "@noalhub/api/qa";
-import { useDateFormat } from "@noalhub/i18n/use-date-format";
-import { AlertError } from "@noalhub/ui/alert";
-import { Badge, type BadgeTone } from "@noalhub/ui/badge";
-import { Button } from "@noalhub/ui/button";
-import { Dialog } from "@noalhub/ui/dialog";
-import { Icon, ICONS, LUCIDE } from "@noalhub/ui/icons";
-import { Input } from "@noalhub/ui/input";
-import { Select } from "@noalhub/ui/select";
-import { Skeleton } from "@noalhub/ui/skeleton";
-import { Tooltip } from "@noalhub/ui/tooltip";
-import { Typography } from "@noalhub/ui/typography";
+} from '@noalhub/api/qa'
+import {useDateFormat} from '@noalhub/i18n/use-date-format'
+import {AlertError} from '@noalhub/ui/alert'
+import {Badge, type BadgeTone} from '@noalhub/ui/badge'
+import {Button} from '@noalhub/ui/button'
+import {Dialog} from '@noalhub/ui/dialog'
+import {Icon, ICONS, LUCIDE} from '@noalhub/ui/icons'
+import {Input} from '@noalhub/ui/input'
+import {Select} from '@noalhub/ui/select'
+import {Skeleton} from '@noalhub/ui/skeleton'
+import {Tooltip} from '@noalhub/ui/tooltip'
+import {Typography} from '@noalhub/ui/typography'
 
-const KINDS = ["theory", "practice", "recall", "analysis"] as const;
-const DIFFICULTIES = ["easy", "medium", "hard"] as const;
+const KINDS = ['theory', 'practice', 'recall', 'analysis'] as const
+const DIFFICULTIES = ['easy', 'medium', 'hard'] as const
 /** How many cards one "Load more" reveals — two rows of the three-column grid. */
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 6
 
 const DIFFICULTY_TONE: Record<QaDifficulty, BadgeTone> = {
-  easy: "success",
-  medium: "warning",
-  hard: "danger",
-};
+  easy: 'success',
+  medium: 'warning',
+  hard: 'danger',
+}
 
 /**
  * The way into the learner surface.
@@ -54,53 +54,53 @@ const DIFFICULTY_TONE: Record<QaDifficulty, BadgeTone> = {
  * catalogue, small enough to hold in memory.
  */
 export function LearnBrowse() {
-  const t = useTranslations("web.learn");
-  const [kind, setKind] = useState<QaItemKind | "">("");
-  const [difficulty, setDifficulty] = useState<QaDifficulty | "">("");
-  const [search, setSearch] = useState("");
-  const [visible, setVisible] = useState(PAGE_SIZE);
-  const [opened, setOpened] = useState<QaDatasetSummary | null>(null);
+  const t = useTranslations('web.learn')
+  const [kind, setKind] = useState<QaItemKind | ''>('')
+  const [difficulty, setDifficulty] = useState<QaDifficulty | ''>('')
+  const [search, setSearch] = useState('')
+  const [visible, setVisible] = useState(PAGE_SIZE)
+  const [opened, setOpened] = useState<QaDatasetSummary | null>(null)
 
-  const datasets = useBrowseQaDatasets();
-  const attempts = useQaAttempts();
+  const datasets = useBrowseQaDatasets()
+  const attempts = useQaAttempts()
 
   // One open attempt per dataset (the backend guarantees it) → its progress by dataset id.
   const openByDataset = useMemo(() => {
-    const map = new Map<string, QaAttempt>();
+    const map = new Map<string, QaAttempt>()
     for (const attempt of attempts.data ?? []) {
-      if (attempt.status === "in_progress" && !isAnsweredThrough(attempt)) {
-        map.set(attempt.datasetId, attempt);
+      if (attempt.status === 'in_progress' && !isAnsweredThrough(attempt)) {
+        map.set(attempt.datasetId, attempt)
       }
     }
-    return map;
-  }, [attempts.data]);
+    return map
+  }, [attempts.data])
 
-  const needle = search.trim().toLowerCase();
+  const needle = search.trim().toLowerCase()
   const rows = (datasets.data?.items ?? []).filter(
     (row) =>
-      (kind === "" || row.itemKinds.includes(kind)) &&
-      (difficulty === "" || row.difficulties.includes(difficulty)) &&
-      (needle === "" || row.title.toLowerCase().includes(needle)),
-  );
-  const shown = rows.slice(0, visible);
+      (kind === '' || row.itemKinds.includes(kind)) &&
+      (difficulty === '' || row.difficulties.includes(difficulty)) &&
+      (needle === '' || row.title.toLowerCase().includes(needle)),
+  )
+  const shown = rows.slice(0, visible)
 
   // A filter change must start from the first page again, or "Showing 6 of 3"
   // is one keystroke away.
   const onFilter =
     <T,>(set: (value: T) => void) =>
     (value: T) => {
-      set(value);
-      setVisible(PAGE_SIZE);
-    };
+      set(value)
+      setVisible(PAGE_SIZE)
+    }
 
   // The dataset the learner was last in the middle of leads the grid as the
   // featured card — but only on the unfiltered first view, or a search would
   // reshuffle the layout under the cursor.
   const featured =
-    kind === "" && difficulty === "" && needle === ""
+    kind === '' && difficulty === '' && needle === ''
       ? (shown.find((row) => openByDataset.has(row.id)) ?? null)
-      : null;
-  const rest = featured ? shown.filter((row) => row.id !== featured.id) : shown;
+      : null
+  const rest = featured ? shown.filter((row) => row.id !== featured.id) : shown
 
   return (
     <main className="mx-auto w-full max-w-6xl p-4 sm:p-6">
@@ -109,23 +109,23 @@ export function LearnBrowse() {
           <header className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <Typography variant="h2" as="h1">
-                {t("browse.title")}
+                {t('browse.title')}
               </Typography>
               <Typography variant="body-3" className="text-muted-foreground">
-                {t("browse.intro")}
+                {t('browse.intro')}
               </Typography>
             </div>
             <div className="flex shrink-0 gap-2">
-              <Tooltip label={t("history.open")} side="bottom">
+              <Tooltip label={t('history.open')} side="bottom">
                 <Button variant="outline" size="icon" asChild>
-                  <Link href="/learn/history" aria-label={t("history.open")}>
+                  <Link href="/learn/history" aria-label={t('history.open')}>
                     <Icon icon={LUCIDE.history} />
                   </Link>
                 </Button>
               </Tooltip>
-              <Tooltip label={t("browse.stats")} side="bottom">
+              <Tooltip label={t('browse.stats')} side="bottom">
                 <Button variant="outline" size="icon" asChild>
-                  <Link href="/learn/stats" aria-label={t("browse.stats")}>
+                  <Link href="/learn/stats" aria-label={t('browse.stats')}>
                     <Icon icon={LUCIDE.chartColumn} />
                   </Link>
                 </Button>
@@ -134,37 +134,37 @@ export function LearnBrowse() {
           </header>
 
           <Input
-            label={t("browse.searchLabel")}
+            label={t('browse.searchLabel')}
             hideLabel
             type="search"
             leadingIcon={ICONS.search}
-            placeholder={t("browse.searchPlaceholder")}
+            placeholder={t('browse.searchPlaceholder')}
             value={search}
             onChange={(event) => onFilter(setSearch)(event.target.value)}
           />
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Select
-              label={t("browse.filterKind")}
+              label={t('browse.filterKind')}
               hideLabel
               value={kind}
               onChange={(event) =>
-                onFilter(setKind)(event.target.value as QaItemKind | "")
+                onFilter(setKind)(event.target.value as QaItemKind | '')
               }
-              placeholder={t("browse.allKinds")}
+              placeholder={t('browse.allKinds')}
               options={KINDS.map((value) => ({
                 value,
                 label: t(`kinds.${value}`),
               }))}
             />
             <Select
-              label={t("browse.difficultyLabel")}
+              label={t('browse.difficultyLabel')}
               hideLabel
               value={difficulty}
               onChange={(event) =>
-                onFilter(setDifficulty)(event.target.value as QaDifficulty | "")
+                onFilter(setDifficulty)(event.target.value as QaDifficulty | '')
               }
-              placeholder={t("browse.anyDifficulty")}
+              placeholder={t('browse.anyDifficulty')}
               options={DIFFICULTIES.map((value) => ({
                 value,
                 label: t(`difficulty.${value}`),
@@ -183,8 +183,8 @@ export function LearnBrowse() {
               {/* Empty here means no admin has PUBLISHED anything — say that,
                   rather than "no data", which reads like something broke. */}
               {datasets.data?.total === 0
-                ? t("browse.emptyNone")
-                : t("browse.emptyFilter")}
+                ? t('browse.emptyNone')
+                : t('browse.emptyFilter')}
             </Typography>
           ) : (
             <>
@@ -209,7 +209,7 @@ export function LearnBrowse() {
 
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <Typography variant="body-4" className="text-muted-foreground">
-                  {t("browse.showing", {
+                  {t('browse.showing', {
                     shown: shown.length,
                     total: rows.length,
                   })}
@@ -217,9 +217,8 @@ export function LearnBrowse() {
                 {shown.length < rows.length ? (
                   <Button
                     variant="outline"
-                    onClick={() => setVisible((n) => n + PAGE_SIZE)}
-                  >
-                    {t("browse.loadMore")}
+                    onClick={() => setVisible((n) => n + PAGE_SIZE)}>
+                    {t('browse.loadMore')}
                   </Button>
                 ) : null}
               </div>
@@ -236,7 +235,7 @@ export function LearnBrowse() {
         />
       ) : null}
     </main>
-  );
+  )
 }
 
 /**
@@ -252,21 +251,21 @@ function DatasetDialog({
   attempt,
   onClose,
 }: {
-  dataset: QaDatasetSummary;
-  attempt?: QaAttempt;
-  onClose: () => void;
+  dataset: QaDatasetSummary
+  attempt?: QaAttempt
+  onClose: () => void
 }) {
-  const t = useTranslations("web.learn");
-  const router = useRouter();
-  const start = useStartQaAttempt();
+  const t = useTranslations('web.learn')
+  const router = useRouter()
+  const start = useStartQaAttempt()
   // Only sizes smaller than the bank are offered — "20" of 12 questions is just "all".
-  const sizes = QA_COUNT_OPTIONS.filter((size) => size < dataset.itemCount);
+  const sizes = QA_COUNT_OPTIONS.filter((size) => size < dataset.itemCount)
   // `null` = all of them. Ten is a sitting; a bank smaller than that is taken whole.
   const [count, setCount] = useState<number | null>(
     sizes.includes(10) ? 10 : null,
-  );
+  )
   // An open attempt already has its questions — the picker would be a lie.
-  const resuming = attempt !== undefined;
+  const resuming = attempt !== undefined
 
   const begin = () =>
     start.mutate(
@@ -274,8 +273,8 @@ function DatasetDialog({
         datasetId: dataset.id,
         count: resuming ? undefined : (count ?? undefined),
       },
-      { onSuccess: () => router.push(`/learn/sets/${dataset.id}`) },
-    );
+      {onSuccess: () => router.push(`/learn/sets/${dataset.id}`)},
+    )
 
   return (
     <Dialog open onClose={onClose} title={dataset.title}>
@@ -287,7 +286,7 @@ function DatasetDialog({
 
       <div className="flex flex-wrap gap-1.5">
         <Badge tone="neutral">
-          {t("browse.itemCount", { count: dataset.itemCount })}
+          {t('browse.itemCount', {count: dataset.itemCount})}
         </Badge>
         {dataset.templateKeys.map((value) => (
           <Badge key={value} tone="neutral">
@@ -308,45 +307,45 @@ function DatasetDialog({
 
       {!resuming && sizes.length > 0 ? (
         <Select
-          label={t("browse.countLabel")}
-          value={count === null ? "all" : String(count)}
+          label={t('browse.countLabel')}
+          value={count === null ? 'all' : String(count)}
           onChange={(event) =>
             setCount(
-              event.target.value === "all" ? null : Number(event.target.value),
+              event.target.value === 'all' ? null : Number(event.target.value),
             )
           }
           options={[
             ...sizes.map((value) => ({
               value: String(value),
-              label: t("browse.countOption", { count: value }),
+              label: t('browse.countOption', {count: value}),
             })),
             {
-              value: "all",
-              label: t("browse.countAll", { count: dataset.itemCount }),
+              value: 'all',
+              label: t('browse.countAll', {count: dataset.itemCount}),
             },
           ]}
         />
       ) : null}
 
-      {start.isError ? <AlertError message={t("dataset.startFailed")} /> : null}
+      {start.isError ? <AlertError message={t('dataset.startFailed')} /> : null}
 
       <div className="space-y-2">
         <Button className="w-full" onClick={begin} loading={start.isPending}>
-          {resuming ? t("browse.continue") : t("dataset.start")}
+          {resuming ? t('browse.continue') : t('dataset.start')}
         </Button>
         {resuming ? (
           <Typography variant="body-4" className="text-muted-foreground">
-            {t("dataset.resumeHint")}
+            {t('dataset.resumeHint')}
           </Typography>
         ) : null}
       </div>
     </Dialog>
-  );
+  )
 }
 
 /** Every question of the attempt is answered — nothing left to continue. */
 function isAnsweredThrough(attempt: QaAttempt) {
-  return attempt.itemCount > 0 && attempt.answeredCount >= attempt.itemCount;
+  return attempt.itemCount > 0 && attempt.answeredCount >= attempt.itemCount
 }
 
 function DatasetCard({
@@ -355,30 +354,29 @@ function DatasetCard({
   onOpen,
   featured = false,
 }: {
-  dataset: QaDatasetSummary;
-  attempt?: QaAttempt;
-  onOpen: () => void;
-  featured?: boolean;
+  dataset: QaDatasetSummary
+  attempt?: QaAttempt
+  onOpen: () => void
+  featured?: boolean
 }) {
-  const t = useTranslations("web.learn");
-  const df = useDateFormat();
+  const t = useTranslations('web.learn')
+  const df = useDateFormat()
   const percent =
     attempt && attempt.itemCount > 0
       ? Math.min(
           100,
           Math.round((attempt.answeredCount / attempt.itemCount) * 100),
         )
-      : 0;
+      : 0
 
   return (
     <li
       className={`flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 transition-shadow hover:shadow-md ${
-        featured ? "sm:col-span-2 xl:col-span-2" : ""
-      }`}
-    >
+        featured ? 'sm:col-span-2 xl:col-span-2' : ''
+      }`}>
       <div className="space-y-2">
         <div className="flex flex-wrap gap-1.5">
-          {featured ? <Badge tone="info">{t("browse.featured")}</Badge> : null}
+          {featured ? <Badge tone="info">{t('browse.featured')}</Badge> : null}
           {dataset.difficulties.map((value) => (
             <Badge key={value} tone={DIFFICULTY_TONE[value]}>
               {t(`difficulty.${value}`)}
@@ -389,16 +387,14 @@ function DatasetCard({
           <button
             type="button"
             onClick={onOpen}
-            className="text-left hover:underline"
-          >
+            className="text-left hover:underline">
             {dataset.title}
           </button>
         </Typography>
         {dataset.description ? (
           <Typography
             variant="body-3"
-            className="line-clamp-2 text-muted-foreground"
-          >
+            className="line-clamp-2 text-muted-foreground">
             {dataset.description}
           </Typography>
         ) : null}
@@ -406,7 +402,7 @@ function DatasetCard({
 
       <div className="flex flex-wrap gap-1.5">
         <Badge tone="neutral">
-          {t("browse.itemCount", { count: dataset.itemCount })}
+          {t('browse.itemCount', {count: dataset.itemCount})}
         </Badge>
         {dataset.templateKeys.map((value) => (
           <Badge key={value} tone="neutral">
@@ -426,16 +422,14 @@ function DatasetCard({
             <Typography
               as="span"
               variant="body-4"
-              className="flex-1 text-primary"
-            >
-              {t("browse.inProgress")}
+              className="flex-1 text-primary">
+              {t('browse.inProgress')}
             </Typography>
             <Typography
               as="span"
               variant="body-4"
-              className="text-muted-foreground"
-            >
-              {t("browse.answeredOf", {
+              className="text-muted-foreground">
+              {t('browse.answeredOf', {
                 answered: attempt.answeredCount,
                 total: attempt.itemCount,
               })}
@@ -446,12 +440,11 @@ function DatasetCard({
             aria-valuemin={0}
             aria-valuemax={attempt.itemCount}
             aria-valuenow={attempt.answeredCount}
-            aria-label={t("attempt.progressLabel")}
-            className="h-1.5 overflow-hidden rounded-full bg-muted"
-          >
+            aria-label={t('attempt.progressLabel')}
+            className="h-1.5 overflow-hidden rounded-full bg-muted">
             <div
               className="h-full rounded-full bg-primary"
-              style={{ width: `${percent}%` }}
+              style={{width: `${percent}%`}}
             />
           </div>
         </div>
@@ -460,31 +453,30 @@ function DatasetCard({
       <div className="mt-auto flex items-center gap-3 border-t border-border pt-4">
         <Typography
           variant="body-4"
-          className="flex flex-1 items-center gap-1.5 text-muted-foreground"
-        >
+          className="flex flex-1 items-center gap-1.5 text-muted-foreground">
           <Icon
             icon={attempt ? LUCIDE.clock : LUCIDE.circleDashed}
             className="size-3.5 shrink-0"
           />
           {attempt
-            ? t("browse.startedOn", { date: df.date(attempt.startedAt) })
-            : t("browse.notStarted")}
+            ? t('browse.startedOn', {date: df.date(attempt.startedAt)})
+            : t('browse.notStarted')}
         </Typography>
         {/* Continue skips the modal: there is nothing left to decide. */}
         {attempt ? (
           <Button asChild shape="circle" className="pr-4 pl-5">
             <Link href={`/learn/sets/${attempt.datasetId}`}>
-              {t("browse.continue")}
+              {t('browse.continue')}
               <Icon icon={LUCIDE.arrowRight} />
             </Link>
           </Button>
         ) : (
           <Button shape="circle" onClick={onOpen} className="pr-5 pl-4">
             <Icon icon={LUCIDE.play} className="size-4 fill-current" />
-            {t("browse.start")}
+            {t('browse.start')}
           </Button>
         )}
       </div>
     </li>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import {z} from 'zod'
 
 /**
  * Two groups of schemas:
@@ -9,13 +9,15 @@ import { z } from "zod";
  *   spot.
  */
 
-const email = z.email("validation.email.invalid").max(320, "validation.email.tooLong");
+const email = z
+  .email('validation.email.invalid')
+  .max(320, 'validation.email.tooLong')
 
 /** Backend: minLength 12, maxLength 128, no special-character requirement. */
 const password = z
   .string()
-  .min(12, "validation.password.tooShort")
-  .max(128, "validation.password.tooLong");
+  .min(12, 'validation.password.tooShort')
+  .max(128, 'validation.password.tooLong')
 
 /**
  * The single list of roles. Shared with `admin/schemas.ts` rather than retyped:
@@ -23,28 +25,31 @@ const password = z
  * was missing `super_admin`, which made `/auth/me` unparseable — and an
  * unparseable `/auth/me` signs the account straight back out.
  */
-export const userRoleSchema = z.enum(["user", "admin", "super_admin"]);
+export const userRoleSchema = z.enum(['user', 'admin', 'super_admin'])
 
 /* ---- Form schemas ---- */
 
 export const loginSchema = z.object({
   email,
-  password: z.string().min(1, "validation.password.currentRequired"),
-});
+  password: z.string().min(1, 'validation.password.currentRequired'),
+})
 
 export const registerSchema = z
   .object({
-    displayName: z.string().max(255, "validation.displayName.tooLong").optional(),
+    displayName: z
+      .string()
+      .max(255, 'validation.displayName.tooLong')
+      .optional(),
     email,
     password,
     confirmPassword: z.string(),
   })
   .refine((v) => v.password === v.confirmPassword, {
-    message: "validation.password.mismatch",
-    path: ["confirmPassword"],
-  });
+    message: 'validation.password.mismatch',
+    path: ['confirmPassword'],
+  })
 
-export const forgotPasswordSchema = z.object({ email });
+export const forgotPasswordSchema = z.object({email})
 
 export const resetPasswordSchema = z
   .object({
@@ -52,26 +57,26 @@ export const resetPasswordSchema = z
     confirmPassword: z.string(),
   })
   .refine((v) => v.newPassword === v.confirmPassword, {
-    message: "validation.password.mismatch",
-    path: ["confirmPassword"],
-  });
+    message: 'validation.password.mismatch',
+    path: ['confirmPassword'],
+  })
 
 export const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, "validation.password.currentRequired"),
+    currentPassword: z.string().min(1, 'validation.password.currentRequired'),
     newPassword: password,
     confirmPassword: z.string(),
   })
   .refine((v) => v.newPassword === v.confirmPassword, {
-    message: "validation.password.mismatch",
-    path: ["confirmPassword"],
-  });
+    message: 'validation.password.mismatch',
+    path: ['confirmPassword'],
+  })
 
-export type LoginInput = z.infer<typeof loginSchema>;
-export type RegisterInput = z.infer<typeof registerSchema>;
-export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
-export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
-export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type LoginInput = z.infer<typeof loginSchema>
+export type RegisterInput = z.infer<typeof registerSchema>
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>
 
 /* ---- Response schemas (mirror DTO) ---- */
 
@@ -98,7 +103,7 @@ export const userSchema = z.object({
    * still valid and an older `/auth/me` may lack it — a parse failure here logs
    * the whole session out.
    */
-  language: z.enum(["vi", "en"]).catch("vi"),
+  language: z.enum(['vi', 'en']).catch('vi'),
   displayName: z
     .string()
     .nullish()
@@ -108,7 +113,7 @@ export const userSchema = z.object({
     .nullish()
     .transform((v) => v ?? null),
   createdAt: z.string(),
-});
+})
 
 /** `TokenPairDto` */
 export const tokenPairSchema = z.object({
@@ -116,7 +121,7 @@ export const tokenPairSchema = z.object({
   refreshToken: z.string(),
   expiresIn: z.number(),
   tokenType: z.string(),
-});
+})
 
 /** `AuthSessionDto` */
-export const sessionSchema = tokenPairSchema.extend({ user: userSchema });
+export const sessionSchema = tokenPairSchema.extend({user: userSchema})

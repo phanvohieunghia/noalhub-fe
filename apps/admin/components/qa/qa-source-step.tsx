@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import {useTranslations} from 'next-intl'
+import {useMemo, useState} from 'react'
 
 import {
   CHARS_PER_TOKEN,
@@ -12,80 +12,81 @@ import {
   useQaSources,
   useUpdateQaSource,
   type QaDatasetSourceFull,
-} from "@noalhub/api/qa";
-import { formatCompactNumber } from "@noalhub/core/format-number";
-import type { Message } from "@noalhub/api/message";
-import { applyApiError } from "@noalhub/core/forms/apply-api-error";
-import { useMessage } from "@noalhub/i18n/use-message";
-import { AlertError, AlertWarning } from "@noalhub/ui/alert";
-import { MarkdownEditor } from "@noalhub/ui/blog/markdown-editor";
-import { Button } from "@noalhub/ui/button";
-import { Dialog } from "@noalhub/ui/dialog";
-import { DropdownMenu, DropdownMenuItem } from "@noalhub/ui/dropdown-menu";
-import { Icon, ICONS, LUCIDE } from "@noalhub/ui/icons";
-import { InlineTextField } from "@noalhub/ui/inline-text-field";
-import { Input } from "@noalhub/ui/input";
-import { MetricsCard, type MetricItem } from "@noalhub/ui/metrics-card";
-import { Skeleton } from "@noalhub/ui/skeleton";
-import { toast } from "@noalhub/ui/toast";
-import { Tooltip } from "@noalhub/ui/tooltip";
-import { Typography } from "@noalhub/ui/typography";
+} from '@noalhub/api/qa'
+import {formatCompactNumber} from '@noalhub/core/format-number'
+import type {Message} from '@noalhub/api/message'
+import {applyApiError} from '@noalhub/core/forms/apply-api-error'
+import {useMessage} from '@noalhub/i18n/use-message'
+import {AlertError, AlertWarning} from '@noalhub/ui/alert'
+import {MarkdownEditor} from '@noalhub/ui/blog/markdown-editor'
+import {Button} from '@noalhub/ui/button'
+import {Dialog} from '@noalhub/ui/dialog'
+import {DropdownMenu, DropdownMenuItem} from '@noalhub/ui/dropdown-menu'
+import {Icon, ICONS, LUCIDE} from '@noalhub/ui/icons'
+import {InlineTextField} from '@noalhub/ui/inline-text-field'
+import {Input} from '@noalhub/ui/input'
+import {MetricsCard, type MetricItem} from '@noalhub/ui/metrics-card'
+import {Skeleton} from '@noalhub/ui/skeleton'
+import {toast} from '@noalhub/ui/toast'
+import {Tooltip} from '@noalhub/ui/tooltip'
+import {Typography} from '@noalhub/ui/typography'
 
-import { EditorShell } from "./qa-editor-shell";
-import { textStats } from "./qa-plain-doc";
-import { useFitHeight } from "./use-fit-height";
+import {EditorShell} from './qa-editor-shell'
+import {textStats} from './qa-plain-doc'
+import {useFitHeight} from './use-fit-height'
 
 /**
  * Step 1: the dataset's source text, edited in place. Every source is fetched up
  * front; the first starts open, the rest folded. The editor works on Markdown,
  * which is what goes into the prompt.
  */
-export function SourcesStep({ datasetId }: { datasetId: string }) {
-  const t = useTranslations("admin.qa");
-  const sources = useQaSources(datasetId);
-  const remove = useDeleteQaSource(datasetId);
+export function SourcesStep({datasetId}: {datasetId: string}) {
+  const t = useTranslations('admin.qa')
+  const sources = useQaSources(datasetId)
+  const remove = useDeleteQaSource(datasetId)
   // `null` = untouched: the first source starts open, the rest folded.
-  const [openIds, setOpenIds] = useState<string[] | null>(null);
-  const [adding, setAdding] = useState(false);
-  const listRef = useFitHeight<HTMLDivElement>();
+  const [openIds, setOpenIds] = useState<string[] | null>(null)
+  const [adding, setAdding] = useState(false)
+  const listRef = useFitHeight<HTMLDivElement>()
 
-  const rows = sources.data ?? [];
+  const rows = sources.data ?? []
 
-  if (sources.isPending) return <Skeleton className="h-96 w-full" />;
+  if (sources.isPending) return <Skeleton className="h-96 w-full" />
 
-  const opened = openIds ?? (rows[0] ? [rows[0].id] : []);
+  const opened = openIds ?? (rows[0] ? [rows[0].id] : [])
   const toggle = (id: string) => {
-    setOpenIds(opened.includes(id) ? opened.filter((x) => x !== id) : [...opened, id]);
-  };
+    setOpenIds(
+      opened.includes(id) ? opened.filter((x) => x !== id) : [...opened, id],
+    )
+  }
 
   const addDialog = adding ? (
     <Dialog
       open
       size="lg"
       onClose={() => setAdding(false)}
-      title={t("sources.add")}
-    >
+      title={t('sources.add')}>
       <AddSourceForm
         datasetId={datasetId}
         onSaved={(id) => {
-          setAdding(false);
+          setAdding(false)
           // Show what was just added.
-          if (id) setOpenIds([...opened, id]);
+          if (id) setOpenIds([...opened, id])
         }}
       />
     </Dialog>
-  ) : null;
+  ) : null
 
   if (rows.length === 0) {
     return (
       <section className="flex flex-col items-center gap-3 rounded-lg border border-border bg-surface p-10">
         <Typography variant="body-3" className="text-muted-foreground">
-          {t("ws.source.empty")}
+          {t('ws.source.empty')}
         </Typography>
-        <Button onClick={() => setAdding(true)}>{t("ws.source.add")}</Button>
+        <Button onClick={() => setAdding(true)}>{t('ws.source.add')}</Button>
         {addDialog}
       </section>
-    );
+    )
   }
 
   return (
@@ -93,16 +94,14 @@ export function SourcesStep({ datasetId }: { datasetId: string }) {
     // above stay put, and the editors inside just grow.
     <div
       ref={listRef}
-      className="flex max-h-[var(--fit-h,70vh)] min-h-0 flex-col gap-3 overflow-y-auto [&>*]:shrink-0"
-    >
+      className="flex max-h-[var(--fit-h,70vh)] min-h-0 flex-col gap-3 overflow-y-auto [&>*]:shrink-0">
       <div className="flex justify-end">
-        <Tooltip label={t("ws.source.add")}>
+        <Tooltip label={t('ws.source.add')}>
           <Button
             variant="outline"
             size="icon-md"
-            aria-label={t("ws.source.add")}
-            onClick={() => setAdding(true)}
-          >
+            aria-label={t('ws.source.add')}
+            onClick={() => setAdding(true)}>
             <Icon icon={ICONS.add} />
           </Button>
         </Tooltip>
@@ -122,7 +121,7 @@ export function SourcesStep({ datasetId }: { datasetId: string }) {
       ))}
       {addDialog}
     </div>
-  );
+  )
 }
 
 /** One source, open or folded: fetches its full text as soon as it is mounted. */
@@ -134,18 +133,18 @@ function OpenSource({
   onRemove,
   onToggle,
 }: {
-  datasetId: string;
-  id: string;
-  collapsed: boolean;
-  removing: boolean;
-  onRemove: () => void;
-  onToggle: () => void;
+  datasetId: string
+  id: string
+  collapsed: boolean
+  removing: boolean
+  onRemove: () => void
+  onToggle: () => void
 }) {
-  const t = useTranslations("admin.qa");
-  const full = useQaSource(id);
+  const t = useTranslations('admin.qa')
+  const full = useQaSource(id)
 
-  if (full.isError) return <AlertError message={t("ws.source.loadFailed")} />;
-  if (full.isPending || !full.data) return <Skeleton className="h-96 w-full" />;
+  if (full.isError) return <AlertError message={t('ws.source.loadFailed')} />
+  if (full.isPending || !full.data) return <Skeleton className="h-96 w-full" />
   return (
     <SourceEditor
       datasetId={datasetId}
@@ -155,7 +154,7 @@ function OpenSource({
       onRemove={onRemove}
       onToggle={onToggle}
     />
-  );
+  )
 }
 
 function SourceEditor({
@@ -166,112 +165,102 @@ function SourceEditor({
   onRemove,
   onToggle,
 }: {
-  datasetId: string;
-  source: QaDatasetSourceFull;
-  collapsed: boolean;
-  removing: boolean;
-  onRemove: () => void;
-  onToggle: () => void;
+  datasetId: string
+  source: QaDatasetSourceFull
+  collapsed: boolean
+  removing: boolean
+  onRemove: () => void
+  onToggle: () => void
 }) {
-  const t = useTranslations("admin.qa");
-  const update = useUpdateQaSource(datasetId);
-  const original = source.content ?? "";
-  const [value, setValue] = useState(original);
-  const [saved, setSaved] = useState(original);
+  const t = useTranslations('admin.qa')
+  const update = useUpdateQaSource(datasetId)
+  const original = source.content ?? ''
+  const [value, setValue] = useState(original)
+  const [saved, setSaved] = useState(original)
   // Counts saves so the editor can drop the change highlights of what was just saved.
-  const [savedCount, setSavedCount] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const [savedCount, setSavedCount] = useState(0)
+  const [error, setError] = useState<string | null>(null)
   // The editor is built the first time the source is opened, not while it is folded:
   // parsing a long document is the expensive part. The text (and so the metrics) is
   // already here; once built, the editor stays mounted so folding keeps the edits.
-  const [rendered, setRendered] = useState(!collapsed);
-  if (!collapsed && !rendered) setRendered(true);
+  const [rendered, setRendered] = useState(!collapsed)
+  if (!collapsed && !rendered) setRendered(true)
 
-  const canSave = value !== saved && value.trim() !== "";
+  const canSave = value !== saved && value.trim() !== ''
 
   const save = async () => {
-    setError(null);
+    setError(null)
     try {
-      await update.mutateAsync({ id: source.id, input: { content: value } });
-      setSaved(value);
-      setSavedCount((count) => count + 1);
-      toast.success(t("ws.source.saved"));
+      await update.mutateAsync({id: source.id, input: {content: value}})
+      setSaved(value)
+      setSavedCount((count) => count + 1)
+      toast.success(t('ws.source.saved'))
     } catch {
-      setError(t("ws.source.saveFailed"));
+      setError(t('ws.source.saveFailed'))
     }
-  };
+  }
 
-  // ⌘S / Ctrl+S saves instead of opening the browser's "save page" dialog.
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
-        event.preventDefault();
-        if (canSave && !update.isPending) void save();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  });
-
-  const stats = useMemo(() => textStats(value), [value]);
-  const readMinutes = Math.max(1, Math.ceil(stats.words / 230));
-  const fmt = (n: number) => n.toLocaleString("en-US");
-  const tokenCount = Math.ceil(stats.characters / CHARS_PER_TOKEN);
+  const stats = useMemo(() => textStats(value), [value])
+  const readMinutes = Math.max(1, Math.ceil(stats.words / 230))
+  const fmt = (n: number) => n.toLocaleString('en-US')
+  const tokenCount = Math.ceil(stats.characters / CHARS_PER_TOKEN)
   const statItems: MetricItem[] = [
     {
-      key: "words",
+      key: 'words',
       icon: LUCIDE.fileText,
-      iconClass: "text-primary",
+      iconClass: 'text-primary',
       value: formatCompactNumber(stats.words),
       detail: fmt(stats.words),
-      label: t("ws.source.metrics.words"),
+      label: t('ws.source.metrics.words'),
     },
     {
-      key: "characters",
+      key: 'characters',
       icon: LUCIDE.type,
-      iconClass: "text-brand-500",
+      iconClass: 'text-brand-500',
       value: formatCompactNumber(stats.characters),
       detail: fmt(stats.characters),
-      label: t("ws.source.metrics.characters"),
+      label: t('ws.source.metrics.characters'),
     },
     {
-      key: "tokens",
+      key: 'tokens',
       icon: LUCIDE.zap,
-      iconClass: "text-success",
+      iconClass: 'text-success',
       value: formatCompactNumber(tokenCount),
       detail: fmt(tokenCount),
-      label: t("ws.source.metrics.tokens"),
+      label: t('ws.source.metrics.tokens'),
     },
     {
-      key: "readTime",
+      key: 'readTime',
       icon: LUCIDE.clock,
-      iconClass: "text-warning",
+      iconClass: 'text-warning',
       value: `~${readMinutes}`,
-      label: t("ws.source.metrics.readTime"),
-      detail: t("ws.source.metrics.minutes", { count: readMinutes }),
+      label: t('ws.source.metrics.readTime'),
+      detail: t('ws.source.metrics.minutes', {count: readMinutes}),
     },
-  ];
+  ]
 
   const statusLabel = update.isPending
-    ? t("ws.source.statusSaving")
+    ? t('ws.source.statusSaving')
     : value !== saved
-      ? t("ws.source.statusUnsaved")
-      : t("ws.source.statusSaved");
+      ? t('ws.source.statusUnsaved')
+      : t('ws.source.statusSaved')
 
   return (
     <>
       <EditorShell
-        fullscreenTitle={source.title ?? t("sources.untitled")}
+        fullscreenTitle={source.title ?? t('sources.untitled')}
         title={
           <div className="flex min-w-0 items-center gap-2">
-            <Tooltip label={t(collapsed ? "ws.source.expand" : "ws.source.collapse")}>
+            <Tooltip
+              label={t(collapsed ? 'ws.source.expand' : 'ws.source.collapse')}>
               <Button
                 variant="ghost"
                 size="icon-sm"
                 aria-expanded={!collapsed}
-                aria-label={t(collapsed ? "ws.source.expand" : "ws.source.collapse")}
-                onClick={onToggle}
-              >
+                aria-label={t(
+                  collapsed ? 'ws.source.expand' : 'ws.source.collapse',
+                )}
+                onClick={onToggle}>
                 <Icon
                   icon={collapsed ? ICONS.chevronRight : ICONS.chevronDown}
                   animate="snappy"
@@ -286,10 +275,9 @@ function SourceEditor({
                 aria-label={statusLabel}
                 className={`hidden size-5 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring md:flex ${
                   value !== saved || update.isPending
-                    ? "text-warning"
-                    : "text-success"
-                }`}
-              >
+                    ? 'text-warning'
+                    : 'text-success'
+                }`}>
                 <span
                   aria-hidden="true"
                   className="size-2 rounded-full bg-current"
@@ -300,39 +288,22 @@ function SourceEditor({
         }
         actions={
           <div className="flex items-center gap-2">
-            <Tooltip label={`${t("ws.source.saveChanges")} (⌘S)`}>
-              {/* The span takes the hover: a disabled button swallows pointer events. */}
-              <span className="inline-flex">
-                <Button
-                  size="icon-md"
-                  disabled={!canSave} loading={update.isPending}
-                  aria-label={t("ws.source.saveChanges")}
-                  aria-keyshortcuts="Meta+S Control+S"
-                  onClick={() => void save()}
-                >
-                  <Icon icon={LUCIDE.save} />
-                </Button>
-              </span>
-            </Tooltip>
             <DropdownMenu
               compact
               trigger={
                 <Button
                   variant="outline"
                   size="icon-md"
-                  aria-label={t("ws.source.actions")}
-                >
+                  aria-label={t('ws.source.actions')}>
                   <Icon icon={ICONS.more} />
                 </Button>
-              }
-            >
+              }>
               <DropdownMenuItem
                 icon={ICONS.delete}
                 tone="danger"
                 disabled={removing}
-                onSelect={onRemove}
-              >
-                {t("ws.source.remove")}
+                onSelect={onRemove}>
+                {t('ws.source.remove')}
               </DropdownMenuItem>
             </DropdownMenu>
           </div>
@@ -345,12 +316,12 @@ function SourceEditor({
         collapsed={collapsed}
         meta={
           <MetricsCard
-            title={t("ws.source.metrics.title")}
+            title={t('ws.source.metrics.title')}
             items={statItems}
             className="hidden lg:grid"
           />
         }
-        renderEditor={({ className, fullscreen }) =>
+        renderEditor={({className, fullscreen}) =>
           rendered ? (
             <MarkdownEditor
               value={value}
@@ -363,82 +334,82 @@ function SourceEditor({
         }
       />
     </>
-  );
+  )
 }
 
 function SourceTitleField({
   datasetId,
   source,
 }: {
-  datasetId: string;
-  source: QaDatasetSourceFull;
+  datasetId: string
+  source: QaDatasetSourceFull
 }) {
-  const t = useTranslations("admin.qa");
-  const update = useUpdateQaSource(datasetId);
+  const t = useTranslations('admin.qa')
+  const update = useUpdateQaSource(datasetId)
 
   return (
     <InlineTextField
-      value={source.title ?? ""}
-      placeholder={t("sources.untitled")}
-      label={t("sources.fields.title")}
+      value={source.title ?? ''}
+      placeholder={t('sources.untitled')}
+      label={t('sources.fields.title')}
       onSubmit={async (title) => {
         try {
           // An empty title goes back to `null`, i.e. "Untitled".
           await update.mutateAsync({
             id: source.id,
-            input: { title: title === "" ? null : title },
-          });
+            input: {title: title === '' ? null : title},
+          })
         } catch (error) {
-          toast.error(t("ws.source.saveFailed"));
-          throw error;
+          toast.error(t('ws.source.saveFailed'))
+          throw error
         }
       }}
     />
-  );
+  )
 }
 
 function AddSourceForm({
   datasetId,
   onSaved,
 }: {
-  datasetId: string;
-  onSaved: (id?: string) => void;
+  datasetId: string
+  onSaved: (id?: string) => void
 }) {
-  const t = useTranslations("admin.qa");
-  const m = useMessage();
-  const add = useAddQaSource(datasetId);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [formError, setFormError] = useState<Message | string | null>(null);
+  const t = useTranslations('admin.qa')
+  const m = useMessage()
+  const add = useAddQaSource(datasetId)
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+  const [formError, setFormError] = useState<Message | string | null>(null)
 
-  const tooLong = content.length > MAX_SOURCE_CHARS;
+  const tooLong = content.length > MAX_SOURCE_CHARS
 
   const save = async () => {
-    setFormError(null);
+    setFormError(null)
     try {
       const created = await add.mutateAsync({
-        kind: "text",
-        title: title === "" ? null : title,
+        kind: 'text',
+        title: title === '' ? null : title,
         content,
-      });
-      setTitle("");
-      setContent("");
-      onSaved(created.id);
+      })
+      setTitle('')
+      setContent('')
+      onSaved(created.id)
     } catch (error) {
-      setFormError(applyApiError(error, () => undefined, []));
+      setFormError(applyApiError(error, () => undefined, []))
     }
-  };
+  }
 
   return (
     <div className="space-y-3">
       <Input
-        label={t("sources.fields.title")}
+        label={t('sources.fields.title')}
         value={title}
         onChange={(event) => setTitle(event.target.value)}
       />
       <div className="space-y-1.5">
         <Typography variant="body-4" as="span" className="font-medium">
-          {t("sources.fields.content")}
+          {t('sources.fields.content')}
         </Typography>
         {/* The same editor as editing a source: paste, images and Markdown behave alike. */}
         <MarkdownEditor
@@ -450,29 +421,25 @@ function AddSourceForm({
       <div className="flex items-center justify-between gap-3">
         <Typography
           variant="body-4"
-          className={tooLong ? "text-danger" : "text-muted-foreground"}
-        >
-          {t("sources.charCount", {
+          className={tooLong ? 'text-danger' : 'text-muted-foreground'}>
+          {t('sources.charCount', {
             count: content.length,
             max: MAX_SOURCE_CHARS,
           })}
         </Typography>
         <Button
           onClick={() => void save()}
-          disabled={content.trim() === "" || tooLong}
-          loading={add.isPending}
-        >
-          {t("sources.save")}
+          disabled={content.trim() === '' || tooLong}
+          loading={add.isPending}>
+          {t('sources.save')}
         </Button>
       </div>
       {/* Stopped here rather than at the API: a 400 after pasting a whole chapter
           is the worst possible moment to learn about the limit. */}
       {tooLong ? (
-        <AlertWarning
-          message={t("sources.tooLong", { max: MAX_SOURCE_CHARS })}
-        />
+        <AlertWarning message={t('sources.tooLong', {max: MAX_SOURCE_CHARS})} />
       ) : null}
       {formError ? <AlertError message={m(formError)} /> : null}
     </div>
-  );
+  )
 }

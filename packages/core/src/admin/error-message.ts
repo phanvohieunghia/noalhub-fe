@@ -1,5 +1,5 @@
-import { ApiError, isForbidden, isRateLimited } from "@noalhub/api/errors";
-import type { Message } from "@noalhub/api/message";
+import {ApiError, isForbidden, isRateLimited} from '@noalhub/api/errors'
+import type {Message} from '@noalhub/api/message'
 
 /**
  * The message shown for an error on an admin screen — **one single place**, so
@@ -16,16 +16,16 @@ import type { Message } from "@noalhub/api/message";
  * rules out.
  */
 export function adminErrorText(error: unknown): Message | string {
-  if (isForbidden(error)) return { key: "common.errors.forbidden" };
-  if (isRateLimited(error)) return { key: "common.errors.rateLimited" };
+  if (isForbidden(error)) return {key: 'common.errors.forbidden'}
+  if (isRateLimited(error)) return {key: 'common.errors.rateLimited'}
 
   if (error instanceof ApiError) {
-    if (error.status === 404) return { key: "common.errors.notFound" };
-    if (error.status === 0) return { key: "common.errors.network" };
+    if (error.status === 404) return {key: 'common.errors.notFound'}
+    if (error.status === 0) return {key: 'common.errors.network'}
     // `message` is written by the backend — for display only, never parse it.
     // It has no translation, so it shows verbatim even in the English UI (§7.3).
-    return error.message;
+    return error.message
   }
 
-  return { key: "common.errors.generic" };
+  return {key: 'common.errors.generic'}
 }

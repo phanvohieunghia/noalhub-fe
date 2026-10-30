@@ -75,7 +75,7 @@
     "allKinds": "All stages",
     "footer": "{from}–{to} of {total, plural, one {# prompt} other {# prompts}}",
     "sortHint": "Sort by {column}",
-    "perPage": "{count} per page",
+    "perPage": "{count} / page",
     "perPageLabel": "Prompts per page",
     "defaultCount": "{count, plural, one {# question} other {# questions}} per set",
     "defaultSummary": "{count, plural, one {# question} other {# questions}} per set · {shape}",
@@ -106,9 +106,7 @@
       "name": "Display name",
       "prompt": "Prompt",
       "promptOf": "Prompt — {name}",
-      "characters": "{count, plural, one {# character} other {# characters}}",
-      "insertVariable": "Insert variable",
-      "variablesHint": "The three source variables ({forbidden}) do not belong here: the source travels separately, and the leading half must stay byte-identical between runs for caching to hit."
+      "characters": "{count, plural, one {# character} other {# characters}}"
     }
   },
   "datasets": {
@@ -304,7 +302,7 @@
     "selected": "{count, plural, one {# set selected} other {# sets selected}}",
     "deleteSelected": "Delete selected",
     "footer": "{selected} of {total, plural, one {# set} other {# sets}} selected",
-    "perPage": "{count} per page",
+    "perPage": "{count} / page",
     "perPageLabel": "Sets per page",
     "selectAll": "Select all sets",
     "selectRow": "Select {title}",
@@ -592,7 +590,6 @@
     },
     "source": {
       "saved": "Source saved",
-      "saveChanges": "Save changes",
       "statusSaving": "Saving…",
       "statusUnsaved": "Unsaved changes",
       "statusSaved": "All changes saved",
@@ -636,7 +633,6 @@
         "minutes": "~{count} min"
       },
       "openDrawer": "Show outline",
-      "saveChanges": "Save changes",
       "generatingHeading": "Outline · generating",
       "generatingTitle": "Generating outline from {count, plural, one {# chapter} other {# chapters}}…",
       "fullscreen": "Full screen",

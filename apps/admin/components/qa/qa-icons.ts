@@ -1,4 +1,4 @@
-import { LUCIDE } from "@noalhub/ui/icons";
+import {LUCIDE} from '@noalhub/ui/icons'
 
 /** One icon per answer shape, the same everywhere a shape is picked or shown. */
 export const SHAPE_ICONS = {
@@ -8,7 +8,7 @@ export const SHAPE_ICONS = {
   short_answer: LUCIDE.messageSquareText,
   fill_blank: LUCIDE.textCursorInput,
   flashcard: LUCIDE.layers,
-} as const;
+} as const
 
 /** One icon per question kind. */
 export const KIND_ICONS = {
@@ -16,4 +16,4 @@ export const KIND_ICONS = {
   practice: LUCIDE.wrench,
   recall: LUCIDE.brain,
   analysis: LUCIDE.microscope,
-} as const;
+} as const

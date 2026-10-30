@@ -1,7 +1,7 @@
-import { getPublishedPosts } from "@noalhub/api/blog/server";
-import { absoluteUrl } from "@noalhub/core/blog/seo";
-import { DEFAULT_LOCALE } from "@noalhub/i18n/config";
-import { getTranslations } from "next-intl/server";
+import {getPublishedPosts} from '@noalhub/api/blog/server'
+import {absoluteUrl} from '@noalhub/core/blog/seo'
+import {DEFAULT_LOCALE} from '@noalhub/i18n/config'
+import {getTranslations} from 'next-intl/server'
 
 /**
  * Same reason as `sitemap.ts`: the build-time prerender produces an **empty
@@ -9,12 +9,12 @@ import { getTranslations } from "next-intl/server";
  * test). Caching still happens at the `fetch` layer under the `blog-list` tag,
  * so the backend takes no extra calls.
  */
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic'
 
 /** Still used for the `Cache-Control` header sent to the CDN/nginx. */
-const FEED_MAX_AGE = 3600;
+const FEED_MAX_AGE = 3600
 
-const FEED_SIZE = 20;
+const FEED_SIZE = 20
 
 /**
  * A **summary** feed: `<description>` carries only the `excerpt`, never the
@@ -47,7 +47,10 @@ const FEED_SIZE = 20;
  */
 export async function GET() {
   // Hardcoded to `vi` rather than reading the request's locale: see the note above.
-  const t = await getTranslations({ locale: DEFAULT_LOCALE, namespace: "web.blog.rss" });
+  const t = await getTranslations({
+    locale: DEFAULT_LOCALE,
+    namespace: 'web.blog.rss',
+  })
 
   // ⚠️ Same reason as `generateStaticParams` in §4.4a, and this is where it
   // **actually broke**: Next prerenders Route Handlers during `next build`, when
@@ -60,43 +63,43 @@ export async function GET() {
   // live backend") applies to EVERY route prerendered at build time. A
   // temporarily empty feed is cheaper than a break in CD, and `revalidate`
   // regenerates it on the next visit.
-  const items = await getPublishedPosts({ limit: FEED_SIZE })
+  const items = await getPublishedPosts({limit: FEED_SIZE})
     .then((list) => list.items)
-    .catch(() => []);
+    .catch(() => [])
 
-  const feedUrl = absoluteUrl(`/${DEFAULT_LOCALE}/blogs/rss.xml`);
-  const siteUrl = absoluteUrl(`/${DEFAULT_LOCALE}/blogs`);
+  const feedUrl = absoluteUrl(`/${DEFAULT_LOCALE}/blogs/rss.xml`)
+  const siteUrl = absoluteUrl(`/${DEFAULT_LOCALE}/blogs`)
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>${escapeXml(t("title"))}</title>
+    <title>${escapeXml(t('title'))}</title>
     <link>${escapeXml(siteUrl)}</link>
-    <description>${escapeXml(t("description"))}</description>
+    <description>${escapeXml(t('description'))}</description>
     <language>${DEFAULT_LOCALE}</language>
     <atom:link href="${escapeXml(feedUrl)}" rel="self" type="application/rss+xml" />
-${items.map(itemXml).join("\n")}
+${items.map(itemXml).join('\n')}
   </channel>
 </rss>
-`;
+`
 
   return new Response(body, {
     headers: {
-      "Content-Type": "application/rss+xml; charset=utf-8",
+      'Content-Type': 'application/rss+xml; charset=utf-8',
       // The CDN/nginx path should also know how long the feed stays fresh.
-      "Cache-Control": `public, max-age=0, s-maxage=${FEED_MAX_AGE}`,
+      'Cache-Control': `public, max-age=0, s-maxage=${FEED_MAX_AGE}`,
     },
-  });
+  })
 }
 
 function itemXml(post: {
-  slug: string;
-  title: string;
-  excerpt: string;
-  publishedAt: string;
-  category: { name: string };
+  slug: string
+  title: string
+  excerpt: string
+  publishedAt: string
+  category: {name: string}
 }): string {
-  const url = absoluteUrl(`/${DEFAULT_LOCALE}/blogs/${post.slug}`);
+  const url = absoluteUrl(`/${DEFAULT_LOCALE}/blogs/${post.slug}`)
 
   return `    <item>
       <title>${escapeXml(post.title)}</title>
@@ -105,7 +108,7 @@ function itemXml(post: {
       <pubDate>${new Date(post.publishedAt).toUTCString()}</pubDate>
       <category>${escapeXml(post.category.name)}</category>
       <description>${escapeXml(post.excerpt)}</description>
-    </item>`;
+    </item>`
 }
 
 /**
@@ -114,9 +117,9 @@ function itemXml(post: {
  */
 function escapeXml(value: string): string {
   return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
 }

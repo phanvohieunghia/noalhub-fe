@@ -1,4 +1,4 @@
-import { LogoGlyphPaths } from "./logo";
+import {LogoGlyphPaths} from './logo'
 
 /**
  * The lockup: the bare glyph (no tile) next to the "Noalhub" wordmark, for
@@ -9,7 +9,7 @@ import { LogoGlyphPaths } from "./logo";
  * whole thing scales with whatever text size the call site picks. Colors follow
  * the `--logo-*` tokens; add `dark` to force the on-dark variant (see `logo.tsx`).
  */
-export function LogoLockup({ className = "text-title-3" }: { className?: string }) {
+export function LogoLockup({className = 'text-title-3'}: {className?: string}) {
   return (
     <span className={`inline-flex items-center gap-[0.27em] ${className}`}>
       <svg
@@ -18,17 +18,16 @@ export function LogoLockup({ className = "text-title-3" }: { className?: string 
         className="h-[1.95em] shrink-0"
         style={
           {
-            width: "calc(1.95em * 380 / 366.86)",
-            "--logo-glyph-a": "var(--logo-a)",
-            "--logo-glyph-b": "var(--logo-b)",
+            width: 'calc(1.95em * 380 / 366.86)',
+            '--logo-glyph-a': 'var(--logo-a)',
+            '--logo-glyph-b': 'var(--logo-b)',
           } as React.CSSProperties
-        }
-      >
+        }>
         <LogoGlyphPaths />
       </svg>
       <span className="font-bold tracking-tight text-(--logo-word)">
         Noal<span className="text-(--logo-word-accent)">hub</span>
       </span>
     </span>
-  );
+  )
 }

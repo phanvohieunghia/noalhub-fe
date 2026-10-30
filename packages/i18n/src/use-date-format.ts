@@ -3,11 +3,11 @@ import {
   formatDateTime,
   formatDayMonth,
   formatMonthYear,
-} from "@noalhub/core/format-date";
-import { useLocale } from "next-intl";
+} from '@noalhub/core/format-date'
+import {useLocale} from 'next-intl'
 
-import { intlLocale } from "./formats";
-import { DEFAULT_LOCALE, isLocale } from "./config";
+import {intlLocale} from './formats'
+import {DEFAULT_LOCALE, isLocale} from './config'
 
 /**
  * Two date formatters already bound to the current request's locale.
@@ -21,13 +21,13 @@ import { DEFAULT_LOCALE, isLocale } from "./config";
  * (`docs/i18n.md` §7.1).
  */
 export function useDateFormat() {
-  const locale = useLocale();
-  const tag = intlLocale(isLocale(locale) ? locale : DEFAULT_LOCALE);
+  const locale = useLocale()
+  const tag = intlLocale(isLocale(locale) ? locale : DEFAULT_LOCALE)
 
   return {
     date: (value?: string | null) => formatDate(tag, value),
     dateTime: (value?: string | null) => formatDateTime(tag, value),
     dayMonth: (value?: string | null) => formatDayMonth(tag, value),
     monthYear: (value?: string | null) => formatMonthYear(tag, value),
-  };
+  }
 }

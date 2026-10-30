@@ -1,11 +1,11 @@
-"use client";
+'use client'
 
-import Link from "next/link";
+import Link from 'next/link'
 
-import type { BlogCategory } from "@noalhub/api/blog";
-import { useTranslations } from "next-intl";
-import { Select } from "@noalhub/ui/select";
-import { Typography } from "@noalhub/ui/typography";
+import type {BlogCategory} from '@noalhub/api/blog'
+import {useTranslations} from 'next-intl'
+import {Select} from '@noalhub/ui/select'
+import {Typography} from '@noalhub/ui/typography'
 
 /**
  * A category is a **single-value select with no free typing** (§7.1a).
@@ -22,10 +22,10 @@ export function CategorySelect({
   error,
   required = false,
 }: {
-  categories: BlogCategory[];
-  value: string;
-  onChange: (slug: string) => void;
-  error?: string;
+  categories: BlogCategory[]
+  value: string
+  onChange: (slug: string) => void
+  error?: string
   /**
    * A **published** post has no "— none —" option.
    *
@@ -34,15 +34,15 @@ export function CategorySelect({
    * errors — the exact "two round trips" §7.4 warns about. Drafts are the
    * opposite: empty is valid.
    */
-  required?: boolean;
+  required?: boolean
 }) {
-  const t = useTranslations("admin.posts");
+  const t = useTranslations('admin.posts')
 
   return (
     <div className="flex flex-col gap-1.5">
       <Select
-        label={t("categorySelect.label")}
-        placeholder={required ? undefined : t("categorySelect.unset")}
+        label={t('categorySelect.label')}
+        placeholder={required ? undefined : t('categorySelect.unset')}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         error={error}
@@ -52,20 +52,28 @@ export function CategorySelect({
         }))}
       />
       {categories.length === 0 ? (
-        <Typography variant="body-4" className="text-amber-700 dark:text-amber-300">
-          {t("categorySelect.none")}{" "}
-          <Link href="/posts/categories" className="underline underline-offset-2">
-            {t("categorySelect.create")}
+        <Typography
+          variant="body-4"
+          className="text-amber-700 dark:text-amber-300">
+          {t('categorySelect.none')}{' '}
+          <Link
+            href="/posts/categories"
+            className="underline underline-offset-2">
+            {t('categorySelect.create')}
           </Link>
         </Typography>
       ) : (
         <Typography variant="body-4" className="opacity-60">
-          {required ? t("categorySelect.requiredHint") : t("categorySelect.optionalHint")}{" "}
-          <Link href="/posts/categories" className="underline underline-offset-2">
-            {t("categorySelect.manage")}
+          {required
+            ? t('categorySelect.requiredHint')
+            : t('categorySelect.optionalHint')}{' '}
+          <Link
+            href="/posts/categories"
+            className="underline underline-offset-2">
+            {t('categorySelect.manage')}
           </Link>
         </Typography>
       )}
     </div>
-  );
+  )
 }

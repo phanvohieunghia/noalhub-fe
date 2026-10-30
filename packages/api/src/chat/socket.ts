@@ -1,8 +1,8 @@
-import { io, type Socket } from "socket.io-client";
+import {io, type Socket} from 'socket.io-client'
 
-import { CHAT_NAMESPACE, getWsUrl, WS_URL } from "../config";
-import { ensureAccessToken } from "../client";
-import { tokenStore } from "../auth/token-store";
+import {CHAT_NAMESPACE, getWsUrl, WS_URL} from '../config'
+import {ensureAccessToken} from '../client'
+import {tokenStore} from '../auth/token-store'
 
 /**
  * Realtime's ISOLATION BOUNDARY — the ONLY file in the codebase that knows about
@@ -14,19 +14,19 @@ import { tokenStore } from "../auth/token-store";
  */
 
 /** Acks do not time out on their own — without this, a bubble is stuck "sending" forever. */
-const ACK_TIMEOUT_MS = 10_000;
+const ACK_TIMEOUT_MS = 10_000
 
 /** Renew the token 60s before it expires; do not wait for the backend to disconnect. */
-const REFRESH_MARGIN_MS = 60_000;
+const REFRESH_MARGIN_MS = 60_000
 
-let socket: Socket | null = null;
-let refreshTimer: ReturnType<typeof setTimeout> | null = null;
-let unsubscribeToken: (() => void) | null = null;
+let socket: Socket | null = null
+let refreshTimer: ReturnType<typeof setTimeout> | null = null
+let unsubscribeToken: (() => void) | null = null
 /** Stops overlapping `connect()` calls from building two sockets. */
-let connecting: Promise<Socket | null> | null = null;
+let connecting: Promise<Socket | null> | null = null
 
 export function getSocket(): Socket | null {
-  return socket;
+  return socket
 }
 
 /**
@@ -37,51 +37,51 @@ export function getSocket(): Socket | null {
  * `token: null` is disconnected immediately.
  */
 export function connectChatSocket(): Promise<Socket | null> {
-  if (socket?.connected) return Promise.resolve(socket);
-  if (connecting) return connecting;
+  if (socket?.connected) return Promise.resolve(socket)
+  if (connecting) return connecting
 
   connecting = (async () => {
-    const token = await ensureAccessToken();
-    if (!token) return null;
+    const token = await ensureAccessToken()
+    if (!token) return null
 
     // Another call finished building the socket while we awaited.
-    if (socket) return socket;
+    if (socket) return socket
 
-    const wsUrl = getWsUrl();
+    const wsUrl = getWsUrl()
     socket = io(`${wsUrl}${CHAT_NAMESPACE}`, {
       // The token rides in the handshake payload, NOT in the query string
       // (query strings end up in the server's access log).
-      auth: { token },
+      auth: {token},
       // Force websocket: avoids needing sticky sessions at the load balancer
       // when the backend runs several instances. The trade is losing the
       // long-polling fallback on networks that block WebSocket — see
       // `docs/chat.md` §5.4.
-      transports: ["websocket"],
+      transports: ['websocket'],
       // Socket.IO already has backoff plus jitter. Do not hand-write reconnect.
       reconnection: true,
       reconnectionDelayMax: 30_000,
-    });
+    })
 
-    registerLifecycle(socket);
-    scheduleTokenRefresh();
-    watchTokenChanges();
+    registerLifecycle(socket)
+    scheduleTokenRefresh()
+    watchTokenChanges()
 
-    return socket;
-  })();
+    return socket
+  })()
 
   connecting.finally(() => {
-    connecting = null;
-  });
+    connecting = null
+  })
 
-  return connecting;
+  return connecting
 }
 
 export function disconnectChatSocket() {
-  clearRefreshTimer();
-  unsubscribeToken?.();
-  unsubscribeToken = null;
-  socket?.disconnect();
-  socket = null;
+  clearRefreshTimer()
+  unsubscribeToken?.()
+  unsubscribeToken = null
+  socket?.disconnect()
+  socket = null
 }
 
 /**
@@ -90,39 +90,39 @@ export function disconnectChatSocket() {
  * infinite loop with an error code attached.
  */
 function registerLifecycle(instance: Socket) {
-  instance.on("connect", scheduleTokenRefresh);
+  instance.on('connect', scheduleTokenRefresh)
 
-  instance.on("disconnect", (reason) => {
-    clearRefreshTimer();
-    if (reason === "io server disconnect") {
+  instance.on('disconnect', (reason) => {
+    clearRefreshTimer()
+    if (reason === 'io server disconnect') {
       // The server disconnected us → Socket.IO does NOT reconnect on its own.
       // It is usually an expired token, so fetch a fresh one and reconnect by
       // hand.
-      void reconnectWithFreshToken();
+      void reconnectWithFreshToken()
     }
-  });
+  })
 
-  instance.on("connect_error", (error) => {
-    const code = (error as Error & { data?: { code?: string } }).data?.code;
-    if (code === "TOKEN_EXPIRED" || code === "UNAUTHENTICATED") {
-      void reconnectWithFreshToken();
+  instance.on('connect_error', (error) => {
+    const code = (error as Error & {data?: {code?: string}}).data?.code
+    if (code === 'TOKEN_EXPIRED' || code === 'UNAUTHENTICATED') {
+      void reconnectWithFreshToken()
     }
-  });
+  })
 }
 
 async function reconnectWithFreshToken() {
-  const token = await ensureAccessToken();
-  if (!token || !socket) return;
-  applyToken(token);
-  socket.connect();
+  const token = await ensureAccessToken()
+  if (!token || !socket) return
+  applyToken(token)
+  socket.connect()
 }
 
 /** Updates the token for the next handshake and renews the open session. */
 function applyToken(token: string) {
-  if (!socket) return;
-  socket.auth = { token };
+  if (!socket) return
+  socket.auth = {token}
   if (socket.connected) {
-    socket.emit("auth:refresh", { token });
+    socket.emit('auth:refresh', {token})
   }
 }
 
@@ -135,57 +135,64 @@ function applyToken(token: string) {
  * the token may have been refreshed several times since.
  */
 function scheduleTokenRefresh() {
-  clearRefreshTimer();
+  clearRefreshTimer()
 
-  const token = tokenStore.getAccess();
-  if (!token) return;
+  const token = tokenStore.getAccess()
+  if (!token) return
 
-  const expiresAt = readJwtExpiry(token);
-  if (!expiresAt) return;
+  const expiresAt = readJwtExpiry(token)
+  if (!expiresAt) return
 
-  const delay = expiresAt - Date.now() - REFRESH_MARGIN_MS;
+  const delay = expiresAt - Date.now() - REFRESH_MARGIN_MS
   refreshTimer = setTimeout(
     () => {
       void (async () => {
         // Clear the access token from memory so `ensureAccessToken` is forced to
         // refresh — it uses the HTTP layer's single-flight, so it never races
         // with REST.
-        const fresh = await ensureAccessToken();
-        if (fresh) applyToken(fresh);
-        scheduleTokenRefresh();
-      })();
+        const fresh = await ensureAccessToken()
+        if (fresh) applyToken(fresh)
+        scheduleTokenRefresh()
+      })()
     },
     Math.max(delay, 1_000),
-  );
+  )
 }
 
 /** REST refreshed the token → renew the socket session at once, do not wait for the timer. */
 function watchTokenChanges() {
-  unsubscribeToken?.();
+  unsubscribeToken?.()
   unsubscribeToken = tokenStore.subscribe((token) => {
-    if (!token) return;
-    applyToken(token);
-    scheduleTokenRefresh();
-  });
+    if (!token) return
+    applyToken(token)
+    scheduleTokenRefresh()
+  })
 }
 
 function clearRefreshTimer() {
-  if (refreshTimer) clearTimeout(refreshTimer);
-  refreshTimer = null;
+  if (refreshTimer) clearTimeout(refreshTimer)
+  refreshTimer = null
 }
 
 function decodeBase64(str: string): string {
-  if (typeof globalThis.atob === "function") {
-    return globalThis.atob(str);
+  if (typeof globalThis.atob === 'function') {
+    return globalThis.atob(str)
   }
-  const maybeBuffer = (globalThis as unknown as { Buffer?: { from(data: string, encoding: string): { toString(enc: string): string } } }).Buffer;
+  const maybeBuffer = (
+    globalThis as unknown as {
+      Buffer?: {
+        from(data: string, encoding: string): {toString(enc: string): string}
+      }
+    }
+  ).Buffer
   if (maybeBuffer) {
-    return maybeBuffer.from(str, "base64").toString("utf-8");
+    return maybeBuffer.from(str, 'base64').toString('utf-8')
   }
   // Pure JS fallback
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-  let output = "";
-  const clean = String(str).replace(/=+$/, "");
+  const chars =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
+  let output = ''
+  const clean = String(str).replace(/=+$/, '')
   for (
     let bc = 0, bs = 0, buffer: number, idx = 0;
     (buffer = clean.charCodeAt(idx++));
@@ -193,9 +200,9 @@ function decodeBase64(str: string): string {
       ? (output += String.fromCharCode(255 & (bs >> ((-2 * bc) & 6))))
       : 0
   ) {
-    buffer = chars.indexOf(String.fromCharCode(buffer));
+    buffer = chars.indexOf(String.fromCharCode(buffer))
   }
-  return output;
+  return output
 }
 
 /**
@@ -204,14 +211,14 @@ function decodeBase64(str: string): string {
  */
 function readJwtExpiry(token: string): number | null {
   try {
-    const payload = token.split(".")[1];
-    if (!payload) return null;
+    const payload = token.split('.')[1]
+    if (!payload) return null
     const json = JSON.parse(
-      decodeBase64(payload.replace(/-/g, "+").replace(/_/g, "/")),
-    ) as { exp?: number };
-    return typeof json.exp === "number" ? json.exp * 1000 : null;
+      decodeBase64(payload.replace(/-/g, '+').replace(/_/g, '/')),
+    ) as {exp?: number}
+    return typeof json.exp === 'number' ? json.exp * 1000 : null
   } catch {
-    return null;
+    return null
   }
 }
 
@@ -223,12 +230,12 @@ function readJwtExpiry(token: string): number | null {
  * go through `useChatSocket`; calling `disconnect()` from the console does not
  * clear the ephemeral store, exactly like a real network drop.
  */
-if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
-  (window as Window & { __chatSocket?: unknown }).__chatSocket = {
+if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  ;(window as Window & {__chatSocket?: unknown}).__chatSocket = {
     get: getSocket,
     connect: connectChatSocket,
     disconnect: disconnectChatSocket,
-  };
+  }
 }
 
 /**
@@ -239,15 +246,17 @@ export async function emitWithAck<T>(
   event: string,
   payload: unknown,
 ): Promise<T> {
-  const instance = socket;
+  const instance = socket
   if (!instance?.connected) {
-    throw new Error("SOCKET_OFFLINE");
+    throw new Error('SOCKET_OFFLINE')
   }
-  return instance.timeout(ACK_TIMEOUT_MS).emitWithAck(event, payload) as Promise<T>;
+  return instance
+    .timeout(ACK_TIMEOUT_MS)
+    .emitWithAck(event, payload) as Promise<T>
 }
 
 /** A fire-and-forget emit — for typing, which is allowed to be dropped. */
 export function emitFireAndForget(event: string, payload: unknown) {
-  if (!socket?.connected) return;
-  socket.emit(event, payload);
+  if (!socket?.connected) return
+  socket.emit(event, payload)
 }

@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import type { BlogDoc } from "@noalhub/api/blog";
-import { QaContent } from "@noalhub/ui/blog/qa-content";
-import { QaQuestion } from "@noalhub/ui/blog/qa-question";
+import type {BlogDoc} from '@noalhub/api/blog'
+import {QaContent} from '@noalhub/ui/blog/qa-content'
+import {QaQuestion} from '@noalhub/ui/blog/qa-question'
 
 /**
  * Renders a question's rich text with the same renderer the blog uses.
@@ -18,16 +18,20 @@ export function PostContentPreview({
   doc,
   tagIds,
 }: {
-  doc: BlogDoc;
+  doc: BlogDoc
   /**
    * Pass a QUESTION's tag ids to draw it framed and labelled, as a learner sees it. Leave
    * it out for any other rich text (answer, explanation, intro) — those are never framed.
    */
-  tagIds?: readonly string[];
+  tagIds?: readonly string[]
 }) {
   return (
     <div className="text-body-3">
-      {tagIds ? <QaQuestion doc={doc} tagIds={tagIds} /> : <QaContent doc={doc} />}
+      {tagIds ? (
+        <QaQuestion doc={doc} tagIds={tagIds} />
+      ) : (
+        <QaContent doc={doc} />
+      )}
     </div>
-  );
+  )
 }

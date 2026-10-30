@@ -1,15 +1,15 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
-import Link from "next/link";
+import {useTranslations} from 'next-intl'
+import Link from 'next/link'
 
-import { useBrowseQaItems, useQaAttempts } from "@noalhub/api/qa";
-import { Badge } from "@noalhub/ui/badge";
-import { Button } from "@noalhub/ui/button";
-import { Icon, LUCIDE } from "@noalhub/ui/icons";
-import { QaQuestion } from "@noalhub/ui/blog/qa-question";
-import { Skeleton } from "@noalhub/ui/skeleton";
-import { Typography } from "@noalhub/ui/typography";
+import {useBrowseQaItems, useQaAttempts} from '@noalhub/api/qa'
+import {Badge} from '@noalhub/ui/badge'
+import {Button} from '@noalhub/ui/button'
+import {Icon, LUCIDE} from '@noalhub/ui/icons'
+import {QaQuestion} from '@noalhub/ui/blog/qa-question'
+import {Skeleton} from '@noalhub/ui/skeleton'
+import {Typography} from '@noalhub/ui/typography'
 
 /**
  * The questions you are currently getting wrong, across every set and every
@@ -20,29 +20,34 @@ import { Typography } from "@noalhub/ui/typography";
  * list on its own.
  */
 export function LearnPractice() {
-  const t = useTranslations("web.learn");
-  const wrong = useBrowseQaItems({ wrongOnly: true });
-  const attempts = useQaAttempts();
+  const t = useTranslations('web.learn')
+  const wrong = useBrowseQaItems({wrongOnly: true})
+  const attempts = useQaAttempts()
 
-  const rows = wrong.data?.items ?? [];
+  const rows = wrong.data?.items ?? []
   // Two empty states that look the same and mean opposite things: nothing
   // answered yet, versus answered plenty and got them all right.
-  const neverAnswered = (attempts.data?.length ?? 0) === 0;
+  const neverAnswered = (attempts.data?.length ?? 0) === 0
 
   return (
     <main className="mx-auto w-full max-w-3xl p-6">
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" shape="circle" asChild className="-ml-2 shrink-0">
-          <Link href="/learn" aria-label={t("attempt.backToBrowse")}>
+        <Button
+          variant="ghost"
+          size="icon"
+          shape="circle"
+          asChild
+          className="-ml-2 shrink-0">
+          <Link href="/learn" aria-label={t('attempt.backToBrowse')}>
             <Icon icon={LUCIDE.arrowLeft} />
           </Link>
         </Button>
         <Typography variant="h4" as="h1" className="min-w-0 flex-1 break-words">
-          {t("practice.title")}
+          {t('practice.title')}
         </Typography>
       </div>
       <Typography variant="body-3" className="mt-1 opacity-70">
-        {t("practice.intro")}
+        {t('practice.intro')}
       </Typography>
 
       <div className="mt-6 space-y-3">
@@ -50,11 +55,15 @@ export function LearnPractice() {
           <Skeleton className="h-24 w-full" />
         ) : rows.length === 0 ? (
           <Typography variant="body-3" className="opacity-70">
-            {neverAnswered ? t("practice.emptyNew") : t("practice.emptyAllRight")}
+            {neverAnswered
+              ? t('practice.emptyNew')
+              : t('practice.emptyAllRight')}
           </Typography>
         ) : (
           rows.map((item) => (
-            <article key={item.id} className="rounded-lg border border-border p-4">
+            <article
+              key={item.id}
+              className="rounded-lg border border-border p-4">
               <Badge tone="neutral">{t(`kinds.${item.kind}`)}</Badge>
               <div className="mt-2">
                 <QaQuestion doc={item.question} tagIds={item.tagIds} />
@@ -66,5 +75,5 @@ export function LearnPractice() {
         )}
       </div>
     </main>
-  );
+  )
 }

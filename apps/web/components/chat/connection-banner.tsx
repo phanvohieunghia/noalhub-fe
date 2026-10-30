@@ -1,11 +1,11 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
+import {useTranslations} from 'next-intl'
 
-import { Button } from "@noalhub/ui/button";
-import { Spinner } from "@noalhub/ui/spinner";
-import { useChatRealtime } from "./chat-realtime-provider";
-import { Typography } from "@noalhub/ui/typography";
+import {Button} from '@noalhub/ui/button'
+import {Spinner} from '@noalhub/ui/spinner'
+import {useChatRealtime} from './chat-realtime-provider'
+import {Typography} from '@noalhub/ui/typography'
 
 /**
  * Shown only while the socket is NOT online. Messages go over the socket, so a
@@ -13,23 +13,26 @@ import { Typography } from "@noalhub/ui/typography";
  * not guess it.
  */
 export function ConnectionBanner() {
-  const t = useTranslations("web.chat.connection");
-  const tc = useTranslations("common");
-  const { status, reconnect } = useChatRealtime();
-  if (status === "online") return null;
+  const t = useTranslations('web.chat.connection')
+  const tc = useTranslations('common')
+  const {status, reconnect} = useChatRealtime()
+  if (status === 'online') return null
 
-  const connecting = status === "connecting";
+  const connecting = status === 'connecting'
 
   return (
     <div
       role="status"
-      className="flex shrink-0 items-center justify-center gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-amber-800 dark:text-amber-200"
-    >
-      {connecting ? <Spinner /> : <Typography as="span" variant="body-3" aria-hidden>
+      className="flex shrink-0 items-center justify-center gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-amber-800 dark:text-amber-200">
+      {connecting ? (
+        <Spinner />
+      ) : (
+        <Typography as="span" variant="body-3" aria-hidden>
           ⚠
-        </Typography>}
+        </Typography>
+      )}
       <Typography as="span" variant="body-3">
-        {connecting ? t("reconnecting") : t("offline")}
+        {connecting ? t('reconnecting') : t('offline')}
       </Typography>
       {connecting ? null : (
         // `border-current` on purpose: the banner is amber, and a
@@ -38,11 +41,10 @@ export function ConnectionBanner() {
           variant="outline"
           size="xs"
           onClick={reconnect}
-          className="border-current/30 hover:bg-current/10"
-        >
-          {tc("actions.retry")}
+          className="border-current/30 hover:bg-current/10">
+          {tc('actions.retry')}
         </Button>
       )}
     </div>
-  );
+  )
 }

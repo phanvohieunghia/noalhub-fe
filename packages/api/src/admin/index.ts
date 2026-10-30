@@ -6,6 +6,6 @@
  * `apps/admin` — an import from `apps/web` is a sign an admin screen ended up
  * in the wrong place.
  */
-export * from "./hooks";
-export * from "./types";
-export * from "./schemas";
+export * from './hooks'
+export * from './types'
+export * from './schemas'

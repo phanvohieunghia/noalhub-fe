@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import { isMessage, type Message } from "@noalhub/api/message";
-import { useTranslations } from "next-intl";
+import {isMessage, type Message} from '@noalhub/api/message'
+import {useTranslations} from 'next-intl'
 
 /**
  * Translates messages **produced by the data layer** rather than written by a
@@ -18,12 +18,12 @@ import { useTranslations } from "next-intl";
  * accepts this for now).
  */
 export function useMessage() {
-  const t = useTranslations();
+  const t = useTranslations()
 
   return (message?: Message | string | null): string | undefined => {
-    if (!message) return undefined;
-    const key = isMessage(message) ? message.key : message;
-    const values = isMessage(message) ? message.values : undefined;
+    if (!message) return undefined
+    const key = isMessage(message) ? message.key : message
+    const values = isMessage(message) ? message.values : undefined
 
     /*
      * The cast is required, and belongs only here: the key comes from runtime
@@ -32,10 +32,10 @@ export function useMessage() {
      * key renders as the key string instead of throwing.
      */
     const translate = t as unknown as {
-      (key: string, values?: Record<string, string | number>): string;
-      has: (key: string) => boolean;
-    };
+      (key: string, values?: Record<string, string | number>): string
+      has: (key: string) => boolean
+    }
 
-    return translate.has(key) ? translate(key, values) : key;
-  };
+    return translate.has(key) ? translate(key, values) : key
+  }
 }

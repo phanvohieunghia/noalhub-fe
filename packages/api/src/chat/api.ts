@@ -1,10 +1,10 @@
-import { http } from "../client";
+import {http} from '../client'
 import {
   conversationPageSchema,
   conversationSchema,
   messagePageSchema,
-} from "./schemas";
-import type { Conversation, ConversationPage, MessagePage } from "./types";
+} from './schemas'
+import type {Conversation, ConversationPage, MessagePage} from './types'
 
 /**
  * Chat's transport layer — READ ONLY.
@@ -20,16 +20,16 @@ import type { Conversation, ConversationPage, MessagePage } from "./types";
 
 /** GET /chat/conversations — the `before` cursor is a **date-time**. */
 export async function listConversations(
-  params: { before?: string; limit?: number } = {},
+  params: {before?: string; limit?: number} = {},
   signal?: AbortSignal,
 ): Promise<ConversationPage> {
-  const { data } = await http.get<ConversationPage>("/chat/conversations", {
+  const {data} = await http.get<ConversationPage>('/chat/conversations', {
     params,
     authRequired: true,
     schema: conversationPageSchema,
     signal,
-  });
-  return data;
+  })
+  return data
 }
 
 /**
@@ -40,12 +40,12 @@ export async function listConversations(
 export async function createDirectConversation(
   userId: string,
 ): Promise<Conversation> {
-  const { data } = await http.post<Conversation>(
-    "/chat/conversations/direct",
-    { userId },
-    { authRequired: true, schema: conversationSchema },
-  );
-  return data;
+  const {data} = await http.post<Conversation>(
+    '/chat/conversations/direct',
+    {userId},
+    {authRequired: true, schema: conversationSchema},
+  )
+  return data
 }
 
 /**
@@ -58,12 +58,12 @@ export async function getConversation(
   id: string,
   signal?: AbortSignal,
 ): Promise<Conversation> {
-  const { data } = await http.get<Conversation>(`/chat/conversations/${id}`, {
+  const {data} = await http.get<Conversation>(`/chat/conversations/${id}`, {
     authRequired: true,
     schema: conversationSchema,
     signal,
-  });
-  return data;
+  })
+  return data
 }
 
 /**
@@ -75,10 +75,10 @@ export async function getConversation(
  */
 export async function listMessages(
   conversationId: string,
-  params: { before?: string; limit?: number } = {},
+  params: {before?: string; limit?: number} = {},
   signal?: AbortSignal,
 ): Promise<MessagePage> {
-  const { data } = await http.get<MessagePage>(
+  const {data} = await http.get<MessagePage>(
     `/chat/conversations/${conversationId}/messages`,
     {
       params,
@@ -86,8 +86,8 @@ export async function listMessages(
       schema: messagePageSchema,
       signal,
     },
-  );
-  return data;
+  )
+  return data
 }
 
 /**
@@ -102,7 +102,7 @@ export async function markRead(
 ): Promise<void> {
   await http.post(
     `/chat/conversations/${conversationId}/read`,
-    { messageId },
-    { authRequired: true },
-  );
+    {messageId},
+    {authRequired: true},
+  )
 }

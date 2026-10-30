@@ -1,39 +1,39 @@
-import { DEFAULT_LOCALE, isLocale } from "@noalhub/i18n/config";
-import { IntlProvider } from "@noalhub/i18n/provider";
+import {DEFAULT_LOCALE, isLocale} from '@noalhub/i18n/config'
+import {IntlProvider} from '@noalhub/i18n/provider'
 
-import { AdminLocaleSync } from "@/components/layout/locale-sync";
-import type { Metadata } from "next";
-import { getLocale, getTranslations } from "next-intl/server";
-import { Be_Vietnam_Pro } from "next/font/google";
+import {AdminLocaleSync} from '@/components/layout/locale-sync'
+import type {Metadata} from 'next'
+import {getLocale, getTranslations} from 'next-intl/server'
+import {Be_Vietnam_Pro} from 'next/font/google'
 
-import "./globals.css";
-import { THEME_INIT_SCRIPT } from "@noalhub/core/theme/script";
-import { AuthProvider } from "@noalhub/ui/auth/auth-provider";
-import { NavigationProgress } from "@noalhub/ui/navigation-progress";
-import { QueryProvider } from "@noalhub/ui/query-provider";
-import { ThemeProvider } from "@noalhub/ui/theme/theme-provider";
-import { ToastHost } from "@noalhub/ui/toast";
+import './globals.css'
+import {THEME_INIT_SCRIPT} from '@noalhub/core/theme/script'
+import {AuthProvider} from '@noalhub/ui/auth/auth-provider'
+import {NavigationProgress} from '@noalhub/ui/navigation-progress'
+import {QueryProvider} from '@noalhub/ui/query-provider'
+import {ThemeProvider} from '@noalhub/ui/theme/theme-provider'
+import {ToastHost} from '@noalhub/ui/toast'
 
 /** See the note in `apps/web/app/root-html.tsx` — both apps share one font. */
 const beVietnamPro = Be_Vietnam_Pro({
-  variable: "--font-be-vietnam-pro",
-  subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600"],
-  display: "swap",
-});
+  variable: '--font-be-vietnam-pro',
+  subsets: ['latin', 'vietnamese'],
+  weight: ['400', '500', '600'],
+  display: 'swap',
+})
 
 /** The italic face for the `caption` variant — see the note in `apps/web/app/root-html.tsx`. */
 const beVietnamProItalic = Be_Vietnam_Pro({
-  variable: "--font-be-vietnam-pro-italic",
-  subsets: ["latin", "vietnamese"],
-  weight: "400",
-  style: "italic",
-  display: "swap",
-});
+  variable: '--font-be-vietnam-pro-italic',
+  subsets: ['latin', 'vietnamese'],
+  weight: '400',
+  style: 'italic',
+  display: 'swap',
+})
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("nav");
-  return { title: t("adminTitle"), description: t("adminDescription") };
+  const t = await getTranslations('nav')
+  return {title: t('adminTitle'), description: t('adminDescription')}
 }
 
 /**
@@ -46,19 +46,18 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function RootLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
-  const locale = await getLocale();
-  const t = await getTranslations("common");
+}: Readonly<{children: React.ReactNode}>) {
+  const locale = await getLocale()
+  const t = await getTranslations('common')
   return (
     // See the note in `apps/web/app/root-html.tsx` — both apps are deliberately
     // identical in this block, down to the localStorage key.
     <html
       lang={isLocale(locale) ? locale : DEFAULT_LOCALE}
       suppressHydrationWarning
-      className={`${beVietnamPro.variable} ${beVietnamProItalic.variable} h-full antialiased`}
-    >
+      className={`${beVietnamPro.variable} ${beVietnamProItalic.variable} h-full antialiased`}>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{__html: THEME_INIT_SCRIPT}} />
       </head>
       <body className="flex min-h-full flex-col">
         <ThemeProvider>
@@ -75,7 +74,7 @@ export default async function RootLayout({
                     close button needs `common.actions.close`. The label is
                     passed in rather than read inside the package — see the note
                     on `ToastHost`. */}
-                <ToastHost closeLabel={t("actions.close")} />
+                <ToastHost closeLabel={t('actions.close')} />
                 <AdminLocaleSync />
                 {children}
               </IntlProvider>
@@ -84,5 +83,5 @@ export default async function RootLayout({
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }

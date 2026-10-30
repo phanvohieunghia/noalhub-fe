@@ -1,6 +1,6 @@
-import { z } from "zod";
+import {z} from 'zod'
 
-import { userRoleSchema } from "../auth/schemas";
+import {userRoleSchema} from '../auth/schemas'
 
 /**
  * Response schemas for the admin feature — REST bodies are parsed so a backend
@@ -15,7 +15,7 @@ import { userRoleSchema } from "../auth/schemas";
 const nullableString = z
   .string()
   .nullish()
-  .transform((value) => value ?? null);
+  .transform((value) => value ?? null)
 
 export const adminUserSchema = z.object({
   id: z.string(),
@@ -28,7 +28,7 @@ export const adminUserSchema = z.object({
   lastSeenAt: nullableString,
   usernameChangedAt: nullableString,
   createdAt: z.string(),
-});
+})
 
 /**
  * `page`/`limit` use `.catch()` instead of being required: if the backend only
@@ -40,18 +40,18 @@ export const adminUserListSchema = z.object({
   total: z.number(),
   page: z.number().catch(1),
   limit: z.number().catch(20),
-});
+})
 
 export const adminStatsSchema = z.object({
   totalUsers: z.number(),
   verifiedUsers: z.number(),
   newUsersLast7Days: z.number(),
   admins: z.number(),
-});
+})
 
 export const adminSignupsSchema = z.object({
-  range: z.enum(["week", "month", "year"]),
-  granularity: z.enum(["day", "month"]),
+  range: z.enum(['week', 'month', 'year']),
+  granularity: z.enum(['day', 'month']),
   points: z.array(
     z.object({
       date: z.string(),
@@ -61,7 +61,7 @@ export const adminSignupsSchema = z.object({
   ),
   total: z.number(),
   previousTotal: z.number(),
-});
+})
 
 export const adminQaQuestionStatsSchema = z.object({
   items: z.array(
@@ -74,7 +74,7 @@ export const adminQaQuestionStatsSchema = z.object({
   ),
   totalAnswers: z.number(),
   totalCorrect: z.number(),
-});
+})
 
 /**
  * The input schema for the user table's filters. It parses **URL searchParams**
@@ -90,11 +90,14 @@ export const adminUserListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).catch(20),
   q: z.string().trim().min(1).optional().catch(undefined),
   role: userRoleSchema.optional().catch(undefined),
-  sort: z.enum(["createdAt", "username", "email", "role"]).optional().catch(undefined),
-  order: z.enum(["asc", "desc"]).optional().catch(undefined),
-});
+  sort: z
+    .enum(['createdAt', 'username', 'email', 'role'])
+    .optional()
+    .catch(undefined),
+  order: z.enum(['asc', 'desc']).optional().catch(undefined),
+})
 
-export type AdminUserListQueryInput = z.infer<typeof adminUserListQuerySchema>;
+export type AdminUserListQueryInput = z.infer<typeof adminUserListQuerySchema>
 
 export const storybookAccessSchema = z.object({
   id: z.string(),
@@ -102,7 +105,7 @@ export const storybookAccessSchema = z.object({
   note: nullableString,
   createdBy: nullableString,
   createdAt: z.string(),
-});
+})
 
 /**
  * The grant form.
@@ -117,10 +120,12 @@ export const storybookAccessFormSchema = z.object({
     .string()
     .trim()
     .toLowerCase()
-    .min(1, "validation.email.invalid")
-    .max(320, "validation.email.tooLong")
-    .pipe(z.email("validation.email.invalid")),
+    .min(1, 'validation.email.invalid')
+    .max(320, 'validation.email.tooLong')
+    .pipe(z.email('validation.email.invalid')),
   note: z.string().trim().max(255),
-});
+})
 
-export type StorybookAccessFormValues = z.infer<typeof storybookAccessFormSchema>;
+export type StorybookAccessFormValues = z.infer<
+  typeof storybookAccessFormSchema
+>

@@ -1,6 +1,6 @@
-import { createNavigation } from "next-intl/navigation";
+import {createNavigation} from 'next-intl/navigation'
 
-import { routing } from "./routing";
+import {routing} from './routing'
 
 /**
  * The replacements for `next/link` and `next/navigation` in **`apps/web`**:
@@ -14,5 +14,5 @@ import { routing } from "./routing";
  * `apps/admin` is the opposite: it uses `next/link` as usual, because admin
  * URLs carry no locale.
  */
-export const { Link, redirect, usePathname, useRouter, getPathname } =
-  createNavigation(routing);
+export const {Link, redirect, usePathname, useRouter, getPathname} =
+  createNavigation(routing)

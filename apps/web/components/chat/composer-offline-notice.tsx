@@ -1,6 +1,6 @@
-import { useTranslations } from "next-intl";
+import {useTranslations} from 'next-intl'
 
-import { Typography } from "@noalhub/ui/typography";
+import {Typography} from '@noalhub/ui/typography'
 
 /**
  * Messages are sent over the socket, so a lost connection means nothing can be
@@ -10,7 +10,7 @@ import { Typography } from "@noalhub/ui/typography";
 export function ComposerOfflineNotice() {
   return (
     <Typography variant="body-4" role="status" className="px-1 pb-1 opacity-60">
-      {useTranslations("web.chat.connection")("composerOffline")}
+      {useTranslations('web.chat.connection')('composerOffline')}
     </Typography>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import { blogPageParamSchema } from "@noalhub/api/blog";
+import {blogPageParamSchema} from '@noalhub/api/blog'
 
 /**
  * Reads `?page=` on the public listing pages.
@@ -11,13 +11,15 @@ import { blogPageParamSchema } from "@noalhub/api/blog";
  * `/blogs?page=` are three URLs with one content, and all three canonicalize to
  * `/blogs`.
  */
-export function readPageParam(value: string | string[] | undefined): number | null {
-  if (value === undefined || value === "") return 1;
+export function readPageParam(
+  value: string | string[] | undefined,
+): number | null {
+  if (value === undefined || value === '') return 1
   // `?page=1&page=2` produces an array — do not guess the intent; treat it as a bad URL.
-  if (typeof value !== "string") return null;
+  if (typeof value !== 'string') return null
 
-  const parsed = blogPageParamSchema.safeParse(value);
-  return parsed.success ? parsed.data : null;
+  const parsed = blogPageParamSchema.safeParse(value)
+  return parsed.success ? parsed.data : null
 }
 
 /**
@@ -29,7 +31,11 @@ export function readPageParam(value: string | string[] | undefined): number | nu
  * valid — that is the site's correct state before any posts exist, not an error
  * (§6.5).
  */
-export function isPageOutOfRange(page: number, total: number, limit: number): boolean {
-  if (total === 0) return page > 1;
-  return page > Math.ceil(total / Math.max(1, limit));
+export function isPageOutOfRange(
+  page: number,
+  total: number,
+  limit: number,
+): boolean {
+  if (total === 0) return page > 1
+  return page > Math.ceil(total / Math.max(1, limit))
 }

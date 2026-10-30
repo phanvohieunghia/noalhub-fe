@@ -3,11 +3,11 @@ import {
   formatDateTime,
   formatDayMonth,
   formatMonthYear,
-} from "@noalhub/core/format-date";
-import { getLocale } from "next-intl/server";
+} from '@noalhub/core/format-date'
+import {getLocale} from 'next-intl/server'
 
-import { DEFAULT_LOCALE, isLocale } from "./config";
-import { intlLocale } from "./formats";
+import {DEFAULT_LOCALE, isLocale} from './config'
+import {intlLocale} from './formats'
 
 /**
  * The `async` counterpart of `useDateFormat`, for **async Server Components**.
@@ -17,13 +17,13 @@ import { intlLocale } from "./formats";
  * on the same `formatDate` underneath, so they cannot disagree.
  */
 export async function getDateFormat() {
-  const locale = await getLocale();
-  const tag = intlLocale(isLocale(locale) ? locale : DEFAULT_LOCALE);
+  const locale = await getLocale()
+  const tag = intlLocale(isLocale(locale) ? locale : DEFAULT_LOCALE)
 
   return {
     date: (value?: string | null) => formatDate(tag, value),
     dateTime: (value?: string | null) => formatDateTime(tag, value),
     dayMonth: (value?: string | null) => formatDayMonth(tag, value),
     monthYear: (value?: string | null) => formatMonthYear(tag, value),
-  };
+  }
 }

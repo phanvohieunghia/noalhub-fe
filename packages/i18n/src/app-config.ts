@@ -1,20 +1,20 @@
-import type adminLogin from "../messages/vi/admin.login.json";
-import type adminOverview from "../messages/vi/admin.overview.json";
-import type adminPosts from "../messages/vi/admin.posts.json";
-import type adminQa from "../messages/vi/admin.qa.json";
-import type adminStorybook from "../messages/vi/admin.storybook.json";
-import type adminUsers from "../messages/vi/admin.users.json";
-import type common from "../messages/vi/common.json";
-import type nav from "../messages/vi/nav.json";
-import type validation from "../messages/vi/validation.json";
-import type webAuth from "../messages/vi/web.auth.json";
-import type webBlog from "../messages/vi/web.blog.json";
-import type webChat from "../messages/vi/web.chat.json";
-import type webDashboard from "../messages/vi/web.dashboard.json";
-import type webFriends from "../messages/vi/web.friends.json";
-import type webHome from "../messages/vi/web.home.json";
-import type webLearn from "../messages/vi/web.learn.json";
-import type webProfile from "../messages/vi/web.profile.json";
+import type adminLogin from '../messages/vi/admin.login.json'
+import type adminOverview from '../messages/vi/admin.overview.json'
+import type adminPosts from '../messages/vi/admin.posts.json'
+import type adminQa from '../messages/vi/admin.qa.json'
+import type adminStorybook from '../messages/vi/admin.storybook.json'
+import type adminUsers from '../messages/vi/admin.users.json'
+import type common from '../messages/vi/common.json'
+import type nav from '../messages/vi/nav.json'
+import type validation from '../messages/vi/validation.json'
+import type webAuth from '../messages/vi/web.auth.json'
+import type webBlog from '../messages/vi/web.blog.json'
+import type webChat from '../messages/vi/web.chat.json'
+import type webDashboard from '../messages/vi/web.dashboard.json'
+import type webFriends from '../messages/vi/web.friends.json'
+import type webHome from '../messages/vi/web.home.json'
+import type webLearn from '../messages/vi/web.learn.json'
+import type webProfile from '../messages/vi/web.profile.json'
 
 /**
  * The message tree, shaped from the **`vi`** files — `vi` is the source
@@ -29,28 +29,28 @@ import type webProfile from "../messages/vi/web.profile.json";
  * from `i18n/app-config.ts`.
  */
 export type AppMessages = {
-  common: typeof common;
-  nav: typeof nav;
-  validation: typeof validation;
+  common: typeof common
+  nav: typeof nav
+  validation: typeof validation
   web: {
-    auth: typeof webAuth;
-    blog: typeof webBlog;
-    chat: typeof webChat;
-    dashboard: typeof webDashboard;
-    friends: typeof webFriends;
-    home: typeof webHome;
-    learn: typeof webLearn;
-    profile: typeof webProfile;
-  };
+    auth: typeof webAuth
+    blog: typeof webBlog
+    chat: typeof webChat
+    dashboard: typeof webDashboard
+    friends: typeof webFriends
+    home: typeof webHome
+    learn: typeof webLearn
+    profile: typeof webProfile
+  }
   admin: {
-    login: typeof adminLogin;
-    overview: typeof adminOverview;
-    posts: typeof adminPosts;
-    qa: typeof adminQa;
-    storybook: typeof adminStorybook;
-    users: typeof adminUsers;
-  };
-};
+    login: typeof adminLogin
+    overview: typeof adminOverview
+    posts: typeof adminPosts
+    qa: typeof adminQa
+    storybook: typeof adminStorybook
+    users: typeof adminUsers
+  }
+}
 
 /**
  * Declares `Messages` ONLY, deliberately not `Locale`.
@@ -62,8 +62,8 @@ export type AppMessages = {
  * already calls `notFound()` on garbage — the same thing verified twice, for
  * exactly one extra safe spot.
  */
-declare module "next-intl" {
+declare module 'next-intl' {
   interface AppConfig {
-    Messages: AppMessages;
+    Messages: AppMessages
   }
 }

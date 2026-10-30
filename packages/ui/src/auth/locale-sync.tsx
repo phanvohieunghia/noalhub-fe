@@ -1,10 +1,10 @@
-"use client";
+'use client'
 
-import { useMe } from "@noalhub/api/auth";
-import { isLocale, type Locale } from "@noalhub/i18n/config";
-import { readLocaleCookie, writeLocaleCookie } from "@noalhub/i18n/cookie";
-import { useLocale } from "next-intl";
-import { useEffect } from "react";
+import {useMe} from '@noalhub/api/auth'
+import {isLocale, type Locale} from '@noalhub/i18n/config'
+import {readLocaleCookie, writeLocaleCookie} from '@noalhub/i18n/cookie'
+import {useLocale} from 'next-intl'
+import {useEffect} from 'react'
 
 /**
  * The **only** point where `user.language` beats the cookie (`docs/i18n.md`
@@ -24,18 +24,22 @@ import { useEffect } from "react";
  * Logging out does **not** reset to `vi`: the person was just reading in
  * English.
  */
-export function LocaleSync({ onMismatch }: { onMismatch: (locale: Locale) => void }) {
-  const me = useMe();
-  const active = useLocale();
-  const language = me.data?.language;
+export function LocaleSync({
+  onMismatch,
+}: {
+  onMismatch: (locale: Locale) => void
+}) {
+  const me = useMe()
+  const active = useLocale()
+  const language = me.data?.language
 
   useEffect(() => {
-    if (!language || !isLocale(language)) return;
-    if (language === active && readLocaleCookie() === language) return;
+    if (!language || !isLocale(language)) return
+    if (language === active && readLocaleCookie() === language) return
 
-    writeLocaleCookie(language);
-    if (language !== active) onMismatch(language);
-  }, [language, active, onMismatch]);
+    writeLocaleCookie(language)
+    if (language !== active) onMismatch(language)
+  }, [language, active, onMismatch])
 
-  return null;
+  return null
 }

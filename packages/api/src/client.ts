@@ -1,5 +1,5 @@
-import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
-import type { ZodType } from "zod";
+import axios, {AxiosError, type InternalAxiosRequestConfig} from 'axios'
+import type {ZodType} from 'zod'
 
 import {
   API_BASE_URL,
@@ -7,12 +7,12 @@ import {
   getApiBaseUrl,
   isNgrokApi,
   onApiConfigChange,
-} from "./config";
-import { ApiError, ERROR_CODES } from "./errors";
-import type { ApiErrorBody } from "./errors";
-import { tokenStore } from "./auth/token-store";
-import { tokenPairSchema } from "./auth/schemas";
-import type { AuthTokens } from "./auth/types";
+} from './config'
+import {ApiError, ERROR_CODES} from './errors'
+import type {ApiErrorBody} from './errors'
+import {tokenStore} from './auth/token-store'
+import {tokenPairSchema} from './auth/schemas'
+import type {AuthTokens} from './auth/types'
 
 /**
  * Adds app-specific options to axios' config, so the service layer can call
@@ -22,22 +22,22 @@ import type { AuthTokens } from "./auth/types";
  * `authRequired` must NOT be named `auth`: axios already uses that key for HTTP
  * Basic (`{ username, password }`).
  */
-declare module "axios" {
+declare module 'axios' {
   export interface AxiosRequestConfig {
     /** Attaches `Authorization: Bearer <access>` and enables refresh-on-401. */
-    authRequired?: boolean;
+    authRequired?: boolean
     /** Validates the response with zod — catching a backend shape change on the spot. */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    schema?: ZodType<any>;
+    schema?: ZodType<any>
     /** Internal: marks a request as already retried after a refresh. */
-    isRetry?: boolean;
+    isRetry?: boolean
   }
 }
 
 export const http = axios.create({
   baseURL: getApiBaseUrl(),
-  headers: { "Content-Type": "application/json" },
-});
+  headers: {'Content-Type': 'application/json'},
+})
 
 /**
  * A separate instance for `/auth/refresh`: it has no 401 interceptor, so it
@@ -45,28 +45,28 @@ export const http = axios.create({
  */
 const refreshHttp = axios.create({
   baseURL: getApiBaseUrl(),
-  headers: { "Content-Type": "application/json" },
-});
+  headers: {'Content-Type': 'application/json'},
+})
 
 onApiConfigChange(() => {
-  const url = getApiBaseUrl();
-  http.defaults.baseURL = url;
-  refreshHttp.defaults.baseURL = url;
-});
+  const url = getApiBaseUrl()
+  http.defaults.baseURL = url
+  refreshHttp.defaults.baseURL = url
+})
 
 /**
  * Registered by `lib/auth/store.ts`. Routed through a callback so the client
  * never imports the store (avoiding a circular dependency).
  */
-let onSessionExpired: (() => void) | null = null;
+let onSessionExpired: (() => void) | null = null
 
 export function setSessionExpiredHandler(handler: () => void) {
-  onSessionExpired = handler;
+  onSessionExpired = handler
 }
 
 function expireSession() {
-  tokenStore.clear();
-  onSessionExpired?.();
+  tokenStore.clear()
+  onSessionExpired?.()
 }
 
 /**
@@ -75,37 +75,37 @@ function expireSession() {
  * revokes the ENTIRE session — so parallel calls actually lose the session,
  * they are not merely wasteful.
  */
-let refreshPromise: Promise<AuthTokens> | null = null;
+let refreshPromise: Promise<AuthTokens> | null = null
 
 function refreshTokens(): Promise<AuthTokens> {
-  if (refreshPromise) return refreshPromise;
+  if (refreshPromise) return refreshPromise
 
   refreshPromise = withRefreshLock(async () => {
     // RE-READ storage AFTER winning the lock. If another tab rotated while we
     // queued, the token read before locking is already dead — presenting it
     // reports us as a replay.
-    const refreshToken = tokenStore.getRefresh();
+    const refreshToken = tokenStore.getRefresh()
     if (!refreshToken) {
       throw new ApiError(401, {
         code: ERROR_CODES.unauthenticated,
-        message: "common.errors.sessionExpired",
+        message: 'common.errors.sessionExpired',
         statusCode: 401,
-      });
+      })
     }
 
-    const { data } = await refreshHttp.post("/auth/refresh", { refreshToken });
-    const tokens = tokenPairSchema.parse(data);
-    tokenStore.setTokens(tokens);
-    return tokens;
-  });
+    const {data} = await refreshHttp.post('/auth/refresh', {refreshToken})
+    const tokens = tokenPairSchema.parse(data)
+    tokenStore.setTokens(tokens)
+    return tokens
+  })
 
   refreshPromise
     .catch(() => {})
     .finally(() => {
-      refreshPromise = null;
-    });
+      refreshPromise = null
+    })
 
-  return refreshPromise;
+  return refreshPromise
 }
 
 /**
@@ -130,10 +130,10 @@ function refreshTokens(): Promise<AuthTokens> {
  * completely sufficient without external locking.
  */
 function withRefreshLock<T>(run: () => Promise<T>): Promise<T> {
-  const locks = globalThis.navigator?.locks;
-  if (!locks) return run();
+  const locks = globalThis.navigator?.locks
+  if (!locks) return run()
   // Cast: `request`'s typing infers T = Promise<AuthTokens>, adding a layer of nesting.
-  return locks.request("noalhub.auth.refresh", run) as Promise<T>;
+  return locks.request('noalhub.auth.refresh', run) as Promise<T>
 }
 
 /**
@@ -146,35 +146,35 @@ function withRefreshLock<T>(run: () => Promise<T>): Promise<T> {
  * single-flight here really loses the session, it is not just a wasted request.
  */
 export async function ensureAccessToken(): Promise<string | null> {
-  const current = tokenStore.getAccess();
-  if (current) return current;
-  if (!tokenStore.getRefresh()) return null;
+  const current = tokenStore.getAccess()
+  if (current) return current
+  if (!tokenStore.getRefresh()) return null
 
   try {
-    const tokens = await refreshTokens();
-    return tokens.accessToken;
+    const tokens = await refreshTokens()
+    return tokens.accessToken
   } catch {
-    expireSession();
-    return null;
+    expireSession()
+    return null
   }
 }
 
 /** Attaches `Authorization: Bearer <access>` to requests marked `authRequired`. */
 /** Dev tunnels only; see `NGROK_SKIP_WARNING_HEADER`. */
 const addTunnelHeaders = (config: InternalAxiosRequestConfig) => {
-  if (isNgrokApi()) config.headers.set(NGROK_SKIP_WARNING_HEADER, "1");
-  return config;
-};
-refreshHttp.interceptors.request.use(addTunnelHeaders);
+  if (isNgrokApi()) config.headers.set(NGROK_SKIP_WARNING_HEADER, '1')
+  return config
+}
+refreshHttp.interceptors.request.use(addTunnelHeaders)
 
 http.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  addTunnelHeaders(config);
+  addTunnelHeaders(config)
   if (config.authRequired) {
-    const accessToken = tokenStore.getAccess();
-    if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
+    const accessToken = tokenStore.getAccess()
+    if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`
   }
-  return config;
-});
+  return config
+})
 
 /**
  * Success branch: validate with `config.schema` when present, and map 204 to
@@ -187,73 +187,73 @@ http.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 http.interceptors.response.use(
   (response) => {
     if (response.status === 204) {
-      response.data = undefined;
+      response.data = undefined
     } else if (response.config.schema) {
-      response.data = response.config.schema.parse(response.data);
+      response.data = response.config.schema.parse(response.data)
     }
-    return response;
+    return response
   },
   async (error: unknown) => {
-    if (axios.isCancel(error)) throw error;
-    if (!(error instanceof AxiosError)) throw error;
+    if (axios.isCancel(error)) throw error
+    if (!(error instanceof AxiosError)) throw error
 
-    const config = error.config;
+    const config = error.config
 
     // No response means the connection never happened (DNS, CORS, dead network).
     if (!error.response) {
       throw new ApiError(0, {
-        code: "NETWORK_ERROR",
-        message: "common.errors.noConnection",
+        code: 'NETWORK_ERROR',
+        message: 'common.errors.noConnection',
         statusCode: 0,
-      });
+      })
     }
 
-    const { status } = error.response;
+    const {status} = error.response
 
     if (status === 401 && config?.authRequired && !config.isRetry) {
       try {
-        await refreshTokens();
+        await refreshTokens()
       } catch {
-        expireSession();
+        expireSession()
         throw new ApiError(401, {
           code: ERROR_CODES.unauthenticated,
-          message: "common.errors.sessionExpired",
+          message: 'common.errors.sessionExpired',
           statusCode: 401,
-        });
+        })
       }
       // Retry EXACTLY once — isRetry stops an infinite loop.
-      config.isRetry = true;
-      return http.request(config);
+      config.isRetry = true
+      return http.request(config)
     }
 
     if (status === 401 && config?.authRequired && config.isRetry) {
-      expireSession();
+      expireSession()
     }
 
-    throw new ApiError(status, readErrorBody(error.response.data, status));
+    throw new ApiError(status, readErrorBody(error.response.data, status))
   },
-);
+)
 
 function readErrorBody(data: unknown, status: number): ApiErrorBody {
   if (
     data &&
-    typeof data === "object" &&
-    typeof (data as ApiErrorBody).message === "string" &&
-    typeof (data as ApiErrorBody).code === "string"
+    typeof data === 'object' &&
+    typeof (data as ApiErrorBody).message === 'string' &&
+    typeof (data as ApiErrorBody).code === 'string'
   ) {
-    return data as ApiErrorBody;
+    return data as ApiErrorBody
   }
   return {
     code: fallbackCodeFor(status),
     message: defaultMessageFor(status),
     statusCode: status,
-  };
+  }
 }
 
 function fallbackCodeFor(status: number): string {
-  if (status === 401) return ERROR_CODES.unauthenticated;
-  if (status === 429) return ERROR_CODES.rateLimited;
-  return "UNKNOWN";
+  if (status === 401) return ERROR_CODES.unauthenticated
+  if (status === 429) return ERROR_CODES.rateLimited
+  return 'UNKNOWN'
 }
 
 /**
@@ -265,10 +265,10 @@ function fallbackCodeFor(status: number): string {
  * §7.3).
  */
 function defaultMessageFor(status: number): string {
-  if (status === 401) return "common.errors.sessionExpired";
-  if (status === 403) return "common.errors.forbiddenAction";
-  if (status === 404) return "common.errors.resourceNotFound";
-  if (status === 429) return "common.errors.tooFast";
-  if (status >= 500) return "common.errors.serverError";
-  return "common.errors.unknown";
+  if (status === 401) return 'common.errors.sessionExpired'
+  if (status === 403) return 'common.errors.forbiddenAction'
+  if (status === 404) return 'common.errors.resourceNotFound'
+  if (status === 429) return 'common.errors.tooFast'
+  if (status >= 500) return 'common.errors.serverError'
+  return 'common.errors.unknown'
 }

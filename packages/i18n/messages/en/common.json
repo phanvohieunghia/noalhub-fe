@@ -160,6 +160,8 @@
     "uploading": "Uploading the image… {percent}%",
     "fullscreen": "Full screen",
     "exitFullscreen": "Exit full screen",
+    "showMinimap": "Show minimap",
+    "hideMinimap": "Hide minimap",
     "mermaidTitle": "Edit diagram",
     "mermaidSource": "Mermaid source",
     "mermaidPreview": "Preview",

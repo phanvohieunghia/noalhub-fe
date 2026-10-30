@@ -16,9 +16,12 @@
     "build:admin": "turbo run build --filter=@noalhub/admin...",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
+    "format": "prettier --write \"{apps,packages}/**/*.{ts,tsx,css}\"",
+    "format:check": "prettier --check \"{apps,packages}/**/*.{ts,tsx,css}\"",
     "check-messages": "pnpm --filter @noalhub/i18n check-messages"
   },
   "devDependencies": {
+    "prettier": "^3.4.2",
     "turbo": "^2.5.8"
   },
   "engines": {

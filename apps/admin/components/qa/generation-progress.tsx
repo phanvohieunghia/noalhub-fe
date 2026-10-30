@@ -1,18 +1,18 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import {useTranslations} from 'next-intl'
+import {useEffect, useState} from 'react'
 
 import {
   isGenerationRunning,
   useQaGeneration,
   useRetryQaGeneration,
-} from "@noalhub/api/qa";
-import { AlertError, AlertInfo, AlertWarning } from "@noalhub/ui/alert";
-import { Button } from "@noalhub/ui/button";
-import { Spinner } from "@noalhub/ui/spinner";
-import { toast } from "@noalhub/ui/toast";
-import { Typography } from "@noalhub/ui/typography";
+} from '@noalhub/api/qa'
+import {AlertError, AlertInfo, AlertWarning} from '@noalhub/ui/alert'
+import {Button} from '@noalhub/ui/button'
+import {Spinner} from '@noalhub/ui/spinner'
+import {toast} from '@noalhub/ui/toast'
+import {Typography} from '@noalhub/ui/typography'
 
 /**
  * After the worker has had this long and the row is still `queued`, say so.
@@ -21,7 +21,7 @@ import { Typography } from "@noalhub/ui/typography";
  * everywhere except the VPS — without this line the screen spins forever and
  * nobody guesses why.
  */
-const NO_WORKER_HINT_MS = 60_000;
+const NO_WORKER_HINT_MS = 60_000
 
 /**
  * Watches one run to the end. Polls rather than opening a socket: one job with
@@ -38,43 +38,43 @@ export function GenerationProgress({
   onDone,
   onRetry,
 }: {
-  generationId: string;
+  generationId: string
   /** The backend found an identical run already going; this is it. */
-  reused?: boolean;
-  onDone?: () => void;
+  reused?: boolean
+  onDone?: () => void
   /**
    * Given, a failed or partial question-set run offers to re-run what it lost, and
    * hands over the id of the new run. Left out where the caller cannot follow it.
    */
-  onRetry?: (generationId: string) => void;
+  onRetry?: (generationId: string) => void
 }) {
-  const t = useTranslations("admin.qa");
-  const generation = useQaGeneration(generationId);
-  const retry = useRetryQaGeneration();
-  const [startedAt] = useState(() => Date.now());
-  const [waitedLong, setWaitedLong] = useState(false);
+  const t = useTranslations('admin.qa')
+  const generation = useQaGeneration(generationId)
+  const retry = useRetryQaGeneration()
+  const [startedAt] = useState(() => Date.now())
+  const [waitedLong, setWaitedLong] = useState(false)
 
-  const status = generation.data?.status;
-  const running = status ? isGenerationRunning(status) : true;
+  const status = generation.data?.status
+  const running = status ? isGenerationRunning(status) : true
 
   useEffect(() => {
-    if (!running) return;
+    if (!running) return
     const timer = setTimeout(
       () => setWaitedLong(true),
       Math.max(NO_WORKER_HINT_MS - (Date.now() - startedAt), 0),
-    );
-    return () => clearTimeout(timer);
-  }, [running, startedAt]);
+    )
+    return () => clearTimeout(timer)
+  }, [running, startedAt])
 
   useEffect(() => {
-    if (!running && status) onDone?.();
+    if (!running && status) onDone?.()
     // `onDone` intentionally out of the deps: callers pass an inline closure,
     // and including it re-runs this on every render of the parent.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running, status]);
+  }, [running, status])
 
   if (generation.isError) {
-    return <AlertError message={t("generation.pollFailed")} />;
+    return <AlertError message={t('generation.pollFailed')} />
   }
 
   if (running) {
@@ -83,16 +83,16 @@ export function GenerationProgress({
         <div className="flex items-center gap-2">
           <Spinner />
           <Typography variant="body-3">
-            {status === "queued"
-              ? t("generation.queued")
-              : t("generation.running")}
+            {status === 'queued'
+              ? t('generation.queued')
+              : t('generation.running')}
           </Typography>
         </div>
         {generation.data?.chunkTotal ? (
           /* A long source runs as several calls one after another; without this
              the screen looks the same for ten minutes. */
           <Typography variant="body-4" className="text-muted-foreground">
-            {t("generation.chunks", {
+            {t('generation.chunks', {
               done: generation.data.chunkDone ?? 0,
               total: generation.data.chunkTotal,
             })}
@@ -101,20 +101,20 @@ export function GenerationProgress({
         {reused ? (
           /* Someone clicked twice: tell them they are watching the run that
              already existed, not that a second one just started. */
-          <AlertInfo message={t("generation.reused")} />
+          <AlertInfo message={t('generation.reused')} />
         ) : null}
-        {waitedLong && status === "queued" ? (
-          <AlertWarning message={t("generation.noWorker")} />
+        {waitedLong && status === 'queued' ? (
+          <AlertWarning message={t('generation.noWorker')} />
         ) : null}
       </div>
-    );
+    )
   }
 
-  const data = generation.data;
-  if (!data) return null;
+  const data = generation.data
+  if (!data) return null
 
   const retryButton =
-    onRetry && data.kind === "qa" ? (
+    onRetry && data.kind === 'qa' ? (
       <Button
         variant="outline"
         size="sm"
@@ -122,59 +122,58 @@ export function GenerationProgress({
         onClick={() =>
           retry.mutate(data.id, {
             onSuccess: (result) => onRetry(result.generationId),
-            onError: () => toast.error(t("generation.retryFailed")),
+            onError: () => toast.error(t('generation.retryFailed')),
           })
-        }
-      >
-        {t("generation.retry")}
+        }>
+        {t('generation.retry')}
       </Button>
-    ) : null;
+    ) : null
 
-  if (data.status === "failed") {
+  if (data.status === 'failed') {
     return (
       <div className="space-y-2">
         {/* The backend's message already names the cause — a truncated response
             says "output ceiling", not "invalid JSON". Show it verbatim. */}
-        <AlertError message={data.error ?? t("generation.failed")} />
+        <AlertError message={data.error ?? t('generation.failed')} />
         {retryButton}
       </div>
-    );
+    )
   }
 
-  const sectionErrors = Object.entries(data.sectionErrors ?? {});
+  const sectionErrors = Object.entries(data.sectionErrors ?? {})
 
   return (
     <div className="space-y-2 rounded-md border border-border p-3">
       <Typography variant="body-3">
-        {data.status === "partial"
-          ? t("generation.partial", { count: data.resultCount })
-          : t("generation.succeeded", { count: data.resultCount })}
+        {data.status === 'partial'
+          ? t('generation.partial', {count: data.resultCount})
+          : t('generation.succeeded', {count: data.resultCount})}
       </Typography>
 
-      {data.status === "partial" ? (
+      {data.status === 'partial' ? (
         <AlertWarning
           message={
             sectionErrors.length > 0
-              ? t("generation.partialDetail", {
+              ? t('generation.partialDetail', {
                   sections: sectionErrors
                     .map(([anchor, reason]) => `${anchor}: ${reason}`)
-                    .join(" · "),
+                    .join(' · '),
                 })
-              : t("generation.partialUnknown")
+              : t('generation.partialUnknown')
           }
         />
       ) : null}
-      {data.status === "partial" ? retryButton : null}
+      {data.status === 'partial' ? retryButton : null}
 
       <Typography variant="body-4" className="text-muted-foreground">
-        {t("generation.tokens", {
+        {t('generation.tokens', {
           input: data.inputTokens ?? 0,
           output: data.outputTokens ?? 0,
           cached: data.cacheReadInputTokens ?? 0,
         })}
       </Typography>
     </div>
-  );
+  )
 }
 
 /**
@@ -182,22 +181,22 @@ export function GenerationProgress({
  * failure or a partial result must stay on screen, because the panel alone would
  * read as if nothing had been tried.
  */
-export function RunOutcome({ generationId }: { generationId?: string }) {
+export function RunOutcome({generationId}: {generationId?: string}) {
   // A retry is a new run; follow it here so its progress and outcome replace the old.
   // Keyed by the run it retried, so a new `generationId` from the parent drops it
   // without an effect.
-  const [retried, setRetried] = useState<{ from?: string; id: string }>();
-  const retryId = retried?.from === generationId ? retried?.id : undefined;
+  const [retried, setRetried] = useState<{from?: string; id: string}>()
+  const retryId = retried?.from === generationId ? retried?.id : undefined
 
-  const id = retryId ?? generationId;
-  const generation = useQaGeneration(id);
-  const status = generation.data?.status;
-  if (!id) return null;
-  if (!retryId && status !== "failed" && status !== "partial") return null;
+  const id = retryId ?? generationId
+  const generation = useQaGeneration(id)
+  const status = generation.data?.status
+  if (!id) return null
+  if (!retryId && status !== 'failed' && status !== 'partial') return null
   return (
     <GenerationProgress
       generationId={id}
-      onRetry={(id) => setRetried({ from: generationId, id })}
+      onRetry={(id) => setRetried({from: generationId, id})}
     />
-  );
+  )
 }

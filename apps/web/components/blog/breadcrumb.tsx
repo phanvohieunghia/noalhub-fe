@@ -1,11 +1,11 @@
-import { Link } from "@noalhub/i18n/navigation";
-import { useTranslations } from "next-intl";
+import {Link} from '@noalhub/i18n/navigation'
+import {useTranslations} from 'next-intl'
 
-import { JsonLd } from "./json-ld";
-import { absoluteUrl } from "@noalhub/core/blog/seo";
-import { Typography } from "@noalhub/ui/typography";
+import {JsonLd} from './json-ld'
+import {absoluteUrl} from '@noalhub/core/blog/seo'
+import {Typography} from '@noalhub/ui/typography'
 
-export type Crumb = { label: string; href?: string };
+export type Crumb = {label: string; href?: string}
 
 /**
  * The visible breadcrumb **and** the `BreadcrumbList` JSON-LD, from one array.
@@ -18,12 +18,12 @@ export type Crumb = { label: string; href?: string };
  * Blog → <category> → <post title>. Without that axis there are only two levels
  * and it is close to meaningless (§6.2).
  */
-export function Breadcrumb({ items }: { items: Crumb[] }) {
-  const t = useTranslations("web.blog.breadcrumb");
+export function Breadcrumb({items}: {items: Crumb[]}) {
+  const t = useTranslations('web.blog.breadcrumb')
 
   return (
     <>
-      <nav aria-label={t("label")} className="text-body-3 opacity-70">
+      <nav aria-label={t('label')} className="text-body-3 opacity-70">
         <ol className="flex flex-wrap items-center gap-1.5">
           {items.map((item, index) => (
             <li key={index} className="flex items-center gap-1.5">
@@ -49,16 +49,16 @@ export function Breadcrumb({ items }: { items: Crumb[] }) {
 
       <JsonLd
         data={{
-          "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
           itemListElement: items.map((item, index) => ({
-            "@type": "ListItem",
+            '@type': 'ListItem',
             position: index + 1,
             name: item.label,
-            ...(item.href ? { item: absoluteUrl(item.href) } : {}),
+            ...(item.href ? {item: absoluteUrl(item.href)} : {}),
           })),
         }}
       />
     </>
-  );
+  )
 }

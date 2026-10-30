@@ -1,13 +1,13 @@
-import { keysOf } from "./variants";
+import {keysOf} from './variants'
 
 /**
  * Three weights only. Be Vietnam Pro is loaded in 300–600 (300 only for the Home
  * hero), but exposing all of them means everyone picks a different number and
  * the interface stops being consistent.
  */
-export const TYPOGRAPHY_WEIGHTS = [400, 500, 600] as const;
+export const TYPOGRAPHY_WEIGHTS = [400, 500, 600] as const
 
-export type Weight = (typeof TYPOGRAPHY_WEIGHTS)[number];
+export type Weight = (typeof TYPOGRAPHY_WEIGHTS)[number]
 
 /**
  * ⚠️ This must be a lookup object with class names written out IN FULL.
@@ -19,24 +19,24 @@ export type Weight = (typeof TYPOGRAPHY_WEIGHTS)[number];
  * DEFINITION, not decoration applied at the call site.
  */
 const VARIANTS = {
-  h1: "text-h1",
-  h2: "text-h2",
-  h3: "text-h3",
-  h4: "text-h4",
-  h5: "text-h5",
-  h6: "text-h6",
-  "title-1": "text-title-1",
-  "title-2": "text-title-2",
-  "title-3": "text-title-3",
-  "title-4": "text-title-4",
-  "body-1": "text-body-1",
-  "body-2": "text-body-2",
-  "body-3": "text-body-3",
-  "body-4": "text-body-4",
-  caption: "text-caption italic",
-} as const;
+  h1: 'text-h1',
+  h2: 'text-h2',
+  h3: 'text-h3',
+  h4: 'text-h4',
+  h5: 'text-h5',
+  h6: 'text-h6',
+  'title-1': 'text-title-1',
+  'title-2': 'text-title-2',
+  'title-3': 'text-title-3',
+  'title-4': 'text-title-4',
+  'body-1': 'text-body-1',
+  'body-2': 'text-body-2',
+  'body-3': 'text-body-3',
+  'body-4': 'text-body-4',
+  caption: 'text-caption italic',
+} as const
 
-export type Variant = keyof typeof VARIANTS;
+export type Variant = keyof typeof VARIANTS
 
 /**
  * The variants in scale order, derived from the table above — see
@@ -44,13 +44,13 @@ export type Variant = keyof typeof VARIANTS;
  * `Variant`, so a step added to the table stops compiling until it is given a
  * weight and a tag as well.
  */
-export const TYPOGRAPHY_VARIANTS = keysOf(VARIANTS);
+export const TYPOGRAPHY_VARIANTS = keysOf(VARIANTS)
 
 const WEIGHTS: Record<Weight, string> = {
-  400: "font-normal",
-  500: "font-medium",
-  600: "font-semibold",
-};
+  400: 'font-normal',
+  500: 'font-medium',
+  600: 'font-semibold',
+}
 
 /**
  * Which weight each size defaults to.
@@ -66,39 +66,39 @@ const DEFAULT_WEIGHT: Record<Variant, Weight> = {
   h4: 600,
   h5: 600,
   h6: 600,
-  "title-1": 600,
-  "title-2": 600,
-  "title-3": 500,
-  "title-4": 500,
-  "body-1": 400,
-  "body-2": 400,
-  "body-3": 400,
-  "body-4": 400,
+  'title-1': 600,
+  'title-2': 600,
+  'title-3': 500,
+  'title-4': 500,
+  'body-1': 400,
+  'body-2': 400,
+  'body-3': 400,
+  'body-4': 400,
   caption: 400,
-};
+}
 
 /** The default HTML tag. `title-*`/`caption` are `<p>` because they are NOT headings. */
 const DEFAULT_TAG: Record<Variant, React.ElementType> = {
-  h1: "h1",
-  h2: "h2",
-  h3: "h3",
-  h4: "h4",
-  h5: "h5",
-  h6: "h6",
-  "title-1": "p",
-  "title-2": "p",
-  "title-3": "p",
-  "title-4": "p",
-  "body-1": "p",
-  "body-2": "p",
-  "body-3": "p",
-  "body-4": "p",
-  caption: "p",
-};
+  h1: 'h1',
+  h2: 'h2',
+  h3: 'h3',
+  h4: 'h4',
+  h5: 'h5',
+  h6: 'h6',
+  'title-1': 'p',
+  'title-2': 'p',
+  'title-3': 'p',
+  'title-4': 'p',
+  'body-1': 'p',
+  'body-2': 'p',
+  'body-3': 'p',
+  'body-4': 'p',
+  caption: 'p',
+}
 
 type TypographyProps = {
-  variant?: Variant;
-  weight?: Weight;
+  variant?: Variant
+  weight?: Weight
   /**
    * The HTML tag, decoupled from `variant`.
    *
@@ -109,32 +109,34 @@ type TypographyProps = {
    *
    * For an image caption: `<Typography variant="caption" as="figcaption">`.
    */
-  as?: React.ElementType;
-  className?: string;
-  children: React.ReactNode;
+  as?: React.ElementType
+  className?: string
+  children: React.ReactNode
   /** For `as="label"` — `htmlFor` is not part of the generic `HTMLAttributes`. */
-  htmlFor?: string;
+  htmlFor?: string
   /** For `as="time"`. */
-  dateTime?: string;
+  dateTime?: string
   /** For `as="td"` / `as="th"`. */
-  colSpan?: number;
-  scope?: string;
-} & Omit<React.HTMLAttributes<HTMLElement>, "className" | "children">;
+  colSpan?: number
+  scope?: string
+} & Omit<React.HTMLAttributes<HTMLElement>, 'className' | 'children'>
 
 export function Typography({
-  variant = "body-2",
+  variant = 'body-2',
   weight,
   as,
-  className = "",
+  className = '',
   children,
   ...props
 }: TypographyProps) {
-  const Tag = as ?? DEFAULT_TAG[variant];
-  const resolvedWeight = weight ?? DEFAULT_WEIGHT[variant];
+  const Tag = as ?? DEFAULT_TAG[variant]
+  const resolvedWeight = weight ?? DEFAULT_WEIGHT[variant]
 
   return (
-    <Tag className={`${VARIANTS[variant]} ${WEIGHTS[resolvedWeight]} ${className}`} {...props}>
+    <Tag
+      className={`${VARIANTS[variant]} ${WEIGHTS[resolvedWeight]} ${className}`}
+      {...props}>
       {children}
     </Tag>
-  );
+  )
 }

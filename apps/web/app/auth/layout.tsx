@@ -1,9 +1,9 @@
-import { DEFAULT_LOCALE } from "@noalhub/i18n/config";
-import { IntlProvider } from "@noalhub/i18n/provider";
-import { NavigationProgress } from "@noalhub/ui/navigation-progress";
-import type { Metadata } from "next";
+import {DEFAULT_LOCALE} from '@noalhub/i18n/config'
+import {IntlProvider} from '@noalhub/i18n/provider'
+import {NavigationProgress} from '@noalhub/ui/navigation-progress'
+import type {Metadata} from 'next'
 
-import { RootHtml, rootMetadata } from "../root-html";
+import {RootHtml, rootMetadata} from '../root-html'
 
 /**
  * The second root layout, for `/auth/callback` only.
@@ -17,12 +17,12 @@ import { RootHtml, rootMetadata } from "../root-html";
  * With two root layouts the repo **must not** have an `app/layout.tsx` —
  * `docs/01-app/01-getting-started/02-project-structure.md`.
  */
-export const metadata: Metadata = rootMetadata;
+export const metadata: Metadata = rootMetadata
 
 export default function AuthCallbackLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <RootHtml lang={DEFAULT_LOCALE}>
@@ -31,5 +31,5 @@ export default function AuthCallbackLayout({
         {children}
       </IntlProvider>
     </RootHtml>
-  );
+  )
 }

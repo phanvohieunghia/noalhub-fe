@@ -1,14 +1,14 @@
-"use client";
+'use client'
 
-import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "@noalhub/i18n/navigation";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
+import {useQueryClient} from '@tanstack/react-query'
+import {useRouter} from '@noalhub/i18n/navigation'
+import {useTranslations} from 'next-intl'
+import {useState} from 'react'
 
-import { Button } from "@noalhub/ui/button";
-import { Icon, ICONS } from "@noalhub/ui/icons";
-import { Tooltip } from "@noalhub/ui/tooltip";
-import { useAuthStore } from "@noalhub/api/auth";
+import {Button} from '@noalhub/ui/button'
+import {Icon, ICONS} from '@noalhub/ui/icons'
+import {Tooltip} from '@noalhub/ui/tooltip'
+import {useAuthStore} from '@noalhub/api/auth'
 
 /**
  * ⚠️ The namespace is `nav`, NOT `web.auth`.
@@ -24,28 +24,28 @@ export function LogoutButton({
   className,
   iconOnly = false,
 }: {
-  className?: string;
+  className?: string
   /** A round ghost icon with a tooltip, as in admin's account menu. */
-  iconOnly?: boolean;
+  iconOnly?: boolean
 } = {}) {
-  const t = useTranslations("nav");
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const logout = useAuthStore((s) => s.logout);
-  const [pending, setPending] = useState(false);
+  const t = useTranslations('nav')
+  const router = useRouter()
+  const queryClient = useQueryClient()
+  const logout = useAuthStore((s) => s.logout)
+  const [pending, setPending] = useState(false)
 
   const onClick = async () => {
-    setPending(true);
-    await logout();
+    setPending(true)
+    await logout()
     // The cache holds ONE user's data — without clearing it, the next user to
     // sign in on this tab sees the previous one's data for a beat.
-    queryClient.clear();
-    router.replace("/login");
-  };
+    queryClient.clear()
+    router.replace('/login')
+  }
 
   if (iconOnly) {
     return (
-      <Tooltip label={pending ? t("loggingOut") : t("logout")} side="bottom">
+      <Tooltip label={pending ? t('loggingOut') : t('logout')} side="bottom">
         <Button
           variant="ghost"
           size="icon-sm"
@@ -53,18 +53,21 @@ export function LogoutButton({
           onClick={onClick}
           loading={pending}
           aria-busy={pending}
-          aria-label={t("logout")}
-          className={`shrink-0 text-muted-foreground hover:text-foreground ${className ?? ""}`}
-        >
+          aria-label={t('logout')}
+          className={`shrink-0 text-muted-foreground hover:text-foreground ${className ?? ''}`}>
           <Icon icon={ICONS.logout} className="size-4" />
         </Button>
       </Tooltip>
-    );
+    )
   }
 
   return (
-    <Button variant="outline" onClick={onClick} loading={pending} className={className}>
-      {pending ? t("loggingOut") : t("logout")}
+    <Button
+      variant="outline"
+      onClick={onClick}
+      loading={pending}
+      className={className}>
+      {pending ? t('loggingOut') : t('logout')}
     </Button>
-  );
+  )
 }

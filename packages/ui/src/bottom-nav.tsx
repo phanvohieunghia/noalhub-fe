@@ -1,19 +1,19 @@
-import { Link } from "@noalhub/i18n/navigation";
+import {Link} from '@noalhub/i18n/navigation'
 
-import { Icon } from "./icons";
-import { Typography } from "./typography";
+import {Icon} from './icons'
+import {Typography} from './typography'
 
 export type BottomNavItem = {
   /** Stable id; matched against `activeKey`. */
-  key: string;
+  key: string
   /** Already translated — the component pins no i18n namespace. */
-  label: string;
+  label: string
   /** An iconify name, e.g. `ICONS.newspaper`. */
-  icon: string;
-  href: string;
+  icon: string
+  href: string
   /** Rendered as a non-interactive, dimmed item (e.g. Chat while signed out). */
-  disabled?: boolean;
-};
+  disabled?: boolean
+}
 
 /**
  * The mobile primary navigation: a row of icon + label items pinned to the
@@ -26,30 +26,33 @@ export function BottomNav({
   items,
   activeKey,
   label,
-  className = "",
+  className = '',
 }: {
-  items: BottomNavItem[];
-  activeKey?: string;
+  items: BottomNavItem[]
+  activeKey?: string
   /** Accessible name of the `<nav>` landmark. */
-  label: string;
-  className?: string;
+  label: string
+  className?: string
 }) {
   return (
     <nav
       aria-label={label}
-      className={`flex items-center justify-between border-t border-border bg-surface p-2 ${className}`}
-    >
+      className={`flex items-center justify-between border-t border-border bg-surface p-2 ${className}`}>
       {items.map((item) => {
-        const active = item.key === activeKey && !item.disabled;
+        const active = item.key === activeKey && !item.disabled
         const content = (
           <>
             <Icon icon={item.icon} className="size-6 shrink-0" />
-            <Typography as="span" variant="body-4" className="whitespace-nowrap">
+            <Typography
+              as="span"
+              variant="body-4"
+              className="whitespace-nowrap">
               {item.label}
             </Typography>
           </>
-        );
-        const base = "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 overflow-hidden";
+        )
+        const base =
+          'flex min-w-0 flex-1 flex-col items-center justify-center gap-1 overflow-hidden'
 
         // A disabled item is a <span>, not a <Link>: no href to follow or prefetch,
         // and it drops out of the tab order.
@@ -58,26 +61,26 @@ export function BottomNav({
             <span
               key={item.key}
               aria-disabled="true"
-              className={`${base} cursor-not-allowed text-muted-foreground opacity-40`}
-            >
+              className={`${base} cursor-not-allowed text-muted-foreground opacity-40`}>
               {content}
             </span>
-          );
+          )
         }
 
         return (
           <Link
             key={item.key}
             href={item.href}
-            aria-current={active ? "page" : undefined}
+            aria-current={active ? 'page' : undefined}
             className={`${base} transition-colors ${
-              active ? "text-accent" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
+              active
+                ? 'text-accent'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}>
             {content}
           </Link>
-        );
+        )
       })}
     </nav>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import type { User, UserRole } from "./types";
+import type {User, UserRole} from './types'
 
 /**
  * "Does this session satisfy the role a screen asks for?"
@@ -19,15 +19,15 @@ import type { User, UserRole } from "./types";
  * edit it in devtools. The real boundary stays the backend's 403.
  */
 export function satisfiesRole(
-  user: Pick<User, "role" | "isAdmin" | "canGenerateAi">,
+  user: Pick<User, 'role' | 'isAdmin' | 'canGenerateAi'>,
   required: UserRole,
 ): boolean {
   switch (required) {
-    case "user":
-      return true;
-    case "admin":
-      return user.isAdmin;
-    case "super_admin":
-      return user.role === "super_admin";
+    case 'user':
+      return true
+    case 'admin':
+      return user.isAdmin
+    case 'super_admin':
+      return user.role === 'super_admin'
   }
 }

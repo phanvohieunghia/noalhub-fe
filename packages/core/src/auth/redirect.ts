@@ -1,4 +1,4 @@
-export const DEFAULT_REDIRECT = "/";
+export const DEFAULT_REDIRECT = '/'
 
 /**
  * Accepts internal paths only. Without this,
@@ -13,11 +13,11 @@ export function safeRedirect(
    */
   fallback: string = DEFAULT_REDIRECT,
 ): string {
-  if (!next) return fallback;
-  if (!next.startsWith("/")) return fallback;
+  if (!next) return fallback
+  if (!next.startsWith('/')) return fallback
   // Browsers read both `//evil.com` and `/\evil.com` as protocol-relative.
-  if (next.startsWith("//") || next.startsWith("/\\")) return fallback;
-  return next;
+  if (next.startsWith('//') || next.startsWith('/\\')) return fallback
+  return next
 }
 
 /**
@@ -26,16 +26,16 @@ export function safeRedirect(
  * along in the query string. It is parked in sessionStorage instead: alive only
  * in the tab doing the handshake, gone when that tab closes.
  */
-const OAUTH_NEXT_KEY = "nh.oauth.next";
+const OAUTH_NEXT_KEY = 'nh.oauth.next'
 
 export function rememberOAuthNext(next: string | undefined) {
-  if (typeof window === "undefined" || !next) return;
-  sessionStorage.setItem(OAUTH_NEXT_KEY, safeRedirect(next));
+  if (typeof window === 'undefined' || !next) return
+  sessionStorage.setItem(OAUTH_NEXT_KEY, safeRedirect(next))
 }
 
 export function takeOAuthNext(): string {
-  if (typeof window === "undefined") return DEFAULT_REDIRECT;
-  const next = sessionStorage.getItem(OAUTH_NEXT_KEY);
-  sessionStorage.removeItem(OAUTH_NEXT_KEY);
-  return safeRedirect(next);
+  if (typeof window === 'undefined') return DEFAULT_REDIRECT
+  const next = sessionStorage.getItem(OAUTH_NEXT_KEY)
+  sessionStorage.removeItem(OAUTH_NEXT_KEY)
+  return safeRedirect(next)
 }

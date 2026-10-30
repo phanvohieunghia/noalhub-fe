@@ -1,82 +1,84 @@
-"use client";
+'use client'
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "@noalhub/i18n/navigation";
-import { useMessage } from "@noalhub/i18n/use-message";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import {zodResolver} from '@hookform/resolvers/zod'
+import {Link} from '@noalhub/i18n/navigation'
+import {useMessage} from '@noalhub/i18n/use-message'
+import {useTranslations} from 'next-intl'
+import {useState} from 'react'
+import {useForm} from 'react-hook-form'
 
-import { Button } from "@noalhub/ui/button";
-import { AlertError, AlertSuccess } from "@noalhub/ui/alert";
-import { Input } from "@noalhub/ui/input";
-import { useForgotPassword } from "@noalhub/api/auth";
-import { applyApiError } from "@noalhub/core/forms/apply-api-error";
-import { Typography } from "@noalhub/ui/typography";
-import type { Message } from "@noalhub/api/message";
-import { forgotPasswordSchema, type ForgotPasswordInput } from "@noalhub/api/auth";
+import {Button} from '@noalhub/ui/button'
+import {AlertError, AlertSuccess} from '@noalhub/ui/alert'
+import {Input} from '@noalhub/ui/input'
+import {useForgotPassword} from '@noalhub/api/auth'
+import {applyApiError} from '@noalhub/core/forms/apply-api-error'
+import {Typography} from '@noalhub/ui/typography'
+import type {Message} from '@noalhub/api/message'
+import {forgotPasswordSchema, type ForgotPasswordInput} from '@noalhub/api/auth'
 
 export function ForgotPasswordForm() {
-  const t = useTranslations("web.auth.forgotPassword");
-  const m = useMessage();
-  const [formError, setFormError] = useState<Message | string | null>(null);
-  const [sent, setSent] = useState(false);
-  const forgotPassword = useForgotPassword();
+  const t = useTranslations('web.auth.forgotPassword')
+  const m = useMessage()
+  const [formError, setFormError] = useState<Message | string | null>(null)
+  const [sent, setSent] = useState(false)
+  const forgotPassword = useForgotPassword()
 
   const {
     register,
     handleSubmit,
     setError,
-    formState: { errors, isSubmitting },
-  } = useForm<ForgotPasswordInput>({ resolver: zodResolver(forgotPasswordSchema) });
+    formState: {errors, isSubmitting},
+  } = useForm<ForgotPasswordInput>({
+    resolver: zodResolver(forgotPasswordSchema),
+  })
 
   const onSubmit = handleSubmit(async (values) => {
-    setFormError(null);
+    setFormError(null)
     try {
-      await forgotPassword.mutateAsync(values);
-      setSent(true);
+      await forgotPassword.mutateAsync(values)
+      setSent(true)
     } catch (error) {
-      setFormError(applyApiError(error, setError, ["email"]));
+      setFormError(applyApiError(error, setError, ['email']))
     }
-  });
+  })
 
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <Typography variant="h3" as="h1">
-          {t("title")}
+          {t('title')}
         </Typography>
         <Typography variant="body-3" className="opacity-70">
-          {t("subtitle")}
+          {t('subtitle')}
         </Typography>
       </header>
 
       {sent ? (
         // Never reveal whether the email exists — this prevents account enumeration.
-        <AlertSuccess message={t("sent")} />
+        <AlertSuccess message={t('sent')} />
       ) : (
         <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
           <AlertError message={m(formError)} />
 
           <Input
-            label={t("email")}
+            label={t('email')}
             type="email"
             autoComplete="email"
             error={m(errors.email?.message)}
-            {...register("email")}
+            {...register('email')}
           />
 
           <Button type="submit" loading={isSubmitting}>
-            {isSubmitting ? t("submitting") : t("submit")}
+            {isSubmitting ? t('submitting') : t('submit')}
           </Button>
         </form>
       )}
 
       <Typography variant="body-3" className="text-center opacity-70">
         <Link href="/login" className="underline underline-offset-4">
-          {t("backToLogin")}
+          {t('backToLogin')}
         </Link>
       </Typography>
     </div>
-  );
+  )
 }

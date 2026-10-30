@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import { cloneElement, useRef, useState } from "react";
+import {cloneElement, useRef, useState} from 'react'
 
-import { Tooltip } from "@noalhub/ui/tooltip";
+import {Tooltip} from '@noalhub/ui/tooltip'
 
 /**
  * A tooltip that only opens when the text it describes is actually cut off. Wraps one
@@ -16,22 +16,21 @@ export function TruncatedTooltip({
   label,
   children,
 }: {
-  label: string;
-  children: React.ReactElement<{ ref?: React.Ref<HTMLElement> }>;
+  label: string
+  children: React.ReactElement<{ref?: React.Ref<HTMLElement>}>
 }) {
-  const ref = useRef<HTMLElement>(null);
-  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLElement>(null)
+  const [open, setOpen] = useState(false)
 
   return (
     <Tooltip
       label={label}
       open={open}
       onOpenChange={(next) => {
-        const text = ref.current?.querySelector<HTMLElement>(".truncate");
-        setOpen(next && !!text && text.scrollWidth > text.clientWidth);
-      }}
-    >
-      {cloneElement(children, { ref })}
+        const text = ref.current?.querySelector<HTMLElement>('.truncate')
+        setOpen(next && !!text && text.scrollWidth > text.clientWidth)
+      }}>
+      {cloneElement(children, {ref})}
     </Tooltip>
-  );
+  )
 }

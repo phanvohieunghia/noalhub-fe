@@ -1,6 +1,6 @@
-import { Icon, type IconName } from "./icons";
-import { Skeleton } from "./skeleton";
-import { Typography } from "./typography";
+import {Icon, type IconName} from './icons'
+import {Skeleton} from './skeleton'
+import {Typography} from './typography'
 
 /**
  * A stat tile for the overview page.
@@ -25,37 +25,41 @@ export function StatCard({
   compact = false,
   progress,
 }: {
-  label: string;
-  value: number | string;
-  hint?: string;
-  icon?: IconName;
-  isLoading?: boolean;
-  compact?: boolean;
-  progress?: number;
+  label: string
+  value: number | string
+  hint?: string
+  icon?: IconName
+  isLoading?: boolean
+  compact?: boolean
+  progress?: number
 }) {
   return (
     <div
       title={compact ? hint : undefined}
-      className={`border-border bg-surface rounded-xl border ${compact ? "px-4 py-3" : "p-5"}`}
-    >
+      className={`border-border bg-surface rounded-xl border ${compact ? 'px-4 py-3' : 'p-5'}`}>
       <div className="flex items-center justify-between gap-3">
-        <Typography variant="title-4" weight={500} className="text-muted-foreground uppercase tracking-wide">
+        <Typography
+          variant="title-4"
+          weight={500}
+          className="text-muted-foreground uppercase tracking-wide">
           {label}
         </Typography>
         {icon ? (
           <span
             aria-hidden
-            className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-lg"
-          >
+            className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-lg">
             <Icon icon={icon} className="size-4" />
           </span>
         ) : null}
       </div>
       {isLoading ? (
-        <Skeleton className={compact ? "mt-2 h-7 w-16" : "mt-3 h-10 w-24"} />
+        <Skeleton className={compact ? 'mt-2 h-7 w-16' : 'mt-3 h-10 w-24'} />
       ) : (
-        <Typography variant={compact ? "h3" : "h1"} as="p" className={`${compact ? "mt-1.5" : "mt-3"} tabular-nums`}>
-          {typeof value === "number" ? value.toLocaleString("vi-VN") : value}
+        <Typography
+          variant={compact ? 'h3' : 'h1'}
+          as="p"
+          className={`${compact ? 'mt-1.5' : 'mt-3'} tabular-nums`}>
+          {typeof value === 'number' ? value.toLocaleString('vi-VN') : value}
         </Typography>
       )}
       {progress === undefined ? null : (
@@ -65,9 +69,11 @@ export function StatCard({
           aria-valuenow={progress}
           aria-valuemin={0}
           aria-valuemax={100}
-          className="bg-foreground/10 mt-2 h-1.5 overflow-hidden rounded-full"
-        >
-          <div className="bg-primary h-full rounded-full" style={{ width: `${progress}%` }} />
+          className="bg-foreground/10 mt-2 h-1.5 overflow-hidden rounded-full">
+          <div
+            className="bg-primary h-full rounded-full"
+            style={{width: `${progress}%`}}
+          />
         </div>
       )}
       {hint && !compact ? (
@@ -76,5 +82,5 @@ export function StatCard({
         </Typography>
       ) : null}
     </div>
-  );
+  )
 }

@@ -160,6 +160,8 @@
     "uploading": "Đang tải ảnh lên… {percent}%",
     "fullscreen": "Toàn màn hình",
     "exitFullscreen": "Thoát toàn màn hình",
+    "showMinimap": "Hiện bản đồ thu nhỏ",
+    "hideMinimap": "Ẩn bản đồ thu nhỏ",
     "mermaidTitle": "Sửa sơ đồ",
     "mermaidSource": "Mã Mermaid",
     "mermaidPreview": "Xem trước",

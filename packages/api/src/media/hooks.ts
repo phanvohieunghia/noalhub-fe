@@ -1,13 +1,12 @@
-"use client";
+'use client'
 
-import { useMutation } from "@tanstack/react-query";
-import { useCallback, useRef, useState } from "react";
+import {useMutation} from '@tanstack/react-query'
+import {useCallback, useRef, useState} from 'react'
 
-import * as mediaApi from "./api";
-import { describeMediaRejection } from "./schemas";
-import type { MediaAsset, UploadFile, UploadProgress } from "./types";
-import { MessageError } from "../message";
-
+import * as mediaApi from './api'
+import {describeMediaRejection} from './schemas'
+import type {MediaAsset, UploadFile, UploadProgress} from './types'
+import {MessageError} from '../message'
 
 /**
  * Uploads one file through all three steps, with progress and a way to cancel.
@@ -21,10 +20,10 @@ import { MessageError } from "../message";
  * dozens of times per second, and React Query's cache is not the place for
  * data like that.
  */
-export function useUploadMedia(options: { allow?: readonly string[] } = {}) {
-  const { allow } = options;
-  const [progress, setProgress] = useState<UploadProgress | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
+export function useUploadMedia(options: {allow?: readonly string[]} = {}) {
+  const {allow} = options
+  const [progress, setProgress] = useState<UploadProgress | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
   const mutation = useMutation<MediaAsset, Error, UploadFile>({
     mutationFn: async (file) => {
@@ -34,33 +33,33 @@ export function useUploadMedia(options: { allow?: readonly string[] } = {}) {
        * mistake is known at selection time, not after pushing all 40MB over the
        * network.
        */
-      const rejection = describeMediaRejection(file, { allow });
-      if (rejection) throw new MessageError(rejection);
+      const rejection = describeMediaRejection(file, {allow})
+      if (rejection) throw new MessageError(rejection)
 
-      const controller = new AbortController();
-      abortRef.current = controller;
-      const total = typeof file.size === "number" ? file.size : 0;
-      setProgress({ loaded: 0, total, ratio: 0 });
+      const controller = new AbortController()
+      abortRef.current = controller
+      const total = typeof file.size === 'number' ? file.size : 0
+      setProgress({loaded: 0, total, ratio: 0})
 
       try {
         return await mediaApi.uploadMedia({
           file,
           onProgress: setProgress,
           signal: controller.signal,
-        });
+        })
       } finally {
-        abortRef.current = null;
+        abortRef.current = null
       }
     },
     onSettled: () => setProgress(null),
-  });
+  })
 
   /**
    * Cancels the step in flight. The backend's `pending` row is **not** cleaned
    * up here: there is no delete endpoint, and the backend's cleanup job removes
    * it after 24h.
    */
-  const cancel = useCallback(() => abortRef.current?.abort(), []);
+  const cancel = useCallback(() => abortRef.current?.abort(), [])
 
-  return { ...mutation, progress, cancel };
+  return {...mutation, progress, cancel}
 }

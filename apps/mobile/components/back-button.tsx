@@ -1,9 +1,9 @@
-import React from "react";
-import { Pressable } from "react-native";
-import { useRouter } from "expo-router";
-import { useTranslations } from "use-intl";
+import React from 'react'
+import {Pressable} from 'react-native'
+import {useRouter} from 'expo-router'
+import {useTranslations} from 'use-intl'
 
-import { Icon } from "@noalhub/ui-native";
+import {Icon} from '@noalhub/ui-native'
 
 /**
  * The back control every screen header starts with. A 40dp round hit target —
@@ -15,23 +15,22 @@ import { Icon } from "@noalhub/ui-native";
  */
 export function BackButton({
   onPress,
-  className = "",
+  className = '',
 }: {
-  onPress?: () => void;
-  className?: string;
+  onPress?: () => void
+  className?: string
 }) {
-  const router = useRouter();
-  const t = useTranslations("common");
+  const router = useRouter()
+  const t = useTranslations('common')
 
   return (
     <Pressable
       onPress={onPress ?? (() => router.back())}
       accessibilityRole="button"
-      accessibilityLabel={t("actions.back")}
+      accessibilityLabel={t('actions.back')}
       hitSlop={4}
-      className={`-ml-2 h-10 w-10 items-center justify-center rounded-full active:bg-muted ${className}`}
-    >
+      className={`-ml-2 h-10 w-10 items-center justify-center rounded-full active:bg-muted ${className}`}>
       <Icon name="arrowLeft" size={22} className="text-foreground" />
     </Pressable>
-  );
+  )
 }

@@ -11,10 +11,10 @@
  * user-facing, so it lives at `web.blog.post.readingTime` and is translated at
  * render time — this function knows no locale (`docs/i18n.md` §7.3).
  */
-const WORDS_PER_MINUTE = 200;
+const WORDS_PER_MINUTE = 200
 
 export function readingMinutes(contentText: string): number {
-  const words = contentText.trim().split(/\s+/).filter(Boolean).length;
+  const words = contentText.trim().split(/\s+/).filter(Boolean).length
   // An empty post is still "1 min read": "0 min read" looks like a rendering bug.
-  return Math.max(1, Math.round(words / WORDS_PER_MINUTE));
+  return Math.max(1, Math.round(words / WORDS_PER_MINUTE))
 }

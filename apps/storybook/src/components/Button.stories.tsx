@@ -1,48 +1,48 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { useTranslations } from "next-intl";
+import type {Meta, StoryObj} from '@storybook/nextjs-vite'
+import {useTranslations} from 'next-intl'
 import {
   Button,
   BUTTON_SHAPES,
   BUTTON_SIZES,
   BUTTON_VARIANTS,
-} from "@noalhub/ui/button";
-import { Icon, ICONS } from "@noalhub/ui/icons";
+} from '@noalhub/ui/button'
+import {Icon, ICONS} from '@noalhub/ui/icons'
 
 const meta: Meta<typeof Button> = {
-  title: "UI/Elements/Button",
+  title: 'UI/Elements/Button',
   component: Button,
   parameters: {
-    layout: "centered",
+    layout: 'centered',
   },
   argTypes: {
     variant: {
-      control: "select",
+      control: 'select',
       options: BUTTON_VARIANTS,
-      description: "Thay đổi giao diện của nút",
+      description: 'Thay đổi giao diện của nút',
     },
     size: {
-      control: "select",
+      control: 'select',
       options: BUTTON_SIZES,
-      description: "Kích thước của nút",
+      description: 'Kích thước của nút',
     },
     shape: {
-      control: "radio",
+      control: 'radio',
       options: BUTTON_SHAPES,
-      description: "Độ bo góc của nút",
+      description: 'Độ bo góc của nút',
     },
     disabled: {
-      control: "boolean",
-      description: "Trạng thái vô hiệu hóa",
+      control: 'boolean',
+      description: 'Trạng thái vô hiệu hóa',
     },
     children: {
-      control: "text",
-      description: "Nội dung hiển thị bên trong nút",
+      control: 'text',
+      description: 'Nội dung hiển thị bên trong nút',
     },
   },
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof Button>;
+export default meta
+type Story = StoryObj<typeof Button>
 
 /*
  * `children` is left out of `args` and falls back to `sb.button` when empty: the
@@ -50,12 +50,12 @@ type Story = StoryObj<typeof Button>;
  * toolbar.
  */
 export const Playground: Story = {
-  args: { variant: "primary", size: "md" },
+  args: {variant: 'primary', size: 'md'},
   render: function PlaygroundStory(args) {
-    const t = useTranslations("sb.button");
-    return <Button {...args}>{args.children || t("default")}</Button>;
+    const t = useTranslations('sb.button')
+    return <Button {...args}>{args.children || t('default')}</Button>
   },
-};
+}
 
 /**
  * Every variant against every size. Built by iterating the exported lists, so a
@@ -67,17 +67,19 @@ export const AllVariants: Story = {
     <div className="flex flex-col gap-4">
       {BUTTON_VARIANTS.map((variant) => (
         <div key={variant} className="flex flex-wrap items-center gap-3">
-          <code className="w-20 text-body-4 text-muted-foreground">{variant}</code>
+          <code className="w-20 text-body-4 text-muted-foreground">
+            {variant}
+          </code>
           {BUTTON_SIZES.map((size) => (
             <Button key={size} variant={variant} size={size} aria-label={size}>
-              {size.startsWith("icon") ? <Icon icon={ICONS.add} /> : size}
+              {size.startsWith('icon') ? <Icon icon={ICONS.add} /> : size}
             </Button>
           ))}
         </div>
       ))}
     </div>
   ),
-};
+}
 
 /** Both shapes, so the `rounded-full` override is visible side by side. */
 export const Shapes: Story = {
@@ -90,30 +92,30 @@ export const Shapes: Story = {
       ))}
     </div>
   ),
-};
+}
 
 export const Disabled: Story = {
-  args: { variant: "primary", size: "md", disabled: true },
+  args: {variant: 'primary', size: 'md', disabled: true},
   render: function DisabledStory(args) {
-    const t = useTranslations("sb.button");
-    return <Button {...args}>{args.children || t("disabled")}</Button>;
+    const t = useTranslations('sb.button')
+    return <Button {...args}>{args.children || t('disabled')}</Button>
   },
-};
+}
 
 /** Icon-only button: always carries an `aria-label`, since there is no text left to read. */
 export const IconButton: Story = {
   args: {
-    variant: "outline",
-    size: "icon",
-    shape: "circle",
+    variant: 'outline',
+    size: 'icon',
+    shape: 'circle',
   },
   render: function IconButtonStory(args) {
-    const t = useTranslations("sb.button");
+    const t = useTranslations('sb.button')
 
     return (
-      <Button {...args} aria-label={args["aria-label"] || t("search")}>
+      <Button {...args} aria-label={args['aria-label'] || t('search')}>
         <Icon icon={ICONS.search} />
       </Button>
-    );
+    )
   },
-};
+}

@@ -1,8 +1,8 @@
-import { http } from "../client";
-import { userSchema } from "../auth/schemas";
-import { publicProfileSchema } from "./schemas";
-import type { ChangeLanguageInput, ChangeUsernameInput } from "./schemas";
-import type { PublicProfile, User } from "./types";
+import {http} from '../client'
+import {userSchema} from '../auth/schemas'
+import {publicProfileSchema} from './schemas'
+import type {ChangeLanguageInput, ChangeUsernameInput} from './schemas'
+import type {PublicProfile, User} from './types'
 
 /**
  * The contact surface with the users backend, mapping 1-to-1 to the OpenAPI
@@ -18,11 +18,11 @@ export async function getPublicProfile(
   username: string,
   signal?: AbortSignal,
 ): Promise<PublicProfile> {
-  const { data } = await http.get<PublicProfile>(
+  const {data} = await http.get<PublicProfile>(
     `/users/${encodeURIComponent(username)}`,
-    { authRequired: true, schema: publicProfileSchema, signal },
-  );
-  return data;
+    {authRequired: true, schema: publicProfileSchema, signal},
+  )
+  return data
 }
 
 /**
@@ -34,11 +34,11 @@ export async function getPublicProfile(
 export async function changeUsername(
   input: ChangeUsernameInput,
 ): Promise<User> {
-  const { data } = await http.patch<User>("/users/me/username", input, {
+  const {data} = await http.patch<User>('/users/me/username', input, {
     authRequired: true,
     schema: userSchema,
-  });
-  return data;
+  })
+  return data
 }
 
 /**
@@ -48,10 +48,12 @@ export async function changeUsername(
  * signed out is a 401. Returns the updated user in the same shape as
  * `/auth/me` → replace the cached copy directly.
  */
-export async function changeLanguage(input: ChangeLanguageInput): Promise<User> {
-  const { data } = await http.patch<User>("/users/me/language", input, {
+export async function changeLanguage(
+  input: ChangeLanguageInput,
+): Promise<User> {
+  const {data} = await http.patch<User>('/users/me/language', input, {
     authRequired: true,
     schema: userSchema,
-  });
-  return data;
+  })
+  return data
 }

@@ -1,11 +1,11 @@
-import { defineRouting } from "next-intl/routing";
+import {defineRouting} from 'next-intl/routing'
 
 import {
   DEFAULT_LOCALE,
   LOCALES,
   LOCALE_COOKIE,
   LOCALE_COOKIE_MAX_AGE,
-} from "./config";
+} from './config'
 
 /**
  * Routing config for **`apps/web`**. `apps/admin` does NOT use this file: it
@@ -20,7 +20,7 @@ import {
 export const routing = defineRouting({
   locales: LOCALES,
   defaultLocale: DEFAULT_LOCALE,
-  localePrefix: "always",
+  localePrefix: 'always',
 
   /*
    * The cookie name is shared with admin so that changing the language in one
@@ -31,6 +31,6 @@ export const routing = defineRouting({
   localeCookie: {
     name: LOCALE_COOKIE,
     maxAge: LOCALE_COOKIE_MAX_AGE,
-    sameSite: "lax",
+    sameSite: 'lax',
   },
-});
+})

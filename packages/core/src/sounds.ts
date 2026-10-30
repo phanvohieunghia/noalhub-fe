@@ -7,8 +7,8 @@
  * so a screen that plays verdicts calls `unlockSounds()` when it opens. Any failure
  * is swallowed — sound is garnish.
  */
-let ctx: AudioContext | null = null;
-let sessionSet = false;
+let ctx: AudioContext | null = null
+let sessionSet = false
 
 /**
  * iOS routes Web Audio through the "ringer" channel, so the silent switch mutes it —
@@ -18,24 +18,23 @@ let sessionSet = false;
  * Must run inside a gesture.
  */
 function claimPlaybackSession() {
-  if (sessionSet) return;
+  if (sessionSet) return
   try {
-    const session = (
-      navigator as Navigator & { audioSession?: { type: string } }
-    ).audioSession;
+    const session = (navigator as Navigator & {audioSession?: {type: string}})
+      .audioSession
     if (session) {
-      session.type = "playback";
-      sessionSet = true;
-      return;
+      session.type = 'playback'
+      sessionSet = true
+      return
     }
-    if (!/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
-    const silent = new Audio(SILENT_WAV);
-    silent.loop = true;
-    silent.setAttribute("playsinline", "");
+    if (!/iPhone|iPad|iPod/.test(navigator.userAgent)) return
+    const silent = new Audio(SILENT_WAV)
+    silent.loop = true
+    silent.setAttribute('playsinline', '')
     void silent.play().then(
       () => (sessionSet = true),
       () => undefined,
-    );
+    )
   } catch {
     // Sound is garnish.
   }
@@ -43,7 +42,7 @@ function claimPlaybackSession() {
 
 /** 0.1s of 8-bit mono silence. */
 const SILENT_WAV =
-  "data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ4AAACAgICAgICAgICAgICA";
+  'data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ4AAACAgICAgICAgICAgICA'
 
 /**
  * The shared context, started or woken if it is not running. Call it from inside a
@@ -54,18 +53,18 @@ const SILENT_WAV =
  * so it is replaced. A refused `resume()` (no gesture yet) is not worth reporting.
  */
 function context(): AudioContext | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === 'undefined') return null
   try {
-    if (ctx?.state === "closed") ctx = null;
-    ctx ??= new window.AudioContext();
-    if (ctx.state !== "running") void ctx.resume().catch(() => undefined);
-    return ctx;
+    if (ctx?.state === 'closed') ctx = null
+    ctx ??= new window.AudioContext()
+    if (ctx.state !== 'running') void ctx.resume().catch(() => undefined)
+    return ctx
   } catch {
-    return null;
+    return null
   }
 }
 
-const GESTURES = ["touchend", "click", "keydown"] as const;
+const GESTURES = ['touchend', 'click', 'keydown'] as const
 
 /**
  * Keeps the audio context running while a screen is open: the first tap or key press
@@ -80,15 +79,15 @@ const GESTURES = ["touchend", "click", "keydown"] as const;
  * background).
  */
 export function unlockSounds() {
-  if (typeof window === "undefined") return () => undefined;
+  if (typeof window === 'undefined') return () => undefined
   const wake = () => {
-    claimPlaybackSession();
-    void context();
-  };
-  for (const type of GESTURES) window.addEventListener(type, wake, true);
+    claimPlaybackSession()
+    void context()
+  }
+  for (const type of GESTURES) window.addEventListener(type, wake, true)
   return () => {
-    for (const type of GESTURES) window.removeEventListener(type, wake, true);
-  };
+    for (const type of GESTURES) window.removeEventListener(type, wake, true)
+  }
 }
 
 /**
@@ -107,21 +106,21 @@ export function unlockSounds() {
  * third lower and softer, so the two directions can be told apart by ear.
  */
 export function playSelect(on = true) {
-  const audio = context();
-  if (!audio) return;
-  const pitch = on ? 1 : 0.8;
-  const t0 = audio.currentTime;
-  const master = audio.createGain();
-  master.gain.value = on ? 0.8 : 0.5;
-  master.connect(audio.destination);
+  const audio = context()
+  if (!audio) return
+  const pitch = on ? 1 : 0.8
+  const t0 = audio.currentTime
+  const master = audio.createGain()
+  master.gain.value = on ? 0.8 : 0.5
+  master.connect(audio.destination)
 
   // The pop: a sine gliding 580 → 900 → 830Hz under the measured envelope.
-  const osc = audio.createOscillator();
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(580 * pitch, t0);
-  osc.frequency.exponentialRampToValueAtTime(900 * pitch, t0 + 0.014);
-  osc.frequency.exponentialRampToValueAtTime(830 * pitch, t0 + 0.05);
-  const amp = audio.createGain();
+  const osc = audio.createOscillator()
+  osc.type = 'sine'
+  osc.frequency.setValueAtTime(580 * pitch, t0)
+  osc.frequency.exponentialRampToValueAtTime(900 * pitch, t0 + 0.014)
+  osc.frequency.exponentialRampToValueAtTime(830 * pitch, t0 + 0.05)
+  const amp = audio.createGain()
   const envelope: [number, number][] = [
     [0, 0],
     [0.002, 0.12],
@@ -138,35 +137,35 @@ export function playSelect(on = true) {
     [0.031, 0.026],
     [0.061, 0.012],
     [0.2, 0],
-  ];
-  amp.gain.setValueAtTime(0, t0);
+  ]
+  amp.gain.setValueAtTime(0, t0)
   for (const [at, value] of envelope)
-    amp.gain.linearRampToValueAtTime(value, t0 + at);
-  osc.connect(amp).connect(master);
-  osc.start(t0);
-  osc.stop(t0 + 0.21);
+    amp.gain.linearRampToValueAtTime(value, t0 + at)
+  osc.connect(amp).connect(master)
+  osc.start(t0)
+  osc.stop(t0 + 0.21)
 
   // Ring-down: a quiet sine near 770Hz that fades in under the pop and rings out.
-  const ring = audio.createOscillator();
-  ring.type = "sine";
-  ring.frequency.value = 770 * pitch;
-  const ringAmp = audio.createGain();
-  ringAmp.gain.setValueAtTime(0, t0 + 0.007);
-  ringAmp.gain.linearRampToValueAtTime(0.025, t0 + 0.013);
-  ringAmp.gain.setTargetAtTime(0, t0 + 0.013, 0.05);
-  ring.connect(ringAmp).connect(master);
-  ring.start(t0 + 0.007);
-  ring.stop(t0 + 0.3);
+  const ring = audio.createOscillator()
+  ring.type = 'sine'
+  ring.frequency.value = 770 * pitch
+  const ringAmp = audio.createGain()
+  ringAmp.gain.setValueAtTime(0, t0 + 0.007)
+  ringAmp.gain.linearRampToValueAtTime(0.025, t0 + 0.013)
+  ringAmp.gain.setTargetAtTime(0, t0 + 0.013, 0.05)
+  ring.connect(ringAmp).connect(master)
+  ring.start(t0 + 0.007)
+  ring.stop(t0 + 0.3)
 }
 
 type Overtone = {
-  freq: number;
-  gain: number;
-  decay: number;
-  attack?: number;
+  freq: number
+  gain: number
+  decay: number
+  attack?: number
   /** The bar keeps swelling for a moment after the hit: it starts at this share of `gain` and reaches it over `swell` seconds. */
-  swell?: { from: number; over: number };
-};
+  swell?: {from: number; over: number}
+}
 
 /**
  * One struck glockenspiel bar: a set of sines, each rising over `attack` seconds and
@@ -180,23 +179,23 @@ function strike(
   start: number,
   partials: Overtone[],
 ) {
-  const t0 = audio.currentTime + start;
-  for (const { freq, gain, decay, attack = 0.003, swell } of partials) {
-    const osc = audio.createOscillator();
-    const amp = audio.createGain();
-    osc.type = "sine";
-    osc.frequency.value = freq;
-    amp.gain.setValueAtTime(0, t0);
-    const settle = swell ? attack + swell.over : attack;
+  const t0 = audio.currentTime + start
+  for (const {freq, gain, decay, attack = 0.003, swell} of partials) {
+    const osc = audio.createOscillator()
+    const amp = audio.createGain()
+    osc.type = 'sine'
+    osc.frequency.value = freq
+    amp.gain.setValueAtTime(0, t0)
+    const settle = swell ? attack + swell.over : attack
     amp.gain.linearRampToValueAtTime(
       swell ? gain * swell.from : gain,
       t0 + attack,
-    );
-    if (swell) amp.gain.linearRampToValueAtTime(gain, t0 + settle);
-    amp.gain.setTargetAtTime(0, t0 + settle, decay);
-    osc.connect(amp).connect(out);
-    osc.start(t0);
-    osc.stop(t0 + settle + decay * 7);
+    )
+    if (swell) amp.gain.linearRampToValueAtTime(gain, t0 + settle)
+    amp.gain.setTargetAtTime(0, t0 + settle, decay)
+    osc.connect(amp).connect(out)
+    osc.start(t0)
+    osc.stop(t0 + settle + decay * 7)
   }
 }
 
@@ -211,11 +210,11 @@ function strike(
  * constants below are measured from it, partial by partial.
  */
 export function playCorrect() {
-  const audio = context();
-  if (!audio) return;
-  const master = audio.createGain();
-  master.gain.value = 1.6;
-  master.connect(audio.destination);
+  const audio = context()
+  if (!audio) return
+  const master = audio.createGain()
+  master.gain.value = 1.6
+  master.connect(audio.destination)
 
   strike(audio, master, 0, [
     {
@@ -223,18 +222,18 @@ export function playCorrect() {
       gain: 0.083,
       decay: 0.26,
       attack: 0.012,
-      swell: { from: 0.8, over: 0.07 },
+      swell: {from: 0.8, over: 0.07},
     },
-    { freq: 4781, gain: 0.016, decay: 0.15 },
-    { freq: 9140, gain: 0.09, decay: 0.035 },
-    { freq: 8296, gain: 0.013, decay: 0.02 },
-    { freq: 3530, gain: 0.01, decay: 0.01, attack: 0.001 },
-  ]);
+    {freq: 4781, gain: 0.016, decay: 0.15},
+    {freq: 9140, gain: 0.09, decay: 0.035},
+    {freq: 8296, gain: 0.013, decay: 0.02},
+    {freq: 3530, gain: 0.01, decay: 0.01, attack: 0.001},
+  ])
   strike(audio, master, 0.14, [
-    { freq: 2367, gain: 0.0275, decay: 0.34, attack: 0.012 },
-    { freq: 6375, gain: 0.04, decay: 0.08 },
-    { freq: 8296, gain: 0.013, decay: 0.05 },
-  ]);
+    {freq: 2367, gain: 0.0275, decay: 0.34, attack: 0.012},
+    {freq: 6375, gain: 0.04, decay: 0.08},
+    {freq: 8296, gain: 0.013, decay: 0.05},
+  ])
 }
 
 /**
@@ -246,27 +245,27 @@ export function playCorrect() {
  * left bright (lowpass at 3kHz) so it cuts through without being shrill.
  */
 export function playWrong() {
-  const audio = context();
-  if (!audio) return;
+  const audio = context()
+  if (!audio) return
 
   const buzz = (start: number, duration: number) => {
-    const t0 = audio.currentTime + start;
-    const osc = audio.createOscillator();
-    osc.type = "square";
-    osc.frequency.value = 262;
-    const filter = audio.createBiquadFilter();
-    filter.type = "lowpass";
-    filter.frequency.value = 3000;
-    const amp = audio.createGain();
-    amp.gain.setValueAtTime(0.0001, t0);
-    amp.gain.linearRampToValueAtTime(0.09, t0 + 0.005);
-    amp.gain.setValueAtTime(0.09, t0 + duration - 0.05);
-    amp.gain.linearRampToValueAtTime(0.0001, t0 + duration);
-    osc.connect(filter).connect(amp).connect(audio.destination);
-    osc.start(t0);
-    osc.stop(t0 + duration + 0.02);
-  };
+    const t0 = audio.currentTime + start
+    const osc = audio.createOscillator()
+    osc.type = 'square'
+    osc.frequency.value = 262
+    const filter = audio.createBiquadFilter()
+    filter.type = 'lowpass'
+    filter.frequency.value = 3000
+    const amp = audio.createGain()
+    amp.gain.setValueAtTime(0.0001, t0)
+    amp.gain.linearRampToValueAtTime(0.09, t0 + 0.005)
+    amp.gain.setValueAtTime(0.09, t0 + duration - 0.05)
+    amp.gain.linearRampToValueAtTime(0.0001, t0 + duration)
+    osc.connect(filter).connect(amp).connect(audio.destination)
+    osc.start(t0)
+    osc.stop(t0 + duration + 0.02)
+  }
 
-  buzz(0, 0.13);
-  buzz(0.19, 0.2);
+  buzz(0, 0.13)
+  buzz(0.19, 0.2)
 }

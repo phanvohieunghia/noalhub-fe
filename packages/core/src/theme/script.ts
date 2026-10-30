@@ -11,4 +11,4 @@
  * `THEME_STORAGE_KEY` — a bundler cannot substitute a variable inside a string.
  * Changing the key means changing both places; `types.ts` carries a reminder.
  */
-export const THEME_INIT_SCRIPT = `try{var t=localStorage.getItem("noalhub-theme");var d=t==="dark"||((!t||t==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d)}catch(e){}`;
+export const THEME_INIT_SCRIPT = `try{var t=localStorage.getItem("noalhub-theme");var d=t==="dark"||((!t||t==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d)}catch(e){}`

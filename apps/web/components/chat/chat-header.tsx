@@ -1,36 +1,35 @@
-"use client";
+'use client'
 
-import { Link } from "@noalhub/i18n/navigation";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
+import {Link} from '@noalhub/i18n/navigation'
+import {useTranslations} from 'next-intl'
+import {useState} from 'react'
 
-import { Button } from "@noalhub/ui/button";
-import { Avatar } from "@noalhub/ui/avatar";
-import { MemberProfileDrawer } from "./member-profile-drawer";
-import { PresenceDot, PresenceLabel } from "./presence-dot";
-import { useChatFormat } from "./use-chat-format";
-import { useAuthStore } from "@noalhub/api/auth";
-import { otherMember } from "@noalhub/core/chat/format";
-import type { Conversation } from "@noalhub/api/chat";
-import { Typography } from "@noalhub/ui/typography";
+import {Button} from '@noalhub/ui/button'
+import {Avatar} from '@noalhub/ui/avatar'
+import {MemberProfileDrawer} from './member-profile-drawer'
+import {PresenceDot, PresenceLabel} from './presence-dot'
+import {useChatFormat} from './use-chat-format'
+import {useAuthStore} from '@noalhub/api/auth'
+import {otherMember} from '@noalhub/core/chat/format'
+import type {Conversation} from '@noalhub/api/chat'
+import {Typography} from '@noalhub/ui/typography'
 
-export function ChatHeader({ conversation }: { conversation: Conversation }) {
-  const t = useTranslations("web.chat.header");
-  const cf = useChatFormat();
-  const currentUserId = useAuthStore((state) => state.user?.id ?? null);
-  const name = cf.conversationName(conversation, currentUserId);
-  const peer = otherMember(conversation, currentUserId);
-  const isDirect = conversation.type === "direct";
-  const [profileOpen, setProfileOpen] = useState(false);
+export function ChatHeader({conversation}: {conversation: Conversation}) {
+  const t = useTranslations('web.chat.header')
+  const cf = useChatFormat()
+  const currentUserId = useAuthStore((state) => state.user?.id ?? null)
+  const name = cf.conversationName(conversation, currentUserId)
+  const peer = otherMember(conversation, currentUserId)
+  const isDirect = conversation.type === 'direct'
+  const [profileOpen, setProfileOpen] = useState(false)
 
   return (
     <div className="flex shrink-0 items-center gap-3 border-b border-black/10 px-4 py-3 dark:border-white/10">
       {/* The back button only means anything on mobile — desktop always shows the sidebar. */}
       <Link
         href="/chat"
-        aria-label={t("backToList")}
-        className="-ml-1 rounded-md px-1 py-0.5 text-title-2 leading-none opacity-70 hover:opacity-100 md:hidden"
-      >
+        aria-label={t('backToList')}
+        className="-ml-1 rounded-md px-1 py-0.5 text-title-2 leading-none opacity-70 hover:opacity-100 md:hidden">
         ◀
       </Link>
 
@@ -40,12 +39,14 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
           variant="ghost"
           shape="circle"
           onClick={() => setProfileOpen(true)}
-          aria-label={t("viewProfile", { name })}
-          className="relative size-auto shrink-0 p-0 hover:bg-transparent"
-        >
+          aria-label={t('viewProfile', {name})}
+          className="relative size-auto shrink-0 p-0 hover:bg-transparent">
           <Avatar name={name} src={peer.avatarUrl} size="sm" />
           {isDirect ? (
-            <PresenceDot userId={peer.userId} className="absolute -right-0.5 -bottom-0.5" />
+            <PresenceDot
+              userId={peer.userId}
+              className="absolute -right-0.5 -bottom-0.5"
+            />
           ) : null}
         </Button>
       ) : (
@@ -55,14 +56,18 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
       )}
 
       <div className="flex min-w-0 flex-col">
-        <Typography variant="title-4" weight={600} as="span" className="truncate">
+        <Typography
+          variant="title-4"
+          weight={600}
+          as="span"
+          className="truncate">
           {name}
         </Typography>
         {isDirect ? (
           <PresenceLabel userId={peer?.userId} />
         ) : (
           <Typography variant="body-4" as="span" className="opacity-60">
-            {t("memberCount", { count: conversation.members.length })}
+            {t('memberCount', {count: conversation.members.length})}
           </Typography>
         )}
       </div>
@@ -76,5 +81,5 @@ export function ChatHeader({ conversation }: { conversation: Conversation }) {
         />
       ) : null}
     </div>
-  );
+  )
 }

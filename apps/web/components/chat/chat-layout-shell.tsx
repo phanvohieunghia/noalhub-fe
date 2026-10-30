@@ -1,12 +1,12 @@
-"use client";
+'use client'
 
-import { usePathname } from "@noalhub/i18n/navigation";
+import {usePathname} from '@noalhub/i18n/navigation'
 
-import { MobileNav } from "@/components/layout/mobile-nav";
-import { SiteHeader } from "@/components/layout/site-header";
+import {MobileNav} from '@/components/layout/mobile-nav'
+import {SiteHeader} from '@/components/layout/site-header'
 
-import { ChatSidebar } from "./chat-sidebar";
-import { ConnectionBanner } from "./connection-banner";
+import {ChatSidebar} from './chat-sidebar'
+import {ConnectionBanner} from './connection-banner'
 
 /**
  * The two-column shell.
@@ -21,9 +21,9 @@ import { ConnectionBanner } from "./connection-banner";
  * `pathname` only tells mobile which screen it is on; desktop always shows both
  * regardless of its value.
  */
-export function ChatLayoutShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const hasSelection = pathname !== "/chat";
+export function ChatLayoutShell({children}: {children: React.ReactNode}) {
+  const pathname = usePathname()
+  const hasSelection = pathname !== '/chat'
 
   return (
     /* Chat occupies EXACTLY one screen and never lets the page scroll: only with
@@ -34,18 +34,16 @@ export function ChatLayoutShell({ children }: { children: React.ReactNode }) {
       <ConnectionBanner />
       <div className="flex min-h-0 flex-1">
         <div
-          className={`${hasSelection ? "hidden md:flex" : "flex"} w-full min-h-0 shrink-0 flex-col border-black/10 md:w-80 md:border-r dark:border-white/10`}
-        >
+          className={`${hasSelection ? 'hidden md:flex' : 'flex'} w-full min-h-0 shrink-0 flex-col border-black/10 md:w-80 md:border-r dark:border-white/10`}>
           <ChatSidebar />
         </div>
         <div
-          className={`${hasSelection ? "flex" : "hidden md:flex"} min-h-0 min-w-0 flex-1 flex-col`}
-        >
+          className={`${hasSelection ? 'flex' : 'hidden md:flex'} min-h-0 min-w-0 flex-1 flex-col`}>
           {children}
         </div>
       </div>
       {/* Only on the conversation list: an open conversation takes the whole screen. */}
       {!hasSelection && <MobileNav />}
     </div>
-  );
+  )
 }

@@ -1,51 +1,51 @@
-"use client";
+'use client'
 
-import Link from "next/link";
+import Link from 'next/link'
 
-import { HoverFlyout } from "./hover-flyout";
-import { Icon, ICONS } from "./icons";
-import { Logo } from "./logo";
-import { Tooltip } from "./tooltip";
-import { Typography } from "./typography";
+import {HoverFlyout} from './hover-flyout'
+import {Icon, ICONS} from './icons'
+import {Logo} from './logo'
+import {Tooltip} from './tooltip'
+import {Typography} from './typography'
 
 export type SidebarItem = {
-  href: string;
+  href: string
   /** Already translated — the component pins no i18n namespace. */
-  label: string;
+  label: string
   /** An iconify name for top-level rows. Children are drawn without one. */
-  icon?: string;
+  icon?: string
   /** Shown but unusable. */
-  locked?: boolean;
+  locked?: boolean
   /** Why it is locked, shown as a tooltip. */
-  lockedReason?: string;
+  lockedReason?: string
   /** Sub-screens, indented under the row. One level only. */
-  children?: SidebarItem[];
-};
+  children?: SidebarItem[]
+}
 
 export type SidebarLabels = {
   /** Accessible name of the `<nav>` landmark. */
-  nav: string;
-  expandSidebar: string;
-  collapseSidebar: string;
+  nav: string
+  expandSidebar: string
+  collapseSidebar: string
   /** Name of a group's chevron button; `open` is its current state. */
-  group: (open: boolean, section: string) => string;
-};
+  group: (open: boolean, section: string) => string
+}
 
 export type SidebarProps = {
-  brand: { title: string; subtitle: string };
-  items: SidebarItem[];
-  pathname: string;
+  brand: {title: string; subtitle: string}
+  items: SidebarItem[]
+  pathname: string
   /** The href of the row that is current, or undefined. */
-  activeHref?: string;
+  activeHref?: string
   /** Hrefs of the groups the user collapsed. */
-  collapsedGroups: string[];
-  onToggleGroup: (href: string) => void;
+  collapsedGroups: string[]
+  onToggleGroup: (href: string) => void
   /** Icon-only mode. */
-  rail: boolean;
-  onToggleRail: () => void;
-  labels: SidebarLabels;
-  className?: string;
-};
+  rail: boolean
+  onToggleRail: () => void
+  labels: SidebarLabels
+  className?: string
+}
 
 /**
  * A collapsible navigation sidebar with grouped rows and an icon-rail mode.
@@ -62,28 +62,29 @@ export function Sidebar({
   rail,
   onToggleRail,
   labels,
-  className = "",
+  className = '',
 }: SidebarProps) {
   return (
     <aside
       className={`group/sidebar relative flex shrink-0 flex-col gap-1 border-r border-border px-3 py-4 transition-[width] duration-200 ${
-        rail ? "w-16" : "w-62"
-      } ${className}`}
-    >
+        rail ? 'w-16' : 'w-62'
+      } ${className}`}>
       <div
         className={
           rail
-            ? "flex flex-col items-center gap-2 pt-1 pb-3"
-            : "flex items-center gap-2.5 px-2 pt-1 pb-4"
-        }
-      >
+            ? 'flex flex-col items-center gap-2 pt-1 pb-3'
+            : 'flex items-center gap-2.5 px-2 pt-1 pb-4'
+        }>
         <Logo className="size-8 shrink-0" />
         {rail ? null : (
           <div className="min-w-0 flex-1 whitespace-nowrap">
             <Typography variant="title-3" as="p" className="leading-snug">
               {brand.title}
             </Typography>
-            <Typography variant="body-4" as="p" className="text-muted-foreground">
+            <Typography
+              variant="body-4"
+              as="p"
+              className="text-muted-foreground">
               {brand.subtitle}
             </Typography>
           </div>
@@ -98,24 +99,27 @@ export function Sidebar({
        */}
       <div className="group/edge absolute top-0 right-0 z-10 h-18 w-8 translate-x-1/2">
         <div className="absolute top-7 left-1/2 -translate-x-1/2">
-        <div className="scale-50 opacity-0 transition-[opacity,scale] duration-200 ease-out group-focus-within/edge:scale-100 group-focus-within/edge:opacity-100 group-hover/edge:scale-100 group-hover/edge:opacity-100 [@media(hover:none)]:scale-100 [@media(hover:none)]:opacity-100">
-        <Tooltip label={rail ? labels.expandSidebar : labels.collapseSidebar} side="right">
-          <button
-            type="button"
-            onClick={onToggleRail}
-            aria-expanded={!rail}
-            aria-label={rail ? labels.expandSidebar : labels.collapseSidebar}
-            className="grid size-6 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Icon
-              icon={rail ? ICONS.chevronRight : ICONS.chevronLeft}
-              animate="snappy"
-              className="size-3.5"
-              strokeWidth={3}
-            />
-          </button>
-        </Tooltip>
-        </div>
+          <div className="scale-50 opacity-0 transition-[opacity,scale] duration-200 ease-out group-focus-within/edge:scale-100 group-focus-within/edge:opacity-100 group-hover/edge:scale-100 group-hover/edge:opacity-100 [@media(hover:none)]:scale-100 [@media(hover:none)]:opacity-100">
+            <Tooltip
+              label={rail ? labels.expandSidebar : labels.collapseSidebar}
+              side="right">
+              <button
+                type="button"
+                onClick={onToggleRail}
+                aria-expanded={!rail}
+                aria-label={
+                  rail ? labels.expandSidebar : labels.collapseSidebar
+                }
+                className="grid size-6 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <Icon
+                  icon={rail ? ICONS.chevronRight : ICONS.chevronLeft}
+                  animate="snappy"
+                  className="size-3.5"
+                  strokeWidth={3}
+                />
+              </button>
+            </Tooltip>
+          </div>
         </div>
       </div>
       <div role="separator" className="h-px w-full bg-border" />
@@ -134,7 +138,7 @@ export function Sidebar({
         ))}
       </nav>
     </aside>
-  );
+  )
 }
 
 function SidebarEntry({
@@ -146,62 +150,66 @@ function SidebarEntry({
   labels,
   rail = false,
 }: {
-  item: SidebarItem;
-  activeHref: string | undefined;
-  pathname: string;
-  collapsedGroups: string[];
-  onToggleGroup: (href: string) => void;
-  labels: SidebarLabels;
+  item: SidebarItem
+  activeHref: string | undefined
+  pathname: string
+  collapsedGroups: string[]
+  onToggleGroup: (href: string) => void
+  labels: SidebarLabels
   /** Icon-only: no label, no chevron, and a group's children are not drawn. */
-  rail?: boolean;
+  rail?: boolean
 }) {
-  const locked = Boolean(item.locked);
+  const locked = Boolean(item.locked)
 
   // Top-level rows carry an icon; the indented children are text only.
-  const icon = item.icon ? <Icon icon={item.icon} className="size-5 shrink-0" /> : null;
-  const rowPadding = item.icon ? "px-3 py-[9px]" : "px-3 py-[7px]";
+  const icon = item.icon ? (
+    <Icon icon={item.icon} className="size-5 shrink-0" />
+  ) : null
+  const rowPadding = item.icon ? 'px-3 py-[9px]' : 'px-3 py-[7px]'
 
   if (rail) {
     // A rail has no room for children, so the group's icon stands for the whole
     // section: it lights up when the current page is the group or any child.
     const railActive =
-      item.href === activeHref || item.children?.some((child) => child.href === activeHref);
+      item.href === activeHref ||
+      item.children?.some((child) => child.href === activeHref)
     const railRow = `flex items-center justify-center rounded-md py-2.5 transition-colors ${
-      railActive ? "bg-muted" : "hover:bg-muted/60"
-    }`;
+      railActive ? 'bg-muted' : 'hover:bg-muted/60'
+    }`
 
     if (locked) {
       return (
         <Tooltip
-          label={item.lockedReason ? `${item.label} — ${item.lockedReason}` : item.label}
-          side="right"
-        >
+          label={
+            item.lockedReason
+              ? `${item.label} — ${item.lockedReason}`
+              : item.label
+          }
+          side="right">
           <span
             // `aria-label` is only allowed on an element with a role; a disabled
             // link is `role="link"` + `aria-disabled`.
             role="link"
             aria-disabled="true"
             aria-label={item.label}
-            className="flex cursor-not-allowed items-center justify-center rounded-md py-2.5 text-muted-foreground"
-          >
+            className="flex cursor-not-allowed items-center justify-center rounded-md py-2.5 text-muted-foreground">
             {icon}
           </span>
         </Tooltip>
-      );
+      )
     }
 
     const railLink = (
       <Link
         href={item.href}
         aria-label={item.label}
-        aria-current={item.href === activeHref ? "page" : undefined}
-        className={railRow}
-      >
+        aria-current={item.href === activeHref ? 'page' : undefined}
+        className={railRow}>
         {icon}
       </Link>
-    );
+    )
 
-    const visibleChildren = item.children ?? [];
+    const visibleChildren = item.children ?? []
 
     // No children: the label tooltip is enough.
     if (!visibleChildren.length) {
@@ -209,7 +217,7 @@ function SidebarEntry({
         <Tooltip label={item.label} side="right">
           {railLink}
         </Tooltip>
-      );
+      )
     }
 
     // A group: hovering (or focusing) the icon opens a flyout with the children,
@@ -222,18 +230,19 @@ function SidebarEntry({
             <li key={child.href}>
               <Link
                 href={child.href}
-                aria-current={child.href === activeHref ? "page" : undefined}
+                aria-current={child.href === activeHref ? 'page' : undefined}
                 className={`block rounded-md px-3 py-[7px] text-body-3 transition-colors ${
-                  child.href === activeHref ? "bg-muted font-semibold" : "hover:bg-muted/60"
-                }`}
-              >
+                  child.href === activeHref
+                    ? 'bg-muted font-semibold'
+                    : 'hover:bg-muted/60'
+                }`}>
                 {child.label}
               </Link>
             </li>
           ))}
         </ul>
       </HoverFlyout>
-    );
+    )
   }
 
   if (locked) {
@@ -241,41 +250,42 @@ function SidebarEntry({
       <span
         title={item.lockedReason}
         aria-disabled="true"
-        className={`flex cursor-not-allowed items-center gap-3 rounded-md text-body-3 text-muted-foreground ${rowPadding}`}
-      >
+        className={`flex cursor-not-allowed items-center gap-3 rounded-md text-body-3 text-muted-foreground ${rowPadding}`}>
         {icon}
         {item.label}
       </span>
-    );
+    )
   }
 
-  const isActive = item.href === activeHref;
-  const rowTone = isActive ? "bg-muted font-semibold" : "hover:bg-muted/60";
+  const isActive = item.href === activeHref
+  const rowTone = isActive ? 'bg-muted font-semibold' : 'hover:bg-muted/60'
   const link = (
     <Link
       href={item.href}
-      aria-current={isActive ? "page" : undefined}
+      aria-current={isActive ? 'page' : undefined}
       className={`flex min-w-0 flex-1 items-center gap-3 rounded-md text-body-3 transition-colors ${rowPadding} ${
-        item.children?.length ? "" : rowTone
-      }`}
-    >
+        item.children?.length ? '' : rowTone
+      }`}>
       {icon}
-      <Typography variant="body-3" as="span" className="min-w-0 flex-1 truncate">
+      <Typography
+        variant="body-3"
+        as="span"
+        className="min-w-0 flex-1 truncate">
         {item.label}
       </Typography>
     </Link>
-  );
+  )
 
-  if (!item.children?.length) return link;
+  if (!item.children?.length) return link
 
   /*
    * A collapsed group whose child IS the current screen stays open regardless:
    * hiding the row that is highlighted right now would leave the sidebar
    * disagreeing with the page, and the user cannot see where they are.
    */
-  const holdsCurrentPage = pathname.startsWith(`${item.href}/`);
-  const isOpen = holdsCurrentPage || !collapsedGroups.includes(item.href);
-  const groupId = `nav-group-${item.href.replace(/\W+/g, "-")}`;
+  const holdsCurrentPage = pathname.startsWith(`${item.href}/`)
+  const isOpen = holdsCurrentPage || !collapsedGroups.includes(item.href)
+  const groupId = `nav-group-${item.href.replace(/\W+/g, '-')}`
 
   return (
     <div>
@@ -285,7 +295,8 @@ function SidebarEntry({
        * cost the one-click path to the group's page, and a row that both
        * navigates and expands does neither predictably.
        */}
-      <div className={`flex items-center rounded-md transition-colors ${rowTone}`}>
+      <div
+        className={`flex items-center rounded-md transition-colors ${rowTone}`}>
         {link}
         <button
           type="button"
@@ -294,8 +305,7 @@ function SidebarEntry({
           aria-controls={groupId}
           aria-label={labels.group(isOpen, item.label)}
           disabled={holdsCurrentPage}
-          className="mr-2 grid size-6 shrink-0 place-items-center rounded text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none"
-        >
+          className="mr-2 grid size-6 shrink-0 place-items-center rounded text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none">
           <Icon
             icon={isOpen ? ICONS.chevronDown : ICONS.chevronRight}
             animate="snappy"
@@ -311,17 +321,15 @@ function SidebarEntry({
        */}
       <div
         className={`grid transition-[grid-template-rows] duration-200 ease-out ${
-          isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        }`}
-      >
+          isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+        }`}>
         <div className="min-h-0 overflow-hidden">
           <div className="pt-0.5 pb-1">
             {/* The nested <ul> is what tells a screen reader these belong to the section above. */}
             <ul
               id={groupId}
               inert={!isOpen}
-              className="ml-[22px] flex flex-col gap-0.5 border-l border-border pl-2.5"
-            >
+              className="ml-[22px] flex flex-col gap-0.5 border-l border-border pl-2.5">
               {item.children.map((child) => (
                 <li key={child.href}>
                   <SidebarEntry
@@ -339,5 +347,5 @@ function SidebarEntry({
         </div>
       </div>
     </div>
-  );
+  )
 }

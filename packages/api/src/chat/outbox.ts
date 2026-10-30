@@ -12,24 +12,24 @@
  */
 
 export type OutboxEntry = {
-  id: string;
-  conversationId: string;
-  body: string;
-};
+  id: string
+  conversationId: string
+  body: string
+}
 
-const entries = new Map<string, OutboxEntry>();
+const entries = new Map<string, OutboxEntry>()
 
 export const outbox = {
   add(entry: OutboxEntry) {
-    entries.set(entry.id, entry);
+    entries.set(entry.id, entry)
   },
 
   remove(id: string) {
-    entries.delete(id);
+    entries.delete(id)
   },
 
   has(id: string) {
-    return entries.has(id);
+    return entries.has(id)
   },
 
   /**
@@ -37,10 +37,10 @@ export const outbox = {
    * exactly the order the user typed them — and the order they are resent in.
    */
   drain(): OutboxEntry[] {
-    return [...entries.values()].sort((a, b) => a.id.localeCompare(b.id));
+    return [...entries.values()].sort((a, b) => a.id.localeCompare(b.id))
   },
 
   clear() {
-    entries.clear();
+    entries.clear()
   },
-};
+}

@@ -1,27 +1,27 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
+import {useTranslations} from 'next-intl'
 
-import { Button } from "@noalhub/ui/button";
-import { Icon, ICONS } from "@noalhub/ui/icons";
-import { rememberOAuthNext } from "@noalhub/core/auth/redirect";
-import { oauthStartUrl } from "@noalhub/api/auth";
-import type { OAuthProvider } from "@noalhub/api/auth";
-import { Typography } from "@noalhub/ui/typography";
+import {Button} from '@noalhub/ui/button'
+import {Icon, ICONS} from '@noalhub/ui/icons'
+import {rememberOAuthNext} from '@noalhub/core/auth/redirect'
+import {oauthStartUrl} from '@noalhub/api/auth'
+import type {OAuthProvider} from '@noalhub/api/auth'
+import {Typography} from '@noalhub/ui/typography'
 
-const PROVIDERS: { id: OAuthProvider; label: string; icon: string }[] = [
-  { id: "google", label: "Google", icon: ICONS.google },
-  { id: "github", label: "GitHub", icon: ICONS.github },
-];
+const PROVIDERS: {id: OAuthProvider; label: string; icon: string}[] = [
+  {id: 'google', label: 'Google', icon: ICONS.google},
+  {id: 'github', label: 'GitHub', icon: ICONS.github},
+]
 
-export function OAuthButtons({ next }: { next?: string }) {
-  const t = useTranslations("web.auth.oauth");
+export function OAuthButtons({next}: {next?: string}) {
+  const t = useTranslations('web.auth.oauth')
 
   // Navigating off-origin → use window.location, never <Link>.
   const go = (provider: OAuthProvider) => {
-    rememberOAuthNext(next);
-    window.location.assign(oauthStartUrl(provider));
-  };
+    rememberOAuthNext(next)
+    window.location.assign(oauthStartUrl(provider))
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -31,15 +31,14 @@ export function OAuthButtons({ next }: { next?: string }) {
       <Typography
         as="div"
         variant="body-4"
-        className="flex items-center gap-3 uppercase tracking-wide text-muted-foreground"
-      >
+        className="flex items-center gap-3 uppercase tracking-wide text-muted-foreground">
         <span className="h-px flex-1 bg-current" />
-        {t("divider")}
+        {t('divider')}
         <span className="h-px flex-1 bg-current" />
       </Typography>
 
       <div className="grid grid-cols-2 gap-3">
-        {PROVIDERS.map(({ id, label, icon }) => (
+        {PROVIDERS.map(({id, label, icon}) => (
           <Button key={id} variant="outline" onClick={() => go(id)}>
             <Icon icon={icon} />
             {label}
@@ -47,5 +46,5 @@ export function OAuthButtons({ next }: { next?: string }) {
         ))}
       </div>
     </div>
-  );
+  )
 }

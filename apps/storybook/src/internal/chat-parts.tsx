@@ -1,10 +1,10 @@
-import { useTranslations } from "next-intl";
+import {useTranslations} from 'next-intl'
 
-import { Avatar } from "@noalhub/ui/avatar";
-import { Button } from "@noalhub/ui/button";
-import { Icon, ICONS } from "@noalhub/ui/icons";
-import { Spinner } from "@noalhub/ui/spinner";
-import { Typography } from "@noalhub/ui/typography";
+import {Avatar} from '@noalhub/ui/avatar'
+import {Button} from '@noalhub/ui/button'
+import {Icon, ICONS} from '@noalhub/ui/icons'
+import {Spinner} from '@noalhub/ui/spinner'
+import {Typography} from '@noalhub/ui/typography'
 
 /*
  * The pieces the chat and presence flows both draw, kept out of either stories
@@ -22,7 +22,7 @@ import { Typography } from "@noalhub/ui/typography";
  * messages, so the locale toolbar switches these exactly like the app.
  */
 
-export type PresenceState = "online" | "offline";
+export type PresenceState = 'online' | 'offline'
 
 /**
  * The status dot. TWO states.
@@ -38,13 +38,13 @@ export type PresenceState = "online" | "offline";
 export function PresenceDot({
   state,
   label,
-  className = "",
+  className = '',
 }: {
-  state: PresenceState;
-  label: string;
-  className?: string;
+  state: PresenceState
+  label: string
+  className?: string
 }) {
-  const color = state === "online" ? "bg-success" : "bg-muted-foreground";
+  const color = state === 'online' ? 'bg-success' : 'bg-muted-foreground'
 
   return (
     <span className={`inline-flex items-center ${className}`}>
@@ -54,7 +54,7 @@ export function PresenceDot({
       />
       <span className="sr-only">{label}</span>
     </span>
-  );
+  )
 }
 
 /**
@@ -68,20 +68,19 @@ export function PresenceDot({
 export function ChatScreen({
   banner,
   children,
-  className = "",
+  className = '',
 }: {
-  banner?: React.ReactNode;
-  children: React.ReactNode;
-  className?: string;
+  banner?: React.ReactNode
+  children: React.ReactNode
+  className?: string
 }) {
   return (
     <div
-      className={`border-border bg-surface flex h-[30rem] w-[min(46rem,90vw)] flex-col overflow-hidden rounded-xl border ${className}`}
-    >
+      className={`border-border bg-surface flex h-[30rem] w-[min(46rem,90vw)] flex-col overflow-hidden rounded-xl border ${className}`}>
       {banner}
       <div className="flex min-h-0 flex-1">{children}</div>
     </div>
-  );
+  )
 }
 
 /**
@@ -92,51 +91,64 @@ export function ChatScreen({
  * **drops the retry button**, because there is nothing to retry while a retry is
  * already in flight.
  */
-export function ConnectionBanner({ connecting = false }: { connecting?: boolean }) {
-  const t = useTranslations("web.chat.connection");
-  const tc = useTranslations("common");
+export function ConnectionBanner({connecting = false}: {connecting?: boolean}) {
+  const t = useTranslations('web.chat.connection')
+  const tc = useTranslations('common')
 
   return (
     <div
       role="status"
-      className="text-body-3 bg-warning/15 text-warning border-warning/30 flex shrink-0 items-center justify-center gap-3 border-b px-4 py-2"
-    >
+      className="text-body-3 bg-warning/15 text-warning border-warning/30 flex shrink-0 items-center justify-center gap-3 border-b px-4 py-2">
       {connecting ? <Spinner /> : <span aria-hidden>⚠</span>}
       <Typography as="span" variant="body-3">
-        {connecting ? t("reconnecting") : t("offline")}
+        {connecting ? t('reconnecting') : t('offline')}
       </Typography>
       {connecting ? null : (
         // `border-current` on purpose: the banner is amber, and a `border-border`
         // button inside it reads as a foreign element.
-        <Button variant="outline" size="xs" className="border-current/30 hover:bg-current/10">
-          {tc("actions.retry")}
+        <Button
+          variant="outline"
+          size="xs"
+          className="border-current/30 hover:bg-current/10">
+          {tc('actions.retry')}
         </Button>
       )}
     </div>
-  );
+  )
 }
 
 export type Peer = {
-  name: string;
-  presence: PresenceState;
-  preview: string;
-  time: string;
-  unread?: number;
-};
+  name: string
+  presence: PresenceState
+  preview: string
+  time: string
+  unread?: number
+}
 
 export const PEERS: Peer[] = [
-  { name: "Nguyễn An", presence: "online", preview: "Ok mình xem rồi nhé", time: "09:41", unread: 2 },
-  { name: "Trần Bình", presence: "offline", preview: "Gửi lại giúp mình link", time: "Hôm qua" },
-  { name: "Lê Chi", presence: "offline", preview: "", time: "3 Th7" },
-];
+  {
+    name: 'Nguyễn An',
+    presence: 'online',
+    preview: 'Ok mình xem rồi nhé',
+    time: '09:41',
+    unread: 2,
+  },
+  {
+    name: 'Trần Bình',
+    presence: 'offline',
+    preview: 'Gửi lại giúp mình link',
+    time: 'Hôm qua',
+  },
+  {name: 'Lê Chi', presence: 'offline', preview: '', time: '3 Th7'},
+]
 
 /** The sidebar list. Presence rides on the avatar of every direct conversation. */
-export function ConversationList({ activeIndex = 0 }: { activeIndex?: number }) {
-  const t = useTranslations("web.chat.sidebar");
-  const tp = useTranslations("web.chat.presence");
+export function ConversationList({activeIndex = 0}: {activeIndex?: number}) {
+  const t = useTranslations('web.chat.sidebar')
+  const tp = useTranslations('web.chat.presence')
 
   const presenceLabel = (peer: Peer) =>
-    peer.presence === "online" ? tp("online") : tp("hoursAgo", { hours: 3 });
+    peer.presence === 'online' ? tp('online') : tp('hoursAgo', {hours: 3})
 
   return (
     // `w-80`, matching `ChatLayoutShell`'s `md:w-80` — the sidebar is 20rem in
@@ -149,7 +161,7 @@ export function ConversationList({ activeIndex = 0 }: { activeIndex?: number }) 
           button is an empty promise (`docs/chat.md` §0 #2).
         */}
         <Typography variant="h6" as="h1">
-          {t("title")}
+          {t('title')}
         </Typography>
       </div>
 
@@ -162,8 +174,8 @@ export function ConversationList({ activeIndex = 0 }: { activeIndex?: number }) 
       <div className="shrink-0 px-2 pb-2">
         <input
           type="search"
-          placeholder={t("searchPlaceholder")}
-          aria-label={t("searchLabel")}
+          placeholder={t('searchPlaceholder')}
+          aria-label={t('searchLabel')}
           className="border-border text-body-3 focus:border-foreground/60 w-full rounded-md border bg-transparent px-3 py-1.5 outline-none"
         />
       </div>
@@ -173,11 +185,10 @@ export function ConversationList({ activeIndex = 0 }: { activeIndex?: number }) 
           <li key={peer.name}>
             <a
               href="#"
-              aria-current={index === activeIndex ? "page" : undefined}
+              aria-current={index === activeIndex ? 'page' : undefined}
               className={`flex items-center gap-3 rounded-lg p-2 transition-colors ${
-                index === activeIndex ? "bg-muted" : "hover:bg-muted/60"
-              }`}
-            >
+                index === activeIndex ? 'bg-muted' : 'hover:bg-muted/60'
+              }`}>
               <span className="relative shrink-0">
                 <Avatar name={peer.name} />
                 <PresenceDot
@@ -191,7 +202,10 @@ export function ConversationList({ activeIndex = 0 }: { activeIndex?: number }) 
                   <Typography variant="title-4" as="span" className="truncate">
                     {peer.name}
                   </Typography>
-                  <Typography as="span" variant="body-4" className="text-muted-foreground shrink-0">
+                  <Typography
+                    as="span"
+                    variant="body-4"
+                    className="text-muted-foreground shrink-0">
                     {peer.time}
                   </Typography>
                 </span>
@@ -200,9 +214,8 @@ export function ConversationList({ activeIndex = 0 }: { activeIndex?: number }) 
                     as="span"
                     variant="body-4"
                     weight={peer.unread ? 500 : 400}
-                    className={`truncate ${peer.unread ? "" : "text-muted-foreground"}`}
-                  >
-                    {peer.preview || t("noMessages")}
+                    className={`truncate ${peer.unread ? '' : 'text-muted-foreground'}`}>
+                    {peer.preview || t('noMessages')}
                   </Typography>
                   {peer.unread ? (
                     // `bg-foreground`, not `bg-primary`: the unread pill is the
@@ -211,11 +224,12 @@ export function ConversationList({ activeIndex = 0 }: { activeIndex?: number }) 
                       as="span"
                       variant="body-4"
                       weight={600}
-                      className="bg-foreground text-background inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5"
-                    >
-                      <span aria-hidden>{peer.unread > 99 ? "99+" : peer.unread}</span>
+                      className="bg-foreground text-background inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5">
+                      <span aria-hidden>
+                        {peer.unread > 99 ? '99+' : peer.unread}
+                      </span>
                       <span className="sr-only">
-                        {t("unread", { count: peer.unread })}
+                        {t('unread', {count: peer.unread})}
                       </span>
                     </Typography>
                   ) : null}
@@ -226,7 +240,7 @@ export function ConversationList({ activeIndex = 0 }: { activeIndex?: number }) 
         ))}
       </ul>
     </aside>
-  );
+  )
 }
 
 /**
@@ -241,22 +255,22 @@ export function ConversationHeader({
   statusLabel,
   landmark = true,
 }: {
-  peer?: Peer;
-  statusLabel?: string;
+  peer?: Peer
+  statusLabel?: string
   /**
    * `false` renders a plain `<div>`. In the app there is exactly one chat header
    * on the page, so `<header>` is right; a story that stacks several of them
    * would otherwise ship several banner landmarks — an a11y error, and CI runs
    * `a11y: { test: "error" }`.
    */
-  landmark?: boolean;
+  landmark?: boolean
 }) {
-  const Root = landmark ? "header" : "div";
-  const tp = useTranslations("web.chat.presence");
-  const th = useTranslations("web.chat.header");
+  const Root = landmark ? 'header' : 'div'
+  const tp = useTranslations('web.chat.presence')
+  const th = useTranslations('web.chat.header')
 
   const presenceLabel =
-    peer.presence === "online" ? tp("online") : tp("hoursAgo", { hours: 3 });
+    peer.presence === 'online' ? tp('online') : tp('hoursAgo', {hours: 3})
 
   return (
     <Root className="border-border flex shrink-0 items-center gap-3 border-b px-4 py-3">
@@ -265,9 +279,8 @@ export function ConversationHeader({
           therefore invisible at Storybook's usual viewport — resize the preview
           below 768px to see it. */}
       <span
-        aria-label={th("backToList")}
-        className="text-title-2 -ml-1 leading-none opacity-70 md:hidden"
-      >
+        aria-label={th('backToList')}
+        className="text-title-2 -ml-1 leading-none opacity-70 md:hidden">
         ◀
       </span>
 
@@ -280,24 +293,27 @@ export function ConversationHeader({
         />
       </span>
       <span className="flex min-w-0 flex-col">
-        <Typography variant="title-4" weight={600} as="span" className="truncate">
+        <Typography
+          variant="title-4"
+          weight={600}
+          as="span"
+          className="truncate">
           {peer.name}
         </Typography>
         {statusLabel ? (
           <Typography
             variant="body-4"
             as="span"
-            className="text-muted-foreground"
-          >
+            className="text-muted-foreground">
             {statusLabel}
           </Typography>
         ) : null}
       </span>
     </Root>
-  );
+  )
 }
 
-export function DateSeparator({ label }: { label: string }) {
+export function DateSeparator({label}: {label: string}) {
   return (
     <div className="flex items-center gap-3 py-2">
       <span className="bg-border h-px flex-1" />
@@ -306,7 +322,7 @@ export function DateSeparator({ label }: { label: string }) {
       </Typography>
       <span className="bg-border h-px flex-1" />
     </div>
-  );
+  )
 }
 
 export function Bubble({
@@ -318,18 +334,18 @@ export function Bubble({
   pending = false,
   danger = false,
 }: {
-  mine?: boolean;
-  children: React.ReactNode;
-  time: string;
-  meta?: React.ReactNode;
+  mine?: boolean
+  children: React.ReactNode
+  time: string
+  meta?: React.ReactNode
   /** The failed-send row: the error message and the resend button. */
-  error?: React.ReactNode;
+  error?: React.ReactNode
   /** In flight: drawn as an outline, not a faded fill — see below. */
-  pending?: boolean;
-  danger?: boolean;
+  pending?: boolean
+  danger?: boolean
 }) {
   return (
-    <div className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
+    <div className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
       <div
         className={`text-body-3 max-w-[min(32rem,80%)] rounded-2xl px-3 py-2 ${
           pending
@@ -338,14 +354,13 @@ export function Bubble({
               // WCAG AA threshold and CI fails the story. A dashed outline says
               // "in flight" without touching the text contrast. This is the one
               // place these screens deliberately differ from the app.
-              "border-foreground text-foreground border border-dashed"
+              'border-foreground text-foreground border border-dashed'
             : mine
               ? // `bg-foreground text-background` — the own-message bubble is the
                 // plain inverted one, not the brand color.
-                "bg-foreground text-background"
-              : "bg-muted text-foreground"
-        } ${danger ? "ring-danger ring-1" : ""}`}
-      >
+                'bg-foreground text-background'
+              : 'bg-muted text-foreground'
+        } ${danger ? 'ring-danger ring-1' : ''}`}>
         {children}
       </div>
       <div className="mt-0.5 flex items-center gap-1.5 px-1 text-[11px] opacity-60">
@@ -354,9 +369,11 @@ export function Bubble({
       </div>
       {/* Inside the bubble's own flex column, so it lands on the same side the
           message did — the app does the same rather than aligning it by hand. */}
-      {error ? <div className="mt-0.5 flex items-center gap-2 px-1">{error}</div> : null}
+      {error ? (
+        <div className="mt-0.5 flex items-center gap-2 px-1">{error}</div>
+      ) : null}
     </div>
-  );
+  )
 }
 
 /**
@@ -372,13 +389,13 @@ export function MessageGroup({
   mine = false,
   children,
 }: {
-  peer?: Peer;
-  mine?: boolean;
-  children: React.ReactNode;
+  peer?: Peer
+  mine?: boolean
+  children: React.ReactNode
 }) {
   return (
-    <div className={`flex gap-2 ${mine ? "flex-row-reverse" : ""}`}>
-      {mine ? null : <Avatar name={peer?.name ?? ""} size="sm" />}
+    <div className={`flex gap-2 ${mine ? 'flex-row-reverse' : ''}`}>
+      {mine ? null : <Avatar name={peer?.name ?? ''} size="sm" />}
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         {mine ? null : (
           <Typography as="span" variant="body-4" className="px-1 opacity-60">
@@ -388,7 +405,7 @@ export function MessageGroup({
         {children}
       </div>
     </div>
-  );
+  )
 }
 
 /**
@@ -402,52 +419,54 @@ export function MessageGroup({
  * these stories run with `a11y: { test: "error" }`. The app's own message list
  * is missing it.
  */
-export function MessageList({ children }: { children: React.ReactNode }) {
-  const t = useTranslations("web.chat.messages");
+export function MessageList({children}: {children: React.ReactNode}) {
+  const t = useTranslations('web.chat.messages')
 
   return (
     <div
       role="log"
       aria-live="polite"
       aria-relevant="additions"
-      aria-label={t("label")}
+      aria-label={t('label')}
       tabIndex={0}
-      className="flex-1 overflow-y-auto px-4 py-3"
-    >
+      className="flex-1 overflow-y-auto px-4 py-3">
       <div className="flex flex-col gap-3">{children}</div>
     </div>
-  );
+  )
 }
 
 /** `✓` sent · `✓✓` read — derived from the peer's read cursor, not a per-message flag. */
-export function ReadReceipt({ read }: { read: boolean }) {
-  const t = useTranslations("web.chat.messages");
+export function ReadReceipt({read}: {read: boolean}) {
+  const t = useTranslations('web.chat.messages')
 
   return (
     <Typography as="span" variant="body-4" className="leading-none opacity-70">
-      <span aria-hidden>{read ? "✓✓" : "✓"}</span>
-      <span className="sr-only">{t(read ? "read" : "sent")}</span>
+      <span aria-hidden>{read ? '✓✓' : '✓'}</span>
+      <span className="sr-only">{t(read ? 'read' : 'sent')}</span>
     </Typography>
-  );
+  )
 }
 
 export function Composer({
   offline = false,
   pending = false,
 }: {
-  offline?: boolean;
-  pending?: boolean;
+  offline?: boolean
+  pending?: boolean
 }) {
-  const t = useTranslations("web.chat.composer");
-  const tc = useTranslations("web.chat.connection");
+  const t = useTranslations('web.chat.composer')
+  const tc = useTranslations('web.chat.connection')
 
   return (
     <form className="border-border shrink-0 border-t p-3" noValidate>
       {/* Inside the form, above the input row — and only `opacity-60`, not a
           warning color: it explains, it does not alarm. */}
       {offline ? (
-        <Typography variant="body-4" role="status" className="px-1 pb-1 opacity-60">
-          {tc("composerOffline")}
+        <Typography
+          variant="body-4"
+          role="status"
+          className="px-1 pb-1 opacity-60">
+          {tc('composerOffline')}
         </Typography>
       ) : null}
 
@@ -461,8 +480,8 @@ export function Composer({
         */}
         <textarea
           rows={1}
-          aria-label={t("label")}
-          placeholder={offline ? t("placeholderOffline") : t("placeholder")}
+          aria-label={t('label')}
+          placeholder={offline ? t('placeholderOffline') : t('placeholder')}
           className="border-border text-body-3 focus:border-foreground/60 max-h-40 flex-1 resize-none rounded-md border bg-transparent px-3 py-2 outline-none"
         />
         {/* Icon-only, so the label moves to `aria-label`: a button whose only
@@ -471,13 +490,16 @@ export function Composer({
         <Button
           type="submit"
           size="icon"
-          aria-label={t("send")}
+          aria-label={t('send')}
           className="shrink-0"
-          disabled={offline}
-        >
-          {pending ? <Spinner className="size-4" /> : <Icon icon={ICONS.send} />}
+          disabled={offline}>
+          {pending ? (
+            <Spinner className="size-4" />
+          ) : (
+            <Icon icon={ICONS.send} />
+          )}
         </Button>
       </div>
     </form>
-  );
+  )
 }

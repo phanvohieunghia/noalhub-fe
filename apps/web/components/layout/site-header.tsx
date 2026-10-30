@@ -1,10 +1,10 @@
-"use client";
+'use client'
 
-import { Link } from "@noalhub/i18n/navigation";
-import { LogoLockup } from "@noalhub/ui/logo-lockup";
-import { useTranslations } from "next-intl";
+import {Link} from '@noalhub/i18n/navigation'
+import {LogoLockup} from '@noalhub/ui/logo-lockup'
+import {useTranslations} from 'next-intl'
 
-import { HeaderAccount } from "./header-account";
+import {HeaderAccount} from './header-account'
 
 /**
  * The app header: wordmark on the left, nav links and the account on the right.
@@ -13,13 +13,13 @@ import { HeaderAccount } from "./header-account";
  * header is hidden below `md`, where `MobileNav` is the primary navigation.
  */
 export function SiteHeader() {
-  const t = useTranslations("nav");
+  const t = useTranslations('nav')
 
   const links = [
-    { href: "/blogs", label: t("header.posts") },
-    { href: "/learn", label: t("header.practice") },
-    { href: "/chat", label: t("header.chat") },
-  ] as const;
+    {href: '/blogs', label: t('header.posts')},
+    {href: '/learn', label: t('header.practice')},
+    {href: '/chat', label: t('header.chat')},
+  ] as const
 
   return (
     <header className="sticky top-0 z-30 hidden h-16 shrink-0 border-b border-border bg-surface md:block">
@@ -29,13 +29,14 @@ export function SiteHeader() {
         </Link>
 
         <div className="flex items-center gap-4">
-          <nav aria-label={t("header.mainLinks")} className="hidden items-center gap-4 md:flex">
+          <nav
+            aria-label={t('header.mainLinks')}
+            className="hidden items-center gap-4 md:flex">
             {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-title-4 text-muted-foreground transition-colors hover:text-foreground"
-              >
+                className="text-title-4 text-muted-foreground transition-colors hover:text-foreground">
                 {link.label}
               </Link>
             ))}
@@ -45,5 +46,5 @@ export function SiteHeader() {
         </div>
       </div>
     </header>
-  );
+  )
 }

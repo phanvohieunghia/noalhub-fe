@@ -1,10 +1,10 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { useTranslations } from "next-intl";
-import React from "react";
-import { Typography, TYPOGRAPHY_VARIANTS } from "@noalhub/ui/typography";
-import type { Variant } from "@noalhub/ui/typography";
+import type {Meta, StoryObj} from '@storybook/nextjs-vite'
+import {useTranslations} from 'next-intl'
+import React from 'react'
+import {Typography, TYPOGRAPHY_VARIANTS} from '@noalhub/ui/typography'
+import type {Variant} from '@noalhub/ui/typography'
 
-import { useTokens } from "./use-token";
+import {useTokens} from './use-token'
 
 /**
  * The type scale of `packages/config/theme.css`, rendered through the real
@@ -15,96 +15,109 @@ import { useTokens } from "./use-token";
  * `typography.tsx` and it appears here — in the right group — with no edit.
  */
 const meta: Meta = {
-  title: "Foundations/Typography",
+  title: 'Foundations/Typography',
   parameters: {
-    layout: "fullscreen",
-    controls: { disable: true },
+    layout: 'fullscreen',
+    controls: {disable: true},
   },
-};
+}
 
-export default meta;
-type Story = StoryObj;
+export default meta
+type Story = StoryObj
 
 /**
  * Groups are derived from the variant NAME, not listed by hand. The final
  * catch-all matters: a step in some new family still shows up rather than
  * silently disappearing from the documentation.
  */
-const GROUPS: { title: string; note: string; match: (variant: string) => boolean }[] = [
+const GROUPS: {
+  title: string
+  note: string
+  match: (variant: string) => boolean
+}[] = [
   {
-    title: "Headings",
-    note: "The larger the step, the tighter the line-height and the more negative the letter-spacing.",
+    title: 'Headings',
+    note: 'The larger the step, the tighter the line-height and the more negative the letter-spacing.',
     match: (variant) => /^h\d/.test(variant),
   },
   {
-    title: "Titles",
-    note: "Not headings: these label a block (a card, a table row, a stat tile). Same size range as h4–h6, but tighter line-height and POSITIVE letter-spacing.",
-    match: (variant) => variant.startsWith("title-"),
+    title: 'Titles',
+    note: 'Not headings: these label a block (a card, a table row, a stat tile). Same size range as h4–h6, but tighter line-height and POSITIVE letter-spacing.',
+    match: (variant) => variant.startsWith('title-'),
   },
   {
-    title: "Body",
-    note: "`body-2` is the system default; `body-1` is for a lead paragraph only.",
-    match: (variant) => variant.startsWith("body-"),
+    title: 'Body',
+    note: '`body-2` is the system default; `body-1` is for a lead paragraph only.',
+    match: (variant) => variant.startsWith('body-'),
   },
   {
-    title: "Caption",
-    note: "Same size as `body-4` but always italic — separated by style, not size.",
-    match: (variant) => variant === "caption",
+    title: 'Caption',
+    note: 'Same size as `body-4` but always italic — separated by style, not size.',
+    match: (variant) => variant === 'caption',
   },
   {
-    title: "Other",
-    note: "Steps that do not fall into a group above.",
+    title: 'Other',
+    note: 'Steps that do not fall into a group above.',
     match: () => true,
   },
-];
+]
 
 /** Each variant lands in the FIRST group that claims it. */
 const GROUPED = GROUPS.map((group, index) => ({
   ...group,
   variants: TYPOGRAPHY_VARIANTS.filter(
-    (variant) => GROUPS.findIndex((candidate) => candidate.match(variant)) === index,
+    (variant) =>
+      GROUPS.findIndex((candidate) => candidate.match(variant)) === index,
   ),
-})).filter((group) => group.variants.length > 0);
+})).filter((group) => group.variants.length > 0)
 
 const TOKENS = TYPOGRAPHY_VARIANTS.flatMap((variant) => [
   `--text-${variant}`,
   `--text-${variant}--line-height`,
   `--text-${variant}--letter-spacing`,
-]);
+])
 
-function Step({ variant, values }: { variant: Variant; values: Record<string, string> }) {
-  const t = useTranslations("sb.typography");
+function Step({
+  variant,
+  values,
+}: {
+  variant: Variant
+  values: Record<string, string>
+}) {
+  const t = useTranslations('sb.typography')
   return (
     <div className="flex flex-col gap-1 border-b border-border py-4 last:border-0">
       <div className="flex flex-wrap items-baseline gap-x-3 text-body-4 text-muted-foreground">
         <code className="text-foreground">{variant}</code>
         <Typography variant="body-4" as="span">
-          {values[`--text-${variant}`] || "—"}
+          {values[`--text-${variant}`] || '—'}
         </Typography>
         <Typography variant="body-4" as="span">
-          line-height {values[`--text-${variant}--line-height`] || "1"}
+          line-height {values[`--text-${variant}--line-height`] || '1'}
         </Typography>
         <Typography variant="body-4" as="span">
-          tracking {values[`--text-${variant}--letter-spacing`] || "0"}
+          tracking {values[`--text-${variant}--letter-spacing`] || '0'}
         </Typography>
       </div>
-      <Typography variant={variant}>{t("sample")}</Typography>
+      <Typography variant={variant}>{t('sample')}</Typography>
     </div>
-  );
+  )
 }
 
 function Scale() {
-  const t = useTranslations("sb.foundations");
-  const values = useTokens(TOKENS);
+  const t = useTranslations('sb.foundations')
+  const values = useTokens(TOKENS)
 
   return (
     <div className="flex flex-col gap-10 bg-background p-8 text-foreground">
       <div className="flex flex-col gap-2">
         <Typography variant="h3" as="h1">
-          {t("typeScale")}
+          {t('typeScale')}
         </Typography>
-        <Typography variant="body-3" className="max-w-2xl text-muted-foreground">
-          {t("typeScaleNote")}
+        <Typography
+          variant="body-3"
+          className="max-w-2xl text-muted-foreground">
+          {t('typeScaleNote')}
         </Typography>
       </div>
 
@@ -113,7 +126,9 @@ function Scale() {
           <Typography variant="title-2" as="h2">
             {group.title}
           </Typography>
-          <Typography variant="body-4" className="max-w-2xl text-muted-foreground">
+          <Typography
+            variant="body-4"
+            className="max-w-2xl text-muted-foreground">
             {group.note}
           </Typography>
           <div className="mt-2">
@@ -124,10 +139,10 @@ function Scale() {
         </section>
       ))}
     </div>
-  );
+  )
 }
 
 export const Scale_: Story = {
-  name: "Scale",
+  name: 'Scale',
   render: () => <Scale />,
-};
+}

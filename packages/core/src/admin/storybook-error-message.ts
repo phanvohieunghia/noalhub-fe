@@ -1,7 +1,7 @@
-import { ApiError, ERROR_CODES } from "@noalhub/api/errors";
-import type { Message } from "@noalhub/api/message";
+import {ApiError, ERROR_CODES} from '@noalhub/api/errors'
+import type {Message} from '@noalhub/api/message'
 
-import { adminErrorText } from "./error-message";
+import {adminErrorText} from './error-message'
 
 /**
  * Error messages for the internal-Storybook access screen. Returns an i18n key —
@@ -19,8 +19,8 @@ export function storybookErrorText(error: unknown): Message | string {
     error instanceof ApiError &&
     error.code === ERROR_CODES.storybookAccessConflict
   ) {
-    return { key: "common.errors.storybookAccessConflict" };
+    return {key: 'common.errors.storybookAccessConflict'}
   }
 
-  return adminErrorText(error);
+  return adminErrorText(error)
 }

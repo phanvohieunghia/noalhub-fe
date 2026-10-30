@@ -1,8 +1,8 @@
-import { Link } from "@noalhub/i18n/navigation";
-import { useTranslations } from "next-intl";
+import {Link} from '@noalhub/i18n/navigation'
+import {useTranslations} from 'next-intl'
 
-import { Icon, ICONS } from "./icons";
-import { Typography } from "./typography";
+import {Icon, ICONS} from './icons'
+import {Typography} from './typography'
 
 /**
  * Pagination made of **real `<a href>`s**, for public pages.
@@ -31,47 +31,52 @@ export function PaginationLinks({
   label,
 }: {
   /** The path without a query, e.g. `/blogs` or `/blogs/category/huong-dan`. */
-  basePath: string;
-  page: number;
-  limit: number;
-  total: number;
+  basePath: string
+  page: number
+  limit: number
+  total: number
   /** Left out, the generic "Pagination" label is used. */
-  label?: string;
+  label?: string
 }) {
-  const t = useTranslations("common.pagination");
-  const pageCount = Math.max(1, Math.ceil(total / Math.max(1, limit)));
-  if (pageCount <= 1) return null;
+  const t = useTranslations('common.pagination')
+  const pageCount = Math.max(1, Math.ceil(total / Math.max(1, limit)))
+  if (pageCount <= 1) return null
 
   // Page 1 carries NO `?page=1` — it has to match the canonical, or `/blogs`
   // and `/blogs?page=1` are two URLs with one content (§4.5).
-  const hrefFor = (target: number) => (target <= 1 ? basePath : `${basePath}?page=${target}`);
+  const hrefFor = (target: number) =>
+    target <= 1 ? basePath : `${basePath}?page=${target}`
 
   return (
     <nav
-      aria-label={label ?? t("label")}
-      className="flex items-center justify-between gap-3 pt-8 text-body-3"
-    >
+      aria-label={label ?? t('label')}
+      className="flex items-center justify-between gap-3 pt-8 text-body-3">
       <PageLink
         href={hrefFor(page - 1)}
         // `rel="prev"/"next"`: Google dropped it in 2019, but Bing and RSS
         // readers still read it. Worth setting, never a substitute for a real <a>.
         rel="prev"
-        disabled={page <= 1}
-      >
+        disabled={page <= 1}>
         <Icon icon={ICONS.chevronLeft} />
-        {t("previous")}
+        {t('previous')}
       </PageLink>
 
-      <Typography as="span" variant="body-3" className="text-muted-foreground tabular-nums">
-        {t("current", { page, total: pageCount })}
+      <Typography
+        as="span"
+        variant="body-3"
+        className="text-muted-foreground tabular-nums">
+        {t('current', {page, total: pageCount})}
       </Typography>
 
-      <PageLink href={hrefFor(page + 1)} rel="next" disabled={page >= pageCount}>
-        {t("next")}
+      <PageLink
+        href={hrefFor(page + 1)}
+        rel="next"
+        disabled={page >= pageCount}>
+        {t('next')}
         <Icon icon={ICONS.chevronRight} />
       </PageLink>
     </nav>
-  );
+  )
 }
 
 /**
@@ -85,10 +90,10 @@ function PageLink({
   disabled,
   children,
 }: {
-  href: string;
-  rel: string;
-  disabled: boolean;
-  children: React.ReactNode;
+  href: string
+  rel: string
+  disabled: boolean
+  children: React.ReactNode
 }) {
   if (disabled) {
     // `text-muted-foreground` rather than fading the normal color with
@@ -100,20 +105,18 @@ function PageLink({
       <Typography
         as="span"
         variant="body-3"
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-muted-foreground"
-      >
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-muted-foreground">
         {children}
       </Typography>
-    );
+    )
   }
 
   return (
     <Link
       href={href}
       rel={rel}
-      className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 transition-colors hover:bg-muted"
-    >
+      className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 transition-colors hover:bg-muted">
       {children}
     </Link>
-  );
+  )
 }

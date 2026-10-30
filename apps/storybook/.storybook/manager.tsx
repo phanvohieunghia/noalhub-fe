@@ -1,7 +1,7 @@
-import React from "react";
-import { addons, types, useGlobals } from "storybook/manager-api";
-import { IconButton } from "storybook/internal/components";
-import { create } from "storybook/theming";
+import React from 'react'
+import {addons, types, useGlobals} from 'storybook/manager-api'
+import {IconButton} from 'storybook/internal/components'
+import {create} from 'storybook/theming'
 
 /**
  * Sidebar branding for the Storybook shell (the "manager" UI, which lives
@@ -20,7 +20,7 @@ import { create } from "storybook/theming";
  * stays legible. Keep the paths in sync with `packages/ui/src/logo.tsx`.
  */
 const brandMark =
-  "data:image/svg+xml;utf8," +
+  'data:image/svg+xml;utf8,' +
   encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" width="118" height="24" viewBox="0 0 118 24">' +
       '<g transform="scale(0.2)">' +
@@ -32,23 +32,23 @@ const brandMark =
       '<path fill="#95D9BD" d="M243.25 39.45L380 177.51L289.27 269.55L262.98 243.26L323.46 177.51L243.25 95.99L203.81 134.12V78.9L243.25 39.45Z"/>' +
       '<path fill="#95D9BD" d="M193.29 211.7L289.27 309V366.86L193.29 269.55V211.7Z"/>' +
       '<path fill="#95D9BD" d="M140.69 139.38L168.3 165.68L151.21 185.4L168.3 203.81L140.69 231.42L94.6699 185.4L140.69 139.38Z"/>' +
-      "</g>" +
-      "</g>" +
+      '</g>' +
+      '</g>' +
       '<text x="32" y="17" fill="#2e3438" font-family="Nunito Sans, -apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="700">Noalhub UI</text>' +
-      "</svg>",
-  );
+      '</svg>',
+  )
 
 addons.setConfig({
   theme: create({
-    base: "dark",
-    brandTitle: "Noalhub UI",
-    brandUrl: "/",
+    base: 'dark',
+    brandTitle: 'Noalhub UI',
+    brandUrl: '/',
     brandImage: brandMark,
-    brandTarget: "_self",
-    colorPrimary: "#006066",
-    colorSecondary: "#006066",
+    brandTarget: '_self',
+    colorPrimary: '#006066',
+    colorSecondary: '#006066',
   }),
-});
+})
 
 /**
  * Toolbar button pointing at the internal build (`/internal/`), so nobody has to
@@ -69,7 +69,7 @@ addons.setConfig({
  * A plain `<a>` doing a full page load, not a router push: `/internal/` is a
  * different Storybook build, a different document.
  */
-const INTERNAL_PATH = "/internal/";
+const INTERNAL_PATH = '/internal/'
 
 /**
  * Button labels, following the language toolbar.
@@ -87,23 +87,24 @@ const INTERNAL_PATH = "/internal/";
  */
 const LABELS = {
   vi: {
-    title: "Storybook nội bộ",
-    label: "Nội bộ",
-    aria: "Mở Storybook nội bộ",
-    tooltipLocal: "Chỉ có trên bản đã deploy",
-    tooltipRemote: "Cần đăng nhập Google",
+    title: 'Storybook nội bộ',
+    label: 'Nội bộ',
+    aria: 'Mở Storybook nội bộ',
+    tooltipLocal: 'Chỉ có trên bản đã deploy',
+    tooltipRemote: 'Cần đăng nhập Google',
   },
   en: {
-    title: "Internal Storybook",
-    label: "Internal",
-    aria: "Open the internal Storybook",
-    tooltipLocal: "Only exists on the deployed build",
-    tooltipRemote: "Requires a Google sign-in",
+    title: 'Internal Storybook',
+    label: 'Internal',
+    aria: 'Open the internal Storybook',
+    tooltipLocal: 'Only exists on the deployed build',
+    tooltipRemote: 'Requires a Google sign-in',
   },
-} as const;
+} as const
 
 const isLocal = () =>
-  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1'
 
 /**
  * A real component rather than JSX inlined in `render`: `useGlobals` is a hook and
@@ -111,8 +112,8 @@ const isLocal = () =>
  * arrow function that is merely called breaks the rules of hooks.
  */
 function InternalLink() {
-  const [globals] = useGlobals();
-  const t = globals.locale === "en" ? LABELS.en : LABELS.vi;
+  const [globals] = useGlobals()
+  const t = globals.locale === 'en' ? LABELS.en : LABELS.vi
 
   return (
     // `asChild`: IconButton renders a <button>, but this is navigation to a
@@ -122,22 +123,26 @@ function InternalLink() {
     <IconButton
       asChild
       ariaLabel={t.aria}
-      tooltip={isLocal() ? t.tooltipLocal : t.tooltipRemote}
-    >
+      tooltip={isLocal() ? t.tooltipLocal : t.tooltipRemote}>
       <a href={INTERNAL_PATH}>
         {/* Inlined SVG instead of `@storybook/icons`: that package is a transitive
             dependency of `storybook`, and adding it to package.json just for one
             padlock pins another version to keep an eye on. */}
-        <svg width={13} height={13} viewBox="0 0 14 14" fill="currentColor" aria-hidden>
+        <svg
+          width={13}
+          height={13}
+          viewBox="0 0 14 14"
+          fill="currentColor"
+          aria-hidden>
           <path d="M4 6V4.5a3 3 0 1 1 6 0V6h.5A1.5 1.5 0 0 1 12 7.5v4A1.5 1.5 0 0 1 10.5 13h-7A1.5 1.5 0 0 1 2 11.5v-4A1.5 1.5 0 0 1 3.5 6H4Zm1.5 0h3V4.5a1.5 1.5 0 1 0-3 0V6Z" />
         </svg>
         {t.label}
       </a>
     </IconButton>
-  );
+  )
 }
 
-addons.add("noalhub/internal-link", {
+addons.add('noalhub/internal-link', {
   type: types.TOOL,
   // Only a label in Storybook's addon list, never rendered in the UI — so it is
   // static and cannot follow the toolbar.
@@ -146,4 +151,4 @@ addons.add("noalhub/internal-link", {
   // so reading the URL once here is enough.
   match: () => !window.location.pathname.startsWith(INTERNAL_PATH),
   render: () => <InternalLink />,
-});
+})

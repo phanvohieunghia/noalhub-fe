@@ -7,23 +7,23 @@
  * The env var holds an origin only, never `/api`: changing hosts in production
  * should not require remembering the suffix.
  */
-let customApiOrigin: string | null = null;
-let customWsUrl: string | null = null;
+let customApiOrigin: string | null = null
+let customWsUrl: string | null = null
 
-const configListeners = new Set<() => void>();
+const configListeners = new Set<() => void>()
 
 /**
  * Configure API origin and WebSocket URL dynamically at runtime (e.g. for React Native / Expo).
  * If not called, falls back to `process.env.NEXT_PUBLIC_API_BASE_URL` / `process.env.NEXT_PUBLIC_WS_URL`.
  */
-export function configureApi(input: { apiOrigin: string; wsUrl?: string }): void {
-  customApiOrigin = input.apiOrigin;
+export function configureApi(input: {apiOrigin: string; wsUrl?: string}): void {
+  customApiOrigin = input.apiOrigin
   if (input.wsUrl) {
-    customWsUrl = input.wsUrl;
+    customWsUrl = input.wsUrl
   }
   for (const listener of configListeners) {
     try {
-      listener();
+      listener()
     } catch {
       /* ignored */
     }
@@ -31,8 +31,8 @@ export function configureApi(input: { apiOrigin: string; wsUrl?: string }): void
 }
 
 export function onApiConfigChange(cb: () => void): () => void {
-  configListeners.add(cb);
-  return () => configListeners.delete(cb);
+  configListeners.add(cb)
+  return () => configListeners.delete(cb)
 }
 
 /**
@@ -47,19 +47,20 @@ export function onApiConfigChange(cb: () => void): () => void {
  * share one function.
  */
 export function apiBaseUrlFrom(rawOrigin: string): string {
-  return `${rawOrigin.replace(/\/+$/, "").replace(/\/api$/, "")}/api`;
+  return `${rawOrigin.replace(/\/+$/, '').replace(/\/api$/, '')}/api`
 }
 
 export function getApiOrigin(): string {
-  if (customApiOrigin) return customApiOrigin.replace(/\/+$/, "").replace(/\/api$/, "");
-  const raw = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3101";
-  return raw.replace(/\/+$/, "").replace(/\/api$/, "");
+  if (customApiOrigin)
+    return customApiOrigin.replace(/\/+$/, '').replace(/\/api$/, '')
+  const raw = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3101'
+  return raw.replace(/\/+$/, '').replace(/\/api$/, '')
 }
 
 export function getApiBaseUrl(): string {
-  if (customApiOrigin) return apiBaseUrlFrom(customApiOrigin);
-  const raw = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3101";
-  return apiBaseUrlFrom(raw);
+  if (customApiOrigin) return apiBaseUrlFrom(customApiOrigin)
+  const raw = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3101'
+  return apiBaseUrlFrom(raw)
 }
 
 /**
@@ -71,22 +72,24 @@ export function getApiBaseUrl(): string {
  * be an extra non-simple header that forces a preflight and has to be
  * allowlisted in the backend's CORS `allowedHeaders`.
  */
-export const NGROK_SKIP_WARNING_HEADER = "ngrok-skip-browser-warning";
+export const NGROK_SKIP_WARNING_HEADER = 'ngrok-skip-browser-warning'
 
 export function isNgrokApi(): boolean {
   try {
-    return /(^|\.)ngrok(-free)?\.(app|dev|io)$/i.test(new URL(getApiOrigin()).hostname);
+    return /(^|\.)ngrok(-free)?\.(app|dev|io)$/i.test(
+      new URL(getApiOrigin()).hostname,
+    )
   } catch {
-    return false;
+    return false
   }
 }
 
 export function getWsUrl(): string {
-  if (customWsUrl) return customWsUrl;
-  return process.env.NEXT_PUBLIC_WS_URL ?? getApiOrigin().replace(/^http/, "ws");
+  if (customWsUrl) return customWsUrl
+  return process.env.NEXT_PUBLIC_WS_URL ?? getApiOrigin().replace(/^http/, 'ws')
 }
 
-export const API_BASE_URL = getApiBaseUrl();
+export const API_BASE_URL = getApiBaseUrl()
 
 /**
  * Socket.IO connects to the ORIGIN, not to `/api`: its handshake goes through
@@ -97,7 +100,7 @@ export const API_BASE_URL = getApiBaseUrl();
  * A separate variable because production usually differs in host/scheme
  * (`wss://`).
  */
-export const WS_URL = getWsUrl();
+export const WS_URL = getWsUrl()
 
 /**
  * The internal Storybook, shown as a link on the admin screen that manages who
@@ -111,7 +114,7 @@ export const WS_URL = getWsUrl();
  */
 export const STORYBOOK_INTERNAL_URL =
   process.env.NEXT_PUBLIC_STORYBOOK_INTERNAL_URL ??
-  "https://storybook-noalhub.duckdns.org/internal/";
+  'https://storybook-noalhub.duckdns.org/internal/'
 
 /** The chat layer's Socket.IO namespace. */
-export const CHAT_NAMESPACE = "/chat";
+export const CHAT_NAMESPACE = '/chat'

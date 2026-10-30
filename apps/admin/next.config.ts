@@ -1,11 +1,11 @@
-import path from "node:path";
+import path from 'node:path'
 
 import {
   BLOG_IMAGE_ALLOW_LOCAL_IP,
   blogImageRemotePatterns,
-} from "@noalhub/config/blog-image-hosts.mjs";
-import type { NextConfig } from "next";
-import createNextIntlPlugin from "next-intl/plugin";
+} from '@noalhub/config/blog-image-hosts.mjs'
+import type {NextConfig} from 'next'
+import createNextIntlPlugin from 'next-intl/plugin'
 
 const nextConfig: NextConfig = {
   /**
@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
    * Next blocks `/_next/*` dev resources from a non-localhost origin and the page
    * never hydrates. Wildcards cover the random URL ngrok free hands out per run.
    */
-  allowedDevOrigins: ["*.ngrok-free.app", "*.ngrok-free.dev"],
+  allowedDevOrigins: ['*.ngrok-free.app', '*.ngrok-free.dev'],
 
   /**
    * Docker: `standalone` emits `.next/standalone` — a pre-traced copy of the
@@ -26,8 +26,8 @@ const nextConfig: NextConfig = {
    * root, standalone is missing files and the container dies at startup rather
    * than at build time.
    */
-  output: "standalone",
-  outputFileTracingRoot: path.join(process.cwd(), "..", ".."),
+  output: 'standalone',
+  outputFileTracingRoot: path.join(process.cwd(), '..', '..'),
 
   /**
    * Internal packages are exported as RAW TS (`./src/*.ts`) with no `dist/`
@@ -39,10 +39,10 @@ const nextConfig: NextConfig = {
    * with a syntax error on the very first `import type` line.
    */
   transpilePackages: [
-    "@noalhub/api",
-    "@noalhub/core",
-    "@noalhub/i18n",
-    "@noalhub/ui",
+    '@noalhub/api',
+    '@noalhub/core',
+    '@noalhub/i18n',
+    '@noalhub/ui',
   ],
 
   /**
@@ -72,7 +72,7 @@ const nextConfig: NextConfig = {
      */
     dangerouslyAllowLocalIP: BLOG_IMAGE_ALLOW_LOCAL_IP,
     dangerouslyAllowSVG: true,
-    contentDispositionType: "attachment",
+    contentDispositionType: 'attachment',
   },
 
   turbopack: {
@@ -86,13 +86,13 @@ const nextConfig: NextConfig = {
      * `process.cwd()` is the app directory because `next build` always runs from
      * there (turbo runs the script inside the package too).
      */
-    root: path.join(process.cwd(), "..", ".."),
+    root: path.join(process.cwd(), '..', '..'),
   },
-};
+}
 
 /**
  * next-intl's plugin points `next-intl/config` at `./i18n/request.ts`. Without
  * it, every `getTranslations`/`useTranslations` runs with an empty config and
  * throws "no messages" on the very first page.
  */
-export default createNextIntlPlugin()(nextConfig);
+export default createNextIntlPlugin()(nextConfig)

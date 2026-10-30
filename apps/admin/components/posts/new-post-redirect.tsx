@@ -1,14 +1,14 @@
-"use client";
+'use client'
 
-import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import {useRouter} from 'next/navigation'
+import {useEffect, useRef} from 'react'
 
-import { useCreateBlogPost } from "@noalhub/api/blog";
-import { Button } from "@noalhub/ui/button";
-import { useTranslations } from "next-intl";
+import {useCreateBlogPost} from '@noalhub/api/blog'
+import {Button} from '@noalhub/ui/button'
+import {useTranslations} from 'next-intl'
 
-import { AdminErrorState } from "../admin-error-state";
-import { Typography } from "@noalhub/ui/typography";
+import {AdminErrorState} from '../admin-error-state'
+import {Typography} from '@noalhub/ui/typography'
 
 /**
  * `/posts/new` **creates a draft and immediately `replace`s to `/posts/[id]`**
@@ -23,13 +23,13 @@ import { Typography } from "@noalhub/ui/typography";
  * `/posts`, not return here and create yet another empty draft.
  */
 export function NewPostRedirect() {
-  const t = useTranslations("admin.posts");
-  const tc = useTranslations("common");
-  const router = useRouter();
-  const create = useCreateBlogPost();
+  const t = useTranslations('admin.posts')
+  const tc = useTranslations('common')
+  const router = useRouter()
+  const create = useCreateBlogPost()
   // StrictMode runs effects twice in dev — without this latch, every visit to
   // `/posts/new` produces two drafts.
-  const started = useRef(false);
+  const started = useRef(false)
 
   // ⚠️ `mutateAsync`, NOT `mutate(_, { onSuccess })`.
   //
@@ -45,15 +45,15 @@ export function NewPostRedirect() {
       .then((post) => router.replace(`/posts/${post.id}`))
       // The error already lives in `create.isError` and is rendered below; this
       // `catch` only keeps the promise from becoming an unhandled rejection.
-      .catch(() => {});
-  };
+      .catch(() => {})
+  }
 
   useEffect(() => {
-    if (started.current) return;
-    started.current = true;
-    start();
+    if (started.current) return
+    started.current = true
+    start()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [])
 
   if (create.isError) {
     return (
@@ -62,22 +62,21 @@ export function NewPostRedirect() {
         <div className="mt-3 flex gap-2">
           <Button
             onClick={() => {
-              create.reset();
-              start();
-            }}
-          >
-            {tc("actions.retry")}
+              create.reset()
+              start()
+            }}>
+            {tc('actions.retry')}
           </Button>
         </div>
       </main>
-    );
+    )
   }
 
   return (
     <main className="w-full p-6">
       <Typography variant="body-3" className="opacity-70">
-        {t("new.creating")}
+        {t('new.creating')}
       </Typography>
     </main>
-  );
+  )
 }

@@ -1,9 +1,12 @@
-"use client";
+'use client'
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import {useRouter, useSearchParams} from 'next/navigation'
+import {useCallback, useEffect, useState} from 'react'
 
-import { adminUserListQuerySchema, type AdminUserListQuery } from "@noalhub/api/admin";
+import {
+  adminUserListQuerySchema,
+  type AdminUserListQuery,
+} from '@noalhub/api/admin'
 
 /**
  * The user table's filters live in the **URL searchParams**, not in component
@@ -11,69 +14,69 @@ import { adminUserListQuerySchema, type AdminUserListQuery } from "@noalhub/api/
  * only local state is the search box, because it needs debouncing.
  */
 export function useUserFilters() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
   // The schema's `.catch()` folds any junk in the URL (`?page=abc`) back to the
   // default — people edit the address bar all the time; that must not break the
   // page.
   const query: AdminUserListQuery = adminUserListQuerySchema.parse({
-    page: searchParams.get("page") ?? undefined,
-    limit: searchParams.get("limit") ?? undefined,
-    q: searchParams.get("q") ?? undefined,
-    role: searchParams.get("role") ?? undefined,
-    sort: searchParams.get("sort") ?? undefined,
-    order: searchParams.get("order") ?? undefined,
-  });
+    page: searchParams.get('page') ?? undefined,
+    limit: searchParams.get('limit') ?? undefined,
+    q: searchParams.get('q') ?? undefined,
+    role: searchParams.get('role') ?? undefined,
+    sort: searchParams.get('sort') ?? undefined,
+    order: searchParams.get('order') ?? undefined,
+  })
 
-  const [searchInput, setSearchInput] = useState(query.q ?? "");
+  const [searchInput, setSearchInput] = useState(query.q ?? '')
 
   const setParams = useCallback(
     (next: Partial<AdminUserListQuery>) => {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(searchParams.toString())
 
       for (const [key, value] of Object.entries(next)) {
-        if (value === undefined || value === "" || value === null) {
-          params.delete(key);
+        if (value === undefined || value === '' || value === null) {
+          params.delete(key)
         } else {
-          params.set(key, String(value));
+          params.set(key, String(value))
         }
       }
 
       // A filter change resets to page 1: keeping `page=5` under a new filter is
       // the surest way to get a baffling empty table.
-      if (!("page" in next)) params.delete("page");
+      if (!('page' in next)) params.delete('page')
 
-      router.replace(params.size ? `/users?${params}` : "/users", {
+      router.replace(params.size ? `/users?${params}` : '/users', {
         scroll: false,
-      });
+      })
     },
     [router, searchParams],
-  );
+  )
 
   // Debounce the search box: written straight to the URL, every keystroke is a
   // request plus a history entry.
   useEffect(() => {
-    const current = query.q ?? "";
-    const next = searchInput.trim();
-    if (next === current) return;
+    const current = query.q ?? ''
+    const next = searchInput.trim()
+    if (next === current) return
 
-    const timer = setTimeout(() => setParams({ q: next || undefined }), 350);
-    return () => clearTimeout(timer);
-  }, [searchInput, query.q, setParams]);
+    const timer = setTimeout(() => setParams({q: next || undefined}), 350)
+    return () => clearTimeout(timer)
+  }, [searchInput, query.q, setParams])
 
   return {
     query,
     searchInput,
     setSearchInput,
     setRole: (role: string) =>
-      setParams({ role: (role || undefined) as AdminUserListQuery["role"] }),
-    setPage: (page: number) => setParams({ page }),
+      setParams({role: (role || undefined) as AdminUserListQuery['role']}),
+    setPage: (page: number) => setParams({page}),
     /** asc → desc → off (back to the server's default order). */
-    toggleSort: (sort: NonNullable<AdminUserListQuery["sort"]>) => {
-      if (query.sort !== sort) setParams({ sort, order: "asc" });
-      else if (query.order === "asc") setParams({ sort, order: "desc" });
-      else setParams({ sort: undefined, order: undefined });
+    toggleSort: (sort: NonNullable<AdminUserListQuery['sort']>) => {
+      if (query.sort !== sort) setParams({sort, order: 'asc'})
+      else if (query.order === 'asc') setParams({sort, order: 'desc'})
+      else setParams({sort: undefined, order: undefined})
     },
-  };
+  }
 }

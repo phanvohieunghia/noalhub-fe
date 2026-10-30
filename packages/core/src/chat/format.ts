@@ -1,6 +1,6 @@
-import { isThisYear, isToday, isYesterday } from "date-fns";
+import {isThisYear, isToday, isYesterday} from 'date-fns'
 
-import type { Conversation, ConversationMember } from "@noalhub/api/chat";
+import type {Conversation, ConversationMember} from '@noalhub/api/chat'
 
 /**
  * The **computation** behind chat's display. No user-facing strings live here:
@@ -25,16 +25,16 @@ import type { Conversation, ConversationMember } from "@noalhub/api/chat";
 export function conversationName(
   conversation: Conversation,
   currentUserId: string | null,
-): { name: string } | { fallback: "user" | "group" | "conversation" } {
-  if (conversation.title) return { name: conversation.title };
+): {name: string} | {fallback: 'user' | 'group' | 'conversation'} {
+  if (conversation.title) return {name: conversation.title}
 
-  const other = otherMember(conversation, currentUserId);
+  const other = otherMember(conversation, currentUserId)
   if (other) {
-    return other.displayName ? { name: other.displayName } : { fallback: "user" };
+    return other.displayName ? {name: other.displayName} : {fallback: 'user'}
   }
 
   // A DM with yourself, or an empty member list for some reason.
-  return { fallback: conversation.type === "group" ? "group" : "conversation" };
+  return {fallback: conversation.type === 'group' ? 'group' : 'conversation'}
 }
 
 /** The other member of a DM. `undefined` for a group. */
@@ -42,17 +42,17 @@ export function otherMember(
   conversation: Conversation,
   currentUserId: string | null,
 ): ConversationMember | undefined {
-  return conversation.members.find((member) => member.userId !== currentUserId);
+  return conversation.members.find((member) => member.userId !== currentUserId)
 }
 
 export function memberMap(
   conversation: Conversation | undefined,
 ): Map<string, ConversationMember> {
-  const map = new Map<string, ConversationMember>();
+  const map = new Map<string, ConversationMember>()
   for (const member of conversation?.members ?? []) {
-    map.set(member.userId, member);
+    map.set(member.userId, member)
   }
-  return map;
+  return map
 }
 
 /**
@@ -60,18 +60,18 @@ export function memberMap(
  * `date` is the already-parsed `Date`, so the call site need not parse again.
  */
 export type DayKind =
-  | { kind: "invalid" }
-  | { kind: "today"; date: Date }
-  | { kind: "yesterday"; date: Date }
-  | { kind: "date"; date: Date; thisYear: boolean };
+  | {kind: 'invalid'}
+  | {kind: 'today'; date: Date}
+  | {kind: 'yesterday'; date: Date}
+  | {kind: 'date'; date: Date; thisYear: boolean}
 
 export function dayKind(iso: string | null): DayKind {
-  if (!iso) return { kind: "invalid" };
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return { kind: "invalid" };
-  if (isToday(date)) return { kind: "today", date };
-  if (isYesterday(date)) return { kind: "yesterday", date };
-  return { kind: "date", date, thisYear: isThisYear(date) };
+  if (!iso) return {kind: 'invalid'}
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return {kind: 'invalid'}
+  if (isToday(date)) return {kind: 'today', date}
+  if (isYesterday(date)) return {kind: 'yesterday', date}
+  return {kind: 'date', date, thisYear: isThisYear(date)}
 }
 
 /**
@@ -82,37 +82,38 @@ export function dayKind(iso: string | null): DayKind {
  * language (§7.2).
  */
 export type LastSeen =
-  | { kind: "unknown" }
-  | { kind: "justNow" }
-  | { kind: "minutes"; value: number }
-  | { kind: "hours"; value: number }
-  | { kind: "days"; value: number }
-  | { kind: "date"; date: Date };
+  | {kind: 'unknown'}
+  | {kind: 'justNow'}
+  | {kind: 'minutes'; value: number}
+  | {kind: 'hours'; value: number}
+  | {kind: 'days'; value: number}
+  | {kind: 'date'; date: Date}
 
 export function lastSeen(iso: string | null): LastSeen {
-  if (!iso) return { kind: "unknown" };
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return { kind: "unknown" };
+  if (!iso) return {kind: 'unknown'}
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return {kind: 'unknown'}
 
-  const minutes = Math.floor((Date.now() - date.getTime()) / 60_000);
-  if (minutes < 1) return { kind: "justNow" };
-  if (minutes < 60) return { kind: "minutes", value: minutes };
+  const minutes = Math.floor((Date.now() - date.getTime()) / 60_000)
+  if (minutes < 1) return {kind: 'justNow'}
+  if (minutes < 60) return {kind: 'minutes', value: minutes}
 
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return { kind: "hours", value: hours };
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return {kind: 'hours', value: hours}
 
-  const days = Math.floor(hours / 24);
-  if (days < 7) return { kind: "days", value: days };
-  return { kind: "date", date };
+  const days = Math.floor(hours / 24)
+  if (days < 7) return {kind: 'days', value: days}
+  return {kind: 'date', date}
 }
 
 /** Two messages from the same person less than 5 minutes apart are grouped. */
-export const GROUP_WINDOW_MS = 5 * 60_000;
+export const GROUP_WINDOW_MS = 5 * 60_000
 
 /** Do two ISO strings fall on the same calendar day? */
 export function isSameDay(a: string, b: string): boolean {
-  const left = new Date(a);
-  const right = new Date(b);
-  if (Number.isNaN(left.getTime()) || Number.isNaN(right.getTime())) return false;
-  return left.toDateString() === right.toDateString();
+  const left = new Date(a)
+  const right = new Date(b)
+  if (Number.isNaN(left.getTime()) || Number.isNaN(right.getTime()))
+    return false
+  return left.toDateString() === right.toDateString()
 }

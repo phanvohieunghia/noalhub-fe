@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import {useTranslations} from 'next-intl'
+import {useEffect} from 'react'
 
 /**
  * Blocks leaving the page while there are unsaved changes.
@@ -25,43 +25,48 @@ import { useEffect } from "react";
  * CONSCIOUS gap rather than an oversight.
  */
 export function useUnsavedChanges(isDirty: boolean) {
-  const t = useTranslations("admin.posts");
+  const t = useTranslations('admin.posts')
 
   useEffect(() => {
-    if (!isDirty) return;
+    if (!isDirty) return
 
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
+      event.preventDefault()
       // A few older browsers still need `returnValue` before showing the dialog.
-      event.returnValue = "";
-    };
+      event.returnValue = ''
+    }
 
     const onClickCapture = (event: MouseEvent) => {
       // Ignore secondary clicks, and ignore deliberate new-tab opens — this tab
       // is not going anywhere, so there is nothing to lose.
-      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey) {
-        return;
+      if (
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey
+      ) {
+        return
       }
 
-      const anchor = (event.target as HTMLElement | null)?.closest?.("a");
-      const href = anchor?.getAttribute("href");
-      if (!anchor || !href || anchor.target === "_blank") return;
+      const anchor = (event.target as HTMLElement | null)?.closest?.('a')
+      const href = anchor?.getAttribute('href')
+      if (!anchor || !href || anchor.target === '_blank') return
       // An external link leaves the app entirely — `beforeunload` above covers it.
-      if (!href.startsWith("/")) return;
-      if (href === window.location.pathname) return;
+      if (!href.startsWith('/')) return
+      if (href === window.location.pathname) return
 
-      if (!window.confirm(t("unsavedChanges"))) {
-        event.preventDefault();
-        event.stopPropagation();
+      if (!window.confirm(t('unsavedChanges'))) {
+        event.preventDefault()
+        event.stopPropagation()
       }
-    };
+    }
 
-    window.addEventListener("beforeunload", onBeforeUnload);
-    document.addEventListener("click", onClickCapture, true);
+    window.addEventListener('beforeunload', onBeforeUnload)
+    document.addEventListener('click', onClickCapture, true)
 
     return () => {
-      window.removeEventListener("beforeunload", onBeforeUnload);
-      document.removeEventListener("click", onClickCapture, true);
-    };
-  }, [isDirty, t]);
+      window.removeEventListener('beforeunload', onBeforeUnload)
+      document.removeEventListener('click', onClickCapture, true)
+    }
+  }, [isDirty, t])
 }

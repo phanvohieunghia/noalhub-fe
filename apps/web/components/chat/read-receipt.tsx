@@ -1,9 +1,9 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
+import {useTranslations} from 'next-intl'
 
-import type { ConversationMember } from "@noalhub/api/chat";
-import { Typography } from "@noalhub/ui/typography";
+import type {ConversationMember} from '@noalhub/api/chat'
+import {Typography} from '@noalhub/ui/typography'
 
 /**
  * `✓` sent · `✓✓` read by someone.
@@ -18,22 +18,22 @@ export function ReadReceipt({
   members,
   currentUserId,
 }: {
-  messageId: string;
-  members: ConversationMember[];
-  currentUserId: string | null;
+  messageId: string
+  members: ConversationMember[]
+  currentUserId: string | null
 }) {
-  const t = useTranslations("web.chat.messages");
+  const t = useTranslations('web.chat.messages')
   const readByOther = members.some(
     (member) =>
       member.userId !== currentUserId &&
       member.lastReadMessageId !== null &&
       member.lastReadMessageId.localeCompare(messageId) >= 0,
-  );
+  )
 
   return (
     <Typography as="span" variant="body-4" className="leading-none opacity-70">
-      <span aria-hidden>{readByOther ? "✓✓" : "✓"}</span>
-      <span className="sr-only">{t(readByOther ? "read" : "sent")}</span>
+      <span aria-hidden>{readByOther ? '✓✓' : '✓'}</span>
+      <span className="sr-only">{t(readByOther ? 'read' : 'sent')}</span>
     </Typography>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import {z} from 'zod'
 
 /**
  * The form schema — its constraints must MATCH `ChangeUsernameDto` (min 3, max
@@ -10,27 +10,27 @@ export const changeUsernameSchema = z.object({
   username: z
     .string()
     .trim()
-    .min(3, "validation.username.tooShort")
-    .max(32, "validation.username.tooLong")
+    .min(3, 'validation.username.tooShort')
+    .max(32, 'validation.username.tooLong')
     .regex(
       /^[a-zA-Z0-9](?:[a-zA-Z0-9_-]*[a-zA-Z0-9])?$/,
-      "validation.username.patternStrict",
+      'validation.username.patternStrict',
     )
     // The backend lowercases — do it on the client too so what is shown matches what is stored.
     .transform((v) => v.toLowerCase()),
-});
+})
 
-export type ChangeUsernameInput = z.infer<typeof changeUsernameSchema>;
+export type ChangeUsernameInput = z.infer<typeof changeUsernameSchema>
 
 /** Matches `ChangeLanguageDto` — an enum, with no other constraints. */
 export const changeLanguageSchema = z.object({
-  language: z.enum(["vi", "en"]),
-});
+  language: z.enum(['vi', 'en']),
+})
 
-export type ChangeLanguageInput = z.infer<typeof changeLanguageSchema>;
+export type ChangeLanguageInput = z.infer<typeof changeLanguageSchema>
 
 /** `UserDto` — reusing auth's schema, since it is the same DTO. */
-export { userSchema } from "../auth/schemas";
+export {userSchema} from '../auth/schemas'
 
 /** `PublicProfileDto` — someone else's profile, with fewer fields than `userSchema`. */
 export const publicProfileSchema = z.object({
@@ -49,4 +49,4 @@ export const publicProfileSchema = z.object({
     .string()
     .nullish()
     .transform((v) => v ?? null),
-});
+})

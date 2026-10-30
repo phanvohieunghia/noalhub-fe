@@ -1,15 +1,15 @@
-import { LOCALES } from "@noalhub/i18n/config";
-import { IntlProvider } from "@noalhub/i18n/provider";
-import { NavigationProgress } from "@noalhub/ui/navigation-progress";
-import { ToastHost } from "@noalhub/ui/toast";
-import type { Metadata } from "next";
-import { hasLocale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
+import {LOCALES} from '@noalhub/i18n/config'
+import {IntlProvider} from '@noalhub/i18n/provider'
+import {NavigationProgress} from '@noalhub/ui/navigation-progress'
+import {ToastHost} from '@noalhub/ui/toast'
+import type {Metadata} from 'next'
+import {hasLocale} from 'next-intl'
+import {getTranslations, setRequestLocale} from 'next-intl/server'
+import {notFound} from 'next/navigation'
 
-import { WebLocaleSync } from "@/components/auth/locale-sync";
+import {WebLocaleSync} from '@/components/auth/locale-sync'
 
-import { RootHtml, rootMetadata } from "../root-html";
+import {RootHtml, rootMetadata} from '../root-html'
 
 /**
  * The root layout for everything that has a language. This is where
@@ -21,28 +21,28 @@ import { RootHtml, rootMetadata } from "../root-html";
  * page falls out of SSG and nginx loses its cache (§10).
  */
 export function generateStaticParams() {
-  return LOCALES.map((locale) => ({ locale }));
+  return LOCALES.map((locale) => ({locale}))
 }
 
 export async function generateMetadata({
   params,
-}: LayoutProps<"/[locale]">): Promise<Metadata> {
-  const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "nav" });
+}: LayoutProps<'/[locale]'>): Promise<Metadata> {
+  const {locale} = await params
+  const t = await getTranslations({locale, namespace: 'nav'})
 
-  return { ...rootMetadata, description: t("siteDescription") };
+  return {...rootMetadata, description: t('siteDescription')}
 }
 
 export default async function LocaleLayout({
   children,
   params,
-}: LayoutProps<"/[locale]">) {
-  const { locale } = await params;
+}: LayoutProps<'/[locale]'>) {
+  const {locale} = await params
 
   // `[locale]` catches every path that matches no other route
   // (`/unknown.txt`), so this value is not necessarily a locale — validate
   // before using it.
-  if (!hasLocale(LOCALES, locale)) notFound();
+  if (!hasLocale(LOCALES, locale)) notFound()
 
   /*
    * REQUIRED, and it must run before any `getTranslations` in the tree: without
@@ -50,9 +50,9 @@ export default async function LocaleLayout({
    * route drops out of static rendering — the blog loses SSG and nginx loses its
    * cache (§3.1).
    */
-  setRequestLocale(locale);
+  setRequestLocale(locale)
 
-  const t = await getTranslations("common");
+  const t = await getTranslations('common')
 
   return (
     <RootHtml lang={locale}>
@@ -67,10 +67,10 @@ export default async function LocaleLayout({
         {/* Also inside `IntlProvider`, and for the same reason: its close button
             needs `common.actions.close`. The label is passed in rather than read
             inside the package — see the note on `ToastHost`. */}
-        <ToastHost closeLabel={t("actions.close")} />
+        <ToastHost closeLabel={t('actions.close')} />
         <WebLocaleSync />
         {children}
       </IntlProvider>
     </RootHtml>
-  );
+  )
 }

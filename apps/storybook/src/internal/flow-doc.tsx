@@ -1,11 +1,11 @@
-import { useRef, useState } from "react";
+import {useRef, useState} from 'react'
 
-import { useTranslations } from "next-intl";
+import {useTranslations} from 'next-intl'
 
-import { Button } from "@noalhub/ui/button";
-import { Dialog } from "@noalhub/ui/dialog";
-import { Icon, LUCIDE } from "@noalhub/ui/icons";
-import { Typography } from "@noalhub/ui/typography";
+import {Button} from '@noalhub/ui/button'
+import {Dialog} from '@noalhub/ui/dialog'
+import {Icon, LUCIDE} from '@noalhub/ui/icons'
+import {Typography} from '@noalhub/ui/typography'
 
 /*
  * The page furniture for the two flow maps (`Chat.stories.tsx`,
@@ -39,37 +39,36 @@ import { Typography } from "@noalhub/ui/typography";
  * `t.raw` is exactly right: it hands back the string as written.
  */
 export function useFlowText(namespace: string) {
-  const t = useTranslations(namespace);
-  return (key: string) => String(t.raw(key));
+  const t = useTranslations(namespace)
+  return (key: string) => String(t.raw(key))
 }
 
-export function RichText({ children }: { children: string }) {
-  const parts = children.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+export function RichText({children}: {children: string}) {
+  const parts = children.split(/(\*\*[^*]+\*\*|`[^`]+`)/g)
 
   return (
     <>
       {parts.map((part, index) => {
-        if (part.startsWith("**") && part.endsWith("**")) {
+        if (part.startsWith('**') && part.endsWith('**')) {
           return (
             <strong key={index} className="text-foreground font-semibold">
               {part.slice(2, -2)}
             </strong>
-          );
+          )
         }
-        if (part.startsWith("`") && part.endsWith("`")) {
+        if (part.startsWith('`') && part.endsWith('`')) {
           return (
             <code
               key={index}
-              className="bg-muted text-foreground rounded px-1 py-0.5 font-mono text-[0.9em]"
-            >
+              className="bg-muted text-foreground rounded px-1 py-0.5 font-mono text-[0.9em]">
               {part.slice(1, -1)}
             </code>
-          );
+          )
         }
-        return <span key={index}>{part}</span>;
+        return <span key={index}>{part}</span>
       })}
     </>
-  );
+  )
 }
 
 export function DocPage({
@@ -77,9 +76,9 @@ export function DocPage({
   lead,
   children,
 }: {
-  title: string;
-  lead: string;
-  children: React.ReactNode;
+  title: string
+  lead: string
+  children: React.ReactNode
 }) {
   return (
     <article className="bg-background text-foreground mx-auto flex max-w-5xl flex-col gap-10 px-6 py-10">
@@ -87,13 +86,15 @@ export function DocPage({
         <Typography variant="h2" as="h1">
           {title}
         </Typography>
-        <Typography variant="body-2" className="text-muted-foreground max-w-2xl">
+        <Typography
+          variant="body-2"
+          className="text-muted-foreground max-w-2xl">
           <RichText>{lead}</RichText>
         </Typography>
       </header>
       {children}
     </article>
-  );
+  )
 }
 
 /** A section: small kicker, heading, then whatever the section shows. */
@@ -104,17 +105,21 @@ export function DocSection({
   children,
 }: {
   /** Section number — language-neutral, so it needs no translation. */
-  step: number;
-  title: string;
-  hint?: string;
-  children: React.ReactNode;
+  step: number
+  title: string
+  hint?: string
+  children: React.ReactNode
 }) {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <div className="flex items-baseline gap-3">
-          <Typography as="span" variant="body-4" weight={600} className="text-primary tabular-nums">
-            {String(step).padStart(2, "0")}
+          <Typography
+            as="span"
+            variant="body-4"
+            weight={600}
+            className="text-primary tabular-nums">
+            {String(step).padStart(2, '0')}
           </Typography>
           <Typography variant="h4" as="h2">
             {title}
@@ -128,15 +133,15 @@ export function DocSection({
       </div>
       {children}
     </section>
-  );
+  )
 }
 
-const ZOOM_MIN = 0.5;
-const ZOOM_MAX = 3;
-const ZOOM_STEP = 0.25;
+const ZOOM_MIN = 0.5
+const ZOOM_MAX = 3
+const ZOOM_STEP = 0.25
 
 const clampZoom = (value: number) =>
-  Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Number(value.toFixed(2))));
+  Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Number(value.toFixed(2))))
 
 /**
  * Drag-to-pan for a scroll container: the pointer drags the CONTENT, so the
@@ -148,49 +153,50 @@ const clampZoom = (value: number) =>
  * click that ends it — otherwise letting go over a node box would navigate away
  * from a diagram the reader was only repositioning.
  */
-const DRAG_SLOP = 4;
+const DRAG_SLOP = 4
 
 function usePan() {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLDivElement>(null)
   const origin = useRef<{
-    x: number;
-    y: number;
-    left: number;
-    top: number;
-  } | null>(null);
-  const [dragging, setDragging] = useState(false);
-  const moved = useRef(false);
+    x: number
+    y: number
+    left: number
+    top: number
+  } | null>(null)
+  const [dragging, setDragging] = useState(false)
+  const moved = useRef(false)
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     // Left button / touch / pen only: a right-click is the context menu.
-    if (event.button !== 0 || !ref.current) return;
+    if (event.button !== 0 || !ref.current) return
     origin.current = {
       x: event.clientX,
       y: event.clientY,
       left: ref.current.scrollLeft,
       top: ref.current.scrollTop,
-    };
-    moved.current = false;
-    setDragging(true);
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
+    }
+    moved.current = false
+    setDragging(true)
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
 
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const start = origin.current;
-    if (!start || !ref.current) return;
-    const dx = event.clientX - start.x;
-    const dy = event.clientY - start.y;
-    if (Math.abs(dx) > DRAG_SLOP || Math.abs(dy) > DRAG_SLOP) moved.current = true;
-    ref.current.scrollLeft = start.left - dx;
-    ref.current.scrollTop = start.top - dy;
-  };
+    const start = origin.current
+    if (!start || !ref.current) return
+    const dx = event.clientX - start.x
+    const dy = event.clientY - start.y
+    if (Math.abs(dx) > DRAG_SLOP || Math.abs(dy) > DRAG_SLOP)
+      moved.current = true
+    ref.current.scrollLeft = start.left - dx
+    ref.current.scrollTop = start.top - dy
+  }
 
   const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!origin.current) return;
-    origin.current = null;
-    setDragging(false);
-    event.currentTarget.releasePointerCapture(event.pointerId);
-  };
+    if (!origin.current) return
+    origin.current = null
+    setDragging(false)
+    event.currentTarget.releasePointerCapture(event.pointerId)
+  }
 
   return {
     dragging,
@@ -201,12 +207,12 @@ function usePan() {
       onPointerUp: endDrag,
       onPointerCancel: endDrag,
       onClickCapture: (event: React.MouseEvent) => {
-        if (!moved.current) return;
-        event.preventDefault();
-        event.stopPropagation();
+        if (!moved.current) return
+        event.preventDefault()
+        event.stopPropagation()
       },
     },
-  };
+  }
 }
 
 /**
@@ -234,19 +240,19 @@ function DiagramViewer({
   title,
   children,
 }: {
-  width: number;
-  title: string;
-  children: React.ReactNode;
+  width: number
+  title: string
+  children: React.ReactNode
 }) {
-  const t = useTranslations("sb.flows.common");
-  const [open, setOpen] = useState(false);
-  const [zoom, setZoom] = useState(1);
-  const { dragging, scrollProps } = usePan();
+  const t = useTranslations('sb.flows.common')
+  const [open, setOpen] = useState(false)
+  const [zoom, setZoom] = useState(1)
+  const {dragging, scrollProps} = usePan()
 
   const openViewer = () => {
-    setZoom(1);
-    setOpen(true);
-  };
+    setZoom(1)
+    setOpen(true)
+  }
 
   return (
     <>
@@ -256,21 +262,19 @@ function DiagramViewer({
           // A click that lands on a node link must navigate, not open the
           // overlay — anything else on the canvas enlarges it.
           onClick={(event) => {
-            if ((event.target as HTMLElement).closest("a")) return;
-            openViewer();
-          }}
-        >
-          <div style={{ width }} className="max-w-full cursor-zoom-in">
+            if ((event.target as HTMLElement).closest('a')) return
+            openViewer()
+          }}>
+          <div style={{width}} className="max-w-full cursor-zoom-in">
             {children}
           </div>
         </div>
         <Button
           variant="outline"
           size="icon-sm"
-          aria-label={t("expand")}
+          aria-label={t('expand')}
           onClick={openViewer}
-          className="bg-background absolute top-0 right-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
-        >
+          className="bg-background absolute top-0 right-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100">
           <Icon icon={LUCIDE.maximize2} />
         </Button>
       </div>
@@ -285,54 +289,48 @@ function DiagramViewer({
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label={t("zoomOut")}
+              aria-label={t('zoomOut')}
               disabled={zoom <= ZOOM_MIN}
-              onClick={() => setZoom((z) => clampZoom(z - ZOOM_STEP))}
-            >
+              onClick={() => setZoom((z) => clampZoom(z - ZOOM_STEP))}>
               <Icon icon={LUCIDE.zoomOut} />
             </Button>
             <Typography
               as="span"
               variant="body-4"
-              className="text-muted-foreground w-12 text-center tabular-nums"
-            >
+              className="text-muted-foreground w-12 text-center tabular-nums">
               {Math.round(zoom * 100)}%
             </Typography>
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label={t("zoomIn")}
+              aria-label={t('zoomIn')}
               disabled={zoom >= ZOOM_MAX}
-              onClick={() => setZoom((z) => clampZoom(z + ZOOM_STEP))}
-            >
+              onClick={() => setZoom((z) => clampZoom(z + ZOOM_STEP))}>
               <Icon icon={LUCIDE.zoomIn} />
             </Button>
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label={t("zoomReset")}
+              aria-label={t('zoomReset')}
               disabled={zoom === 1}
-              onClick={() => setZoom(1)}
-            >
+              onClick={() => setZoom(1)}>
               <Icon icon={LUCIDE.rotateCcw} />
             </Button>
           </>
-        }
-      >
+        }>
         <div
           {...scrollProps}
-          className={`flex flex-1 touch-none overflow-auto ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
+          className={`flex flex-1 touch-none overflow-auto ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           // `safe` centring: a plain `center` pushes the overflow off the left
           // edge of a scroll container, where it can never be scrolled back.
-          style={{ justifyContent: "safe center" }}
-        >
-          <div style={{ width: width * zoom }} className="shrink-0">
+          style={{justifyContent: 'safe center'}}>
+          <div style={{width: width * zoom}} className="shrink-0">
             {children}
           </div>
         </div>
       </Dialog>
     </>
-  );
+  )
 }
 
 /** The card a diagram sits in, with its caption underneath. */
@@ -343,13 +341,13 @@ export function Figure({
   width,
   children,
 }: {
-  legend?: React.ReactNode;
-  caption: string;
+  legend?: React.ReactNode
+  caption: string
   /** Names the diagram in the full-screen overlay. */
-  title: string;
+  title: string
   /** The diagram's intrinsic width — the viewBox width, in px. */
-  width: number;
-  children: React.ReactNode;
+  width: number
+  children: React.ReactNode
 }) {
   return (
     <figure className="border-border bg-surface flex flex-col gap-4 rounded-xl border p-5">
@@ -357,11 +355,14 @@ export function Figure({
       <DiagramViewer width={width} title={title}>
         {children}
       </DiagramViewer>
-      <Typography as="figcaption" variant="body-4" className="text-muted-foreground max-w-3xl">
+      <Typography
+        as="figcaption"
+        variant="body-4"
+        className="text-muted-foreground max-w-3xl">
         <RichText>{caption}</RichText>
       </Typography>
     </figure>
-  );
+  )
 }
 
 /** One entry of the line-style legend: a sample stroke plus what it means. */
@@ -369,8 +370,8 @@ export function LegendItem({
   kind,
   label,
 }: {
-  kind: "request" | "push" | "accent";
-  label: string;
+  kind: 'request' | 'push' | 'accent'
+  label: string
 }) {
   return (
     <span className="text-muted-foreground text-body-4 inline-flex items-center gap-2">
@@ -378,16 +379,16 @@ export function LegendItem({
         <path
           d="M1 4 H27"
           fill="none"
-          strokeWidth={kind === "accent" ? 2 : 1.4}
-          strokeDasharray={kind === "push" ? "5 4" : undefined}
+          strokeWidth={kind === 'accent' ? 2 : 1.4}
+          strokeDasharray={kind === 'push' ? '5 4' : undefined}
           stroke={
-            kind === "accent" ? "var(--primary)" : "var(--muted-foreground)"
+            kind === 'accent' ? 'var(--primary)' : 'var(--muted-foreground)'
           }
         />
       </svg>
       {label}
     </span>
-  );
+  )
 }
 
 /**
@@ -400,15 +401,14 @@ export function LegendItem({
 export function KeyList({
   keys,
 }: {
-  keys: { name: string; shape: string; purpose: string }[];
+  keys: {name: string; shape: string; purpose: string}[]
 }) {
   return (
     <dl className="grid gap-3 md:grid-cols-3">
-      {keys.map(({ name, shape, purpose }) => (
+      {keys.map(({name, shape, purpose}) => (
         <div
           key={name}
-          className="border-border bg-surface flex flex-col gap-2 rounded-lg border p-4"
-        >
+          className="border-border bg-surface flex flex-col gap-2 rounded-lg border p-4">
           <dt className="bg-muted text-foreground self-start rounded px-1.5 py-0.5 font-mono text-[0.8rem]">
             {name}
           </dt>
@@ -423,24 +423,22 @@ export function KeyList({
         </div>
       ))}
     </dl>
-  );
+  )
 }
 
 /** The numbered cards under a diagram — the caveats, one per card. */
-export function NoteList({ notes }: { notes: string[] }) {
+export function NoteList({notes}: {notes: string[]}) {
   return (
     <ol className="grid gap-3 md:grid-cols-2">
       {notes.map((note, index) => (
         <li
           key={index}
-          className="border-border bg-surface flex gap-3 rounded-lg border p-4"
-        >
+          className="border-border bg-surface flex gap-3 rounded-lg border p-4">
           <Typography
             as="span"
             variant="body-4"
             weight={500}
-            className="bg-muted text-muted-foreground flex size-6 shrink-0 items-center justify-center rounded-full"
-          >
+            className="bg-muted text-muted-foreground flex size-6 shrink-0 items-center justify-center rounded-full">
             {index + 1}
           </Typography>
           <Typography variant="body-3" className="text-muted-foreground">
@@ -449,38 +447,38 @@ export function NoteList({ notes }: { notes: string[] }) {
         </li>
       ))}
     </ol>
-  );
+  )
 }
 
 /* ----------------------------------------------------------------- diagrams */
 
 export type FlowNode = {
   /** Story id — the box links to the screen it names. */
-  href: string;
-  x: number;
-  y: number;
-  label: string;
-  note: string;
+  href: string
+  x: number
+  y: number
+  label: string
+  note: string
   /** The entry point of the flow. */
-  primary?: boolean;
+  primary?: boolean
   /** A dead end, or the state everything funnels back to. */
-  end?: boolean;
-};
+  end?: boolean
+}
 
 export type FlowEdge = {
-  d: string;
-  label?: string;
+  d: string
+  label?: string
   /** A second line under `label`, for a transition with two causes. */
-  label2?: string;
+  label2?: string
   /** Where the label sits; `rotate` turns it along a vertical run. */
-  labelX?: number;
-  labelY?: number;
-  anchor?: "start" | "middle" | "end";
-  rotate?: boolean;
-};
+  labelX?: number
+  labelY?: number
+  anchor?: 'start' | 'middle' | 'end'
+  rotate?: boolean
+}
 
-const NODE_WIDTH = 190;
-const NODE_HEIGHT = 52;
+const NODE_WIDTH = 190
+const NODE_HEIGHT = 52
 
 /**
  * The state map. Boxes are links, so this diagram is also the page's index of
@@ -495,10 +493,10 @@ export function FlowMap({
   nodes,
   edges,
 }: {
-  viewBox: string;
-  title: string;
-  nodes: FlowNode[];
-  edges: FlowEdge[];
+  viewBox: string
+  title: string
+  nodes: FlowNode[]
+  edges: FlowEdge[]
 }) {
   return (
     <svg viewBox={viewBox} className="w-full" fontFamily="inherit">
@@ -511,8 +509,7 @@ export function FlowMap({
           refY="5"
           markerWidth="5"
           markerHeight="5"
-          orient="auto-start-reverse"
-        >
+          orient="auto-start-reverse">
           <path d="M0 0 L10 5 L0 10 z" fill="var(--muted-foreground)" />
         </marker>
       </defs>
@@ -527,8 +524,7 @@ export function FlowMap({
         stroke="var(--muted-foreground)"
         strokeWidth="1.25"
         fill="none"
-        markerEnd="url(#flow-arrow)"
-      >
+        markerEnd="url(#flow-arrow)">
         {edges.map((edge) => (
           <path key={edge.d} d={edge.d} />
         ))}
@@ -542,21 +538,19 @@ export function FlowMap({
               <text
                 x={edge.labelX}
                 y={edge.labelY}
-                textAnchor={edge.anchor ?? "start"}
+                textAnchor={edge.anchor ?? 'start'}
                 transform={
                   edge.rotate
                     ? `rotate(-90 ${edge.labelX} ${edge.labelY})`
                     : undefined
-                }
-              >
+                }>
                 {edge.label}
               </text>
               {edge.label2 ? (
                 <text
                   x={edge.labelX}
                   y={(edge.labelY ?? 0) + 14}
-                  textAnchor={edge.anchor ?? "start"}
-                >
+                  textAnchor={edge.anchor ?? 'start'}>
                   {edge.label2}
                 </text>
               ) : null}
@@ -564,25 +558,24 @@ export function FlowMap({
           ))}
       </g>
 
-      {nodes.map(({ href, x, y, label, note, primary, end }) => (
+      {nodes.map(({href, x, y, label, note, primary, end}) => (
         <a
           key={href + x + y}
           className="flow-node"
-          style={{ textDecoration: "none" }}
+          style={{textDecoration: 'none'}}
           // `./` is required: this renders inside `iframe.html`, so a bare
           // `?path=…` resolves to `iframe.html?path=…` and opens the story
           // stripped of the Storybook shell.
           href={`./?path=/story/${href}`}
-          target="_top"
-        >
+          target="_top">
           <rect
             x={x}
             y={y}
             width={NODE_WIDTH}
             height={NODE_HEIGHT}
             rx={10}
-            fill={primary ? "var(--primary)" : "var(--background)"}
-            stroke={end || primary ? "var(--primary)" : "var(--border)"}
+            fill={primary ? 'var(--primary)' : 'var(--background)'}
+            stroke={end || primary ? 'var(--primary)' : 'var(--border)'}
             strokeWidth={end ? 2 : 1}
           />
           <text
@@ -591,8 +584,7 @@ export function FlowMap({
             textAnchor="middle"
             fontSize="13.5"
             fontWeight="500"
-            fill={primary ? "var(--primary-foreground)" : "var(--foreground)"}
-          >
+            fill={primary ? 'var(--primary-foreground)' : 'var(--foreground)'}>
             {label}
           </text>
           <text
@@ -601,28 +593,27 @@ export function FlowMap({
             textAnchor="middle"
             fontSize="10.5"
             fill={
-              primary ? "var(--primary-foreground)" : "var(--muted-foreground)"
-            }
-          >
+              primary ? 'var(--primary-foreground)' : 'var(--muted-foreground)'
+            }>
             {note}
           </text>
         </a>
       ))}
     </svg>
-  );
+  )
 }
 
-export type Lane = { x: number; label: string; note: string };
+export type Lane = {x: number; label: string; note: string}
 
 export type Step = {
-  from: number;
-  to: number;
-  label: string;
+  from: number
+  to: number
+  label: string
   /** BE → FE: a response or a push, drawn dashed. */
-  back?: boolean;
+  back?: boolean
   /** The step a reader must not skim past. */
-  accent?: boolean;
-};
+  accent?: boolean
+}
 
 /**
  * The lane diagram. Lifelines left to right, one step per row, the FE/BE
@@ -638,15 +629,15 @@ export function SequenceDiagram({
   backendLabel,
   width,
 }: {
-  title: string;
-  lanes: Lane[];
-  steps: Step[];
-  divider: number;
-  frontendLabel: string;
-  backendLabel: string;
-  width: number;
+  title: string
+  lanes: Lane[]
+  steps: Step[]
+  divider: number
+  frontendLabel: string
+  backendLabel: string
+  width: number
 }) {
-  const height = 108 + steps.length * 46 + 40;
+  const height = 108 + steps.length * 46 + 40
 
   return (
     <svg
@@ -654,8 +645,7 @@ export function SequenceDiagram({
       className="w-full"
       role="img"
       aria-label={title}
-      fontFamily="inherit"
-    >
+      fontFamily="inherit">
       <defs>
         <marker
           id="seq-arrow"
@@ -664,8 +654,7 @@ export function SequenceDiagram({
           refY="5"
           markerWidth="6"
           markerHeight="6"
-          orient="auto-start-reverse"
-        >
+          orient="auto-start-reverse">
           <path d="M0 0 L10 5 L0 10 z" fill="var(--muted-foreground)" />
         </marker>
         <marker
@@ -675,8 +664,7 @@ export function SequenceDiagram({
           refY="5"
           markerWidth="6"
           markerHeight="6"
-          orient="auto-start-reverse"
-        >
+          orient="auto-start-reverse">
           <path d="M0 0 L10 5 L0 10 z" fill="var(--primary)" />
         </marker>
       </defs>
@@ -687,11 +675,7 @@ export function SequenceDiagram({
         strokeWidth="1"
         strokeDasharray="6 5"
       />
-      <g
-        fontSize="10"
-        fill="var(--muted-foreground)"
-        letterSpacing="0.14em"
-      >
+      <g fontSize="10" fill="var(--muted-foreground)" letterSpacing="0.14em">
         <text x={divider - 14} y="20" textAnchor="end">
           {frontendLabel}
         </text>
@@ -700,7 +684,7 @@ export function SequenceDiagram({
         </text>
       </g>
 
-      {lanes.map(({ x, label, note }) => (
+      {lanes.map(({x, label, note}) => (
         <g key={label}>
           <rect
             x={x - 66}
@@ -717,8 +701,7 @@ export function SequenceDiagram({
             textAnchor="middle"
             fontSize="13"
             fontWeight="500"
-            fill="var(--foreground)"
-          >
+            fill="var(--foreground)">
             {label}
           </text>
           {note ? (
@@ -727,8 +710,7 @@ export function SequenceDiagram({
               y={61}
               textAnchor="middle"
               fontSize="10.5"
-              fill="var(--muted-foreground)"
-            >
+              fill="var(--muted-foreground)">
               {note}
             </text>
           ) : null}
@@ -741,13 +723,13 @@ export function SequenceDiagram({
         </g>
       ))}
 
-      {steps.map(({ from, to, label, back, accent }, index) => {
-        const y = 108 + index * 46;
-        const x1 = lanes[from]!.x;
-        const x2 = lanes[to]!.x;
+      {steps.map(({from, to, label, back, accent}, index) => {
+        const y = 108 + index * 46
+        const x1 = lanes[from]!.x
+        const x2 = lanes[to]!.x
         // A lane talking to itself — a background loop, not a hop. Drawn as a
         // stub out to the right and back, since `H` to the same x draws nothing.
-        const self = from === to;
+        const self = from === to
 
         return (
           <g key={label}>
@@ -758,8 +740,7 @@ export function SequenceDiagram({
               x={self ? x1 + 52 : Math.min(x1, x2)}
               y={y - 8}
               fontSize="11.5"
-              fill={accent ? "var(--primary)" : "var(--muted-foreground)"}
-            >
+              fill={accent ? 'var(--primary)' : 'var(--muted-foreground)'}>
               {label}
             </text>
             <path
@@ -768,19 +749,17 @@ export function SequenceDiagram({
                   ? `M${x1} ${y - 9} H${x1 + 26} Q${x1 + 38} ${y - 9} ${x1 + 38} ${y} Q${x1 + 38} ${y + 9} ${x1 + 26} ${y + 9} H${x1}`
                   : `M${x1} ${y} H${x2}`
               }
-              stroke={accent ? "var(--primary)" : "var(--muted-foreground)"}
+              stroke={accent ? 'var(--primary)' : 'var(--muted-foreground)'}
               strokeWidth={accent ? 1.6 : 1.25}
-              strokeDasharray={back ? "5 4" : undefined}
-              markerEnd={
-                accent ? "url(#seq-arrow-accent)" : "url(#seq-arrow)"
-              }
+              strokeDasharray={back ? '5 4' : undefined}
+              markerEnd={accent ? 'url(#seq-arrow-accent)' : 'url(#seq-arrow)'}
               fill="none"
             />
           </g>
-        );
+        )
       })}
     </svg>
-  );
+  )
 }
 
 /**
@@ -793,22 +772,26 @@ export function SequenceDiagram({
  * carrying a caveat that does not apply to it.
  */
 export function SourceNote({
-  sectionKey = "sourceSection",
-  textKey = "source",
+  sectionKey = 'sourceSection',
+  textKey = 'source',
 }: {
-  sectionKey?: string;
-  textKey?: string;
+  sectionKey?: string
+  textKey?: string
 } = {}) {
-  const t = useTranslations("sb.flows.common");
+  const t = useTranslations('sb.flows.common')
 
   return (
     <section className="border-border text-muted-foreground flex flex-col gap-2 rounded-lg border border-dashed p-4">
-      <Typography as="span" variant="body-4" weight={500} className="tracking-[0.14em] uppercase">
+      <Typography
+        as="span"
+        variant="body-4"
+        weight={500}
+        className="tracking-[0.14em] uppercase">
         {t(sectionKey)}
       </Typography>
       <Typography variant="body-4" className="text-muted-foreground">
         <RichText>{t(textKey)}</RichText>
       </Typography>
     </section>
-  );
+  )
 }

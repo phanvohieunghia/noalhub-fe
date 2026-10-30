@@ -1,13 +1,13 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { useTranslations } from "next-intl";
+import type {Meta, StoryObj} from '@storybook/nextjs-vite'
+import {useTranslations} from 'next-intl'
 
-import { useMessage } from "@noalhub/i18n/use-message";
+import {useMessage} from '@noalhub/i18n/use-message'
 
-import { Button } from "@noalhub/ui/button";
-import { Icon, ICONS } from "@noalhub/ui/icons";
-import { Input } from "@noalhub/ui/input";
-import { AlertError, AlertSuccess } from "@noalhub/ui/alert";
-import { Typography } from "@noalhub/ui/typography";
+import {Button} from '@noalhub/ui/button'
+import {Icon, ICONS} from '@noalhub/ui/icons'
+import {Input} from '@noalhub/ui/input'
+import {AlertError, AlertSuccess} from '@noalhub/ui/alert'
+import {Typography} from '@noalhub/ui/typography'
 
 /*
  * Each story is ONE screen of the customer auth flow, in the order a user meets
@@ -24,17 +24,11 @@ import { Typography } from "@noalhub/ui/typography";
  */
 
 /** The card the auth layout puts every screen in. */
-function AuthScreen({ children }: { children: React.ReactNode }) {
-  return <div className="flex w-full max-w-sm flex-col gap-6">{children}</div>;
+function AuthScreen({children}: {children: React.ReactNode}) {
+  return <div className="flex w-full max-w-sm flex-col gap-6">{children}</div>
 }
 
-function ScreenHeader({
-  title,
-  subtitle,
-}: {
-  title: string;
-  subtitle?: string;
-}) {
+function ScreenHeader({title, subtitle}: {title: string; subtitle?: string}) {
   return (
     <header className="flex flex-col gap-1">
       <Typography variant="h3" as="h1">
@@ -46,12 +40,12 @@ function ScreenHeader({
         </Typography>
       ) : null}
     </header>
-  );
+  )
 }
 
 /** The "or / Google / GitHub" block shared by login and register. */
 function OAuthButtons() {
-  const t = useTranslations("web.auth.oauth");
+  const t = useTranslations('web.auth.oauth')
 
   return (
     <div className="flex flex-col gap-3">
@@ -64,7 +58,7 @@ function OAuthButtons() {
       */}
       <div className="text-body-4 text-muted-foreground flex items-center gap-3 uppercase tracking-wide">
         <span className="h-px flex-1 bg-current" />
-        {t("divider")}
+        {t('divider')}
         <span className="h-px flex-1 bg-current" />
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -78,52 +72,52 @@ function OAuthButtons() {
         </Button>
       </div>
     </div>
-  );
+  )
 }
 
 const meta: Meta = {
-  title: "Flows/Auth",
+  title: 'Flows/Auth',
   parameters: {
-    layout: "centered",
+    layout: 'centered',
   },
-};
+}
 
-export default meta;
-type Story = StoryObj;
+export default meta
+type Story = StoryObj
 
 /** The entry point of the flow. Three ways out: register, forgot password, and OAuth. */
 export const Login: Story = {
   render: function LoginScreen() {
-    const t = useTranslations("web.auth.login");
+    const t = useTranslations('web.auth.login')
 
     return (
       <AuthScreen>
-        <ScreenHeader title={t("title")} subtitle={t("subtitle")} />
+        <ScreenHeader title={t('title')} subtitle={t('subtitle')} />
         <form className="flex flex-col gap-4" noValidate>
-          <Input label={t("email")} type="email" autoComplete="email" />
+          <Input label={t('email')} type="email" autoComplete="email" />
           <Input
-            label={t("password")}
+            label={t('password')}
             type="password"
             autoComplete="current-password"
           />
           <div className="flex justify-end">
             <a href="#" className="text-body-3 underline underline-offset-4">
-              {t("forgot")}
+              {t('forgot')}
             </a>
           </div>
-          <Button type="submit">{t("submit")}</Button>
+          <Button type="submit">{t('submit')}</Button>
         </form>
         <OAuthButtons />
         <Typography variant="body-3" className="text-center opacity-70">
-          {t("noAccount")}{" "}
+          {t('noAccount')}{' '}
           <a href="#" className="underline underline-offset-4">
-            {t("register")}
+            {t('register')}
           </a>
         </Typography>
       </AuthScreen>
-    );
+    )
   },
-};
+}
 
 /**
  * Sign-in rejected: one form-level error and one field-level error.
@@ -136,87 +130,87 @@ export const Login: Story = {
  */
 export const LoginRejected: Story = {
   render: function LoginRejectedScreen() {
-    const t = useTranslations("web.auth.login");
-    const m = useMessage();
+    const t = useTranslations('web.auth.login')
+    const m = useMessage()
 
     return (
       <AuthScreen>
-        <ScreenHeader title={t("title")} subtitle={t("subtitle")} />
+        <ScreenHeader title={t('title')} subtitle={t('subtitle')} />
         <form className="flex flex-col gap-4" noValidate>
-          <AlertError message={m("common.errors.generic")} />
+          <AlertError message={m('common.errors.generic')} />
           <Input
-            label={t("email")}
+            label={t('email')}
             type="email"
             defaultValue="noah@noalhub.dev"
           />
           <Input
-            label={t("password")}
+            label={t('password')}
             type="password"
-            error={m("validation.password.tooShort")}
+            error={m('validation.password.tooShort')}
           />
-          <Button type="submit">{t("submit")}</Button>
+          <Button type="submit">{t('submit')}</Button>
         </form>
       </AuthScreen>
-    );
+    )
   },
-};
+}
 
 /** The "no account yet" branch. On success it lands straight in the app, with no email verification. */
 export const Register: Story = {
   render: function RegisterScreen() {
-    const t = useTranslations("web.auth.register");
+    const t = useTranslations('web.auth.register')
 
     return (
       <AuthScreen>
-        <ScreenHeader title={t("title")} subtitle={t("subtitle")} />
+        <ScreenHeader title={t('title')} subtitle={t('subtitle')} />
         <form className="flex flex-col gap-4" noValidate>
-          <Input label={t("displayName")} autoComplete="name" />
-          <Input label={t("email")} type="email" autoComplete="email" />
+          <Input label={t('displayName')} autoComplete="name" />
+          <Input label={t('email')} type="email" autoComplete="email" />
           <Input
-            label={t("password")}
+            label={t('password')}
             type="password"
             autoComplete="new-password"
           />
           <Input
-            label={t("confirmPassword")}
+            label={t('confirmPassword')}
             type="password"
             autoComplete="new-password"
           />
-          <Button type="submit">{t("submit")}</Button>
+          <Button type="submit">{t('submit')}</Button>
         </form>
         <OAuthButtons />
         <Typography variant="body-3" className="text-center opacity-70">
-          {t("hasAccount")}{" "}
+          {t('hasAccount')}{' '}
           <a href="#" className="underline underline-offset-4">
-            {t("login")}
+            {t('login')}
           </a>
         </Typography>
       </AuthScreen>
-    );
+    )
   },
-};
+}
 
 /** Step 1 of the forgot-password branch: enter the email. */
 export const ForgotPassword: Story = {
   render: function ForgotPasswordScreen() {
-    const t = useTranslations("web.auth.forgotPassword");
+    const t = useTranslations('web.auth.forgotPassword')
 
     return (
       <AuthScreen>
-        <ScreenHeader title={t("title")} subtitle={t("subtitle")} />
+        <ScreenHeader title={t('title')} subtitle={t('subtitle')} />
         <form className="flex flex-col gap-4" noValidate>
-          <Input label={t("email")} type="email" autoComplete="email" />
-          <Button type="submit">{t("submit")}</Button>
+          <Input label={t('email')} type="email" autoComplete="email" />
+          <Button type="submit">{t('submit')}</Button>
         </form>
         <Typography variant="body-3" className="text-center opacity-70">
           <a href="#" className="underline underline-offset-4">
-            {t("backToLogin")}
+            {t('backToLogin')}
           </a>
         </Typography>
       </AuthScreen>
-    );
+    )
   },
-};
+}
 
 /**
  * Step 2: sent. The message is deliberately vague ("if the email exists") — saying
@@ -224,80 +218,80 @@ export const ForgotPassword: Story = {
  */
 export const ForgotPasswordSent: Story = {
   render: function ForgotPasswordSentScreen() {
-    const t = useTranslations("web.auth.forgotPassword");
+    const t = useTranslations('web.auth.forgotPassword')
 
     return (
       <AuthScreen>
-        <ScreenHeader title={t("title")} subtitle={t("subtitle")} />
-        <AlertSuccess message={t("sent")} />
+        <ScreenHeader title={t('title')} subtitle={t('subtitle')} />
+        <AlertSuccess message={t('sent')} />
         <Typography variant="body-3" className="text-center opacity-70">
           <a href="#" className="underline underline-offset-4">
-            {t("backToLogin")}
+            {t('backToLogin')}
           </a>
         </Typography>
       </AuthScreen>
-    );
+    )
   },
-};
+}
 
 /** Step 3: the user clicks the link in the email, with a valid `?token=`. */
 export const ResetPassword: Story = {
   render: function ResetPasswordScreen() {
-    const t = useTranslations("web.auth.resetPassword");
+    const t = useTranslations('web.auth.resetPassword')
 
     return (
       <AuthScreen>
-        <ScreenHeader title={t("title")} subtitle={t("subtitle")} />
+        <ScreenHeader title={t('title')} subtitle={t('subtitle')} />
         <form className="flex flex-col gap-4" noValidate>
           <Input
-            label={t("newPassword")}
+            label={t('newPassword')}
             type="password"
             autoComplete="new-password"
           />
           <Input
-            label={t("confirmPassword")}
+            label={t('confirmPassword')}
             type="password"
             autoComplete="new-password"
           />
-          <Button type="submit">{t("submit")}</Button>
+          <Button type="submit">{t('submit')}</Button>
         </form>
       </AuthScreen>
-    );
+    )
   },
-};
+}
 
 /** The link is missing `?token=` or was truncated by a mail client: a dead end, with only the request-a-new-link way out. */
 export const ResetPasswordInvalidLink: Story = {
   render: function ResetPasswordInvalidLinkScreen() {
-    const t = useTranslations("web.auth.resetPassword");
+    const t = useTranslations('web.auth.resetPassword')
 
     return (
       <AuthScreen>
         <Typography variant="h3" as="h1">
-          {t("invalidLinkTitle")}
+          {t('invalidLinkTitle')}
         </Typography>
-        <AlertError message={t("invalidLink")} />
+        <AlertError message={t('invalidLink')} />
         <a href="#" className="text-body-3 underline underline-offset-4">
-          {t("requestNewLink")}
+          {t('requestNewLink')}
         </a>
       </AuthScreen>
-    );
+    )
   },
-};
+}
 
 /** Password changed: shows a confirmation, then returns to sign-in after 1.5s. */
 export const ResetPasswordDone: Story = {
   render: function ResetPasswordDoneScreen() {
-    const t = useTranslations("web.auth.resetPassword");
+    const t = useTranslations('web.auth.resetPassword')
 
     return (
       <AuthScreen>
-        <ScreenHeader title={t("title")} />
-        <AlertSuccess message={t("done")} />
+        <ScreenHeader title={t('title')} />
+        <AlertSuccess message={t('done')} />
       </AuthScreen>
-    );
+    )
   },
-};
+}
 
 /**
  * The OAuth branch returns to `/auth/callback?code=`. That code is single-use,
@@ -306,30 +300,30 @@ export const ResetPasswordDone: Story = {
  */
 export const OAuthFinishing: Story = {
   render: function OAuthFinishingScreen() {
-    const t = useTranslations("web.auth.oauth");
+    const t = useTranslations('web.auth.oauth')
 
     return (
       <AuthScreen>
         <Typography variant="body-3" className="opacity-70">
-          {t("finishing")}
+          {t('finishing')}
         </Typography>
       </AuthScreen>
-    );
+    )
   },
-};
+}
 
 /** A broken callback: the provider returned an error, `code` is missing, or the code has expired. */
 export const OAuthFailed: Story = {
   render: function OAuthFailedScreen() {
-    const t = useTranslations("web.auth.oauth");
+    const t = useTranslations('web.auth.oauth')
 
     return (
       <AuthScreen>
-        <AlertError message={t("missingCode")} />
+        <AlertError message={t('missingCode')} />
         <a href="#" className="text-body-3 underline underline-offset-4">
-          {t("backToLogin")}
+          {t('backToLogin')}
         </a>
       </AuthScreen>
-    );
+    )
   },
-};
+}

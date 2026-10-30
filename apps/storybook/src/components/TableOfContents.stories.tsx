@@ -1,18 +1,18 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { useTranslations } from "next-intl";
-import { TableOfContents } from "@noalhub/ui/blog/table-of-contents";
-import type { BlogDoc } from "@noalhub/api/blog";
+import type {Meta, StoryObj} from '@storybook/nextjs-vite'
+import {useTranslations} from 'next-intl'
+import {TableOfContents} from '@noalhub/ui/blog/table-of-contents'
+import type {BlogDoc} from '@noalhub/api/blog'
 
 const meta: Meta<typeof TableOfContents> = {
-  title: "UI/Blog/TableOfContents",
+  title: 'UI/Blog/TableOfContents',
   component: TableOfContents,
   parameters: {
-    layout: "padded",
+    layout: 'padded',
   },
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof TableOfContents>;
+export default meta
+type Story = StoryObj<typeof TableOfContents>
 
 /**
  * The sample document is built inside a hook rather than as a module-scope
@@ -20,29 +20,29 @@ type Story = StoryObj<typeof TableOfContents>;
  * language, and at module scope there is no locale yet.
  */
 function useSampleDoc(): BlogDoc {
-  const t = useTranslations("sb.toc");
+  const t = useTranslations('sb.toc')
   const heading = (level: 2 | 3, key: string) => ({
-    type: "heading" as const,
-    attrs: { level },
-    content: [{ type: "text" as const, text: t(key) }],
-  });
+    type: 'heading' as const,
+    attrs: {level},
+    content: [{type: 'text' as const, text: t(key)}],
+  })
 
   return {
-    type: "doc",
+    type: 'doc',
     content: [
-      heading(2, "intro"),
-      { type: "paragraph", content: [{ type: "text", text: t("introBody") }] },
-      heading(2, "install"),
-      heading(3, "deps"),
-      heading(3, "config"),
-      heading(2, "conclusion"),
+      heading(2, 'intro'),
+      {type: 'paragraph', content: [{type: 'text', text: t('introBody')}]},
+      heading(2, 'install'),
+      heading(3, 'deps'),
+      heading(3, 'config'),
+      heading(2, 'conclusion'),
     ],
-  };
+  }
 }
 
 export const Default: Story = {
   render: function DefaultStory(args) {
-    const doc = useSampleDoc();
-    return <TableOfContents {...args} doc={doc} />;
+    const doc = useSampleDoc()
+    return <TableOfContents {...args} doc={doc} />
   },
-};
+}

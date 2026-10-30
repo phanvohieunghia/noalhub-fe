@@ -1,6 +1,6 @@
-import { Link } from "@noalhub/i18n/navigation";
-import { getTranslations } from "next-intl/server";
-import { Typography } from "@noalhub/ui/typography";
+import {Link} from '@noalhub/i18n/navigation'
+import {getTranslations} from 'next-intl/server'
+import {Typography} from '@noalhub/ui/typography'
 
 /**
  * The footer shared by the public area (the blog) and the home page: the
@@ -12,26 +12,31 @@ import { Typography } from "@noalhub/ui/typography";
  * a footer pushes the composer off screen.
  */
 export async function SiteFooter() {
-  const t = await getTranslations("nav");
+  const t = await getTranslations('nav')
 
   const links = [
-    { href: "/about", label: t("footer.about") },
-    { href: "/terms", label: t("footer.terms") },
-    { href: "/privacy", label: t("footer.privacy") },
-    { href: "/contact", label: t("footer.contact") },
-  ] as const;
+    {href: '/about', label: t('footer.about')},
+    {href: '/terms', label: t('footer.terms')},
+    {href: '/privacy', label: t('footer.privacy')},
+    {href: '/contact', label: t('footer.contact')},
+  ] as const
 
   return (
     <footer className="mt-auto hidden items-center justify-between gap-3 border-t border-border bg-surface px-12 text-body-4 text-muted-foreground md:flex md:h-18">
-      <Typography variant="body-4">© {new Date().getFullYear()} Noalhub</Typography>
+      <Typography variant="body-4">
+        © {new Date().getFullYear()} Noalhub
+      </Typography>
 
-      <nav aria-label={t("footer.nav")} className="flex items-center gap-6">
+      <nav aria-label={t('footer.nav')} className="flex items-center gap-6">
         {links.map((link) => (
-          <Link key={link.href} href={link.href} className="transition-colors hover:text-foreground">
+          <Link
+            key={link.href}
+            href={link.href}
+            className="transition-colors hover:text-foreground">
             {link.label}
           </Link>
         ))}
       </nav>
     </footer>
-  );
+  )
 }

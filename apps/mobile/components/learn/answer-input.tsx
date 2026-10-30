@@ -1,16 +1,16 @@
-import React, { useRef, useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { useTranslations } from "use-intl";
+import React, {useRef, useState} from 'react'
+import {ScrollView, Text, TouchableOpacity, View} from 'react-native'
+import {useTranslations} from 'use-intl'
 
 import type {
   QaAnswerResult,
   QaItemPlay,
   QaResponse,
   QaTemplateKey,
-} from "@noalhub/api/qa";
-import { Button, Input } from "@noalhub/ui-native";
+} from '@noalhub/api/qa'
+import {Button, Input} from '@noalhub/ui-native'
 
-const LETTERS = "ABCDEFGH";
+const LETTERS = 'ABCDEFGH'
 
 /**
  * One question, laid out to fill the screen: the question on top, the answers
@@ -33,50 +33,54 @@ export function AnswerInput({
   afterAnswer,
   onSubmit,
 }: {
-  templateKey: QaTemplateKey;
-  item: QaItemPlay;
+  templateKey: QaTemplateKey
+  item: QaItemPlay
   /** The question block, rendered above the answers in the same scroll area. */
-  question: React.ReactNode;
-  result: QaAnswerResult | null;
-  disabled?: boolean;
-  afterAnswer: React.ReactNode;
-  onSubmit: (response: QaResponse, durationMs: number) => void;
+  question: React.ReactNode
+  result: QaAnswerResult | null
+  disabled?: boolean
+  afterAnswer: React.ReactNode
+  onSubmit: (response: QaResponse, durationMs: number) => void
 }) {
-  const t = useTranslations("web.learn");
-  const [picked, setPicked] = useState<string[]>([]);
-  const [text, setText] = useState("");
-  const shownAt = useRef(Date.now());
+  const t = useTranslations('web.learn')
+  const [picked, setPicked] = useState<string[]>([])
+  const [text, setText] = useState('')
+  const shownAt = useRef(Date.now())
 
-  const locked = result !== null || disabled === true;
-  const flashcard = templateKey === "flashcard";
-  const options = flashcard ? [] : (item.options ?? []);
-  const single = templateKey === "true_false" || templateKey === "single_choice";
+  const locked = result !== null || disabled === true
+  const flashcard = templateKey === 'flashcard'
+  const options = flashcard ? [] : (item.options ?? [])
+  const single = templateKey === 'true_false' || templateKey === 'single_choice'
 
   const send = (response: QaResponse) =>
-    onSubmit(response, Math.max(0, Date.now() - shownAt.current));
+    onSubmit(response, Math.max(0, Date.now() - shownAt.current))
 
   const toggle = (id: string) =>
     setPicked((current) => {
-      if (single) return [id];
+      if (single) return [id]
       return current.includes(id)
         ? current.filter((value) => value !== id)
-        : [...current, id];
-    });
+        : [...current, id]
+    })
 
   const submitText = () => {
-    if (!locked && text.trim() !== "") send({ text });
-  };
+    if (!locked && text.trim() !== '') send({text})
+  }
 
-  let body: React.ReactNode;
-  let action: React.ReactNode;
+  let body: React.ReactNode
+  let action: React.ReactNode
 
   if (flashcard) {
     body = result ? null : (
       <View className="gap-2">
-        <Text className="text-sm text-muted-foreground">{t("answer.selfPrompt")}</Text>
-        <Text className="text-xs text-muted-foreground">{t("answer.selfNote")}</Text>
+        <Text className="text-sm text-muted-foreground">
+          {t('answer.selfPrompt')}
+        </Text>
+        <Text className="text-xs text-muted-foreground">
+          {t('answer.selfNote')}
+        </Text>
       </View>
-    );
+    )
     action = (
       <View className="flex-row gap-3">
         <Button
@@ -84,20 +88,23 @@ export function AnswerInput({
           variant="outline"
           className="flex-1"
           disabled={locked}
-          onPress={() => send({ known: false })}
-        >
-          {t("answer.unknown")}
+          onPress={() => send({known: false})}>
+          {t('answer.unknown')}
         </Button>
-        <Button size="lg" className="flex-1" disabled={locked} onPress={() => send({ known: true })}>
-          {t("answer.known")}
+        <Button
+          size="lg"
+          className="flex-1"
+          disabled={locked}
+          onPress={() => send({known: true})}>
+          {t('answer.known')}
         </Button>
       </View>
-    );
+    )
   } else if (options.length > 0) {
     body = (
       <View className="gap-3">
         <Text className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          {single ? t("answer.singleHint") : t("answer.multiHint")}
+          {single ? t('answer.singleHint') : t('answer.multiHint')}
         </Text>
         {options.map((option, index) => (
           <OptionCard
@@ -115,49 +122,46 @@ export function AnswerInput({
           />
         ))}
       </View>
-    );
+    )
     action = (
       <Button
         size="lg"
         disabled={locked || picked.length === 0}
         loading={disabled}
-        onPress={() => send({ optionIds: picked })}
-      >
-        {t("answer.submit")}
+        onPress={() => send({optionIds: picked})}>
+        {t('answer.submit')}
       </Button>
-    );
+    )
   } else {
     body = (
       <Input
-        label={t("answer.text")}
+        label={t('answer.text')}
         value={text}
-        helperText={t("answer.textHint")}
+        helperText={t('answer.textHint')}
         editable={!locked}
         autoFocus
         returnKeyType="send"
         onChangeText={setText}
         onSubmitEditing={submitText}
       />
-    );
+    )
     action = (
       <Button
         size="lg"
-        disabled={locked || text.trim() === ""}
+        disabled={locked || text.trim() === ''}
         loading={disabled}
-        onPress={submitText}
-      >
-        {t("answer.submit")}
+        onPress={submitText}>
+        {t('answer.submit')}
       </Button>
-    );
+    )
   }
 
   return (
     <View className="flex-1">
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ flexGrow: 1, padding: 20, gap: 24 }}
-        keyboardShouldPersistTaps="handled"
-      >
+        contentContainerStyle={{flexGrow: 1, padding: 20, gap: 24}}
+        keyboardShouldPersistTaps="handled">
         {/* The question takes whatever the answers leave, centred in it. */}
         <View className="min-h-40 flex-1 justify-center">{question}</View>
         {body}
@@ -167,10 +171,10 @@ export function AnswerInput({
         {result ? afterAnswer : action}
       </View>
     </View>
-  );
+  )
 }
 
-type OptionState = "idle" | "picked" | "right" | "wrong" | "chosen" | "dimmed";
+type OptionState = 'idle' | 'picked' | 'right' | 'wrong' | 'chosen' | 'dimmed'
 
 /**
  * The result carries no answer key, so only the learner's own picks can be
@@ -182,48 +186,51 @@ function optionState({
   result,
   pickCount,
 }: {
-  chosen: boolean;
-  result: QaAnswerResult | null;
-  pickCount: number;
+  chosen: boolean
+  result: QaAnswerResult | null
+  pickCount: number
 }): OptionState {
-  if (!result) return chosen ? "picked" : "idle";
-  if (!chosen) return "dimmed";
-  if (result.isCorrect) return "right";
-  return pickCount === 1 ? "wrong" : "chosen";
+  if (!result) return chosen ? 'picked' : 'idle'
+  if (!chosen) return 'dimmed'
+  if (result.isCorrect) return 'right'
+  return pickCount === 1 ? 'wrong' : 'chosen'
 }
 
-const CARD_STATES: Record<OptionState, { card: string; letter: string; letterText: string }> = {
+const CARD_STATES: Record<
+  OptionState,
+  {card: string; letter: string; letterText: string}
+> = {
   idle: {
-    card: "border-border bg-surface",
-    letter: "border-border",
-    letterText: "text-muted-foreground",
+    card: 'border-border bg-surface',
+    letter: 'border-border',
+    letterText: 'text-muted-foreground',
   },
   picked: {
-    card: "border-primary bg-primary/10",
-    letter: "border-primary bg-primary",
-    letterText: "text-primary-foreground",
+    card: 'border-primary bg-primary/10',
+    letter: 'border-primary bg-primary',
+    letterText: 'text-primary-foreground',
   },
   right: {
-    card: "border-success bg-success/10",
-    letter: "border-success bg-success",
-    letterText: "text-background",
+    card: 'border-success bg-success/10',
+    letter: 'border-success bg-success',
+    letterText: 'text-background',
   },
   wrong: {
-    card: "border-danger bg-danger/10",
-    letter: "border-danger bg-danger",
-    letterText: "text-background",
+    card: 'border-danger bg-danger/10',
+    letter: 'border-danger bg-danger',
+    letterText: 'text-background',
   },
   chosen: {
-    card: "border-foreground/40 bg-muted",
-    letter: "border-foreground/40",
-    letterText: "text-foreground",
+    card: 'border-foreground/40 bg-muted',
+    letter: 'border-foreground/40',
+    letterText: 'text-foreground',
   },
   dimmed: {
-    card: "border-border opacity-50",
-    letter: "border-border",
-    letterText: "text-muted-foreground",
+    card: 'border-border opacity-50',
+    letter: 'border-border',
+    letterText: 'text-muted-foreground',
   },
-};
+}
 
 function OptionCard({
   letter,
@@ -233,34 +240,34 @@ function OptionCard({
   disabled,
   onPress,
 }: {
-  letter: string;
-  text: string;
-  single: boolean;
-  state: OptionState;
-  disabled: boolean;
-  onPress: () => void;
+  letter: string
+  text: string
+  single: boolean
+  state: OptionState
+  disabled: boolean
+  onPress: () => void
 }) {
-  const look = CARD_STATES[state];
-  const checked = state !== "idle" && state !== "dimmed";
+  const look = CARD_STATES[state]
+  const checked = state !== 'idle' && state !== 'dimmed'
 
   return (
     <TouchableOpacity
-      accessibilityRole={single ? "radio" : "checkbox"}
-      accessibilityState={{ checked, disabled }}
+      accessibilityRole={single ? 'radio' : 'checkbox'}
+      accessibilityState={{checked, disabled}}
       disabled={disabled}
       onPress={onPress}
       activeOpacity={0.75}
-      className={`min-h-16 flex-row items-center gap-4 rounded-2xl border-2 px-4 py-3.5 ${look.card}`}
-    >
-      <View className={`h-9 w-9 items-center justify-center rounded-lg border-2 ${look.letter}`}>
+      className={`min-h-16 flex-row items-center gap-4 rounded-2xl border-2 px-4 py-3.5 ${look.card}`}>
+      <View
+        className={`h-9 w-9 items-center justify-center rounded-lg border-2 ${look.letter}`}>
         <Text className={`text-sm font-bold ${look.letterText}`}>{letter}</Text>
       </View>
       <Text className="flex-1 text-lg text-foreground">{text}</Text>
-      {state === "right" ? (
+      {state === 'right' ? (
         <Text className="text-xl font-bold text-success">✓</Text>
-      ) : state === "wrong" ? (
+      ) : state === 'wrong' ? (
         <Text className="text-xl font-bold text-danger">✕</Text>
       ) : null}
     </TouchableOpacity>
-  );
+  )
 }

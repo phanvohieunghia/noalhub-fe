@@ -1,7 +1,12 @@
-import { http } from "../client";
-import { mediaAssetSchema, presignedUploadSchema } from "./schemas";
-import { StorageUploadError } from "./types";
-import type { MediaAsset, PresignedUpload, UploadFile, UploadProgress } from "./types";
+import {http} from '../client'
+import {mediaAssetSchema, presignedUploadSchema} from './schemas'
+import {StorageUploadError} from './types'
+import type {
+  MediaAsset,
+  PresignedUpload,
+  UploadFile,
+  UploadProgress,
+} from './types'
 
 /**
  * The media feature's **client** path — used only by `apps/admin`. Contract:
@@ -22,15 +27,19 @@ import type { MediaAsset, PresignedUpload, UploadFile, UploadProgress } from "./
  * 400 `MEDIA_TOO_LARGE`.
  */
 export async function presignMedia(
-  input: { mime: string; sizeBytes: number; originalName?: string | null },
+  input: {mime: string; sizeBytes: number; originalName?: string | null},
   signal?: AbortSignal,
 ): Promise<PresignedUpload> {
-  const { data } = await http.post<PresignedUpload>("/admin/media/presign", input, {
-    authRequired: true,
-    schema: presignedUploadSchema,
-    signal,
-  });
-  return data;
+  const {data} = await http.post<PresignedUpload>(
+    '/admin/media/presign',
+    input,
+    {
+      authRequired: true,
+      schema: presignedUploadSchema,
+      signal,
+    },
+  )
+  return data
 }
 
 /**
@@ -46,12 +55,12 @@ export async function completeMedia(
   id: string,
   signal?: AbortSignal,
 ): Promise<MediaAsset> {
-  const { data } = await http.post<MediaAsset>(
+  const {data} = await http.post<MediaAsset>(
     `/admin/media/${encodeURIComponent(id)}/complete`,
     undefined,
-    { authRequired: true, schema: mediaAssetSchema, signal },
-  );
-  return data;
+    {authRequired: true, schema: mediaAssetSchema, signal},
+  )
+  return data
 }
 
 /**
@@ -73,32 +82,35 @@ export async function completeMedia(
  * cannot be set by hand.
  */
 export function putToStorage(params: {
-  uploadUrl: string;
-  file: UploadFile;
-  onProgress?: (progress: UploadProgress) => void;
-  signal?: AbortSignal;
+  uploadUrl: string
+  file: UploadFile
+  onProgress?: (progress: UploadProgress) => void
+  signal?: AbortSignal
 }): Promise<void> {
-  const { uploadUrl, file, onProgress, signal } = params;
+  const {uploadUrl, file, onProgress, signal} = params
 
   return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", uploadUrl, true);
-    xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+    const xhr = new XMLHttpRequest()
+    xhr.open('PUT', uploadUrl, true)
+    xhr.setRequestHeader(
+      'Content-Type',
+      file.type || 'application/octet-stream',
+    )
 
     xhr.upload.onprogress = (event) => {
-      if (!onProgress) return;
-      const total = event.lengthComputable ? event.total : 0;
+      if (!onProgress) return
+      const total = event.lengthComputable ? event.total : 0
       onProgress({
         loaded: event.loaded,
         total,
         ratio: total > 0 ? event.loaded / total : 0,
-      });
-    };
+      })
+    }
 
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
-        resolve();
-        return;
+        resolve()
+        return
       }
       /*
        * A 403 here is almost always one of three things, none of them the
@@ -111,29 +123,30 @@ export function putToStorage(params: {
         new StorageUploadError(
           xhr.status,
           xhr.status === 403
-            ? "common.errors.storageForbidden"
+            ? 'common.errors.storageForbidden'
             : `Storage answered ${xhr.status} while uploading the file.`,
         ),
-      );
-    };
+      )
+    }
 
     // A network failure: `status` is 0 and there is no body to read.
     xhr.onerror = () =>
-      reject(new StorageUploadError(0, "common.errors.uploadDisconnected"));
-    xhr.onabort = () => reject(new StorageUploadError(0, "common.errors.uploadAborted"));
+      reject(new StorageUploadError(0, 'common.errors.uploadDisconnected'))
+    xhr.onabort = () =>
+      reject(new StorageUploadError(0, 'common.errors.uploadAborted'))
 
     if (signal) {
       if (signal.aborted) {
-        xhr.abort();
-        return;
+        xhr.abort()
+        return
       }
-      signal.addEventListener("abort", () => xhr.abort(), { once: true });
+      signal.addEventListener('abort', () => xhr.abort(), {once: true})
     }
 
     // React Native's XMLHttpRequest accepts { uri, type, name } object
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    xhr.send(file as any);
-  });
+    xhr.send(file as any)
+  })
 }
 
 /**
@@ -147,12 +160,13 @@ export function putToStorage(params: {
  * should not be): the backend's cleanup job removes it after 24h.
  */
 export async function uploadMedia(params: {
-  file: UploadFile;
-  onProgress?: (progress: UploadProgress) => void;
-  signal?: AbortSignal;
+  file: UploadFile
+  onProgress?: (progress: UploadProgress) => void
+  signal?: AbortSignal
 }): Promise<MediaAsset> {
-  const { file, onProgress, signal } = params;
-  const sizeBytes = "size" in file && typeof file.size === "number" ? file.size : 0;
+  const {file, onProgress, signal} = params
+  const sizeBytes =
+    'size' in file && typeof file.size === 'number' ? file.size : 0
 
   const ticket = await presignMedia(
     {
@@ -162,9 +176,9 @@ export async function uploadMedia(params: {
       originalName: file.name || null,
     },
     signal,
-  );
+  )
 
-  await putToStorage({ uploadUrl: ticket.uploadUrl, file, onProgress, signal });
+  await putToStorage({uploadUrl: ticket.uploadUrl, file, onProgress, signal})
 
-  return completeMedia(ticket.id, signal);
+  return completeMedia(ticket.id, signal)
 }

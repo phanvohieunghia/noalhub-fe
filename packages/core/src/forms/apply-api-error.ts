@@ -1,7 +1,7 @@
-import type { FieldValues, Path, UseFormSetError } from "react-hook-form";
+import type {FieldValues, Path, UseFormSetError} from 'react-hook-form'
 
-import { ApiError, ERROR_CODES } from "@noalhub/api/errors";
-import type { Message } from "@noalhub/api/message";
+import {ApiError, ERROR_CODES} from '@noalhub/api/errors'
+import type {Message} from '@noalhub/api/message'
 
 /**
  * Maps a backend error onto a form.
@@ -30,29 +30,29 @@ export function applyApiError<T extends FieldValues>(
 ): Message | string | null {
   if (error instanceof ApiError) {
     if (error.code === ERROR_CODES.validationFailed && error.details?.length) {
-      const unmatched: string[] = [];
-      const seen = new Set<string>();
+      const unmatched: string[] = []
+      const seen = new Set<string>()
 
       for (const detail of error.details) {
-        const field = detail.split(" ")[0];
+        const field = detail.split(' ')[0]
         // Only attach when the field really exists in the form; otherwise
         // react-hook-form holds an error no input renders → the form is stuck
         // with nothing on screen.
         if (knownFields.includes(field) && !seen.has(field)) {
-          seen.add(field);
-          setError(field as Path<T>, { type: "server", message: detail });
+          seen.add(field)
+          setError(field as Path<T>, {type: 'server', message: detail})
         } else {
-          unmatched.push(detail);
+          unmatched.push(detail)
         }
       }
 
-      return unmatched.length ? unmatched.join(". ") : null;
+      return unmatched.length ? unmatched.join('. ') : null
     }
 
-    return fallback ? fallback(error) : error.message;
+    return fallback ? fallback(error) : error.message
   }
 
-  if (fallback) return fallback(error);
-  if (error instanceof Error) return error.message;
-  return { key: "common.errors.unknown" };
+  if (fallback) return fallback(error)
+  if (error instanceof Error) return error.message
+  return {key: 'common.errors.unknown'}
 }

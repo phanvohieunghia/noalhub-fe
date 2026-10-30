@@ -1,12 +1,12 @@
-import { IntlProvider } from "@noalhub/i18n/provider";
-import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import {IntlProvider} from '@noalhub/i18n/provider'
+import type {Metadata} from 'next'
+import {getTranslations} from 'next-intl/server'
 
-import { StorybookAccessContent } from "@/components/storybook/storybook-access-content";
+import {StorybookAccessContent} from '@/components/storybook/storybook-access-content'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("admin.storybook");
-  return { title: t("title") };
+  const t = await getTranslations('admin.storybook')
+  return {title: t('title')}
 }
 
 /**
@@ -19,5 +19,5 @@ export default function StorybookAccessPage() {
     <IntlProvider namespace="admin.storybook">
       <StorybookAccessContent />
     </IntlProvider>
-  );
+  )
 }

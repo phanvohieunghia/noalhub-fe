@@ -1,7 +1,7 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /** The palette plus the class-based `dark` variant — see the note in `apps/web/app/globals.css`. */
-@import "../../../packages/config/theme.css";
+@import '../../../packages/config/theme.css';
 
 /**
  * Same as web: Tailwind does not scan `packages/ui` on its own, because it lies
@@ -23,6 +23,8 @@ body {
 
 @media (prefers-reduced-motion: no-preference) {
   body {
-    transition: background-color 150ms ease, color 150ms ease;
+    transition:
+      background-color 150ms ease,
+      color 150ms ease;
   }
 }

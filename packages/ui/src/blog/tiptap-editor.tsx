@@ -1,10 +1,10 @@
-"use client";
+'use client'
 
-import Code from "@tiptap/extension-code";
-import Heading from "@tiptap/extension-heading";
-import Image from "@tiptap/extension-image";
-import Paragraph from "@tiptap/extension-paragraph";
-import TextAlign from "@tiptap/extension-text-align";
+import Code from '@tiptap/extension-code'
+import Heading from '@tiptap/extension-heading'
+import Image from '@tiptap/extension-image'
+import Paragraph from '@tiptap/extension-paragraph'
+import TextAlign from '@tiptap/extension-text-align'
 import {
   EditorContent,
   Node as TiptapNode,
@@ -12,20 +12,15 @@ import {
   useEditorState,
   type Editor,
   type Extensions,
-} from "@tiptap/react";
-import {
-  Table,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "@tiptap/extension-table";
-import { NodeSelection, Plugin } from "@tiptap/pm/state";
-import { Decoration, DecorationSet } from "@tiptap/pm/view";
-import StarterKit from "@tiptap/starter-kit";
+} from '@tiptap/react'
+import {Table, TableCell, TableHeader, TableRow} from '@tiptap/extension-table'
+import {NodeSelection, Plugin} from '@tiptap/pm/state'
+import {Decoration, DecorationSet} from '@tiptap/pm/view'
+import StarterKit from '@tiptap/starter-kit'
 // Also declares `contentType` on the editor options (module augmentation). The JSON editor
 // loads it too, only so a pasted Markdown source can be turned into nodes (`pasteMarkdown`).
-import { Markdown } from "@tiptap/markdown";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {Markdown} from '@tiptap/markdown'
+import {useCallback, useEffect, useRef, useState} from 'react'
 
 import {
   BLOG_CODE_LANGUAGES,
@@ -35,44 +30,42 @@ import {
   parseImageTitle,
   sanitizeBlogDoc,
   type BlogDoc,
-} from "@noalhub/api/blog";
+} from '@noalhub/api/blog'
 import {
   MEDIA_IMAGE_MIMES,
   useUploadMedia,
   type MediaAsset,
-} from "@noalhub/api/media";
-import { messageOf, type Message } from "@noalhub/api/message";
-import { useMessage } from "@noalhub/i18n/use-message";
-import { useTranslations } from "next-intl";
-import { Button } from "../button";
-import { Dialog } from "../dialog";
+} from '@noalhub/api/media'
+import {messageOf, type Message} from '@noalhub/api/message'
+import {useMessage} from '@noalhub/i18n/use-message'
+import {useTranslations} from 'next-intl'
+import {Button} from '../button'
+import {Dialog} from '../dialog'
 import {
   DropdownMenu,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from "../dropdown-menu";
-import { Alert, AlertError } from "../alert";
-import { Icon, ICONS, LUCIDE, type IconName } from "../icons";
-import { Input } from "../input";
-import { Select } from "../select";
-import { Textarea } from "../textarea";
-import { Tooltip } from "../tooltip";
+} from '../dropdown-menu'
+import {Alert, AlertError} from '../alert'
+import {Icon, ICONS, LUCIDE, type IconName} from '../icons'
+import {Input} from '../input'
+import {Select} from '../select'
+import {Textarea} from '../textarea'
+import {Tooltip} from '../tooltip'
 
-import { ImageUploadButton } from "../media/image-upload-button";
-import { Typography } from "../typography";
+import {ImageUploadButton} from '../media/image-upload-button'
+import {Typography} from '../typography'
 
 // The editor writes into a `.post-prose` element, so it needs the very same
 // stylesheet the renderer uses — otherwise what is typed and what is published
 // look different.
-import { formatAlignMarker, takeAlignMarker } from "./align-markdown";
-import {
-  ChangeHighlight,
-  acceptChanges,
-} from "./change-highlight";
-import { INLINE_MAX_HEIGHT, prepareInlineImages } from "./inline-image-markdown";
-import { MermaidPreview } from "./mermaid-preview";
-import { MermaidViewer } from "./mermaid-viewer";
-import "./post-prose.css";
+import {formatAlignMarker, takeAlignMarker} from './align-markdown'
+import {ChangeHighlight, acceptChanges} from './change-highlight'
+import {INLINE_MAX_HEIGHT, prepareInlineImages} from './inline-image-markdown'
+import {EditorMinimap} from './editor-minimap'
+import {MermaidPreview} from './mermaid-preview'
+import {MermaidViewer} from './mermaid-viewer'
+import './post-prose.css'
 
 /**
  * The `image` node carries `width`/`height` **from day one**.
@@ -84,21 +77,21 @@ import "./post-prose.css";
  * therefore squarely inside this plan's SEO goal (`docs/blog.md` §3.1b).
  */
 type ImageAttrs = {
-  width?: number | null;
-  height?: number | null;
-  widthPercent?: number | null;
-  align?: string | null;
-};
+  width?: number | null
+  height?: number | null
+  widthPercent?: number | null
+  align?: string | null
+}
 
 /** The pixel size as a style — only while no share-of-column size overrides it. */
 function pixelStyle(attributes: ImageAttrs) {
   return !attributes.widthPercent && attributes.width && attributes.height
-    ? { style: `width:${attributes.width}px;height:${attributes.height}px` }
-    : {};
+    ? {style: `width:${attributes.width}px;height:${attributes.height}px`}
+    : {}
 }
 
 /** Appended to an image title to say "this one stays in the line"; never reaches the saved markdown. */
-const INLINE_MARK = /(?:^|\s)~inline$/;
+const INLINE_MARK = /(?:^|\s)~inline$/
 
 /**
  * A small picture inside a sentence, as tall as the text. A separate node from the block
@@ -106,34 +99,41 @@ const INLINE_MARK = /(?:^|\s)~inline$/;
  * pixel size is kept (for the ratio); alignment and share-of-column mean nothing in a line.
  */
 const InlineImage = TiptapNode.create({
-  name: "inlineImage",
+  name: 'inlineImage',
   inline: true,
-  group: "inline",
+  group: 'inline',
   atom: true,
   draggable: true,
   addAttributes() {
     return {
-      src: { default: null },
-      alt: { default: "" },
-      width: { default: null },
-      height: { default: null },
-    };
+      src: {default: null},
+      alt: {default: ''},
+      width: {default: null},
+      height: {default: null},
+    }
   },
   parseHTML() {
-    return [{ tag: "img[data-inline-image]" }];
+    return [{tag: 'img[data-inline-image]'}]
   },
-  renderHTML({ node }) {
-    const { src, alt, width, height } = node.attrs;
+  renderHTML({node}) {
+    const {src, alt, width, height} = node.attrs
     return [
-      "img",
-      { src, alt, width, height, "data-inline-image": "", class: "post-prose-inline-image" },
-    ];
+      'img',
+      {
+        src,
+        alt,
+        width,
+        height,
+        'data-inline-image': '',
+        class: 'post-prose-inline-image',
+      },
+    ]
   },
   renderMarkdown: (node) => {
-    const { src = "", alt = "", width, height } = node.attrs ?? {};
-    return `![${alt}](${src} "${formatImageTitle(null, width, height, null, null)}")`;
+    const {src = '', alt = '', width, height} = node.attrs ?? {}
+    return `![${alt}](${src} "${formatImageTitle(null, width, height, null, null)}")`
   },
-});
+})
 
 const BlogImage = Image.extend({
   addAttributes() {
@@ -148,33 +148,31 @@ const BlogImage = Image.extend({
       width: {
         default: null,
         renderHTML: (attributes: ImageAttrs) => ({
-          ...(attributes.width ? { width: attributes.width } : {}),
+          ...(attributes.width ? {width: attributes.width} : {}),
           ...pixelStyle(attributes),
         }),
       },
       height: {
         default: null,
         renderHTML: (attributes: ImageAttrs) =>
-          attributes.height ? { height: attributes.height } : {},
+          attributes.height ? {height: attributes.height} : {},
       },
       widthPercent: {
         default: null,
         parseHTML: () => null,
         renderHTML: (attributes: ImageAttrs) =>
-          attributes.widthPercent
-            ? { style: "width:100%;height:auto" }
-            : {},
+          attributes.widthPercent ? {style: 'width:100%;height:auto'} : {},
       },
       // Shown through a data attribute (not `style`): the resize view writes
       // `style.width/height` on the same element and a `style` here would wipe it.
       align: {
         default: null,
         parseHTML: (element: HTMLElement) =>
-          element.getAttribute("data-image-align"),
+          element.getAttribute('data-image-align'),
         renderHTML: (attributes: ImageAttrs) =>
-          attributes.align ? { "data-image-align": attributes.align } : {},
+          attributes.align ? {'data-image-align': attributes.align} : {},
       },
-    };
+    }
   },
   /*
    * The resize view applies the pixel size once, on creation, and would paint
@@ -183,15 +181,15 @@ const BlogImage = Image.extend({
    * — that way the selection frame hugs the picture instead of the whole row.
    */
   addNodeView() {
-    const make = this.parent?.();
-    if (!make) return null;
+    const make = this.parent?.()
+    if (!make) return null
     return (props) => {
-      const view = make(props);
-      const percent = props.node.attrs.widthPercent;
-      const img = view.dom.querySelector("img");
-      if (percent && img) img.style.cssText = "width:100%;height:auto";
-      return view;
-    };
+      const view = make(props)
+      const percent = props.node.attrs.widthPercent
+      const img = view.dom.querySelector('img')
+      if (percent && img) img.style.cssText = 'width:100%;height:auto'
+      return view
+    }
   },
   /*
    * Dragging a corner commits pixels; a stale share would then win over them
@@ -203,19 +201,19 @@ const BlogImage = Image.extend({
       // container; `post-prose.css` turns it into the wrapper's width.
       new Plugin({
         props: {
-          decorations: ({ doc }) => {
-            const found: Decoration[] = [];
+          decorations: ({doc}) => {
+            const found: Decoration[] = []
             doc.descendants((node, pos) => {
-              if (node.type.name === "image" && node.attrs.widthPercent) {
+              if (node.type.name === 'image' && node.attrs.widthPercent) {
                 found.push(
                   Decoration.node(pos, pos + node.nodeSize, {
-                    class: "image-sized",
+                    class: 'image-sized',
                     style: `--image-width:${node.attrs.widthPercent}%`,
                   }),
-                );
+                )
               }
-            });
-            return found.length ? DecorationSet.create(doc, found) : null;
+            })
+            return found.length ? DecorationSet.create(doc, found) : null
           },
         },
       }),
@@ -228,48 +226,53 @@ const BlogImage = Image.extend({
       new Plugin({
         props: {
           decorations: (state) => {
-            const { selection, doc } = state;
-            if (selection.empty || selection instanceof NodeSelection) return null;
-            const found: Decoration[] = [];
+            const {selection, doc} = state
+            if (selection.empty || selection instanceof NodeSelection)
+              return null
+            const found: Decoration[] = []
             doc.nodesBetween(selection.from, selection.to, (node, pos) => {
-              if (node.type.name === "image") {
+              if (node.type.name === 'image') {
                 found.push(
                   Decoration.node(pos, pos + node.nodeSize, {
-                    class: "image-in-selection",
+                    class: 'image-in-selection',
                   }),
-                );
+                )
               }
-            });
-            return found.length ? DecorationSet.create(doc, found) : null;
+            })
+            return found.length ? DecorationSet.create(doc, found) : null
           },
         },
       }),
       new Plugin({
         appendTransaction: (transactions, oldState, newState) => {
-          if (!transactions.some((tr) => tr.docChanged)) return null;
+          if (!transactions.some((tr) => tr.docChanged)) return null
           // Attribute-only edits keep the document size; anything else (typing,
           // pasting) shifts positions and is not a resize.
-          if (oldState.doc.content.size !== newState.doc.content.size) return null;
-          let tr = newState.tr;
-          let changed = false;
+          if (oldState.doc.content.size !== newState.doc.content.size)
+            return null
+          let tr = newState.tr
+          let changed = false
           newState.doc.descendants((node, pos) => {
-            if (node.type.name !== "image" || !node.attrs.widthPercent) return;
-            const before = oldState.doc.nodeAt(pos);
+            if (node.type.name !== 'image' || !node.attrs.widthPercent) return
+            const before = oldState.doc.nodeAt(pos)
             if (
-              before?.type.name === "image" &&
+              before?.type.name === 'image' &&
               before.attrs.src === node.attrs.src &&
               before.attrs.widthPercent === node.attrs.widthPercent &&
               (before.attrs.width !== node.attrs.width ||
                 before.attrs.height !== node.attrs.height)
             ) {
-              tr = tr.setNodeMarkup(pos, undefined, { ...node.attrs, widthPercent: null });
-              changed = true;
+              tr = tr.setNodeMarkup(pos, undefined, {
+                ...node.attrs,
+                widthPercent: null,
+              })
+              changed = true
             }
-          });
-          return changed ? tr : null;
+          })
+          return changed ? tr : null
         },
       }),
-    ];
+    ]
   },
   /*
    * The size rides in the image's title (`"=300x200"`) — see
@@ -278,15 +281,20 @@ const BlogImage = Image.extend({
    */
   parseMarkdown: (token, helpers) => {
     // `markInlineImages` (markdown-editor.tsx) tags a small picture that shares its line with text.
-    const raw: string = token.title ?? "";
-    const inline = INLINE_MARK.test(raw);
-    const { title, width, height, align, widthPercent } = parseImageTitle(
-      inline ? raw.replace(INLINE_MARK, "") : raw,
-    );
+    const raw: string = token.title ?? ''
+    const inline = INLINE_MARK.test(raw)
+    const {title, width, height, align, widthPercent} = parseImageTitle(
+      inline ? raw.replace(INLINE_MARK, '') : raw,
+    )
     if (inline && width && height) {
-      return helpers.createNode("inlineImage", { src: token.href, alt: token.text, width, height });
+      return helpers.createNode('inlineImage', {
+        src: token.href,
+        alt: token.text,
+        width,
+        height,
+      })
     }
-    return helpers.createNode("image", {
+    return helpers.createNode('image', {
       src: token.href,
       alt: token.text,
       title,
@@ -294,15 +302,22 @@ const BlogImage = Image.extend({
       height,
       align,
       widthPercent,
-    });
+    })
   },
   renderMarkdown: (node) => {
-    const { src = "", alt = "", title, width, height, align, widthPercent } =
-      node.attrs ?? {};
-    const text = formatImageTitle(title, width, height, align, widthPercent);
-    return text ? `![${alt}](${src} "${text}")` : `![${alt}](${src})`;
+    const {
+      src = '',
+      alt = '',
+      title,
+      width,
+      height,
+      align,
+      widthPercent,
+    } = node.attrs ?? {}
+    const text = formatImageTitle(title, width, height, align, widthPercent)
+    return text ? `![${alt}](${src} "${text}")` : `![${alt}](${src})`
   },
-});
+})
 
 /*
  * Paragraph and heading with alignment in their markdown. The attribute itself
@@ -311,33 +326,37 @@ const BlogImage = Image.extend({
  * its alignment on the next keystroke.
  */
 const alignedParse =
-  (parse: NonNullable<typeof Paragraph.config.parseMarkdown>): NonNullable<typeof Paragraph.config.parseMarkdown> =>
+  (
+    parse: NonNullable<typeof Paragraph.config.parseMarkdown>,
+  ): NonNullable<typeof Paragraph.config.parseMarkdown> =>
   (token, helpers) => {
-    const { align, tokens } = takeAlignMarker(token.tokens ?? []);
-    const result = parse({ ...token, tokens }, helpers);
-    if (!align || Array.isArray(result) || !("type" in result)) return result;
-    return { ...result, attrs: { ...result.attrs, textAlign: align } };
-  };
+    const {align, tokens} = takeAlignMarker(token.tokens ?? [])
+    const result = parse({...token, tokens}, helpers)
+    if (!align || Array.isArray(result) || !('type' in result)) return result
+    return {...result, attrs: {...result.attrs, textAlign: align}}
+  }
 
 const alignedRender =
-  (render: NonNullable<typeof Paragraph.config.renderMarkdown>): NonNullable<typeof Paragraph.config.renderMarkdown> =>
+  (
+    render: NonNullable<typeof Paragraph.config.renderMarkdown>,
+  ): NonNullable<typeof Paragraph.config.renderMarkdown> =>
   (node, helpers, ctx) => {
-    const text = render(node, helpers, ctx);
+    const text = render(node, helpers, ctx)
     // An empty block has nothing to align (and `&nbsp;` is its placeholder).
-    return text && text !== "&nbsp;"
+    return text && text !== '&nbsp;'
       ? `${text}${formatAlignMarker(node.attrs?.textAlign)}`
-      : text;
-  };
+      : text
+  }
 
 const AlignedParagraph = Paragraph.extend({
   parseMarkdown: alignedParse(Paragraph.config.parseMarkdown!),
   renderMarkdown: alignedRender(Paragraph.config.renderMarkdown!),
-});
+})
 
 const AlignedHeading = Heading.extend({
   parseMarkdown: alignedParse(Heading.config.parseMarkdown!),
   renderMarkdown: alignedRender(Heading.config.renderMarkdown!),
-});
+})
 
 /**
  * The schema half of the editor: exactly the §3.1 allowlist. Shared by every
@@ -357,7 +376,7 @@ export const BLOG_EXTENSIONS: Extensions = [
     code: false,
     link: {
       openOnClick: false,
-      protocols: ["http", "https", "mailto"],
+      protocols: ['http', 'https', 'mailto'],
       // The first gate for `href`. `sanitizeBlogDoc` is the second and the
       // mandatory one — this exists so the author finds out on the spot.
       isAllowedUri: (url) => isSafeLinkHref(url),
@@ -368,16 +387,16 @@ export const BLOG_EXTENSIONS: Extensions = [
   // collection of marks" and a pasted document landed as raw characters. The allowlist
   // (`sanitizeBlogDoc`, the backend, the renderers) has no such rule, so the editor
   // should not either.
-  Code.extend({ excludes: "" }),
+  Code.extend({excludes: ''}),
   AlignedParagraph,
   // h1 is the Q&A outline document title; h2/h3/h4 are its levels (§6.2). h4 is
   // what the Q&A outline's third level needs — without it the backend demotes a
   // sub-point to h2 and it reads as a chapter that was never written.
-  AlignedHeading.configure({ levels: [1, 2, 3, 4] }),
+  AlignedHeading.configure({levels: [1, 2, 3, 4]}),
   // Left is the default and is never stored (`BlogTextAlign`).
   TextAlign.configure({
-    types: ["heading", "paragraph"],
-    alignments: ["left", "center", "right", "justify"],
+    types: ['heading', 'paragraph'],
+    alignments: ['left', 'center', 'right', 'justify'],
   }),
   /*
    * Drag a corner to resize. It writes the `width`/`height` attrs the schema
@@ -390,7 +409,7 @@ export const BLOG_EXTENSIONS: Extensions = [
     allowBase64: false,
     resize: {
       enabled: true,
-      directions: ["top-left", "top-right", "bottom-left", "bottom-right"],
+      directions: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
       minWidth: 80,
       minHeight: 40,
       alwaysPreserveAspectRatio: true,
@@ -402,11 +421,11 @@ export const BLOG_EXTENSIONS: Extensions = [
    * backend sanitizer does not keep, so the author drags a column, saves,
    * and the width is gone.
    */
-  Table.configure({ resizable: false }),
+  Table.configure({resizable: false}),
   TableRow,
   TableHeader,
   TableCell,
-];
+]
 
 /**
  * The Tiptap editor, configured to **exactly the §3.1 allowlist** — not one node
@@ -422,9 +441,11 @@ export const BLOG_EXTENSIONS: Extensions = [
  * highlighting.
  */
 /** The full-screen toggle an editor can show in its toolbar; the parent owns the state. */
-export type EditorFullscreen = { active: boolean; onToggle: () => void };
+export type EditorFullscreen = {active: boolean; onToggle: () => void}
 
-const JSON_EDITOR_EXTENSIONS = [Markdown];
+const JSON_EDITOR_EXTENSIONS = [Markdown]
+
+const MINIMAP_KEY = 'noalhub.editor.minimap'
 
 export function TiptapEditor({
   value,
@@ -433,19 +454,19 @@ export function TiptapEditor({
   fullscreen,
   savedKey,
 }: {
-  value: BlogDoc;
-  onChange: (doc: BlogDoc) => void;
+  value: BlogDoc
+  onChange: (doc: BlogDoc) => void
   /** Bump after a successful save: the change highlights clear and the saved text becomes the baseline. */
-  savedKey?: number;
+  savedKey?: number
   /** Draws the full-screen toggle as the toolbar's first button. */
-  fullscreen?: EditorFullscreen;
+  fullscreen?: EditorFullscreen
   /**
    * Extra classes on the editable surface itself (the `.ProseMirror` node) —
    * e.g. a `max-h-*` + `overflow-y-auto` pair so a long document scrolls
    * inside its border instead of stretching the page. Applied there rather
    * than on a wrapper so the border and focus ring stay with the scrollbox.
    */
-  contentClassName?: string;
+  contentClassName?: string
 }) {
   return (
     <RichTextEditor
@@ -459,7 +480,7 @@ export function TiptapEditor({
       fullscreen={fullscreen}
       savedKey={savedKey}
     />
-  );
+  )
 }
 
 /**
@@ -479,46 +500,65 @@ export function RichTextEditor({
   onReady,
   savedKey,
 }: {
-  content: BlogDoc | string;
+  content: BlogDoc | string
   /** How Tiptap parses `content`. `"markdown"` needs the `Markdown` extension. */
-  contentType?: "json" | "markdown";
+  contentType?: 'json' | 'markdown'
   /** Appended to the allowlisted set — never a node the renderers drop. */
-  extensions?: Extensions;
-  onUpdate: (editor: Editor) => void;
-  contentClassName?: string;
+  extensions?: Extensions
+  onUpdate: (editor: Editor) => void
+  contentClassName?: string
   /** Draws the full-screen toggle as the toolbar's first button. */
-  fullscreen?: EditorFullscreen;
+  fullscreen?: EditorFullscreen
   /** Controls for the caller's own insertions, pinned to the toolbar's right edge. */
-  toolbarExtra?: React.ReactNode;
+  toolbarExtra?: React.ReactNode
   /** Hands the live instance to the parent (and `null` on unmount), e.g. to insert text at the caret. */
-  onReady?: (editor: Editor | null) => void;
+  onReady?: (editor: Editor | null) => void
   /** Bump after a successful save: the change highlights clear and the saved text becomes the baseline. */
-  savedKey?: number;
+  savedKey?: number
 }) {
-  const t = useTranslations("common.editor");
-  const [linkOpen, setLinkOpen] = useState(false);
+  const t = useTranslations('common.editor')
+  const [linkOpen, setLinkOpen] = useState(false)
   // Position of the mermaid block whose source is being edited, if the dialog is open.
-  const [mermaidAt, setMermaidAt] = useState<number | null>(null);
+  const [mermaidAt, setMermaidAt] = useState<number | null>(null)
   // Same, for the full-size viewer.
-  const [mermaidView, setMermaidView] = useState<number | null>(null);
-  const [imageMode, setImageMode] = useState<"upload" | "url" | null>(null);
-  const m = useMessage();
-  const [dropError, setDropError] = useState<Message | string | null>(null);
+  const [mermaidView, setMermaidView] = useState<number | null>(null)
+  const [imageMode, setImageMode] = useState<'upload' | 'url' | null>(null)
+  // Remembered across editors and sessions; read after mount so the server and
+  // first client render agree.
+  const [minimap, setMinimap] = useState(false)
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(MINIMAP_KEY) === 'on') setMinimap(true)
+    } catch {}
+  }, [])
+  const toggleMinimap = () => {
+    setMinimap((on) => {
+      try {
+        localStorage.setItem(MINIMAP_KEY, on ? 'off' : 'on')
+      } catch {}
+      return !on
+    })
+  }
+  const m = useMessage()
+  const [dropError, setDropError] = useState<Message | string | null>(null)
   /*
    * `editorProps` is captured when the editor is CREATED, so the handlers inside
    * cannot close over the `editor` variable (it does not exist yet at that
    * point). A ref is their only way to talk to the finished instance.
    */
-  const editorRef = useRef<Editor | null>(null);
-  const dropUpload = useUploadMedia({ allow: MEDIA_IMAGE_MIMES });
-  const [localImages, setLocalImages] = useState<LocalImage[]>([]);
+  const editorRef = useRef<Editor | null>(null)
+  const dropUpload = useUploadMedia({allow: MEDIA_IMAGE_MIMES})
+  const [localImages, setLocalImages] = useState<LocalImage[]>([])
   const [folderBatch, setFolderBatch] = useState<{
-    done: number;
-    total: number;
-  } | null>(null);
+    done: number
+    total: number
+  } | null>(null)
   // What the last folder pick failed to match: the author may have chosen the wrong folder.
-  const [folderMiss, setFolderMiss] = useState<{ missing: number; total: number } | null>(null);
-  const folderInputRef = useRef<HTMLInputElement>(null);
+  const [folderMiss, setFolderMiss] = useState<{
+    missing: number
+    total: number
+  } | null>(null)
+  const folderInputRef = useRef<HTMLInputElement>(null)
 
   /**
    * Resolves the pasted `![](/Users/…/x.jpeg)` references. A page cannot read a
@@ -528,56 +568,74 @@ export function RichTextEditor({
    */
   const uploadFromFolder = useCallback(
     async (files: File[]) => {
-      const editorInstance = editorRef.current;
-      if (!editorInstance || localImages.length === 0) return;
-      setDropError(null);
-      setFolderMiss(null);
+      const editorInstance = editorRef.current
+      if (!editorInstance || localImages.length === 0) return
+      setDropError(null)
+      setFolderMiss(null)
 
-      const byName = new Map(files.map((file) => [file.name, file]));
-      const todo = localImages.filter((image) => byName.has(image.name));
-      const missing = localImages.filter((image) => !byName.has(image.name));
-      setFolderBatch({ done: 0, total: todo.length });
+      const byName = new Map(files.map((file) => [file.name, file]))
+      const todo = localImages.filter((image) => byName.has(image.name))
+      const missing = localImages.filter((image) => !byName.has(image.name))
+      setFolderBatch({done: 0, total: todo.length})
 
-      let done = 0;
-      let failed: LocalImage[] = [];
-      const queue = [...todo];
+      let done = 0
+      let failed: LocalImage[] = []
+      const queue = [...todo]
       const worker = async () => {
         for (let image = queue.shift(); image; image = queue.shift()) {
           try {
-            const file = byName.get(image.name)!;
-            const asset = await dropUpload.mutateAsync(file);
-            const size = await measureImage(asset.url);
-            const alt = image.alt || suggestAltFrom(image.name);
+            const file = byName.get(image.name)!
+            const asset = await dropUpload.mutateAsync(file)
+            const size = await measureImage(asset.url)
+            const alt = image.alt || suggestAltFrom(image.name)
             // Among words and small → stays in the line; anything else is a block, which
             // splits the paragraph around the token.
-            const stays = image.inline && size && size.height <= INLINE_MAX_HEIGHT;
+            const stays =
+              image.inline && size && size.height <= INLINE_MAX_HEIGHT
             replaceToken(
               editorInstance,
               image.token,
               stays
-                ? { type: "inlineImage", attrs: { src: asset.url, alt, width: size.width, height: size.height } }
+                ? {
+                    type: 'inlineImage',
+                    attrs: {
+                      src: asset.url,
+                      alt,
+                      width: size.width,
+                      height: size.height,
+                    },
+                  }
                 : {
-                    type: "image",
-                    attrs: { src: asset.url, alt, width: size?.width ?? null, height: size?.height ?? null },
+                    type: 'image',
+                    attrs: {
+                      src: asset.url,
+                      alt,
+                      width: size?.width ?? null,
+                      height: size?.height ?? null,
+                    },
                   },
-            );
+            )
           } catch (error) {
-            failed = [...failed, image];
-            setDropError(messageOf(error));
+            failed = [...failed, image]
+            setDropError(messageOf(error))
           }
-          done += 1;
-          setFolderBatch({ done, total: todo.length });
+          done += 1
+          setFolderBatch({done, total: todo.length})
         }
-      };
+      }
       // A few in flight at once: a pasted chapter can hold hundreds of images.
-      await Promise.all(Array.from({ length: 4 }, worker));
+      await Promise.all(Array.from({length: 4}, worker))
 
-      setFolderBatch(null);
-      setFolderMiss(missing.length > 0 ? { missing: missing.length, total: localImages.length } : null);
-      setLocalImages([...missing, ...failed]);
+      setFolderBatch(null)
+      setFolderMiss(
+        missing.length > 0
+          ? {missing: missing.length, total: localImages.length}
+          : null,
+      )
+      setLocalImages([...missing, ...failed])
     },
     [dropUpload, localImages],
-  );
+  )
 
   /**
    * Gives up on uploading the pasted images. `keepText` leaves the original
@@ -586,7 +644,7 @@ export function RichTextEditor({
    */
   const dismissLocalImages = useCallback(
     (keepText: boolean) => {
-      const editorInstance = editorRef.current;
+      const editorInstance = editorRef.current
       if (editorInstance) {
         for (const image of localImages)
           replaceToken(
@@ -594,16 +652,19 @@ export function RichTextEditor({
             image.token,
             keepText
               ? image.inline
-                ? { type: "text", text: image.raw }
-                : { type: "paragraph", content: [{ type: "text", text: image.raw }] }
+                ? {type: 'text', text: image.raw}
+                : {
+                    type: 'paragraph',
+                    content: [{type: 'text', text: image.raw}],
+                  }
               : null,
-          );
+          )
       }
-      setLocalImages([]);
-      setFolderMiss(null);
+      setLocalImages([])
+      setFolderMiss(null)
     },
     [localImages],
-  );
+  )
 
   /**
    * Drag-and-drop and paste for images — the path authors actually use; the
@@ -618,18 +679,18 @@ export function RichTextEditor({
    */
   const uploadAndInsert = useCallback(
     (file: File) => {
-      const editorInstance = editorRef.current;
-      if (!editorInstance) return;
-      setDropError(null);
+      const editorInstance = editorRef.current
+      if (!editorInstance) return
+      setDropError(null)
       dropUpload.mutate(file, {
         onSuccess: (asset) => {
-          void insertImageAsset(editorInstance, asset, file.name);
+          void insertImageAsset(editorInstance, asset, file.name)
         },
         onError: (error) => setDropError(messageOf(error)),
-      });
+      })
     },
     [dropUpload],
-  );
+  )
 
   const editor = useEditor({
     // Required with Next's SSR: rendering on the first pass mismatches hydration.
@@ -640,25 +701,25 @@ export function RichTextEditor({
       MermaidPreview.configure({
         onEdit: (pos) => setMermaidAt(pos),
         onPreview: (pos) => setMermaidView(pos),
-        labels: { edit: t("mermaidEdit"), preview: t("mermaidView") },
+        labels: {edit: t('mermaidEdit'), preview: t('mermaidView')},
       }),
       ...extensions,
     ],
     // Stored markdown can hold `- [ ]` too (see `flattenTaskLists`); an invalid item
     // here would throw on mount and blank the editor.
     content:
-      contentType === "markdown" && typeof content === "string"
+      contentType === 'markdown' && typeof content === 'string'
         ? prepareInlineImages(flattenTaskLists(content))
         : content,
     contentType,
     editorProps: {
       attributes: {
         class: [
-          "post-prose post-prose-compact min-h-80 rounded-md border border-border bg-surface px-4 py-3 outline-none focus:border-foreground/60",
+          'post-prose post-prose-compact min-h-80 rounded-md border border-border bg-surface px-4 py-3 outline-none focus:border-foreground/60',
           contentClassName,
         ]
           .filter(Boolean)
-          .join(" "),
+          .join(' '),
       },
       /*
        * Returning `true` means "handled, ProseMirror should do nothing more".
@@ -672,28 +733,28 @@ export function RichTextEditor({
        * continue down the default path.
        */
       handlePaste: (_view, event) => {
-        const file = firstImageFile(event.clipboardData?.files);
+        const file = firstImageFile(event.clipboardData?.files)
         if (file) {
-          uploadAndInsert(file);
-          return true;
+          uploadAndInsert(file)
+          return true
         }
         // A paste is diffed against what was there just before it — also when the
         // content was loaded after the editor mounted (so the opening baseline is empty).
-        if (editorRef.current) acceptChanges(editorRef.current);
+        if (editorRef.current) acceptChanges(editorRef.current)
         return pasteMarkdown(editorRef.current, event, contentType, (items) =>
           setLocalImages((prev) => [...prev, ...items]),
-        );
+        )
       },
       handleDrop: (_view, event) => {
-        const file = firstImageFile((event as DragEvent).dataTransfer?.files);
-        if (!file) return false;
-        event.preventDefault();
-        uploadAndInsert(file);
-        return true;
+        const file = firstImageFile((event as DragEvent).dataTransfer?.files)
+        if (!file) return false
+        event.preventDefault()
+        uploadAndInsert(file)
+        return true
       },
     },
-    onUpdate: ({ editor: instance }) => onUpdate(instance),
-  });
+    onUpdate: ({editor: instance}) => onUpdate(instance),
+  })
 
   /*
    * Assigned in an effect rather than directly in the render body: writing to a
@@ -702,24 +763,24 @@ export function RichTextEditor({
    * after mount, so the effect's one-beat delay is unobservable.
    */
   useEffect(() => {
-    editorRef.current = editor;
-    onReady?.(editor);
-    return () => onReady?.(null);
-  }, [editor, onReady]);
+    editorRef.current = editor
+    onReady?.(editor)
+    return () => onReady?.(null)
+  }, [editor, onReady])
 
   // A save makes what is on screen the new baseline, so the highlights of what was
   // just saved go away. The first run is the mount, not a save.
-  const seenSavedKey = useRef(savedKey);
+  const seenSavedKey = useRef(savedKey)
   useEffect(() => {
-    if (!editor || savedKey === seenSavedKey.current) return;
-    seenSavedKey.current = savedKey;
-    acceptChanges(editor);
-  }, [editor, savedKey]);
+    if (!editor || savedKey === seenSavedKey.current) return
+    seenSavedKey.current = savedKey
+    acceptChanges(editor)
+  }, [editor, savedKey])
 
   if (!editor) {
     return (
       <div className="h-96 animate-pulse rounded-md bg-black/5 dark:bg-white/5" />
-    );
+    )
   }
 
   return (
@@ -731,14 +792,26 @@ export function RichTextEditor({
         editor={editor}
         fullscreen={fullscreen}
         extra={toolbarExtra}
+        minimap={{on: minimap, onToggle: toggleMinimap}}
         onLink={() => setLinkOpen(true)}
         onImage={setImageMode}
       />
-      <EditorContent editor={editor} className="min-h-0 flex-1" />
+      <div className="flex min-h-0 flex-1 gap-2">
+        {/* The minimap is the scrollbar while it is on. */}
+        <EditorContent
+          editor={editor}
+          className={`min-h-0 min-w-0 flex-1 ${
+            minimap
+              ? '[&_.ProseMirror]:[scrollbar-width:none] [&_.ProseMirror::-webkit-scrollbar]:hidden'
+              : ''
+          }`}
+        />
+        {minimap ? <EditorMinimap editor={editor} /> : null}
+      </div>
 
       {dropUpload.isPending ? (
         <Typography variant="body-4" role="status" className="opacity-70">
-          {t("uploading", {
+          {t('uploading', {
             percent: dropUpload.progress
               ? Math.round(dropUpload.progress.ratio * 100)
               : 0,
@@ -758,23 +831,22 @@ export function RichTextEditor({
         <Dialog
           open
           onClose={() => {
-            if (folderBatch === null) dismissLocalImages(true);
+            if (folderBatch === null) dismissLocalImages(true)
           }}
-          title={t("localImagesTitle")}
-        >
+          title={t('localImagesTitle')}>
           <div role="status" className="flex flex-col gap-4">
             <Typography variant="body-3" className="text-muted-foreground">
               {folderBatch
-                ? t("localImagesUploading", folderBatch)
-                : t("localImagesPending", { count: localImages.length })}
+                ? t('localImagesUploading', folderBatch)
+                : t('localImagesPending', {count: localImages.length})}
             </Typography>
             {folderMiss && folderBatch === null ? (
               <Alert
                 tone="warning"
                 message={
                   folderMiss.missing === folderMiss.total
-                    ? t("localImagesNoneFound")
-                    : t("localImagesSomeMissing", folderMiss)
+                    ? t('localImagesNoneFound')
+                    : t('localImagesSomeMissing', folderMiss)
                 }
               />
             ) : null}
@@ -783,24 +855,21 @@ export function RichTextEditor({
                 type="button"
                 variant="outline"
                 disabled={folderBatch !== null}
-                onClick={() => dismissLocalImages(false)}
-              >
-                {t("localImagesRemove")}
+                onClick={() => dismissLocalImages(false)}>
+                {t('localImagesRemove')}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 disabled={folderBatch !== null}
-                onClick={() => dismissLocalImages(true)}
-              >
-                {t("localImagesSkip")}
+                onClick={() => dismissLocalImages(true)}>
+                {t('localImagesSkip')}
               </Button>
               <Button
                 type="button"
                 disabled={folderBatch !== null}
-                onClick={() => folderInputRef.current?.click()}
-              >
-                {t("localImagesPick")}
+                onClick={() => folderInputRef.current?.click()}>
+                {t('localImagesPick')}
               </Button>
             </div>
             <input
@@ -808,11 +877,11 @@ export function RichTextEditor({
               type="file"
               multiple
               hidden
-              {...({ webkitdirectory: "" } as object)}
+              {...({webkitdirectory: ''} as object)}
               onChange={(event) => {
-                const files = Array.from(event.target.files ?? []);
-                event.target.value = "";
-                void uploadFromFolder(files);
+                const files = Array.from(event.target.files ?? [])
+                event.target.value = ''
+                void uploadFromFolder(files)
               }}
             />
           </div>
@@ -824,12 +893,16 @@ export function RichTextEditor({
       ) : null}
       {mermaidView !== null ? (
         <MermaidViewer
-          chart={editor.state.doc.nodeAt(mermaidView)?.textContent ?? ""}
+          chart={editor.state.doc.nodeAt(mermaidView)?.textContent ?? ''}
           onClose={() => setMermaidView(null)}
         />
       ) : null}
       {mermaidAt !== null ? (
-        <MermaidDialog editor={editor} pos={mermaidAt} onClose={() => setMermaidAt(null)} />
+        <MermaidDialog
+          editor={editor}
+          pos={mermaidAt}
+          onClose={() => setMermaidAt(null)}
+        />
       ) : null}
       {imageMode ? (
         <ImageDialog
@@ -839,46 +912,48 @@ export function RichTextEditor({
         />
       ) : null}
     </div>
-  );
+  )
 }
 
 /** The alignment every image shares (`"left"` for none), or `null` when they differ or there are none. */
 function commonImageAlign(doc: {
   descendants: (
-    fn: (node: { type: { name: string }; attrs: Record<string, unknown> }) => void,
-  ) => void;
+    fn: (node: {type: {name: string}; attrs: Record<string, unknown>}) => void,
+  ) => void
 }): string | null {
-  let common: string | null | undefined;
+  let common: string | null | undefined
   doc.descendants((node) => {
-    if (node.type.name !== "image") return;
-    const value = (node.attrs.align as string | null) ?? "left";
-    common = common === undefined || common === value ? value : null;
-  });
-  return common ?? null;
+    if (node.type.name !== 'image') return
+    const value = (node.attrs.align as string | null) ?? 'left'
+    common = common === undefined || common === value ? value : null
+  })
+  return common ?? null
 }
 
 const ALIGNMENTS = [
-  { value: "left", icon: LUCIDE.alignLeft, label: "alignLeft" },
-  { value: "center", icon: LUCIDE.alignCenter, label: "alignCenter" },
-  { value: "right", icon: LUCIDE.alignRight, label: "alignRight" },
-  { value: "justify", icon: LUCIDE.alignJustify, label: "alignJustify" },
-] as const;
+  {value: 'left', icon: LUCIDE.alignLeft, label: 'alignLeft'},
+  {value: 'center', icon: LUCIDE.alignCenter, label: 'alignCenter'},
+  {value: 'right', icon: LUCIDE.alignRight, label: 'alignRight'},
+  {value: 'justify', icon: LUCIDE.alignJustify, label: 'alignJustify'},
+] as const
 
 function Toolbar({
   editor,
   fullscreen,
   extra,
+  minimap,
   onLink,
   onImage,
 }: {
-  editor: Editor;
-  fullscreen?: EditorFullscreen;
-  extra?: React.ReactNode;
-  onLink: () => void;
-  onImage: (mode: "upload" | "url") => void;
+  editor: Editor
+  fullscreen?: EditorFullscreen
+  extra?: React.ReactNode
+  minimap: {on: boolean; onToggle: () => void}
+  onLink: () => void
+  onImage: (mode: 'upload' | 'url') => void
 }) {
-  const t = useTranslations("common.editor");
-  const [imagesOpen, setImagesOpen] = useState(false);
+  const t = useTranslations('common.editor')
+  const [imagesOpen, setImagesOpen] = useState(false)
   /*
    * Tiptap v3 no longer re-renders on every transaction, so a bare
    * `editor.isActive(...)` in JSX is frozen at first render — the heading
@@ -888,39 +963,39 @@ function Toolbar({
    */
   const active = useEditorState({
     editor,
-    selector: ({ editor: e }) => ({
-      bold: e.isActive("bold"),
-      italic: e.isActive("italic"),
-      strike: e.isActive("strike"),
-      code: e.isActive("code"),
-      h1: e.isActive("heading", { level: 1 }),
-      h2: e.isActive("heading", { level: 2 }),
-      h3: e.isActive("heading", { level: 3 }),
-      h4: e.isActive("heading", { level: 4 }),
-      bulletList: e.isActive("bulletList"),
-      orderedList: e.isActive("orderedList"),
-      blockquote: e.isActive("blockquote"),
-      codeBlock: e.isActive("codeBlock"),
-      table: e.isActive("table"),
-      link: e.isActive("link"),
-      image: e.isActive("image"),
+    selector: ({editor: e}) => ({
+      bold: e.isActive('bold'),
+      italic: e.isActive('italic'),
+      strike: e.isActive('strike'),
+      code: e.isActive('code'),
+      h1: e.isActive('heading', {level: 1}),
+      h2: e.isActive('heading', {level: 2}),
+      h3: e.isActive('heading', {level: 3}),
+      h4: e.isActive('heading', {level: 4}),
+      bulletList: e.isActive('bulletList'),
+      orderedList: e.isActive('orderedList'),
+      blockquote: e.isActive('blockquote'),
+      codeBlock: e.isActive('codeBlock'),
+      table: e.isActive('table'),
+      link: e.isActive('link'),
+      image: e.isActive('image'),
       imagesAlign: commonImageAlign(e.state.doc),
-      textAlign: e.isActive("image")
-        ? ((e.getAttributes("image").align as string | null) ?? "left")
-        : (ALIGNMENTS.find((item) => e.isActive({ textAlign: item.value }))?.value ??
-          "left"),
+      textAlign: e.isActive('image')
+        ? ((e.getAttributes('image').align as string | null) ?? 'left')
+        : (ALIGNMENTS.find((item) => e.isActive({textAlign: item.value}))
+            ?.value ?? 'left'),
       codeBlockLanguage:
-        (e.getAttributes("codeBlock").language as string | undefined) ?? "",
+        (e.getAttributes('codeBlock').language as string | undefined) ?? '',
     }),
-  });
-  const inCodeBlock = active.codeBlock;
+  })
+  const inCodeBlock = active.codeBlock
 
   return (
     <div className="flex flex-wrap items-center gap-0.5 rounded-md border border-border bg-surface px-2 py-1.5">
       {fullscreen ? (
         <>
           <ToolbarButton
-            label={t(fullscreen.active ? "exitFullscreen" : "fullscreen")}
+            label={t(fullscreen.active ? 'exitFullscreen' : 'fullscreen')}
             active={false}
             onClick={fullscreen.onToggle}
             icon={fullscreen.active ? LUCIDE.minimize : LUCIDE.maximize}
@@ -929,25 +1004,25 @@ function Toolbar({
         </>
       ) : null}
       <ToolbarButton
-        label={t("bold")}
+        label={t('bold')}
         active={active.bold}
         onClick={() => editor.chain().focus().toggleBold().run()}
         icon={LUCIDE.bold}
       />
       <ToolbarButton
-        label={t("italic")}
+        label={t('italic')}
         active={active.italic}
         onClick={() => editor.chain().focus().toggleItalic().run()}
         icon={LUCIDE.italic}
       />
       <ToolbarButton
-        label={t("strike")}
+        label={t('strike')}
         active={active.strike}
         onClick={() => editor.chain().focus().toggleStrike().run()}
         icon={LUCIDE.strikethrough}
       />
       <ToolbarButton
-        label={t("code")}
+        label={t('code')}
         active={active.code}
         onClick={() => editor.chain().focus().toggleCode().run()}
         icon={LUCIDE.code}
@@ -956,27 +1031,27 @@ function Toolbar({
       <Divider />
 
       <ToolbarButton
-        label={t("h1")}
+        label={t('h1')}
         active={active.h1}
-        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+        onClick={() => editor.chain().focus().toggleHeading({level: 1}).run()}
         icon={LUCIDE.heading1}
       />
       <ToolbarButton
-        label={t("h2")}
+        label={t('h2')}
         active={active.h2}
-        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+        onClick={() => editor.chain().focus().toggleHeading({level: 2}).run()}
         icon={LUCIDE.heading2}
       />
       <ToolbarButton
-        label={t("h3")}
+        label={t('h3')}
         active={active.h3}
-        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+        onClick={() => editor.chain().focus().toggleHeading({level: 3}).run()}
         icon={LUCIDE.heading3}
       />
       <ToolbarButton
-        label={t("h4")}
+        label={t('h4')}
         active={active.h4}
-        onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
+        onClick={() => editor.chain().focus().toggleHeading({level: 4}).run()}
         icon={LUCIDE.heading4}
       />
 
@@ -992,40 +1067,41 @@ function Toolbar({
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label={t("align")}
-            title={t("align")}
-          >
+            aria-label={t('align')}
+            title={t('align')}>
             <Icon
               icon={
-                ALIGNMENTS.find((item) => item.value === active.textAlign)?.icon ??
-                LUCIDE.alignLeft
+                ALIGNMENTS.find((item) => item.value === active.textAlign)
+                  ?.icon ?? LUCIDE.alignLeft
               }
               className="size-4"
             />
           </Button>
-        }
-      >
+        }>
         <div className="flex gap-1">
           {/* An image has no justify — it is a box, not a line of text. */}
-          {ALIGNMENTS.filter((item) => !active.image || item.value !== "justify").map((item) => (
+          {ALIGNMENTS.filter(
+            (item) => !active.image || item.value !== 'justify',
+          ).map((item) => (
             <DropdownMenuItem
               key={item.value}
               icon={item.icon}
               className={`size-8 justify-center px-0 ${
-                active.textAlign === item.value ? "bg-primary/10 text-primary" : ""
+                active.textAlign === item.value
+                  ? 'bg-primary/10 text-primary'
+                  : ''
               }`}
               onSelect={() =>
                 active.image
                   ? editor
                       .chain()
                       .focus()
-                      .updateAttributes("image", {
-                        align: item.value === "left" ? null : item.value,
+                      .updateAttributes('image', {
+                        align: item.value === 'left' ? null : item.value,
                       })
                       .run()
                   : editor.chain().focus().setTextAlign(item.value).run()
-              }
-            >
+              }>
               <span className="sr-only">{t(item.label)}</span>
             </DropdownMenuItem>
           ))}
@@ -1033,31 +1109,31 @@ function Toolbar({
       </DropdownMenu>
 
       <ToolbarButton
-        label={t("bulletList")}
+        label={t('bulletList')}
         active={active.bulletList}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         icon={LUCIDE.list}
       />
       <ToolbarButton
-        label={t("orderedList")}
+        label={t('orderedList')}
         active={active.orderedList}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         icon={LUCIDE.listOrdered}
       />
       <ToolbarButton
-        label={t("quote")}
+        label={t('quote')}
         active={active.blockquote}
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
         icon={LUCIDE.textQuote}
       />
       <ToolbarButton
-        label={t("codeBlock")}
+        label={t('codeBlock')}
         active={inCodeBlock}
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
         icon={LUCIDE.codeXml}
       />
       <ToolbarButton
-        label={t("hr")}
+        label={t('hr')}
         active={false}
         onClick={() => editor.chain().focus().setHorizontalRule().run()}
         icon={LUCIDE.minus}
@@ -1068,13 +1144,13 @@ function Toolbar({
         that is inert 99% of the time is six buttons of noise.
       */}
       <ToolbarButton
-        label={t("table")}
+        label={t('table')}
         active={active.table}
         onClick={() =>
           editor
             .chain()
             .focus()
-            .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+            .insertTable({rows: 3, cols: 3, withHeaderRow: true})
             .run()
         }
         icon={LUCIDE.table}
@@ -1084,31 +1160,31 @@ function Toolbar({
         <>
           <Divider />
           <ToolbarButton
-            label={t("addColumn")}
+            label={t('addColumn')}
             active={false}
             onClick={() => editor.chain().focus().addColumnAfter().run()}
             icon={LUCIDE.betweenHorizontalStart}
           />
           <ToolbarButton
-            label={t("addRow")}
+            label={t('addRow')}
             active={false}
             onClick={() => editor.chain().focus().addRowAfter().run()}
             icon={LUCIDE.betweenVerticalStart}
           />
           <ToolbarButton
-            label={t("deleteColumn")}
+            label={t('deleteColumn')}
             active={false}
             onClick={() => editor.chain().focus().deleteColumn().run()}
             icon={LUCIDE.trash2}
           />
           <ToolbarButton
-            label={t("deleteRow")}
+            label={t('deleteRow')}
             active={false}
             onClick={() => editor.chain().focus().deleteRow().run()}
             icon={LUCIDE.trash}
           />
           <ToolbarButton
-            label={t("deleteTable")}
+            label={t('deleteTable')}
             active={false}
             onClick={() => editor.chain().focus().deleteTable().run()}
             icon={LUCIDE.tableCellsMerge}
@@ -1119,7 +1195,7 @@ function Toolbar({
       <Divider />
 
       <ToolbarButton
-        label={t("link")}
+        label={t('link')}
         active={active.link}
         onClick={onLink}
         icon={LUCIDE.link}
@@ -1132,57 +1208,54 @@ function Toolbar({
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label={t("image")}
-            title={t("image")}
-          >
+            aria-label={t('image')}
+            title={t('image')}>
             <Icon icon={ICONS.image} className="size-4" />
           </Button>
-        }
-      >
+        }>
         <DropdownMenuItem
           icon={LUCIDE.upload}
-          onSelect={() => onImage("upload")}
-        >
-          {t("imageFromComputer")}
+          onSelect={() => onImage('upload')}>
+          {t('imageFromComputer')}
         </DropdownMenuItem>
-        <DropdownMenuItem icon={LUCIDE.link} onSelect={() => onImage("url")}>
-          {t("imageByUrl")}
+        <DropdownMenuItem icon={LUCIDE.link} onSelect={() => onImage('url')}>
+          {t('imageByUrl')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           icon={LUCIDE.images}
-          onSelect={() => setImagesOpen(true)}
-        >
-          {t("imagesSettings")}
+          onSelect={() => setImagesOpen(true)}>
+          {t('imagesSettings')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <p className="px-2 pb-1 text-body-4 text-muted-foreground">
-          {t("imagesAlignAll")}
+          {t('imagesAlignAll')}
         </p>
         <div className="flex gap-1">
-          {ALIGNMENTS.filter((item) => item.value !== "justify").map((item) => (
+          {ALIGNMENTS.filter((item) => item.value !== 'justify').map((item) => (
             <DropdownMenuItem
               key={item.value}
               icon={item.icon}
               className={`size-8 justify-center px-0 ${
-                active.imagesAlign === item.value ? "bg-primary/10 text-primary" : ""
+                active.imagesAlign === item.value
+                  ? 'bg-primary/10 text-primary'
+                  : ''
               }`}
               onSelect={() =>
                 editor
                   .chain()
-                  .command(({ tr, state }) => {
+                  .command(({tr, state}) => {
                     state.doc.descendants((node, pos) => {
-                      if (node.type.name !== "image") return;
+                      if (node.type.name !== 'image') return
                       tr.setNodeMarkup(pos, undefined, {
                         ...node.attrs,
-                        align: item.value === "left" ? null : item.value,
-                      });
-                    });
-                    return true;
+                        align: item.value === 'left' ? null : item.value,
+                      })
+                    })
+                    return true
                   })
                   .run()
-              }
-            >
+              }>
               <span className="sr-only">{t(item.label)}</span>
             </DropdownMenuItem>
           ))}
@@ -1196,32 +1269,41 @@ function Toolbar({
       {/* Shown only while the cursor is inside a code block — a select that is
           always visible but almost always inert invites misclicks. */}
       {inCodeBlock ? (
-        <div className={`${extra ? "" : "ml-auto "}w-40`}>
+        <div className="w-40">
           <Select
-            label={t("codeLanguage")}
+            label={t('codeLanguage')}
             hideLabel
             size="sm"
-            placeholder={t("codeLanguageNone")}
+            placeholder={t('codeLanguageNone')}
             value={active.codeBlockLanguage}
             onChange={(event) =>
               editor
                 .chain()
                 .focus()
-                .updateAttributes("codeBlock", {
+                .updateAttributes('codeBlock', {
                   language: event.target.value || null,
                 })
                 .run()
             }
-            options={BLOG_CODE_LANGUAGES.map((language) => ({ value: language, label: language }))}
+            options={BLOG_CODE_LANGUAGES.map((language) => ({
+              value: language,
+              label: language,
+            }))}
           />
         </div>
       ) : null}
 
-      {extra ? (
-        <div className="ml-auto flex items-center gap-1">{extra}</div>
-      ) : null}
+      <div className="ml-auto flex items-center gap-1">
+        <ToolbarButton
+          label={t(minimap.on ? 'hideMinimap' : 'showMinimap')}
+          active={minimap.on}
+          onClick={minimap.onToggle}
+          icon={LUCIDE.map}
+        />
+        {extra}
+      </div>
     </div>
-  );
+  )
 }
 
 function ToolbarButton({
@@ -1230,10 +1312,10 @@ function ToolbarButton({
   onClick,
   icon,
 }: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-  icon: IconName;
+  label: string
+  active: boolean
+  onClick: () => void
+  icon: IconName
 }) {
   return (
     // A Tooltip rather than `title`: these buttons are icon-only, so the label
@@ -1246,16 +1328,15 @@ function ToolbarButton({
         specificity, so which one paints is up to the stylesheet order.
       */}
       <Button
-        variant={active ? "primary" : "ghost"}
+        variant={active ? 'primary' : 'ghost'}
         size="icon-sm"
         aria-label={label}
         aria-pressed={active}
-        onClick={onClick}
-      >
+        onClick={onClick}>
         <Icon icon={icon} className="size-4" />
       </Button>
     </Tooltip>
-  );
+  )
 }
 
 /**
@@ -1270,89 +1351,92 @@ function ImagesDialog({
   editor,
   onClose,
 }: {
-  editor: Editor;
-  onClose: () => void;
+  editor: Editor
+  onClose: () => void
 }) {
-  const t = useTranslations("common.editor");
-  const [value, setValue] = useState("");
-  const [unit, setUnit] = useState<"%" | "px">("%");
+  const t = useTranslations('common.editor')
+  const [value, setValue] = useState('')
+  const [unit, setUnit] = useState<'%' | 'px'>('%')
 
-  const { count, selectedPos } = useEditorState({
+  const {count, selectedPos} = useEditorState({
     editor,
-    selector: ({ editor: e }) => {
-      let n = 0;
+    selector: ({editor: e}) => {
+      let n = 0
       e.state.doc.descendants((node) => {
-        if (node.type.name === "image") n += 1;
-      });
+        if (node.type.name === 'image') n += 1
+      })
       // The image the author had selected when the dialog opened, if any.
-      const { selection } = e.state;
+      const {selection} = e.state
       const picked =
-        "node" in selection &&
-        (selection as { node?: { type: { name: string } } }).node?.type.name === "image"
+        'node' in selection &&
+        (selection as {node?: {type: {name: string}}}).node?.type.name ===
+          'image'
           ? selection.from
-          : null;
-      return { count: n, selectedPos: picked };
+          : null
+      return {count: n, selectedPos: picked}
     },
-  });
+  })
 
-  const amount = Number(value);
-  const valid = value.trim() === "" || (Number.isFinite(amount) && amount >= 1 && (unit === "px" || amount <= 100));
-  const nothing = value.trim() === "";
+  const amount = Number(value)
+  const valid =
+    value.trim() === '' ||
+    (Number.isFinite(amount) && amount >= 1 && (unit === 'px' || amount <= 100))
+  const nothing = value.trim() === ''
 
-  const apply = (scope: "all" | "selected") => {
+  const apply = (scope: 'all' | 'selected') => {
     editor
       .chain()
-      .command(({ tr, state }) => {
+      .command(({tr, state}) => {
         state.doc.descendants((node, pos) => {
-          if (node.type.name !== "image") return;
-          if (scope === "selected" && pos !== selectedPos) return;
-          const attrs = { ...node.attrs };
-          if (value.trim() !== "") {
-            if (unit === "%") {
-              attrs.widthPercent = Math.round(amount);
+          if (node.type.name !== 'image') return
+          if (scope === 'selected' && pos !== selectedPos) return
+          const attrs = {...node.attrs}
+          if (value.trim() !== '') {
+            if (unit === '%') {
+              attrs.widthPercent = Math.round(amount)
             } else if (attrs.width && attrs.height) {
-              attrs.height = Math.round((amount * attrs.height) / attrs.width);
-              attrs.width = Math.round(amount);
-              attrs.widthPercent = null;
+              attrs.height = Math.round((amount * attrs.height) / attrs.width)
+              attrs.width = Math.round(amount)
+              attrs.widthPercent = null
             }
           }
-          tr.setNodeMarkup(pos, undefined, attrs);
-        });
-        return true;
+          tr.setNodeMarkup(pos, undefined, attrs)
+        })
+        return true
       })
-      .run();
-    onClose();
-  };
+      .run()
+    onClose()
+  }
 
   return (
-    <Dialog open onClose={onClose} title={t("imagesDialogTitle")}>
+    <Dialog open onClose={onClose} title={t('imagesDialogTitle')}>
       <div className="flex flex-col gap-4">
         <Typography variant="body-3" className="text-muted-foreground">
-          {t("imagesCount", { count })}
+          {t('imagesCount', {count})}
         </Typography>
 
         <div className="flex items-start gap-2">
           <div className="flex-1">
             <Input
-              label={t("imagesWidth")}
+              label={t('imagesWidth')}
               type="number"
               min={1}
-              max={unit === "%" ? 100 : undefined}
+              max={unit === '%' ? 100 : undefined}
               inputMode="numeric"
               value={value}
               onChange={(event) => setValue(event.target.value)}
-              placeholder={t("imagesWidthPlaceholder")}
-              error={valid ? undefined : t("imagesWidthInvalid")}
+              placeholder={t('imagesWidthPlaceholder')}
+              error={valid ? undefined : t('imagesWidthInvalid')}
             />
           </div>
           <div className="w-24">
             <Select
-              label={t("imagesUnit")}
+              label={t('imagesUnit')}
               value={unit}
-              onChange={(event) => setUnit(event.target.value as "%" | "px")}
+              onChange={(event) => setUnit(event.target.value as '%' | 'px')}
               options={[
-                { value: "%", label: "%" },
-                { value: "px", label: "px" },
+                {value: '%', label: '%'},
+                {value: 'px', label: 'px'},
               ]}
             />
           </div>
@@ -1360,25 +1444,23 @@ function ImagesDialog({
 
         <div className="flex flex-wrap justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
-            {t("close")}
+            {t('close')}
           </Button>
           <Button
             variant="outline"
-            onClick={() => apply("selected")}
-            disabled={!valid || nothing || selectedPos === null}
-          >
-            {t("imagesApplySelected")}
+            onClick={() => apply('selected')}
+            disabled={!valid || nothing || selectedPos === null}>
+            {t('imagesApplySelected')}
           </Button>
           <Button
-            onClick={() => apply("all")}
-            disabled={!valid || nothing || count === 0}
-          >
-            {t("imagesApply")}
+            onClick={() => apply('all')}
+            disabled={!valid || nothing || count === 0}>
+            {t('imagesApply')}
           </Button>
         </div>
       </div>
     </Dialog>
-  );
+  )
 }
 
 /**
@@ -1391,35 +1473,37 @@ function MermaidDialog({
   pos,
   onClose,
 }: {
-  editor: Editor;
-  pos: number;
-  onClose: () => void;
+  editor: Editor
+  pos: number
+  onClose: () => void
 }) {
-  const t = useTranslations("common.editor");
-  const actions = useTranslations("common.actions");
-  const [source, setSource] = useState(() => editor.state.doc.nodeAt(pos)?.textContent ?? "");
+  const t = useTranslations('common.editor')
+  const actions = useTranslations('common.actions')
+  const [source, setSource] = useState(
+    () => editor.state.doc.nodeAt(pos)?.textContent ?? '',
+  )
 
   const save = () => {
     editor
       .chain()
-      .command(({ tr, state }) => {
-        const node = state.doc.nodeAt(pos);
-        if (!node || node.type.name !== "codeBlock") return false;
-        const from = pos + 1;
-        const to = pos + node.nodeSize - 1;
-        if (source.trim()) tr.replaceWith(from, to, state.schema.text(source));
-        else tr.delete(from, to);
-        return true;
+      .command(({tr, state}) => {
+        const node = state.doc.nodeAt(pos)
+        if (!node || node.type.name !== 'codeBlock') return false
+        const from = pos + 1
+        const to = pos + node.nodeSize - 1
+        if (source.trim()) tr.replaceWith(from, to, state.schema.text(source))
+        else tr.delete(from, to)
+        return true
       })
       .focus()
-      .run();
-    onClose();
-  };
+      .run()
+    onClose()
+  }
 
   return (
-    <Dialog open size="lg" onClose={onClose} title={t("mermaidTitle")}>
+    <Dialog open size="lg" onClose={onClose} title={t('mermaidTitle')}>
       <Textarea
-        aria-label={t("mermaidSource")}
+        aria-label={t('mermaidSource')}
         value={source}
         onChange={(event) => setSource(event.target.value)}
         rows={18}
@@ -1429,83 +1513,72 @@ function MermaidDialog({
       />
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onClose}>
-          {actions("cancel")}
+          {actions('cancel')}
         </Button>
-        <Button onClick={save}>{actions("save")}</Button>
+        <Button onClick={save}>{actions('save')}</Button>
       </div>
     </Dialog>
-  );
+  )
 }
 
 function Divider() {
-  return <span aria-hidden className="mx-0.5 h-5 w-px bg-border" />;
+  return <span aria-hidden className="mx-0.5 h-5 w-px bg-border" />
 }
 
 /**
  * A dialog in place of `window.prompt`: prompt blocks the whole tab, cannot be
  * styled, and is close to unusable on mobile.
  */
-function LinkDialog({
-  editor,
-  onClose,
-}: {
-  editor: Editor;
-  onClose: () => void;
-}) {
-  const t = useTranslations("common.editor");
-  const tc = useTranslations("common");
+function LinkDialog({editor, onClose}: {editor: Editor; onClose: () => void}) {
+  const t = useTranslations('common.editor')
+  const tc = useTranslations('common')
   const [href, setHref] = useState(
-    (editor.getAttributes("link").href as string) ?? "",
-  );
-  const [error, setError] = useState<string | null>(null);
+    (editor.getAttributes('link').href as string) ?? '',
+  )
+  const [error, setError] = useState<string | null>(null)
 
   const apply = () => {
-    const value = href.trim();
-    if (value === "") {
-      editor.chain().focus().unsetLink().run();
-      onClose();
-      return;
+    const value = href.trim()
+    if (value === '') {
+      editor.chain().focus().unsetLink().run()
+      onClose()
+      return
     }
     if (!isSafeLinkHref(value)) {
-      setError(t("linkInvalid"));
-      return;
+      setError(t('linkInvalid'))
+      return
     }
     // Do NOT set `target`/`rel` here: the renderer decides them (§3.1a), and
     // writing them into the data reopens the door the attribute allowlist just
     // closed.
-    editor
-      .chain()
-      .focus()
-      .extendMarkRange("link")
-      .setLink({ href: value })
-      .run();
-    onClose();
-  };
+    editor.chain().focus().extendMarkRange('link').setLink({href: value}).run()
+    onClose()
+  }
 
   return (
-    <Dialog open onClose={onClose} title={t("linkDialogTitle")}>
+    <Dialog open onClose={onClose} title={t('linkDialogTitle')}>
       <div className="flex flex-col gap-4">
         <Input
-          label={t("linkUrl")}
+          label={t('linkUrl')}
           value={href}
           onChange={(event) => setHref(event.target.value)}
           placeholder="https://…"
         />
         <Typography variant="body-4" className="-mt-2 opacity-60">
-          {t.rich("linkHint", {
+          {t.rich('linkHint', {
             code: (chunks) => <code className="mx-1">{chunks}</code>,
           })}
         </Typography>
         <AlertError message={error} />
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
-            {tc("actions.cancel")}
+            {tc('actions.cancel')}
           </Button>
-          <Button onClick={apply}>{t("apply")}</Button>
+          <Button onClick={apply}>{t('apply')}</Button>
         </div>
       </div>
     </Dialog>
-  );
+  )
 }
 
 /**
@@ -1528,40 +1601,40 @@ function ImageDialog({
   mode,
   onClose,
 }: {
-  editor: Editor;
-  mode: "upload" | "url";
-  onClose: () => void;
+  editor: Editor
+  mode: 'upload' | 'url'
+  onClose: () => void
 }) {
-  const t = useTranslations("common.editor");
-  const [src, setSrc] = useState("");
-  const [alt, setAlt] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [measuring, setMeasuring] = useState(false);
+  const t = useTranslations('common.editor')
+  const [src, setSrc] = useState('')
+  const [alt, setAlt] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [measuring, setMeasuring] = useState(false)
 
   const insert = async () => {
-    const value = src.trim();
-    setError(null);
-    setNotice(null);
+    const value = src.trim()
+    setError(null)
+    setNotice(null)
 
     if (!isSafeImageSrc(value)) {
-      setError(t("imageHostInvalid"));
-      return;
+      setError(t('imageHostInvalid'))
+      return
     }
 
-    setMeasuring(true);
-    const size = await measureImage(value);
-    setMeasuring(false);
+    setMeasuring(true)
+    const size = await measureImage(value)
+    setMeasuring(false)
 
     if (!size) {
-      setNotice(t("imageMeasureFailed"));
+      setNotice(t('imageMeasureFailed'))
     }
 
     editor
       .chain()
       .focus()
       .insertContent({
-        type: "image",
+        type: 'image',
         attrs: {
           src: value,
           alt: alt.trim(),
@@ -1569,39 +1642,37 @@ function ImageDialog({
           height: size?.height ?? null,
         },
       })
-      .run();
+      .run()
 
-    if (size) onClose();
-  };
+    if (size) onClose()
+  }
 
   return (
-    <Dialog open onClose={onClose} title={t("imageDialogTitle")}>
+    <Dialog open onClose={onClose} title={t('imageDialogTitle')}>
       <div className="flex flex-col gap-4">
-        {mode === "upload" ? (
+        {mode === 'upload' ? (
           <ImageUploadButton
             autoOpen
-            label={t("imagePick")}
+            label={t('imagePick')}
             onUploaded={(asset) => {
-              setSrc(asset.url);
-              setError(null);
-              setNotice(null);
+              setSrc(asset.url)
+              setError(null)
+              setNotice(null)
               // The original filename is a better `alt` suggestion than an empty
               // field, but only while the author has typed nothing — overwriting
               // what they just wrote loses data.
-              setAlt(
-                (current) => current || suggestAltFrom(asset.originalName),
-              );
+              setAlt((current) => current || suggestAltFrom(asset.originalName))
             }}
           />
         ) : (
           <Input
-            label={t("imageUrl")}
+            label={t('imageUrl')}
             value={src}
             onChange={(event) => setSrc(event.target.value)}
-            placeholder={t("imageUrlPlaceholder")}
+            placeholder={t('imageUrlPlaceholder')}
           />
         )}
-        {src.trim() !== "" && isSafeImageSrc(src.trim()) ? (
+        {src.trim() !== '' && isSafeImageSrc(src.trim()) ? (
           // A plain <img>: this is a preview of what is about to be inserted,
           // not page content, so `next/image` (and its host allowlist) adds nothing.
           // eslint-disable-next-line @next/next/no-img-element
@@ -1612,37 +1683,37 @@ function ImageDialog({
           />
         ) : null}
         <Input
-          label={t("imageAlt")}
+          label={t('imageAlt')}
           value={alt}
           onChange={(event) => setAlt(event.target.value)}
-          placeholder={t("imageAltPlaceholder")}
+          placeholder={t('imageAltPlaceholder')}
         />
         <AlertError message={error} />
         <Alert tone="warning" message={notice} />
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
-            {t("close")}
+            {t('close')}
           </Button>
-          <Button onClick={insert} disabled={measuring || src.trim() === ""}>
-            {measuring ? t("measuring") : t("insert")}
+          <Button onClick={insert} disabled={measuring || src.trim() === ''}>
+            {measuring ? t('measuring') : t('insert')}
           </Button>
         </div>
       </div>
     </Dialog>
-  );
+  )
 }
 
 /** The image's `naturalWidth`/`naturalHeight`, or `null` if it will not load. */
 function measureImage(
   src: string,
-): Promise<{ width: number; height: number } | null> {
+): Promise<{width: number; height: number} | null> {
   return new Promise((resolve) => {
-    const image = new window.Image();
+    const image = new window.Image()
     image.onload = () =>
-      resolve({ width: image.naturalWidth, height: image.naturalHeight });
-    image.onerror = () => resolve(null);
-    image.src = src;
-  });
+      resolve({width: image.naturalWidth, height: image.naturalHeight})
+    image.onerror = () => resolve(null)
+    image.src = src
+  })
 }
 
 /**
@@ -1659,14 +1730,16 @@ function measureImage(
  * Fenced code is left alone — a `- [ ]` inside a code block is literal text.
  */
 export function flattenTaskLists(markdown: string): string {
-  let fenced = false;
+  let fenced = false
   return markdown
-    .split("\n")
+    .split('\n')
     .map((line) => {
-      if (/^\s*(```|~~~)/.test(line)) fenced = !fenced;
-      return fenced ? line : line.replace(/^(\s*(?:[-*+]|\d{1,9}[.)])\s+)\[[ xX]\]\s+/, "$1");
+      if (/^\s*(```|~~~)/.test(line)) fenced = !fenced
+      return fenced
+        ? line
+        : line.replace(/^(\s*(?:[-*+]|\d{1,9}[.)])\s+)\[[ xX]\]\s+/, '$1')
     })
-    .join("\n");
+    .join('\n')
 }
 
 /**
@@ -1684,44 +1757,46 @@ export function flattenTaskLists(markdown: string): string {
 function pasteMarkdown(
   editor: Editor | null,
   event: ClipboardEvent,
-  contentType: "json" | "markdown" | undefined,
+  contentType: 'json' | 'markdown' | undefined,
   onLocalImages: (images: LocalImage[]) => void,
 ): boolean {
   // Both editors take pasted Markdown; the JSON one still stores nodes, not text.
-  if (!editor || !editor.markdown) return false;
-  if (editor.isActive("codeBlock")) return false;
+  if (!editor || !editor.markdown) return false
+  if (editor.isActive('codeBlock')) return false
 
-  const data = event.clipboardData;
-  const text = data?.getData("text/plain");
-  if (!data || !text) return false;
+  const data = event.clipboardData
+  const text = data?.getData('text/plain')
+  if (!data || !text) return false
 
-  const fromCodeEditor = data.types.includes("vscode-editor-data");
-  if (data.types.includes("text/html") && !fromCodeEditor) return false;
+  const fromCodeEditor = data.types.includes('vscode-editor-data')
+  if (data.types.includes('text/html') && !fromCodeEditor) return false
 
-  event.preventDefault();
-  const { markdown, images } = extractLocalImages(prepareInlineImages(flattenTaskLists(text)));
+  event.preventDefault()
+  const {markdown, images} = extractLocalImages(
+    prepareInlineImages(flattenTaskLists(text)),
+  )
   try {
-    editor.commands.insertContent(markdown, { contentType: "markdown" });
+    editor.commands.insertContent(markdown, {contentType: 'markdown'})
   } catch {
     // `preventDefault` above already cancelled the browser's own paste, so a parse
     // failure here must not leave the author with nothing: fall back to the text.
-    editor.commands.insertContent(text);
-    return true;
+    editor.commands.insertContent(text)
+    return true
   }
-  if (images.length > 0) onLocalImages(images);
-  return true;
+  if (images.length > 0) onLocalImages(images)
+  return true
 }
 
 /** A pasted image reference that points at a file on the author's machine. */
 type LocalImage = {
-  token: string;
-  name: string;
-  alt: string;
+  token: string
+  name: string
+  alt: string
   /** The `![alt](path)` as pasted, for "skip" to put back as plain text. */
-  raw: string;
+  raw: string
   /** It shares its line with words, so the token stays in that line and a small picture can too. */
-  inline: boolean;
-};
+  inline: boolean
+}
 
 /**
  * Swaps every `![alt](/local/path.jpg)` for a one-word token paragraph and
@@ -1731,10 +1806,10 @@ type LocalImage = {
  * uploaded. Alphanumeric only, so markdown cannot read emphasis into it.
  */
 function extractLocalImages(markdown: string): {
-  markdown: string;
-  images: LocalImage[];
+  markdown: string
+  images: LocalImage[]
 } {
-  const images: LocalImage[] = [];
+  const images: LocalImage[] = []
   // Only text outside code counts: an `![](…)` shown inside a code span or fence
   // is an example, not a picture.
   const out = markdown
@@ -1749,41 +1824,51 @@ function extractLocalImages(markdown: string): {
                 /^([a-z][a-z0-9+.-]*:)?\/\//i.test(src) ||
                 /^(data|blob):/i.test(src)
               ) {
-                return whole;
+                return whole
               }
-              src = src.replace(/\s+"[^"]*"$/, "");
-              const last = src.split(/[\\/]/).pop() ?? "";
-              let name = last;
+              src = src.replace(/\s+"[^"]*"$/, '')
+              const last = src.split(/[\\/]/).pop() ?? ''
+              let name = last
               try {
-                name = decodeURIComponent(last);
+                name = decodeURIComponent(last)
               } catch {
                 // keep the raw name
               }
               // A real file reference ends in an image extension. Anything else
               // — `![](<đường dẫn ảnh>)` in a prompt template — is a placeholder:
               // keep it as plain text instead of asking for a folder.
-              if (!IMAGE_FILE.test(name)) return whole.replace(/^!/, "\\!").replace(/</g, "\\<");
-              const token = `NOALHUBIMG${crypto.randomUUID().replace(/-/g, "")}END`;
+              if (!IMAGE_FILE.test(name))
+                return whole.replace(/^!/, '\\!').replace(/</g, '\\<')
+              const token = `NOALHUBIMG${crypto.randomUUID().replace(/-/g, '')}END`
               // Words on the same line: keep the token among them instead of giving it a paragraph.
-              const lineStart = text.lastIndexOf("\n", offset - 1) + 1;
-              const lineEnd = text.indexOf("\n", offset + whole.length);
-              const line = text.slice(lineStart, lineEnd === -1 ? undefined : lineEnd);
-              const inline = line.replace(/!\[[^\]]*\]\([^)]*\)/g, "").trim() !== "";
-              images.push({ token, name, alt, raw: whole, inline });
-              return inline ? token : `\n\n${token}\n\n`;
+              const lineStart = text.lastIndexOf('\n', offset - 1) + 1
+              const lineEnd = text.indexOf('\n', offset + whole.length)
+              const line = text.slice(
+                lineStart,
+                lineEnd === -1 ? undefined : lineEnd,
+              )
+              const inline =
+                line.replace(/!\[[^\]]*\]\([^)]*\)/g, '').trim() !== ''
+              images.push({token, name, alt, raw: whole, inline})
+              return inline ? token : `\n\n${token}\n\n`
             },
           ),
     )
-    .join("");
-  return { markdown: collapseBlanksAroundImages(out), images };
+    .join('')
+  return {markdown: collapseBlanksAroundImages(out), images}
 }
 
-const IMAGE_FILE = /\.(jpe?g|png|gif|webp|svg|bmp|heic|heif|avif|tiff?)$/i;
+const IMAGE_FILE = /\.(jpe?g|png|gif|webp|svg|bmp|heic|heif|avif|tiff?)$/i
 
-const IMAGE_LINE =
-  String.raw`(?:!\[[^\]]*\]\([^)\n]*\)|NOALHUBIMG[0-9a-f]{32}END)`;
-const BLANKS_BEFORE_IMAGE = new RegExp(String.raw`\n{3,}(?=${IMAGE_LINE}[ \t]*(?:\n|$))`, "g");
-const BLANKS_AFTER_IMAGE = new RegExp(String.raw`(${IMAGE_LINE}[ \t]*)\n{3,}`, "g");
+const IMAGE_LINE = String.raw`(?:!\[[^\]]*\]\([^)\n]*\)|NOALHUBIMG[0-9a-f]{32}END)`
+const BLANKS_BEFORE_IMAGE = new RegExp(
+  String.raw`\n{3,}(?=${IMAGE_LINE}[ \t]*(?:\n|$))`,
+  'g',
+)
+const BLANKS_AFTER_IMAGE = new RegExp(
+  String.raw`(${IMAGE_LINE}[ \t]*)\n{3,}`,
+  'g',
+)
 
 /**
  * An image sits on a line of its own with one blank line either side. Tiptap
@@ -1793,8 +1878,8 @@ const BLANKS_AFTER_IMAGE = new RegExp(String.raw`(${IMAGE_LINE}[ \t]*)\n{3,}`, "
  */
 function collapseBlanksAroundImages(markdown: string): string {
   return markdown
-    .replace(BLANKS_BEFORE_IMAGE, "\n\n")
-    .replace(BLANKS_AFTER_IMAGE, "$1\n\n");
+    .replace(BLANKS_BEFORE_IMAGE, '\n\n')
+    .replace(BLANKS_AFTER_IMAGE, '$1\n\n')
 }
 
 /**
@@ -1809,29 +1894,29 @@ function replaceToken(
   token: string,
   node: Record<string, unknown> | null,
 ): void {
-  let range: { from: number; to: number } | null = null;
+  let range: {from: number; to: number} | null = null
   editor.state.doc.descendants((child, pos) => {
-    if (range) return false;
+    if (range) return false
     if (child.isTextblock && child.textContent === token) {
-      range = { from: pos, to: pos + child.nodeSize };
-      return false;
+      range = {from: pos, to: pos + child.nodeSize}
+      return false
     }
-    if (!child.isText) return;
-    const at = child.text?.indexOf(token) ?? -1;
-    if (at >= 0) range = { from: pos + at, to: pos + at + token.length };
-  });
-  if (!range) return;
-  const chain = editor.chain();
-  if (node) chain.insertContentAt(range, node).run();
-  else chain.deleteRange(range).run();
+    if (!child.isText) return
+    const at = child.text?.indexOf(token) ?? -1
+    if (at >= 0) range = {from: pos + at, to: pos + at + token.length}
+  })
+  if (!range) return
+  const chain = editor.chain()
+  if (node) chain.insertContentAt(range, node).run()
+  else chain.deleteRange(range).run()
 }
 
 /** The first image file in a `FileList`, if any. */
 function firstImageFile(files: FileList | null | undefined): File | undefined {
-  if (!files) return undefined;
+  if (!files) return undefined
   return Array.from(files).find((file) =>
     (MEDIA_IMAGE_MIMES as readonly string[]).includes(file.type),
-  );
+  )
 }
 
 /**
@@ -1848,12 +1933,12 @@ async function insertImageAsset(
   asset: MediaAsset,
   fileName: string,
 ): Promise<void> {
-  const size = await measureImage(asset.url);
+  const size = await measureImage(asset.url)
   editor
     .chain()
     .focus()
     .insertContent({
-      type: "image",
+      type: 'image',
       attrs: {
         src: asset.url,
         alt: suggestAltFrom(asset.originalName ?? fileName),
@@ -1861,7 +1946,7 @@ async function insertImageAsset(
         height: size?.height ?? null,
       },
     })
-    .run();
+    .run()
 }
 
 /**
@@ -1874,9 +1959,9 @@ async function insertImageAsset(
  * it.
  */
 function suggestAltFrom(fileName: string | null): string {
-  if (!fileName) return "";
+  if (!fileName) return ''
   return fileName
-    .replace(/\.[^.]+$/, "")
-    .replace(/[-_]+/g, " ")
-    .trim();
+    .replace(/\.[^.]+$/, '')
+    .replace(/[-_]+/g, ' ')
+    .trim()
 }

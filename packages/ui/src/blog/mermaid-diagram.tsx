@@ -1,9 +1,9 @@
-"use client";
+'use client'
 
-import { useEffect, useRef, useState } from "react";
+import {useEffect, useRef, useState} from 'react'
 
-const drawn = new Map<string, Promise<string>>();
-let counter = 0;
+const drawn = new Map<string, Promise<string>>()
+let counter = 0
 
 /**
  * Draws Mermaid source to an SVG string. Loaded on demand and memoised per
@@ -11,24 +11,24 @@ let counter = 0;
  * editor) costs nothing. Rejects when the source does not parse.
  */
 export function renderMermaid(chart: string, dark: boolean): Promise<string> {
-  const key = `${dark ? "d" : "l"}:${chart}`;
-  let svg = drawn.get(key);
+  const key = `${dark ? 'd' : 'l'}:${chart}`
+  let svg = drawn.get(key)
   if (!svg) {
-    svg = import("mermaid").then(async ({ default: mermaid }) => {
+    svg = import('mermaid').then(async ({default: mermaid}) => {
       mermaid.initialize({
         startOnLoad: false,
-        securityLevel: "strict",
-        theme: dark ? "dark" : "neutral",
-      });
-      counter += 1;
-      return (await mermaid.render(`mermaid-${counter}`, chart)).svg;
-    });
+        securityLevel: 'strict',
+        theme: dark ? 'dark' : 'neutral',
+      })
+      counter += 1
+      return (await mermaid.render(`mermaid-${counter}`, chart)).svg
+    })
     // A failure is not worth remembering: fixing the source changes the key anyway, and a
     // retry (e.g. after the library failed to load) should get a fresh attempt.
-    svg.catch(() => drawn.delete(key));
-    drawn.set(key, svg);
+    svg.catch(() => drawn.delete(key))
+    drawn.set(key, svg)
   }
-  return svg;
+  return svg
 }
 
 /**
@@ -44,49 +44,49 @@ export function renderMermaid(chart: string, dark: boolean): Promise<string> {
  * Until it has drawn (or if the source does not parse) the source stays on screen as a
  * plain code block, so a typo costs the picture, never the text.
  */
-export function MermaidDiagram({ chart }: { chart: string }) {
-  const host = useRef<HTMLDivElement>(null);
-  const [failed, setFailed] = useState(false);
-  const [drawn, setDrawn] = useState(false);
+export function MermaidDiagram({chart}: {chart: string}) {
+  const host = useRef<HTMLDivElement>(null)
+  const [failed, setFailed] = useState(false)
+  const [drawn, setDrawn] = useState(false)
   // Redraw when the theme flips: Mermaid bakes its colours into the SVG.
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(false)
 
   useEffect(() => {
-    const root = document.documentElement;
-    const read = () => setDark(root.classList.contains("dark"));
-    read();
-    const observer = new MutationObserver(read);
-    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, []);
+    const root = document.documentElement
+    const read = () => setDark(root.classList.contains('dark'))
+    read()
+    const observer = new MutationObserver(read)
+    observer.observe(root, {attributes: true, attributeFilter: ['class']})
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
-    let cancelled = false;
+    let cancelled = false
     renderMermaid(chart, dark).then(
       (svg) => {
-        if (cancelled || !host.current) return;
-        host.current.innerHTML = svg;
-        setDrawn(true);
-        setFailed(false);
+        if (cancelled || !host.current) return
+        host.current.innerHTML = svg
+        setDrawn(true)
+        setFailed(false)
       },
       () => {
-        if (!cancelled) setFailed(true);
+        if (!cancelled) setFailed(true)
       },
-    );
+    )
     return () => {
-      cancelled = true;
-    };
-  }, [chart, dark]);
+      cancelled = true
+    }
+  }, [chart, dark])
 
   return (
     <>
       <div
         ref={host}
         role="img"
-        aria-label={chart.split("\n")[0]}
+        aria-label={chart.split('\n')[0]}
         className="post-prose-mermaid"
         // `hidden` would lose to the stylesheet's `display:flex`.
-        style={drawn ? undefined : { display: "none" }}
+        style={drawn ? undefined : {display: 'none'}}
       />
       {drawn && !failed ? null : (
         <pre tabIndex={0}>
@@ -94,5 +94,5 @@ export function MermaidDiagram({ chart }: { chart: string }) {
         </pre>
       )}
     </>
-  );
+  )
 }

@@ -9,10 +9,10 @@
  * A bare string is still valid wherever a `Message` is accepted: that is a
  * sentence written by the **backend**, with no matching key, shown verbatim.
  */
-export type Message = { key: string; values?: Record<string, string | number> };
+export type Message = {key: string; values?: Record<string, string | number>}
 
 export function isMessage(value: unknown): value is Message {
-  return typeof value === "object" && value !== null && "key" in value;
+  return typeof value === 'object' && value !== null && 'key' in value
 }
 
 /**
@@ -24,18 +24,18 @@ export function isMessage(value: unknown): value is Message {
  * stack traces, while `text` is what actually gets translated.
  */
 export class MessageError extends Error {
-  readonly text: Message;
+  readonly text: Message
 
   constructor(text: Message) {
-    super(text.key);
-    this.name = "MessageError";
-    this.text = text;
+    super(text.key)
+    this.name = 'MessageError'
+    this.text = text
   }
 }
 
 /** Extract the displayable part of an arbitrary error. */
 export function messageOf(error: unknown): Message | string {
-  if (error instanceof MessageError) return error.text;
-  if (error instanceof Error) return error.message;
-  return { key: "common.errors.unknown" };
+  if (error instanceof MessageError) return error.text
+  if (error instanceof Error) return error.message
+  return {key: 'common.errors.unknown'}
 }

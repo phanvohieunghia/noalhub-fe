@@ -1,35 +1,35 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { Spinner, SPINNER_SIZES, SPINNER_VARIANTS } from "@noalhub/ui/spinner";
+import type {Meta, StoryObj} from '@storybook/nextjs-vite'
+import {Spinner, SPINNER_SIZES, SPINNER_VARIANTS} from '@noalhub/ui/spinner'
 
 const meta: Meta<typeof Spinner> = {
-  title: "UI/Elements/Spinner",
+  title: 'UI/Elements/Spinner',
   component: Spinner,
   parameters: {
-    layout: "centered",
+    layout: 'centered',
   },
   argTypes: {
     size: {
-      control: "select",
+      control: 'select',
       options: SPINNER_SIZES,
-      description: "Kích thước của vòng xoay",
+      description: 'Kích thước của vòng xoay',
     },
     variant: {
-      control: "select",
+      control: 'select',
       options: SPINNER_VARIANTS,
-      description: "Kiểu hiển thị: vòng tròn, chấm, cột hay nhấp nháy",
+      description: 'Kiểu hiển thị: vòng tròn, chấm, cột hay nhấp nháy',
     },
   },
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof Spinner>;
+export default meta
+type Story = StoryObj<typeof Spinner>
 
 export const Playground: Story = {
   args: {
-    size: "md",
-    variant: "ring",
+    size: 'md',
+    variant: 'ring',
   },
-};
+}
 
 /** Every variant × every size, looped from the two exported lists. */
 export const AllVariants: Story = {
@@ -37,7 +37,9 @@ export const AllVariants: Story = {
     <div className="flex flex-col gap-5">
       {SPINNER_VARIANTS.map((variant) => (
         <div key={variant} className="flex items-end gap-5">
-          <code className="w-12 text-body-4 text-muted-foreground">{variant}</code>
+          <code className="w-12 text-body-4 text-muted-foreground">
+            {variant}
+          </code>
           {SPINNER_SIZES.map((size) => (
             <div key={size} className="flex flex-col items-center gap-1.5">
               <Spinner size={size} variant={variant} />
@@ -48,7 +50,7 @@ export const AllVariants: Story = {
       ))}
     </div>
   ),
-};
+}
 
 /** The spinner inherits `currentColor`, so it matches wherever it is placed. */
 export const InheritsColor: Story = {
@@ -65,4 +67,4 @@ export const InheritsColor: Story = {
       </span>
     </div>
   ),
-};
+}

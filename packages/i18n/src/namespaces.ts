@@ -1,4 +1,4 @@
-import type { Locale } from "./config";
+import type {Locale} from './config'
 
 /**
  * The namespace list. One namespace = **one route group**, not one component
@@ -10,65 +10,65 @@ import type { Locale } from "./config";
  * `useTranslations("web.auth")` behave like any other nested namespace.
  */
 export const NAMESPACES = [
-  "common",
-  "nav",
-  "validation",
-  "web.auth",
-  "web.blog",
-  "web.chat",
-  "web.friends",
-  "web.profile",
-  "web.dashboard",
-  "web.learn",
-  "web.home",
-  "admin.overview",
-  "admin.posts",
-  "admin.users",
-  "admin.storybook",
-  "admin.qa",
-  "admin.login",
-] as const;
+  'common',
+  'nav',
+  'validation',
+  'web.auth',
+  'web.blog',
+  'web.chat',
+  'web.friends',
+  'web.profile',
+  'web.dashboard',
+  'web.learn',
+  'web.home',
+  'admin.overview',
+  'admin.posts',
+  'admin.users',
+  'admin.storybook',
+  'admin.qa',
+  'admin.login',
+] as const
 
-export type Namespace = (typeof NAMESPACES)[number];
+export type Namespace = (typeof NAMESPACES)[number]
 
 /**
  * The namespaces **every** route loads. Keep this list short: it ships in every
  * page's payload, including the static blog pages.
  */
 export const SHARED_NAMESPACES = [
-  "common",
-  "nav",
-  "validation",
-] as const satisfies readonly Namespace[];
+  'common',
+  'nav',
+  'validation',
+] as const satisfies readonly Namespace[]
 
 /**
  * Path prefix → the namespace owned by that route group. Matched **longest
  * prefix first**, so the order of this array is meaningful.
  */
 const WEB_ROUTES: ReadonlyArray<readonly [string, Namespace]> = [
-  ["/blogs", "web.blog"],
-  ["/chat", "web.chat"],
-  ["/friends", "web.friends"],
-  ["/profile", "web.profile"],
-  ["/dashboard", "web.dashboard"],
-  ["/learn", "web.learn"],
-  ["/login", "web.auth"],
-  ["/register", "web.auth"],
-  ["/forgot-password", "web.auth"],
-  ["/reset-password", "web.auth"],
-  ["/auth", "web.auth"],
-];
+  ['/blogs', 'web.blog'],
+  ['/chat', 'web.chat'],
+  ['/friends', 'web.friends'],
+  ['/profile', 'web.profile'],
+  ['/dashboard', 'web.dashboard'],
+  ['/learn', 'web.learn'],
+  ['/login', 'web.auth'],
+  ['/register', 'web.auth'],
+  ['/forgot-password', 'web.auth'],
+  ['/reset-password', 'web.auth'],
+  ['/auth', 'web.auth'],
+]
 
 const ADMIN_ROUTES: ReadonlyArray<readonly [string, Namespace]> = [
-  ["/posts", "admin.posts"],
-  ["/users", "admin.users"],
-  ["/storybook", "admin.storybook"],
+  ['/posts', 'admin.posts'],
+  ['/users', 'admin.users'],
+  ['/storybook', 'admin.storybook'],
   // One namespace for the whole Q&A area, not one per screen: the six screens
   // share their status labels and error sentences, and splitting them would
   // mean the same string translated twice, differently.
-  ["/qa", "admin.qa"],
-  ["/login", "admin.login"],
-];
+  ['/qa', 'admin.qa'],
+  ['/login', 'admin.login'],
+]
 
 function matchPrefix(
   routes: ReadonlyArray<readonly [string, Namespace]>,
@@ -76,10 +76,10 @@ function matchPrefix(
 ): Namespace | null {
   for (const [prefix, namespace] of routes) {
     if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
-      return namespace;
+      return namespace
     }
   }
-  return null;
+  return null
 }
 
 /**
@@ -92,21 +92,25 @@ function matchPrefix(
  * everything would leave the blog page downloading all of chat's strings (§5).
  */
 export function webNamespaces(pathname: string): readonly Namespace[] {
-  const route = matchPrefix(WEB_ROUTES, pathname);
-  return route ? [...SHARED_NAMESPACES, route] : [...SHARED_NAMESPACES];
+  const route = matchPrefix(WEB_ROUTES, pathname)
+  return route ? [...SHARED_NAMESPACES, route] : [...SHARED_NAMESPACES]
 }
 
 /** Same as above, for `apps/admin`. The root `/` is the overview. */
 export function adminNamespaces(pathname: string): readonly Namespace[] {
-  const route = matchPrefix(ADMIN_ROUTES, pathname) ?? "admin.overview";
-  return [...SHARED_NAMESPACES, route];
+  const route = matchPrefix(ADMIN_ROUTES, pathname) ?? 'admin.overview'
+  return [...SHARED_NAMESPACES, route]
 }
 
 /** `/en/blogs/x` → `/blogs/x`. A path without a prefix is returned unchanged. */
-export function stripLocale(pathname: string, locales: readonly Locale[]): string {
+export function stripLocale(
+  pathname: string,
+  locales: readonly Locale[],
+): string {
   for (const locale of locales) {
-    if (pathname === `/${locale}`) return "/";
-    if (pathname.startsWith(`/${locale}/`)) return pathname.slice(locale.length + 1);
+    if (pathname === `/${locale}`) return '/'
+    if (pathname.startsWith(`/${locale}/`))
+      return pathname.slice(locale.length + 1)
   }
-  return pathname;
+  return pathname
 }

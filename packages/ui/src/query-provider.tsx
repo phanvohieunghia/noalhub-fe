@@ -1,10 +1,10 @@
-"use client";
+'use client'
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useState } from "react";
+import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
+import {ReactQueryDevtools} from '@tanstack/react-query-devtools'
+import {useState} from 'react'
 
-import { ApiError } from "@noalhub/api/errors";
+import {ApiError} from '@noalhub/api/errors'
 
 function makeQueryClient() {
   return new QueryClient({
@@ -17,9 +17,9 @@ function makeQueryClient() {
             error.status >= 400 &&
             error.status < 500
           ) {
-            return false;
+            return false
           }
-          return failureCount < 2;
+          return failureCount < 2
         },
         refetchOnWindowFocus: false,
       },
@@ -27,22 +27,22 @@ function makeQueryClient() {
         retry: false,
       },
     },
-  });
+  })
 }
 
-export function QueryProvider({ children }: { children: React.ReactNode }) {
+export function QueryProvider({children}: {children: React.ReactNode}) {
   // useState → exactly one client per mount. Never declare it at module scope:
   // on the server it would be shared across requests → user data leaks.
-  const [client] = useState(makeQueryClient);
+  const [client] = useState(makeQueryClient)
   return (
     <QueryClientProvider client={client}>
       {children}
       {/* Devtools is a devDependency — the bundler drops it from production builds. */}
       {/* Opt-in: env values are strings, so `Boolean("false")` would be true. */}
-      {process.env.NODE_ENV === "development" &&
-        process.env.NEXT_PUBLIC_QUERY_DEVTOOLS === "true" && (
+      {process.env.NODE_ENV === 'development' &&
+        process.env.NEXT_PUBLIC_QUERY_DEVTOOLS === 'true' && (
           <ReactQueryDevtools initialIsOpen={false} />
         )}
     </QueryClientProvider>
-  );
+  )
 }

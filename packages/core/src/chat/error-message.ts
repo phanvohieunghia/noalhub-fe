@@ -1,5 +1,5 @@
-import { ApiError } from "@noalhub/api/errors";
-import type { Message } from "@noalhub/api/message";
+import {ApiError} from '@noalhub/api/errors'
+import type {Message} from '@noalhub/api/message'
 
 /**
  * The message shown for an arbitrary error, as an i18n key (§7.3).
@@ -9,24 +9,24 @@ import type { Message } from "@noalhub/api/message";
  */
 export function errorText(error: unknown): Message | string {
   if (error instanceof ApiError) {
-    if (error.status === 404) return { key: "common.errors.conversationNotFound" };
-    return error.message;
+    if (error.status === 404) return {key: 'common.errors.conversationNotFound'}
+    return error.message
   }
-  return { key: "common.errors.generic" };
+  return {key: 'common.errors.generic'}
 }
 
 /** The message for an error code in a socket ack (`{ ok: false, code }`). */
 export function ackErrorText(code: string | undefined): Message {
   switch (code) {
-    case "SOCKET_OFFLINE":
-      return { key: "common.errors.socket.offline" };
-    case "RATE_LIMITED":
-      return { key: "common.errors.socket.rateLimited" };
-    case "NOT_FOUND":
-      return { key: "common.errors.socket.notFound" };
-    case "VALIDATION_FAILED":
-      return { key: "common.errors.socket.validationFailed" };
+    case 'SOCKET_OFFLINE':
+      return {key: 'common.errors.socket.offline'}
+    case 'RATE_LIMITED':
+      return {key: 'common.errors.socket.rateLimited'}
+    case 'NOT_FOUND':
+      return {key: 'common.errors.socket.notFound'}
+    case 'VALIDATION_FAILED':
+      return {key: 'common.errors.socket.validationFailed'}
     default:
-      return { key: "common.errors.socket.sendFailed" };
+      return {key: 'common.errors.socket.sendFailed'}
   }
 }

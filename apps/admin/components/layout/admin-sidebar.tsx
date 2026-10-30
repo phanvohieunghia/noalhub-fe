@@ -1,16 +1,16 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
-import { usePathname } from "next/navigation";
-import { useMemo, useSyncExternalStore } from "react";
+import {useTranslations} from 'next-intl'
+import {usePathname} from 'next/navigation'
+import {useMemo, useSyncExternalStore} from 'react'
 
-import { useMe } from "@noalhub/api/auth";
+import {useMe} from '@noalhub/api/auth'
 
-import { FLAT_NAV_ITEMS, NAV_ITEMS, type NavItem } from "./nav-items";
-import { Sidebar, type SidebarItem } from "@noalhub/ui/sidebar";
+import {FLAT_NAV_ITEMS, NAV_ITEMS, type NavItem} from './nav-items'
+import {Sidebar, type SidebarItem} from '@noalhub/ui/sidebar'
 
-const COLLAPSED_KEY = "admin.sidebar.collapsedGroups";
-const RAIL_KEY = "admin.sidebar.rail";
+const COLLAPSED_KEY = 'admin.sidebar.collapsedGroups'
+const RAIL_KEY = 'admin.sidebar.rail'
 
 /**
  * The href of the nav item the current path belongs to, or `undefined`.
@@ -20,16 +20,16 @@ const RAIL_KEY = "admin.sidebar.rail";
  * as a bug. The longest match wins — which is also the most specific one.
  */
 function activeNavHref(pathname: string): string | undefined {
-  let best: string | undefined;
+  let best: string | undefined
 
   for (const item of FLAT_NAV_ITEMS) {
     // Requiring the next character to be "/" rules out `/postsomething`.
     const matches =
-      pathname === item.href || pathname.startsWith(`${item.href}/`);
-    if (matches && (!best || item.href.length > best.length)) best = item.href;
+      pathname === item.href || pathname.startsWith(`${item.href}/`)
+    if (matches && (!best || item.href.length > best.length)) best = item.href
   }
 
-  return best;
+  return best
 }
 
 /**
@@ -48,56 +48,56 @@ function activeNavHref(pathname: string): string | undefined {
  * Storing the COLLAPSED set (not the expanded one) keeps the default —
  * everything open — whenever the store is empty or unreadable.
  */
-const listeners = new Set<() => void>();
+const listeners = new Set<() => void>()
 
 function subscribe(listener: () => void) {
-  listeners.add(listener);
+  listeners.add(listener)
   // Another tab writing the same key: `storage` fires here but not in the tab
   // that wrote it, which is why `toggle` notifies locally as well.
-  window.addEventListener("storage", listener);
+  window.addEventListener('storage', listener)
   return () => {
-    listeners.delete(listener);
-    window.removeEventListener("storage", listener);
-  };
+    listeners.delete(listener)
+    window.removeEventListener('storage', listener)
+  }
 }
 
 function readCollapsed(): string {
   try {
-    return window.localStorage.getItem(COLLAPSED_KEY) ?? "";
+    return window.localStorage.getItem(COLLAPSED_KEY) ?? ''
   } catch {
     // Private mode, or storage blocked. Not worth a broken sidebar.
-    return "";
+    return ''
   }
 }
 
 function useCollapsedGroups() {
-  const raw = useSyncExternalStore(subscribe, readCollapsed, () => "");
+  const raw = useSyncExternalStore(subscribe, readCollapsed, () => '')
 
   const collapsed = useMemo<string[]>(() => {
-    if (!raw) return [];
+    if (!raw) return []
     try {
-      const parsed: unknown = JSON.parse(raw);
-      return Array.isArray(parsed) ? (parsed as string[]) : [];
+      const parsed: unknown = JSON.parse(raw)
+      return Array.isArray(parsed) ? (parsed as string[]) : []
     } catch {
       // Someone hand-edited the value — treat it as "nothing collapsed".
-      return [];
+      return []
     }
-  }, [raw]);
+  }, [raw])
 
   const toggle = (href: string) => {
     const next = collapsed.includes(href)
       ? collapsed.filter((item) => item !== href)
-      : [...collapsed, href];
+      : [...collapsed, href]
 
     try {
-      window.localStorage.setItem(COLLAPSED_KEY, JSON.stringify(next));
+      window.localStorage.setItem(COLLAPSED_KEY, JSON.stringify(next))
     } catch {
       // Storage is a convenience; without it the sidebar simply forgets.
     }
-    for (const listener of listeners) listener();
-  };
+    for (const listener of listeners) listener()
+  }
 
-  return { collapsed, toggle };
+  return {collapsed, toggle}
 }
 
 /**
@@ -107,26 +107,26 @@ function useCollapsedGroups() {
  */
 function readRail(): string {
   try {
-    return window.localStorage.getItem(RAIL_KEY) ?? "";
+    return window.localStorage.getItem(RAIL_KEY) ?? ''
   } catch {
-    return "";
+    return ''
   }
 }
 
 function useRail() {
-  const raw = useSyncExternalStore(subscribe, readRail, () => "");
-  const rail = raw === "1";
+  const raw = useSyncExternalStore(subscribe, readRail, () => '')
+  const rail = raw === '1'
 
   const toggle = () => {
     try {
-      window.localStorage.setItem(RAIL_KEY, rail ? "" : "1");
+      window.localStorage.setItem(RAIL_KEY, rail ? '' : '1')
     } catch {
       // Same as the groups: a convenience, not a requirement.
     }
-    for (const listener of listeners) listener();
-  };
+    for (const listener of listeners) listener()
+  }
 
-  return { rail, toggle };
+  return {rail, toggle}
 }
 
 /**
@@ -136,10 +136,10 @@ function useRail() {
  * the boundary.
  */
 function useIsLocked(): (item: NavItem) => boolean {
-  const me = useMe();
+  const me = useMe()
   return (item) =>
     Boolean(item.disabled) ||
-    (item.requires !== undefined && me.data?.[item.requires] !== true);
+    (item.requires !== undefined && me.data?.[item.requires] !== true)
 }
 
 /**
@@ -148,17 +148,18 @@ function useIsLocked(): (item: NavItem) => boolean {
  * locked out — and the translation of keys into words.
  */
 export function AdminSidebar() {
-  const pathname = usePathname();
-  const t = useTranslations("nav");
-  const ta = useTranslations("nav.admin");
-  const active = activeNavHref(pathname);
-  const { collapsed, toggle } = useCollapsedGroups();
-  const { rail, toggle: toggleRail } = useRail();
-  const isLocked = useIsLocked();
+  const pathname = usePathname()
+  const t = useTranslations('nav')
+  const ta = useTranslations('nav.admin')
+  const active = activeNavHref(pathname)
+  const {collapsed, toggle} = useCollapsedGroups()
+  const {rail, toggle: toggleRail} = useRail()
+  const isLocked = useIsLocked()
 
   const toItem = (item: NavItem): SidebarItem => {
     const reasonKey =
-      item.reasonKey ?? (item.requires ? "disabled.requiresSuperAdmin" : undefined);
+      item.reasonKey ??
+      (item.requires ? 'disabled.requiresSuperAdmin' : undefined)
     return {
       href: item.href,
       label: ta(item.labelKey),
@@ -166,12 +167,12 @@ export function AdminSidebar() {
       locked: isLocked(item),
       lockedReason: reasonKey ? ta(reasonKey) : undefined,
       children: item.children?.map(toItem),
-    };
-  };
+    }
+  }
 
   return (
     <Sidebar
-      brand={{ title: t("adminBrand"), subtitle: t("adminSubtitle") }}
+      brand={{title: t('adminBrand'), subtitle: t('adminSubtitle')}}
       items={NAV_ITEMS.map(toItem)}
       pathname={pathname}
       activeHref={active}
@@ -180,11 +181,12 @@ export function AdminSidebar() {
       rail={rail}
       onToggleRail={toggleRail}
       labels={{
-        nav: ta("mainNav"),
-        expandSidebar: ta("expandSidebar"),
-        collapseSidebar: ta("collapseSidebar"),
-        group: (open, section) => ta(open ? "collapseGroup" : "expandGroup", { section }),
+        nav: ta('mainNav'),
+        expandSidebar: ta('expandSidebar'),
+        collapseSidebar: ta('collapseSidebar'),
+        group: (open, section) =>
+          ta(open ? 'collapseGroup' : 'expandGroup', {section}),
       }}
     />
-  );
+  )
 }

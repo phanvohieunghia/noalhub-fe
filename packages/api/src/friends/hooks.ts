@@ -1,26 +1,26 @@
-"use client";
+'use client'
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query'
 
-import * as friendsApi from "./api";
-import { getPublicProfile } from "../users/api";
-import { userKeys } from "../users/hooks";
-import type { FriendRequestDirection } from "./types";
+import * as friendsApi from './api'
+import {getPublicProfile} from '../users/api'
+import {userKeys} from '../users/hooks'
+import type {FriendRequestDirection} from './types'
 
 /** Query key factory — the ONLY source of truth for the friends feature's keys. */
 export const friendKeys = {
-  all: ["friends"] as const,
-  list: () => [...friendKeys.all, "list"] as const,
-  requests: () => [...friendKeys.all, "requests"] as const,
+  all: ['friends'] as const,
+  list: () => [...friendKeys.all, 'list'] as const,
+  requests: () => [...friendKeys.all, 'requests'] as const,
   request: (direction: FriendRequestDirection) =>
     [...friendKeys.requests(), direction] as const,
-};
+}
 
 export function useFriends() {
   return useQuery({
     queryKey: friendKeys.list(),
-    queryFn: ({ signal }) => friendsApi.listFriends(signal),
-  });
+    queryFn: ({signal}) => friendsApi.listFriends(signal),
+  })
 }
 
 /**
@@ -29,12 +29,12 @@ export function useFriends() {
  * overwrite the other.
  */
 export function useFriendRequests(
-  direction: FriendRequestDirection = "incoming",
+  direction: FriendRequestDirection = 'incoming',
 ) {
   return useQuery({
     queryKey: friendKeys.request(direction),
-    queryFn: ({ signal }) => friendsApi.listFriendRequests(direction, signal),
-  });
+    queryFn: ({signal}) => friendsApi.listFriendRequests(direction, signal),
+  })
 }
 
 /**
@@ -47,11 +47,11 @@ export function useFriendRequests(
  */
 export function useFindUserByUsername(username: string | undefined) {
   return useQuery({
-    queryKey: userKeys.detail(username ?? ""),
-    queryFn: ({ signal }) => getPublicProfile(username!, signal),
+    queryKey: userKeys.detail(username ?? ''),
+    queryFn: ({signal}) => getPublicProfile(username!, signal),
     enabled: Boolean(username),
     retry: false,
-  });
+  })
 }
 
 /**
@@ -60,42 +60,38 @@ export function useFindUserByUsername(username: string | undefined) {
  * invalidated too, not just the requests.
  */
 export function useSendFriendRequest() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (username: string) => friendsApi.sendFriendRequest(username),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: friendKeys.all }),
-  });
+    onSuccess: () => queryClient.invalidateQueries({queryKey: friendKeys.all}),
+  })
 }
 
 export function useAcceptFriendRequest() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (username: string) => friendsApi.acceptFriendRequest(username),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: friendKeys.all }),
-  });
+    onSuccess: () => queryClient.invalidateQueries({queryKey: friendKeys.all}),
+  })
 }
 
 /** Decline an incoming request, or cancel one you sent — the same endpoint. */
 export function useRemoveFriendRequest() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (username: string) => friendsApi.removeFriendRequest(username),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: friendKeys.all }),
-  });
+    onSuccess: () => queryClient.invalidateQueries({queryKey: friendKeys.all}),
+  })
 }
 
 export function useUnfriend() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (username: string) => friendsApi.unfriend(username),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: friendKeys.all }),
-  });
+    onSuccess: () => queryClient.invalidateQueries({queryKey: friendKeys.all}),
+  })
 }

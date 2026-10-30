@@ -12,98 +12,100 @@
  * anything fancier would be thrown away one step later.
  */
 export function htmlToMarkdown(html: string): string {
-  if (typeof window === "undefined") return html;
+  if (typeof window === 'undefined') return html
 
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  const text = nodeToMarkdown(doc.body).replace(/\n{3,}/g, "\n\n").trim();
-  return text;
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  const text = nodeToMarkdown(doc.body)
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+  return text
 }
 
 function nodeToMarkdown(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) {
     // Collapse the whitespace HTML sources are full of; Markdown gives newlines
     // a meaning, so stray ones would create paragraphs nobody wrote.
-    return (node.textContent ?? "").replace(/\s+/g, " ");
+    return (node.textContent ?? '').replace(/\s+/g, ' ')
   }
-  if (node.nodeType !== Node.ELEMENT_NODE) return "";
+  if (node.nodeType !== Node.ELEMENT_NODE) return ''
 
-  const element = node as HTMLElement;
+  const element = node as HTMLElement
   const children = () =>
-    Array.from(element.childNodes).map(nodeToMarkdown).join("");
+    Array.from(element.childNodes).map(nodeToMarkdown).join('')
 
   switch (element.tagName) {
-    case "H1":
-    case "H2":
-      return `\n\n## ${children().trim()}\n\n`;
-    case "H3":
-      return `\n\n### ${children().trim()}\n\n`;
-    case "H4":
-    case "H5":
-    case "H6":
-      return `\n\n#### ${children().trim()}\n\n`;
+    case 'H1':
+    case 'H2':
+      return `\n\n## ${children().trim()}\n\n`
+    case 'H3':
+      return `\n\n### ${children().trim()}\n\n`
+    case 'H4':
+    case 'H5':
+    case 'H6':
+      return `\n\n#### ${children().trim()}\n\n`
 
-    case "P":
-    case "DIV":
-    case "SECTION":
-    case "ARTICLE":
-      return `\n\n${children().trim()}\n\n`;
+    case 'P':
+    case 'DIV':
+    case 'SECTION':
+    case 'ARTICLE':
+      return `\n\n${children().trim()}\n\n`
 
-    case "BR":
-      return "\n";
+    case 'BR':
+      return '\n'
 
-    case "UL":
-    case "OL":
-      return `\n${children()}\n`;
+    case 'UL':
+    case 'OL':
+      return `\n${children()}\n`
 
-    case "LI": {
-      const marker = element.parentElement?.tagName === "OL" ? "1." : "-";
-      return `${marker} ${children().trim()}\n`;
+    case 'LI': {
+      const marker = element.parentElement?.tagName === 'OL' ? '1.' : '-'
+      return `${marker} ${children().trim()}\n`
     }
 
-    case "A": {
-      const href = element.getAttribute("href") ?? "";
-      const label = children().trim();
+    case 'A': {
+      const href = element.getAttribute('href') ?? ''
+      const label = children().trim()
       // A link with no target is just words — writing `[x]()` would be noise in
       // the prompt.
-      return href ? `[${label}](${href})` : label;
+      return href ? `[${label}](${href})` : label
     }
 
-    case "STRONG":
-    case "B":
-      return `**${children().trim()}**`;
+    case 'STRONG':
+    case 'B':
+      return `**${children().trim()}**`
 
-    case "EM":
-    case "I":
-      return `*${children().trim()}*`;
+    case 'EM':
+    case 'I':
+      return `*${children().trim()}*`
 
-    case "CODE":
-      return `\`${children().trim()}\``;
+    case 'CODE':
+      return `\`${children().trim()}\``
 
-    case "PRE":
-      return `\n\n\`\`\`\n${element.textContent ?? ""}\n\`\`\`\n\n`;
+    case 'PRE':
+      return `\n\n\`\`\`\n${element.textContent ?? ''}\n\`\`\`\n\n`
 
-    case "BLOCKQUOTE":
-      return `\n\n> ${children().trim()}\n\n`;
+    case 'BLOCKQUOTE':
+      return `\n\n> ${children().trim()}\n\n`
 
-    case "TABLE":
-    case "THEAD":
-    case "TBODY":
-    case "TR":
-      return `\n${children()}\n`;
+    case 'TABLE':
+    case 'THEAD':
+    case 'TBODY':
+    case 'TR':
+      return `\n${children()}\n`
 
-    case "TH":
-    case "TD":
+    case 'TH':
+    case 'TD':
       // Cells separated by a pipe, no alignment row: this is source text for a
       // model, not a table anyone renders.
-      return `${children().trim()} | `;
+      return `${children().trim()} | `
 
     // Elements whose content is not prose at all.
-    case "SCRIPT":
-    case "STYLE":
-    case "NOSCRIPT":
-      return "";
+    case 'SCRIPT':
+    case 'STYLE':
+    case 'NOSCRIPT':
+      return ''
 
     default:
-      return children();
+      return children()
   }
 }

@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import {zodResolver} from '@hookform/resolvers/zod'
+import {useState} from 'react'
+import {useForm} from 'react-hook-form'
 
 import {
   storybookAccessFormSchema,
@@ -11,17 +11,17 @@ import {
   useStorybookAccess,
   type StorybookAccess,
   type StorybookAccessFormValues,
-} from "@noalhub/api/admin";
-import { STORYBOOK_INTERNAL_URL } from "@noalhub/api/config";
-import type { Message } from "@noalhub/api/message";
-import { storybookErrorText } from "@noalhub/core/admin/storybook-error-message";
-import { applyApiError } from "@noalhub/core/forms/apply-api-error";
-import { useDateFormat } from "@noalhub/i18n/use-date-format";
-import { useMessage } from "@noalhub/i18n/use-message";
-import { Button } from "@noalhub/ui/button";
-import { Dialog } from "@noalhub/ui/dialog";
-import { Input } from "@noalhub/ui/input";
-import { Skeleton } from "@noalhub/ui/skeleton";
+} from '@noalhub/api/admin'
+import {STORYBOOK_INTERNAL_URL} from '@noalhub/api/config'
+import type {Message} from '@noalhub/api/message'
+import {storybookErrorText} from '@noalhub/core/admin/storybook-error-message'
+import {applyApiError} from '@noalhub/core/forms/apply-api-error'
+import {useDateFormat} from '@noalhub/i18n/use-date-format'
+import {useMessage} from '@noalhub/i18n/use-message'
+import {Button} from '@noalhub/ui/button'
+import {Dialog} from '@noalhub/ui/dialog'
+import {Input} from '@noalhub/ui/input'
+import {Skeleton} from '@noalhub/ui/skeleton'
 import {
   TableBody,
   TableCell,
@@ -30,15 +30,15 @@ import {
   TableHeaderCell,
   TableRoot,
   TableRow,
-} from "@noalhub/ui/table";
-import { AlertError } from "@noalhub/ui/alert";
-import { Typography } from "@noalhub/ui/typography";
-import { useTranslations } from "next-intl";
+} from '@noalhub/ui/table'
+import {AlertError} from '@noalhub/ui/alert'
+import {Typography} from '@noalhub/ui/typography'
+import {useTranslations} from 'next-intl'
 
-import { AdminErrorState } from "../admin-error-state";
+import {AdminErrorState} from '../admin-error-state'
 
-const FIELDS = ["email", "note"] as const;
-const COLUMN_COUNT = 4;
+const FIELDS = ['email', 'note'] as const
+const COLUMN_COUNT = 4
 
 /**
  * Who may open the internal Storybook.
@@ -57,48 +57,50 @@ const COLUMN_COUNT = 4;
  * "editing" one is revoking one person and granting another.
  */
 export function StorybookAccessContent() {
-  const t = useTranslations("admin.storybook");
-  const access = useStorybookAccess();
-  const [adding, setAdding] = useState(false);
-  const [revoking, setRevoking] = useState<StorybookAccess | null>(null);
+  const t = useTranslations('admin.storybook')
+  const access = useStorybookAccess()
+  const [adding, setAdding] = useState(false)
+  const [revoking, setRevoking] = useState<StorybookAccess | null>(null)
 
-  const rows = access.data ?? [];
+  const rows = access.data ?? []
 
   return (
     <main className="w-full p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="max-w-2xl">
           <Typography variant="h4" as="h1">
-            {t("title")}
+            {t('title')}
           </Typography>
           <Typography variant="body-3" className="mt-1 opacity-70">
-            {t("intro", { url: STORYBOOK_INTERNAL_URL })}
+            {t('intro', {url: STORYBOOK_INTERNAL_URL})}
           </Typography>
         </div>
-        <Button onClick={() => setAdding(true)}>{t("add")}</Button>
+        <Button onClick={() => setAdding(true)}>{t('add')}</Button>
       </div>
 
       <Typography
         variant="body-3"
-        className="mt-4 rounded-md border border-black/10 bg-black/3 px-3 py-2 opacity-80 dark:border-white/15 dark:bg-white/5"
-      >
-        {t("adminsNote")}
+        className="mt-4 rounded-md border border-black/10 bg-black/3 px-3 py-2 opacity-80 dark:border-white/15 dark:bg-white/5">
+        {t('adminsNote')}
       </Typography>
 
       {access.isError ? (
         <div className="mt-4">
-          <AdminErrorState error={access.error} onRetry={() => access.refetch()} />
+          <AdminErrorState
+            error={access.error}
+            onRetry={() => access.refetch()}
+          />
         </div>
       ) : (
         <div className="mt-4">
-          <TableRoot caption={t("caption")}>
+          <TableRoot caption={t('caption')}>
             <TableHead>
               <TableRow>
-                <TableHeaderCell>{t("columns.email")}</TableHeaderCell>
-                <TableHeaderCell>{t("columns.note")}</TableHeaderCell>
-                <TableHeaderCell>{t("columns.grantedAt")}</TableHeaderCell>
+                <TableHeaderCell>{t('columns.email')}</TableHeaderCell>
+                <TableHeaderCell>{t('columns.note')}</TableHeaderCell>
+                <TableHeaderCell>{t('columns.grantedAt')}</TableHeaderCell>
                 <TableHeaderCell>
-                  <span className="sr-only">{t("actionsColumn")}</span>
+                  <span className="sr-only">{t('actionsColumn')}</span>
                 </TableHeaderCell>
               </TableRow>
             </TableHead>
@@ -106,10 +108,16 @@ export function StorybookAccessContent() {
               {access.isPending ? (
                 <SkeletonRows />
               ) : rows.length === 0 ? (
-                <TableEmptyRow colSpan={COLUMN_COUNT}>{t("empty")}</TableEmptyRow>
+                <TableEmptyRow colSpan={COLUMN_COUNT}>
+                  {t('empty')}
+                </TableEmptyRow>
               ) : (
                 rows.map((row) => (
-                  <AccessRow key={row.id} row={row} onRevoke={() => setRevoking(row)} />
+                  <AccessRow
+                    key={row.id}
+                    row={row}
+                    onRevoke={() => setRevoking(row)}
+                  />
                 ))
               )}
             </TableBody>
@@ -123,69 +131,75 @@ export function StorybookAccessContent() {
         <RevokeDialog row={revoking} onClose={() => setRevoking(null)} />
       ) : null}
     </main>
-  );
+  )
 }
 
-function AccessRow({ row, onRevoke }: { row: StorybookAccess; onRevoke: () => void }) {
-  const t = useTranslations("admin.storybook");
-  const df = useDateFormat();
+function AccessRow({
+  row,
+  onRevoke,
+}: {
+  row: StorybookAccess
+  onRevoke: () => void
+}) {
+  const t = useTranslations('admin.storybook')
+  const df = useDateFormat()
 
   return (
     <TableRow>
       <TableCell weight={500}>{row.email}</TableCell>
-      <TableCell className="opacity-70">{row.note ?? "—"}</TableCell>
+      <TableCell className="opacity-70">{row.note ?? '—'}</TableCell>
       <TableCell className="whitespace-nowrap opacity-70">
         {df.date(row.createdAt)}
       </TableCell>
       <TableCell>
         <div className="flex justify-end">
           <Button variant="outline" onClick={onRevoke}>
-            {t("revoke")}
+            {t('revoke')}
           </Button>
         </div>
       </TableCell>
     </TableRow>
-  );
+  )
 }
 
-function GrantDialog({ onClose }: { onClose: () => void }) {
-  const t = useTranslations("admin.storybook");
-  const tc = useTranslations("common");
-  const m = useMessage();
-  const grant = useGrantStorybookAccess();
-  const [formError, setFormError] = useState<Message | string | null>(null);
+function GrantDialog({onClose}: {onClose: () => void}) {
+  const t = useTranslations('admin.storybook')
+  const tc = useTranslations('common')
+  const m = useMessage()
+  const grant = useGrantStorybookAccess()
+  const [formError, setFormError] = useState<Message | string | null>(null)
 
   const {
     register,
     handleSubmit,
     setError,
-    formState: { errors, isSubmitting },
+    formState: {errors, isSubmitting},
   } = useForm<StorybookAccessFormValues>({
     resolver: zodResolver(storybookAccessFormSchema),
-    defaultValues: { email: "", note: "" },
-  });
+    defaultValues: {email: '', note: ''},
+  })
 
   const onSubmit = handleSubmit(async (values) => {
-    setFormError(null);
+    setFormError(null)
     try {
-      await grant.mutateAsync(values);
-      onClose();
+      await grant.mutateAsync(values)
+      onClose()
     } catch (error) {
       // 409 lands on the email field via `applyApiError` when the backend names
       // it; anything else falls back to the sentence under the form.
-      setFormError(applyApiError(error, setError, FIELDS, storybookErrorText));
+      setFormError(applyApiError(error, setError, FIELDS, storybookErrorText))
     }
-  });
+  })
 
   return (
-    <Dialog open onClose={onClose} title={t("addTitle")}>
+    <Dialog open onClose={onClose} title={t('addTitle')}>
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <Input
-          label={t("emailLabel")}
+          label={t('emailLabel')}
           type="email"
           autoComplete="off"
-          placeholder={t("emailPlaceholder")}
-          {...register("email")}
+          placeholder={t('emailPlaceholder')}
+          {...register('email')}
           error={m(errors.email?.message)}
         />
 
@@ -197,77 +211,85 @@ function GrantDialog({ onClose }: { onClose: () => void }) {
         <Typography
           variant="body-3"
           role="note"
-          className="-mt-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300"
-        >
-          {t("emailWarning")}
+          className="-mt-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300">
+          {t('emailWarning')}
         </Typography>
 
-        <Input label={t("noteLabel")} {...register("note")} error={m(errors.note?.message)} />
+        <Input
+          label={t('noteLabel')}
+          {...register('note')}
+          error={m(errors.note?.message)}
+        />
         <Typography variant="body-4" className="-mt-2 opacity-60">
-          {t("noteHint")}
+          {t('noteHint')}
         </Typography>
 
         <AlertError message={m(formError)} />
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
-            {tc("actions.cancel")}
+            {tc('actions.cancel')}
           </Button>
           <Button type="submit" loading={isSubmitting}>
-            {isSubmitting ? t("granting") : t("grant")}
+            {isSubmitting ? t('granting') : t('grant')}
           </Button>
         </div>
       </form>
     </Dialog>
-  );
+  )
 }
 
-function RevokeDialog({ row, onClose }: { row: StorybookAccess; onClose: () => void }) {
-  const t = useTranslations("admin.storybook");
-  const tc = useTranslations("common");
-  const m = useMessage();
-  const revoke = useRevokeStorybookAccess();
-  const [error, setError] = useState<Message | string | null>(null);
+function RevokeDialog({
+  row,
+  onClose,
+}: {
+  row: StorybookAccess
+  onClose: () => void
+}) {
+  const t = useTranslations('admin.storybook')
+  const tc = useTranslations('common')
+  const m = useMessage()
+  const revoke = useRevokeStorybookAccess()
+  const [error, setError] = useState<Message | string | null>(null)
 
   return (
-    <Dialog open onClose={onClose} title={t("revokeTitle", { email: row.email })}>
+    <Dialog open onClose={onClose} title={t('revokeTitle', {email: row.email})}>
       <div className="flex flex-col gap-4">
         <Typography variant="body-3" className="opacity-80">
-          {t("revokeBody")}
+          {t('revokeBody')}
         </Typography>
 
         <AlertError message={m(error)} />
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
-            {tc("actions.cancel")}
+            {tc('actions.cancel')}
           </Button>
           <Button
             loading={revoke.isPending}
             onClick={async () => {
-              setError(null);
+              setError(null)
               try {
-                await revoke.mutateAsync(row.id);
-                onClose();
+                await revoke.mutateAsync(row.id)
+                onClose()
               } catch (cause) {
-                setError(storybookErrorText(cause));
+                setError(storybookErrorText(cause))
               }
-            }}
-          >
-            {revoke.isPending ? tc("states.deleting") : t("revoke")}
+            }}>
+            {revoke.isPending ? tc('states.deleting') : t('revoke')}
           </Button>
         </div>
       </div>
     </Dialog>
-  );
+  )
 }
 
 function SkeletonRows() {
   return (
     <>
-      {Array.from({ length: 4 }).map((_, index) => (
+      {Array.from({length: 4}).map((_, index) => (
         <TableRow key={index} aria-busy="true">
-          {Array.from({ length: COLUMN_COUNT }).map((__, cell) => (
+          {Array.from({length: COLUMN_COUNT}).map((__, cell) => (
             <TableCell key={cell}>
               <Skeleton className="h-4 w-full max-w-32" />
             </TableCell>
@@ -275,5 +297,5 @@ function SkeletonRows() {
         </TableRow>
       ))}
     </>
-  );
+  )
 }

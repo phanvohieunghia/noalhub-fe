@@ -1,11 +1,11 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import {useTranslations} from 'next-intl'
+import Link from 'next/link'
+import {useRouter} from 'next/navigation'
+import {useEffect, useMemo, useState} from 'react'
 
-import type { Message } from "@noalhub/api/message";
+import type {Message} from '@noalhub/api/message'
 import {
   useFinishQaAttempt,
   useQaAttemptPlay,
@@ -16,26 +16,26 @@ import {
   type QaAttempt,
   type QaItemPlay,
   type QaResponse,
-} from "@noalhub/api/qa";
-import { applyApiError } from "@noalhub/core/forms/apply-api-error";
-import { useMessage } from "@noalhub/i18n/use-message";
-import { AlertError } from "@noalhub/ui/alert";
-import { QaContent } from "@noalhub/ui/blog/qa-content";
-import { QaQuestion } from "@noalhub/ui/blog/qa-question";
-import { Button } from "@noalhub/ui/button";
-import { Dialog } from "@noalhub/ui/dialog";
-import { Icon, LUCIDE } from "@noalhub/ui/icons";
-import { Skeleton } from "@noalhub/ui/skeleton";
-import { Tooltip } from "@noalhub/ui/tooltip";
-import { Typography } from "@noalhub/ui/typography";
+} from '@noalhub/api/qa'
+import {applyApiError} from '@noalhub/core/forms/apply-api-error'
+import {useMessage} from '@noalhub/i18n/use-message'
+import {AlertError} from '@noalhub/ui/alert'
+import {QaContent} from '@noalhub/ui/blog/qa-content'
+import {QaQuestion} from '@noalhub/ui/blog/qa-question'
+import {Button} from '@noalhub/ui/button'
+import {Dialog} from '@noalhub/ui/dialog'
+import {Icon, LUCIDE} from '@noalhub/ui/icons'
+import {Skeleton} from '@noalhub/ui/skeleton'
+import {Tooltip} from '@noalhub/ui/tooltip'
+import {Typography} from '@noalhub/ui/typography'
 
-import { AnswerInput } from "./answer-input";
-import { playCorrect, playWrong, unlockSounds } from "@noalhub/core/sounds";
+import {AnswerInput} from './answer-input'
+import {playCorrect, playWrong, unlockSounds} from '@noalhub/core/sounds'
 
 /** Questions per progress section, once the set is long enough to need sections. */
-const SECTION_SIZE = 10;
+const SECTION_SIZE = 10
 /** Up to this many questions the progress is one bar of per-question cells. */
-const SINGLE_BAR_MAX = 10;
+const SINGLE_BAR_MAX = 10
 
 /**
  * Taking a dataset, one question at a time.
@@ -55,7 +55,7 @@ const SINGLE_BAR_MAX = 10;
  * being served; nothing the learner did is lost — the log only ever appends.
  */
 /** How long the header stays down before it folds away again. */
-const HEADER_VISIBLE_MS = 3000;
+const HEADER_VISIBLE_MS = 3000
 
 /**
  * The URL names the **set**, not an attempt: the attempt is resolved on every load
@@ -63,21 +63,21 @@ const HEADER_VISIBLE_MS = 3000;
  * or another device, always lands on whatever is currently open for this set instead
  * of an attempt id that may have been finished elsewhere.
  */
-export function LearnAttempt({ datasetId }: { datasetId: string }) {
-  const t = useTranslations("web.learn");
-  const start = useStartQaAttempt();
-  const { mutate } = start;
-  useEffect(() => mutate({ datasetId }), [mutate, datasetId]);
+export function LearnAttempt({datasetId}: {datasetId: string}) {
+  const t = useTranslations('web.learn')
+  const start = useStartQaAttempt()
+  const {mutate} = start
+  useEffect(() => mutate({datasetId}), [mutate, datasetId])
 
-  if (start.data) return <LearnAttemptRun attemptId={start.data.id} />;
+  if (start.data) return <LearnAttemptRun attemptId={start.data.id} />
   if (start.isError) {
     return (
       <main className="mx-auto w-full max-w-3xl p-4 sm:p-6">
         <Typography variant="h5" as="h1">
-          {t("attempt.notFound")}
+          {t('attempt.notFound')}
         </Typography>
       </main>
-    );
+    )
   }
   return (
     <main className="mx-auto w-full max-w-3xl space-y-4 p-4 sm:p-6">
@@ -85,56 +85,56 @@ export function LearnAttempt({ datasetId }: { datasetId: string }) {
       <Skeleton className="h-2 w-full" />
       <Skeleton className="h-72 w-full rounded-xl" />
     </main>
-  );
+  )
 }
 
-function LearnAttemptRun({ attemptId }: { attemptId: string }) {
-  const t = useTranslations("web.learn");
-  const m = useMessage();
-  const router = useRouter();
+function LearnAttemptRun({attemptId}: {attemptId: string}) {
+  const t = useTranslations('web.learn')
+  const m = useMessage()
+  const router = useRouter()
 
-  const set = useQaAttemptPlay(attemptId);
-  const answered = useQaAttemptReview(attemptId);
-  const submit = useSubmitQaAnswer(attemptId);
-  const finish = useFinishQaAttempt();
+  const set = useQaAttemptPlay(attemptId)
+  const answered = useQaAttemptReview(attemptId)
+  const submit = useSubmitQaAnswer(attemptId)
+  const finish = useFinishQaAttempt()
 
   const [shown, setShown] = useState<{
-    item: QaItemPlay;
-    result: QaAnswerResult;
-  } | null>(null);
+    item: QaItemPlay
+    result: QaAnswerResult
+  } | null>(null)
   // Every answer returns the updated attempt; the attempt query is not refetched
   // per answer, so this is the fresher copy of the counters.
-  const [latest, setLatest] = useState<QaAttempt | null>(null);
-  const [error, setError] = useState<Message | string | null>(null);
-  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [latest, setLatest] = useState<QaAttempt | null>(null)
+  const [error, setError] = useState<Message | string | null>(null)
+  const [confirmLeave, setConfirmLeave] = useState(false)
   // The position label lives in a tooltip: hover/focus open it, and a tap pins
   // it for a moment (Radix itself closes on click and ignores touch).
-  const [tipHover, setTipHover] = useState(false);
-  const [tipPinned, setTipPinned] = useState(false);
+  const [tipHover, setTipHover] = useState(false)
+  const [tipPinned, setTipPinned] = useState(false)
   useEffect(() => {
-    if (!tipPinned) return;
-    const timer = window.setTimeout(() => setTipPinned(false), 2000);
-    return () => window.clearTimeout(timer);
-  }, [tipPinned]);
+    if (!tipPinned) return
+    const timer = window.setTimeout(() => setTipPinned(false), 2000)
+    return () => window.clearTimeout(timer)
+  }, [tipPinned])
   // The header is there on arrival, folds away after a few seconds to give the
   // question the room, and the handle brings it back for the same few seconds.
-  const [headerOpen, setHeaderOpen] = useState(true);
+  const [headerOpen, setHeaderOpen] = useState(true)
   useEffect(() => {
-    if (!headerOpen) return;
+    if (!headerOpen) return
     const timer = window.setTimeout(
       () => setHeaderOpen(false),
       HEADER_VISIBLE_MS,
-    );
-    return () => window.clearTimeout(timer);
-  }, [headerOpen]);
+    )
+    return () => window.clearTimeout(timer)
+  }, [headerOpen])
   // The verdict rings when the server answers, after the tap that sent the answer
   // is over — and some browsers start audio only from inside a tap, so the
   // sitting's first tap does it.
-  useEffect(() => unlockSounds(), []);
+  useEffect(() => unlockSounds(), [])
   // Answered here, this session. The review refetch catches up on its own, but
   // "next" can be clicked before it lands — and the question it would bring
   // back is one the backend already refuses as a duplicate.
-  const [justAnswered, setJustAnswered] = useState<string[]>([]);
+  const [justAnswered, setJustAnswered] = useState<string[]>([])
 
   const answeredIds = useMemo(
     () =>
@@ -143,37 +143,37 @@ function LearnAttemptRun({ attemptId }: { attemptId: string }) {
         ...justAnswered,
       ]),
     [answered.data, justAnswered],
-  );
+  )
   const remaining = (set.data?.items ?? []).filter(
     (item) => !answeredIds.has(item.id) && item.id !== shown?.item.id,
-  );
-  const current = shown?.item ?? remaining[0];
-  const attempt = latest ?? set.data?.attempt;
+  )
+  const current = shown?.item ?? remaining[0]
+  const attempt = latest ?? set.data?.attempt
 
   const send = async (response: QaResponse, durationMs: number) => {
-    if (!current) return;
-    setError(null);
+    if (!current) return
+    setError(null)
     try {
       const result = await submit.mutateAsync({
         itemId: current.id,
         response,
         durationMs,
-      });
-      (result.isCorrect ? playCorrect : playWrong)();
-      setShown({ item: current, result });
-      setLatest(result.attempt);
-      setJustAnswered((ids) => [...ids, current.id]);
+      })
+      ;(result.isCorrect ? playCorrect : playWrong)()
+      setShown({item: current, result})
+      setLatest(result.attempt)
+      setJustAnswered((ids) => [...ids, current.id])
       // The last answer closes the attempt — the learner is never left with an
       // "in progress" set that has nothing left to continue. If this call fails,
       // `wrapUp` retries it.
-      const last = result.attempt;
+      const last = result.attempt
       if (
-        last.status === "in_progress" &&
+        last.status === 'in_progress' &&
         last.answeredCount >= last.itemCount
       ) {
         try {
-          await finish.mutateAsync(attemptId);
-          setLatest({ ...last, status: "finished" });
+          await finish.mutateAsync(attemptId)
+          setLatest({...last, status: 'finished'})
         } catch {
           // Keep the verdict on screen; finishing is retried on "review".
         }
@@ -181,44 +181,43 @@ function LearnAttemptRun({ attemptId }: { attemptId: string }) {
     } catch (err) {
       // A duplicate is a real case — a double click, a flaky connection. It is
       // not worth an error screen; the message says what happened.
-      setError(applyApiError(err, () => undefined, []));
+      setError(applyApiError(err, () => undefined, []))
     }
-  };
+  }
 
   const wrapUp = async () => {
-    setError(null);
+    setError(null)
     try {
       // A finished attempt answers 409 to a second finish; there is nothing to
       // close, so go straight to the review.
-      if (attempt?.status === "in_progress")
-        await finish.mutateAsync(attemptId);
-      router.push(`/learn/attempts/${attemptId}/review`);
+      if (attempt?.status === 'in_progress') await finish.mutateAsync(attemptId)
+      router.push(`/learn/attempts/${attemptId}/review`)
     } catch (err) {
-      setError(applyApiError(err, () => undefined, []));
+      setError(applyApiError(err, () => undefined, []))
     }
-  };
+  }
 
   // On the last question moving on clears the verdict, and `done` then turns
   // true: the summary takes over — the same step for a right and a wrong answer.
-  const isLast = remaining.length === 0;
+  const isLast = remaining.length === 0
   const next = () => {
-    setShown(null);
-    setError(null);
-  };
+    setShown(null)
+    setError(null)
+  }
 
   // Enter moves on once the verdict is in — the same key that answered.
   useEffect(() => {
-    if (!shown) return;
+    if (!shown) return
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Enter") return;
-      const target = event.target as HTMLElement | null;
-      if (target?.closest("button, textarea, [contenteditable]")) return;
-      event.preventDefault();
-      next();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [shown]);
+      if (event.key !== 'Enter') return
+      const target = event.target as HTMLElement | null
+      if (target?.closest('button, textarea, [contenteditable]')) return
+      event.preventDefault()
+      next()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [shown])
 
   if (set.isPending || answered.isPending) {
     return (
@@ -227,40 +226,40 @@ function LearnAttemptRun({ attemptId }: { attemptId: string }) {
         <Skeleton className="h-2 w-full" />
         <Skeleton className="h-72 w-full rounded-xl" />
       </main>
-    );
+    )
   }
 
   if (!attempt || !set.data) {
     return (
       <main className="mx-auto w-full max-w-3xl p-4 sm:p-6">
         <Typography variant="h5" as="h1">
-          {t("attempt.notFound")}
+          {t('attempt.notFound')}
         </Typography>
       </main>
-    );
+    )
   }
 
-  const total = attempt.itemCount;
+  const total = attempt.itemCount
   // Not while a verdict is showing: the last answer closes the attempt, and
   // that must not swap the question (and its explanation) for the summary.
-  const done = !shown && (attempt.status !== "in_progress" || !current);
-  const position = Math.min(total, attempt.answeredCount + (shown ? 0 : 1));
+  const done = !shown && (attempt.status !== 'in_progress' || !current)
+  const position = Math.min(total, attempt.answeredCount + (shown ? 0 : 1))
   // Every question is one cell. A short set is a single bar; past ten the bar
   // is cut into sections of ten cells each.
   const sectionSize =
-    total <= SINGLE_BAR_MAX ? Math.max(1, total) : SECTION_SIZE;
+    total <= SINGLE_BAR_MAX ? Math.max(1, total) : SECTION_SIZE
   const sections = Array.from(
-    { length: Math.max(1, Math.ceil(total / sectionSize)) },
+    {length: Math.max(1, Math.ceil(total / sectionSize))},
     (_, i) => ({
       start: i * sectionSize,
       size: Math.max(1, Math.min(sectionSize, total - i * sectionSize)),
     }),
-  );
+  )
   // Self-graded wording only when the whole bank is flashcards; a mixed bank
   // counts "correct", since most of its answers are machine-graded.
   const selfGraded =
     set.data.items.length > 0 &&
-    set.data.items.every((item) => item.templateKey === "flashcard");
+    set.data.items.every((item) => item.templateKey === 'flashcard')
 
   return (
     <main
@@ -268,9 +267,8 @@ function LearnAttemptRun({ attemptId }: { attemptId: string }) {
         // While answering, the screen is exactly the visible viewport (dvh follows the
         // mobile browser's collapsing address bar): the answers scroll inside it, the
         // page itself does not. The summary is an ordinary scrolling page.
-        done ? "flex-1" : "h-dvh pt-2 sm:pt-3"
-      }`}
-    >
+        done ? 'flex-1' : 'h-dvh pt-2 sm:pt-3'
+      }`}>
       {/* The summary stands alone: its own buttons say where to go next. */}
       {done ? null : (
         <header className="shrink-0">
@@ -281,10 +279,9 @@ function LearnAttemptRun({ attemptId }: { attemptId: string }) {
             inert={!headerOpen}
             className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:duration-200 ${
               headerOpen
-                ? "grid-rows-[1fr] opacity-100"
-                : "grid-rows-[0fr] opacity-0"
-            }`}
-          >
+                ? 'grid-rows-[1fr] opacity-100'
+                : 'grid-rows-[0fr] opacity-0'
+            }`}>
             {/* The fold clips (overflow-hidden), so the padding must cover the back button's
                 -ml-2 and its hover circle, or the circle is cut off on the left. */}
             <div className="-mx-3 -my-1 min-h-0 overflow-hidden px-3 py-1">
@@ -293,14 +290,13 @@ function LearnAttemptRun({ attemptId }: { attemptId: string }) {
                   variant="ghost"
                   size="icon"
                   shape="circle"
-                  aria-label={t("attempt.back")}
+                  aria-label={t('attempt.back')}
                   className="-ml-2 shrink-0"
                   // Nothing is lost by leaving (answers are saved as they go), but a
                   // stray tap should not end the sitting — only ask while it is open.
                   onClick={() =>
-                    done ? router.push("/learn") : setConfirmLeave(true)
-                  }
-                >
+                    done ? router.push('/learn') : setConfirmLeave(true)
+                  }>
                   <Icon icon={LUCIDE.arrowLeft} />
                 </Button>
                 {/* One line with an ellipsis; the full title is the tooltip. */}
@@ -308,8 +304,7 @@ function LearnAttemptRun({ attemptId }: { attemptId: string }) {
                   <Typography
                     variant="h4"
                     as="h1"
-                    className="min-w-0 flex-1 truncate"
-                  >
+                    className="min-w-0 flex-1 truncate">
                     {set.data.datasetTitle}
                   </Typography>
                 </Tooltip>
@@ -321,41 +316,38 @@ function LearnAttemptRun({ attemptId }: { attemptId: string }) {
             <Tooltip
               label={
                 done
-                  ? t("attempt.progressLabel")
-                  : t("attempt.questionOf", { current: position, total })
+                  ? t('attempt.progressLabel')
+                  : t('attempt.questionOf', {current: position, total})
               }
               open={tipHover || tipPinned}
-              onOpenChange={setTipHover}
-            >
+              onOpenChange={setTipHover}>
               <div
                 role="progressbar"
                 tabIndex={0}
-                aria-label={t("attempt.progressLabel")}
+                aria-label={t('attempt.progressLabel')}
                 aria-valuemin={0}
                 aria-valuemax={total}
                 aria-valuenow={attempt.answeredCount}
-                aria-valuetext={t("attempt.questionOf", {
+                aria-valuetext={t('attempt.questionOf', {
                   current: position,
                   total,
                 })}
                 onClick={() => setTipPinned(true)}
-                className="flex min-w-0 flex-1 cursor-pointer gap-1.5 rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-              >
-                {sections.map(({ start, size }) => (
+                className="flex min-w-0 flex-1 cursor-pointer gap-1.5 rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+                {sections.map(({start, size}) => (
                   <div
                     key={start}
                     // A section is as wide as the questions it holds, so a short
                     // last one does not read as a full stretch of the set.
-                    style={{ flexGrow: size, flexBasis: 0 }}
-                    className="flex gap-0.5 rounded-md border border-border p-0.5"
-                  >
-                    {Array.from({ length: size }, (_, i) => (
+                    style={{flexGrow: size, flexBasis: 0}}
+                    className="flex gap-0.5 rounded-md border border-border p-0.5">
+                    {Array.from({length: size}, (_, i) => (
                       <div
                         key={i}
                         className={`h-2 flex-1 rounded-xs transition-colors duration-300 ${
                           start + i < attempt.answeredCount
-                            ? "bg-primary"
-                            : "bg-muted"
+                            ? 'bg-primary'
+                            : 'bg-muted'
                         }`}
                       />
                     ))}
@@ -368,12 +360,11 @@ function LearnAttemptRun({ attemptId }: { attemptId: string }) {
               size="icon"
               shape="circle"
               aria-label={t(
-                headerOpen ? "attempt.hideHeader" : "attempt.showHeader",
+                headerOpen ? 'attempt.hideHeader' : 'attempt.showHeader',
               )}
               aria-expanded={headerOpen}
               onClick={() => setHeaderOpen((open) => !open)}
-              className="-mr-2 shrink-0"
-            >
+              className="-mr-2 shrink-0">
               <Icon icon={headerOpen ? LUCIDE.chevronUp : LUCIDE.chevronDown} />
             </Button>
           </div>
@@ -407,7 +398,6 @@ function LearnAttemptRun({ attemptId }: { attemptId: string }) {
           {shown ? (
             <Feedback result={shown.result} onNext={next} last={isLast} />
           ) : null}
-
         </article>
       ) : null}
 
@@ -418,8 +408,7 @@ function LearnAttemptRun({ attemptId }: { attemptId: string }) {
           {/* The alert tint is translucent; over the page it needs an opaque base to sit on. */}
           <div
             key={m(error)}
-            className="pointer-events-auto animate-notice-in rounded-md bg-background shadow-md"
-          >
+            className="pointer-events-auto animate-notice-in rounded-md bg-background shadow-md">
             <AlertError
               message={m(error)}
               onDismiss={() => setError(null)}
@@ -436,8 +425,7 @@ function LearnAttemptRun({ attemptId }: { attemptId: string }) {
         <div
           aria-hidden
           inert
-          className="pointer-events-none fixed top-0 left-0 -z-10 h-px w-full overflow-hidden opacity-0"
-        >
+          className="pointer-events-none fixed top-0 left-0 -z-10 h-px w-full overflow-hidden opacity-0">
           <QaQuestion
             doc={remaining[0].question}
             tagIds={remaining[0].tagIds}
@@ -449,28 +437,27 @@ function LearnAttemptRun({ attemptId }: { attemptId: string }) {
         <Dialog
           open
           onClose={() => setConfirmLeave(false)}
-          title={t("attempt.leaveTitle")}
+          title={t('attempt.leaveTitle')}
           tone="danger"
-          icon={LUCIDE.circleX}
-        >
+          icon={LUCIDE.circleX}>
           <Typography variant="body-3" className="text-muted-foreground">
-            {t("attempt.leaveBody")}
+            {t('attempt.leaveBody')}
           </Typography>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="outline" onClick={() => setConfirmLeave(false)}>
-              {t("attempt.leaveStay")}
+              {t('attempt.leaveStay')}
             </Button>
-            <Button onClick={() => router.push("/learn")}>
-              {t("attempt.leaveConfirm")}
+            <Button onClick={() => router.push('/learn')}>
+              {t('attempt.leaveConfirm')}
             </Button>
           </div>
         </Dialog>
       ) : null}
     </main>
-  );
+  )
 }
 
-const PANEL = "rounded-lg border bg-background/40 p-3";
+const PANEL = 'rounded-lg border bg-background/40 p-3'
 
 /** The verdict, the answer and the explanation — then the way forward. */
 function Feedback({
@@ -478,47 +465,47 @@ function Feedback({
   last,
   onNext,
 }: {
-  result: QaAnswerResult;
-  last: boolean;
-  onNext: () => void;
+  result: QaAnswerResult
+  last: boolean
+  onNext: () => void
 }) {
-  const t = useTranslations("web.learn");
-  const self = result.grading === "self";
-  const good = result.isCorrect;
+  const t = useTranslations('web.learn')
+  const self = result.grading === 'self'
+  const good = result.isCorrect
 
   const verdict = self
-    ? t(good ? "attempt.selfKnown" : "attempt.selfUnknown")
-    : t(good ? "attempt.correct" : "attempt.wrong");
+    ? t(good ? 'attempt.selfKnown' : 'attempt.selfUnknown')
+    : t(good ? 'attempt.correct' : 'attempt.wrong')
 
   // A machine-graded right answer with nothing to explain is a moment to enjoy: one
   // tap to move on. When there is an explanation it is shown too (below), so a
   // right answer is still something to learn from.
-  const celebrate = good && !self;
+  const celebrate = good && !self
   // The answer and the explanation sit in bordered panels tinted by the verdict.
-  const panelTone = good ? "border-success/40" : "border-danger/40";
+  const panelTone = good ? 'border-success/40' : 'border-danger/40'
 
   // With an explanation there is no button (a right answer is not a decision), so the
   // card says "tap anywhere": Enter, or a click inside it, moves on — as the overlay
   // and Esc already do. A click that ends a text selection is the learner copying
   // the explanation, not asking to leave.
   useEffect(() => {
-    if (!celebrate) return;
+    if (!celebrate) return
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Enter" && !event.repeat) onNext();
-    };
+      if (event.key === 'Enter' && !event.repeat) onNext()
+    }
     const onClick = (event: MouseEvent) => {
       const inside = (event.target as Element | null)?.closest(
         '[role="dialog"]',
-      );
-      if (inside && !window.getSelection()?.toString()) onNext();
-    };
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("click", onClick);
+      )
+      if (inside && !window.getSelection()?.toString()) onNext()
+    }
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('click', onClick)
     return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("click", onClick);
-    };
-  }, [celebrate, onNext]);
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('click', onClick)
+    }
+  }, [celebrate, onNext])
 
   if (celebrate && !result.explanation) {
     return (
@@ -529,28 +516,26 @@ function Feedback({
         icon={LUCIDE.circleCheck}
         tone="success"
         hideClose
-        blurOverlay
-      >
+        blurOverlay>
         {/* No button: the whole card is one — and the overlay and X already mean "next". */}
         <button
           type="button"
           onClick={onNext}
           autoFocus
-          className="relative flex w-full cursor-pointer flex-col items-center gap-2 rounded-md py-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
+          className="relative flex w-full cursor-pointer flex-col items-center gap-2 rounded-md py-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <Confetti />
           <span className="flex size-16 items-center justify-center rounded-full bg-success/15 text-success">
             <Icon icon={LUCIDE.circleCheck} className="size-10" />
           </span>
           <Typography variant="title-3" as="p">
-            {t("attempt.celebrate")}
+            {t('attempt.celebrate')}
           </Typography>
           <Typography variant="body-4" as="p" className="text-muted-foreground">
-            {t(last ? "attempt.tapSeeResult" : "attempt.tapNext")}
+            {t(last ? 'attempt.tapSeeResult' : 'attempt.tapNext')}
           </Typography>
         </button>
       </Dialog>
-    );
+    )
   }
 
   return (
@@ -561,20 +546,18 @@ function Feedback({
       onClose={onNext}
       title={verdict}
       icon={good ? LUCIDE.circleCheck : LUCIDE.circleX}
-      tone={good ? "success" : "danger"}
+      tone={good ? 'success' : 'danger'}
       hideClose
       centered
-      blurOverlay
-    >
+      blurOverlay>
       {celebrate ? (
         <div className="relative flex justify-center">
           <Confetti />
           <Typography
             variant="body-3"
             as="p"
-            className="text-center text-muted-foreground"
-          >
-            {t("attempt.celebrate")}
+            className="text-center text-muted-foreground">
+            {t('attempt.celebrate')}
           </Typography>
         </div>
       ) : null}
@@ -582,7 +565,7 @@ function Feedback({
       {result.answer && !celebrate ? (
         <div className={`space-y-1 ${PANEL} ${panelTone}`}>
           <Typography variant="title-4" as="h3">
-            {t("attempt.answer")}
+            {t('attempt.answer')}
           </Typography>
           <QaContent doc={result.answer} />
         </div>
@@ -591,7 +574,7 @@ function Feedback({
       {result.explanation ? (
         <div className={`space-y-1 ${PANEL} ${panelTone}`}>
           <Typography variant="title-4" as="h3">
-            {t("attempt.explanation")}
+            {t('attempt.explanation')}
           </Typography>
           <QaContent doc={result.explanation} />
         </div>
@@ -601,57 +584,55 @@ function Feedback({
         <Typography
           variant="body-4"
           as="p"
-          className="text-center text-muted-foreground"
-        >
-          {t(last ? "attempt.tapSeeResult" : "attempt.tapNext")}
+          className="text-center text-muted-foreground">
+          {t(last ? 'attempt.tapSeeResult' : 'attempt.tapNext')}
         </Typography>
       ) : (
         <div>
           <Button onClick={onNext} autoFocus className="w-full">
-            {last ? t("attempt.seeResult") : t("attempt.next")}
+            {last ? t('attempt.seeResult') : t('attempt.next')}
             <Icon icon={LUCIDE.arrowRight} />
           </Button>
         </div>
       )}
     </Dialog>
-  );
+  )
 }
 
 const CONFETTI_COLORS = [
-  "bg-success",
-  "bg-primary",
-  "bg-warning",
-  "bg-brand-300",
-  "bg-danger",
-];
+  'bg-success',
+  'bg-primary',
+  'bg-warning',
+  'bg-brand-300',
+  'bg-danger',
+]
 
 /** A one-off burst from the centre of its parent; decorative, so hidden from assistive tech. */
 function Confetti() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-8 flex justify-center"
-    >
-      {Array.from({ length: 18 }, (_, i) => {
-        const angle = (i / 18) * Math.PI * 2;
-        const reach = 90 + (i % 3) * 30;
+      className="pointer-events-none absolute inset-x-0 top-8 flex justify-center">
+      {Array.from({length: 18}, (_, i) => {
+        const angle = (i / 18) * Math.PI * 2
+        const reach = 90 + (i % 3) * 30
         return (
           <span
             key={i}
             className={`confetti-piece absolute h-2.5 w-1.5 rounded-[1px] ${CONFETTI_COLORS[i % CONFETTI_COLORS.length]}`}
             style={
               {
-                "--x": `${Math.round(Math.cos(angle) * reach)}px`,
-                "--y": `${Math.round(Math.sin(angle) * reach - 10)}px`,
-                "--r": `${(i % 2 ? 1 : -1) * (180 + i * 40)}deg`,
-                "--d": `${(i % 4) * 40}ms`,
+                '--x': `${Math.round(Math.cos(angle) * reach)}px`,
+                '--y': `${Math.round(Math.sin(angle) * reach - 10)}px`,
+                '--r': `${(i % 2 ? 1 : -1) * (180 + i * 40)}deg`,
+                '--d': `${(i % 4) * 40}ms`,
               } as React.CSSProperties
             }
           />
-        );
+        )
       })}
     </div>
-  );
+  )
 }
 
 function Summary({
@@ -661,14 +642,14 @@ function Summary({
   pending,
   onReview,
 }: {
-  answered: number;
-  correct: number;
-  selfGraded: boolean;
-  pending: boolean;
-  onReview: () => void;
+  answered: number
+  correct: number
+  selfGraded: boolean
+  pending: boolean
+  onReview: () => void
 }) {
-  const t = useTranslations("web.learn");
-  const rate = answered > 0 ? Math.round((correct / answered) * 100) : 0;
+  const t = useTranslations('web.learn')
+  const rate = answered > 0 ? Math.round((correct / answered) * 100) : 0
 
   return (
     <section className="my-auto flex flex-col items-center gap-4 rounded-xl border border-border bg-surface px-6 py-10 text-center sm:px-10 sm:py-12">
@@ -682,10 +663,10 @@ function Summary({
       </div>
       <div className="space-y-1">
         <Typography variant="h5" as="h2">
-          {t("attempt.summaryCongrats")}
+          {t('attempt.summaryCongrats')}
         </Typography>
         <Typography variant="body-3" className="text-muted-foreground">
-          {t("attempt.summaryBody")}
+          {t('attempt.summaryBody')}
         </Typography>
       </div>
       <div>
@@ -694,19 +675,19 @@ function Summary({
           <span className="text-muted-foreground">/{answered}</span>
         </Typography>
         <Typography variant="body-3" className="text-muted-foreground">
-          {t(selfGraded ? "attempt.summaryKnown" : "attempt.summaryCorrect", {
+          {t(selfGraded ? 'attempt.summaryKnown' : 'attempt.summaryCorrect', {
             rate,
           })}
         </Typography>
       </div>
       <div className="flex flex-wrap justify-center gap-2">
         <Button onClick={onReview} loading={pending}>
-          {t("attempt.finish")}
+          {t('attempt.finish')}
         </Button>
         <Button variant="outline" asChild>
-          <Link href="/learn">{t("attempt.backToBrowse")}</Link>
+          <Link href="/learn">{t('attempt.backToBrowse')}</Link>
         </Button>
       </div>
     </section>
-  );
+  )
 }

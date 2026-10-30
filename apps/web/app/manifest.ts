@@ -1,4 +1,4 @@
-import type { MetadataRoute } from "next";
+import type {MetadataRoute} from 'next'
 
 /**
  * Lets the site be added to the home screen and opened without browser chrome.
@@ -8,16 +8,21 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Noalhub",
-    short_name: "Noalhub",
-    start_url: "/",
-    display: "standalone",
+    name: 'Noalhub',
+    short_name: 'Noalhub',
+    start_url: '/',
+    display: 'standalone',
     // Matches the logo tile; the standalone splash and status bar use these.
-    background_color: "#113138",
-    theme_color: "#113138",
+    background_color: '#113138',
+    theme_color: '#113138',
     icons: [
-      { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
-      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      {src: '/icon-512.png', sizes: '512x512', type: 'image/png'},
+      {
+        src: '/icon-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
     ],
-  };
+  }
 }

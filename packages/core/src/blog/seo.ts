@@ -1,4 +1,4 @@
-import type { BlogPost, BlogPostListItem } from "@noalhub/api/blog";
+import type {BlogPost, BlogPostListItem} from '@noalhub/api/blog'
 
 /**
  * Pure SEO helpers for the blog — no React, no fetching. Used on **both** sides:
@@ -12,7 +12,7 @@ import type { BlogPost, BlogPostListItem } from "@noalhub/api/blog";
  * block on saving — Google truncates by pixels, not characters, so these
  * numbers are an estimate.
  */
-export const SEO_LIMITS = { title: 60, description: 155 } as const;
+export const SEO_LIMITS = {title: 60, description: 155} as const
 
 /**
  * The public origin of `apps/web`.
@@ -24,27 +24,27 @@ export const SEO_LIMITS = { title: 60, description: 155 } as const;
  * (§6.1).
  */
 export function appUrl(): string {
-  return (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3100").replace(
+  return (process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3100').replace(
     /\/+$/,
-    "",
-  );
+    '',
+  )
 }
 
 /** Absolute URLs for JSON-LD and RSS — the two places `metadataBase` does not cover. */
 export function absoluteUrl(path: string): string {
-  return `${appUrl()}${path.startsWith("/") ? path : `/${path}`}`;
+  return `${appUrl()}${path.startsWith('/') ? path : `/${path}`}`
 }
 
 export function postPath(slug: string): string {
-  return `/blogs/${slug}`;
+  return `/blogs/${slug}`
 }
 
 export function categoryPath(slug: string): string {
-  return `/blogs/category/${slug}`;
+  return `/blogs/category/${slug}`
 }
 
 export function tagPath(slug: string): string {
-  return `/blogs/tag/${slug}`;
+  return `/blogs/tag/${slug}`
 }
 
 /**
@@ -54,12 +54,12 @@ export function tagPath(slug: string): string {
  * `?page=1`, `/blogs` and an empty `?page=` are three URLs with one content.
  */
 export function listCanonical(basePath: string, page: number): string {
-  return page <= 1 ? basePath : `${basePath}?page=${page}`;
+  return page <= 1 ? basePath : `${basePath}?page=${page}`
 }
 
 /** `seo.metaTitle ?? title` (§6.2). */
 export function postMetaTitle(post: BlogPost): string {
-  return post.seo.metaTitle ?? post.title;
+  return post.seo.metaTitle ?? post.title
 }
 
 /**
@@ -71,12 +71,12 @@ export function postMetaTitle(post: BlogPost): string {
  * description at all is a silent SEO failure.
  */
 export function postMetaDescription(post: BlogPost): string {
-  return post.seo.metaDescription ?? post.excerpt ?? "";
+  return post.seo.metaDescription ?? post.excerpt ?? ''
 }
 
 /** `seo.ogImageUrl ?? coverImageUrl`. Returns `null` when there is no image (§6.3). */
 export function postOgImage(post: BlogPost): string | null {
-  return post.seo.ogImageUrl ?? post.coverImageUrl;
+  return post.seo.ogImageUrl ?? post.coverImageUrl
 }
 
 /**
@@ -85,17 +85,17 @@ export function postOgImage(post: BlogPost): string | null {
  * ends up fixing the wrong thing.
  */
 export function truncateForSeo(text: string, max: number): string {
-  const trimmed = text.trim();
-  if (trimmed.length <= max) return trimmed;
+  const trimmed = text.trim()
+  if (trimmed.length <= max) return trimmed
 
-  const cut = trimmed.slice(0, max);
-  const lastSpace = cut.lastIndexOf(" ");
-  return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
+  const cut = trimmed.slice(0, max)
+  const lastSpace = cut.lastIndexOf(' ')
+  return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`
 }
 
 /** The description shown on a post card in a listing. */
 export function listItemDescription(item: BlogPostListItem): string {
-  return truncateForSeo(item.excerpt, 180);
+  return truncateForSeo(item.excerpt, 180)
 }
 
 /**
@@ -118,10 +118,10 @@ export function localeAlternates(
   locales: readonly string[],
   defaultLocale: string,
 ) {
-  const languages = Object.fromEntries(locales.map((l) => [l, `/${l}${path}`]));
+  const languages = Object.fromEntries(locales.map((l) => [l, `/${l}${path}`]))
 
   return {
     canonical: `/${locale}${path}`,
-    languages: { ...languages, "x-default": `/${defaultLocale}${path}` },
-  };
+    languages: {...languages, 'x-default': `/${defaultLocale}${path}`},
+  }
 }

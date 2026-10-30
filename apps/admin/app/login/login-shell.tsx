@@ -1,14 +1,14 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
+import {useTranslations} from 'next-intl'
 
-import { Badge } from "@noalhub/ui/badge";
-import { Icon, ICONS, LUCIDE } from "@noalhub/ui/icons";
-import { LogoLockup } from "@noalhub/ui/logo-lockup";
-import { Typography } from "@noalhub/ui/typography";
+import {Badge} from '@noalhub/ui/badge'
+import {Icon, ICONS, LUCIDE} from '@noalhub/ui/icons'
+import {LogoLockup} from '@noalhub/ui/logo-lockup'
+import {Typography} from '@noalhub/ui/typography'
 
 /** Optional: admin is a separate origin, so the public site's URL is config. */
-const WEB_URL = process.env.NEXT_PUBLIC_WEB_URL;
+const WEB_URL = process.env.NEXT_PUBLIC_WEB_URL
 
 /**
  * The frame around the sign-in card: a quiet muted canvas with concentric rings
@@ -19,13 +19,15 @@ const WEB_URL = process.env.NEXT_PUBLIC_WEB_URL;
  * A client component for the same reason as web's `AuthShell`: `LUCIDE.*` names
  * live in a `"use client"` module.
  */
-export function LoginShell({ children }: { children: React.ReactNode }) {
-  const t = useTranslations("admin.login");
+export function LoginShell({children}: {children: React.ReactNode}) {
+  const t = useTranslations('admin.login')
 
   return (
     <div className="relative flex min-h-dvh flex-1 flex-col overflow-hidden bg-muted">
       {/* Decorative rings, centred on the viewport. */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 grid place-items-center">
         <div className="absolute size-[520px] rounded-full border border-border sm:size-[720px]" />
         <div className="absolute hidden size-[1080px] rounded-full border border-border sm:block" />
       </div>
@@ -34,15 +36,14 @@ export function LoginShell({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-3">
           <LogoLockup />
           <span aria-hidden className="h-5 w-px bg-border" />
-          <Badge>{t("badge")}</Badge>
+          <Badge>{t('badge')}</Badge>
         </div>
         {WEB_URL ? (
           <a
             href={WEB_URL}
-            className="hidden items-center gap-2 text-body-3 text-muted-foreground transition-colors hover:text-foreground sm:flex"
-          >
+            className="hidden items-center gap-2 text-body-3 text-muted-foreground transition-colors hover:text-foreground sm:flex">
             <Icon icon={ICONS.arrowLeft} className="size-4" />
-            {t("backToWebsite")}
+            {t('backToWebsite')}
           </a>
         ) : null}
       </header>
@@ -53,10 +54,9 @@ export function LoginShell({ children }: { children: React.ReactNode }) {
           <Typography
             variant="body-4"
             as="div"
-            className="mt-6 flex items-center gap-2 border-t border-border pt-6 text-muted-foreground"
-          >
+            className="mt-6 flex items-center gap-2 border-t border-border pt-6 text-muted-foreground">
             <Icon icon={LUCIDE.lock} className="size-4 shrink-0" />
-            {t("note")}
+            {t('note')}
           </Typography>
         </div>
       </main>
@@ -64,10 +64,9 @@ export function LoginShell({ children }: { children: React.ReactNode }) {
       <Typography
         variant="body-4"
         as="footer"
-        className="relative py-4 text-center text-muted-foreground sm:py-6"
-      >
-        {t("footer")}
+        className="relative py-4 text-center text-muted-foreground sm:py-6">
+        {t('footer')}
       </Typography>
     </div>
-  );
+  )
 }

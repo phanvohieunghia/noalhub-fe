@@ -1,10 +1,10 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
+import {useTranslations} from 'next-intl'
 
-import { Button } from "@noalhub/ui/button";
-import { Icon, ICONS } from "@noalhub/ui/icons";
-import { Spinner } from "@noalhub/ui/spinner";
+import {Button} from '@noalhub/ui/button'
+import {Icon, ICONS} from '@noalhub/ui/icons'
+import {Spinner} from '@noalhub/ui/spinner'
 
 /**
  * The send button: an icon, not the word.
@@ -17,8 +17,14 @@ import { Spinner } from "@noalhub/ui/spinner";
  * `size="icon"` is a square `size-10`, the same height as the default button it
  * replaces — so the composer row does not change height.
  */
-export function SendButton({ disabled, pending }: { disabled: boolean; pending: boolean }) {
-  const t = useTranslations("web.chat.composer");
+export function SendButton({
+  disabled,
+  pending,
+}: {
+  disabled: boolean
+  pending: boolean
+}) {
+  const t = useTranslations('web.chat.composer')
 
   return (
     // A real `type="submit"`, so the form can be sent from the keyboard and not
@@ -26,11 +32,10 @@ export function SendButton({ disabled, pending }: { disabled: boolean; pending: 
     <Button
       type="submit"
       size="icon"
-      aria-label={t("send")}
+      aria-label={t('send')}
       disabled={disabled}
-      className="shrink-0"
-    >
+      className="shrink-0">
       {pending ? <Spinner className="size-4" /> : <Icon icon={ICONS.send} />}
     </Button>
-  );
+  )
 }

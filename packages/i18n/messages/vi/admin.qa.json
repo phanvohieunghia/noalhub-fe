@@ -75,7 +75,7 @@
     "allKinds": "Mọi chặng",
     "footer": "{from}–{to} trên {total} prompt",
     "sortHint": "Sắp xếp theo {column}",
-    "perPage": "{count} mỗi trang",
+    "perPage": "{count} / trang",
     "perPageLabel": "Số prompt mỗi trang",
     "defaultCount": "{count} câu mỗi bộ",
     "defaultSummary": "{count} câu mỗi bộ · {shape}",
@@ -106,9 +106,7 @@
       "name": "Tên hiển thị",
       "prompt": "Nội dung prompt",
       "promptOf": "Prompt — {name}",
-      "characters": "{count} ký tự",
-      "insertVariable": "Chèn biến",
-      "variablesHint": "Ba biến mang nguồn ({forbidden}) không dùng được ở đây: nguồn đi ở phần sau, phần dẫn phải giống nhau từng byte giữa các lần bấm thì cache mới ăn."
+      "characters": "{count} ký tự"
     }
   },
   "datasets": {
@@ -304,7 +302,7 @@
     "selected": "Đã chọn {count} bộ",
     "deleteSelected": "Xóa đã chọn",
     "footer": "Đã chọn {selected} trên {total} bộ",
-    "perPage": "{count} mỗi trang",
+    "perPage": "{count} / trang",
     "perPageLabel": "Số bộ mỗi trang",
     "selectAll": "Chọn tất cả bộ",
     "selectRow": "Chọn {title}",
@@ -592,7 +590,6 @@
     },
     "source": {
       "saved": "Đã lưu nguồn",
-      "saveChanges": "Lưu thay đổi",
       "statusSaving": "Đang lưu…",
       "statusUnsaved": "Chưa lưu thay đổi",
       "statusSaved": "Đã lưu tất cả",
@@ -636,7 +633,6 @@
         "minutes": "~{count} phút"
       },
       "openDrawer": "Mở mục lục",
-      "saveChanges": "Lưu thay đổi",
       "generatingHeading": "Mục lục · đang tạo",
       "generatingTitle": "Đang tạo mục lục từ {count} chương…",
       "fullscreen": "Toàn màn hình",

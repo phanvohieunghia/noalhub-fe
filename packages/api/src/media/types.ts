@@ -13,46 +13,46 @@
  * (declare `video` to claim the 200MB budget, then upload a zip that is capped
  * at 25MB). Here the type is used only to **read** responses.
  */
-export type MediaKind = "image" | "video" | "file";
+export type MediaKind = 'image' | 'video' | 'file'
 
-export type MediaStatus = "pending" | "ready";
+export type MediaStatus = 'pending' | 'ready'
 
 /** The step 1 response — the ticket letting the browser `PUT` to storage itself. */
 export type PresignedUpload = {
-  id: string;
-  kind: MediaKind;
+  id: string
+  kind: MediaKind
   /**
    * The browser `PUT`s **straight** here, never through the backend. It must
    * send exactly the declared `Content-Type` and `Content-Length`: both are part
    * of what was signed, and getting either wrong is a 403 from storage, not an
    * API error.
    */
-  uploadUrl: string;
+  uploadUrl: string
   /**
    * ⚠️ Not a deadline for *starting* the upload — it covers the **entire** PUT
    * request, and a large PUT lasts for the whole transfer.
    */
-  expiresIn: number;
-};
+  expiresIn: number
+}
 
 /** The step 3 response. `url` is the string dropped into the post. */
 export type MediaAsset = {
-  id: string;
-  kind: MediaKind;
-  status: MediaStatus;
+  id: string
+  kind: MediaKind
+  status: MediaStatus
   /** A pure function of the backend's `MEDIA_PUBLIC_URL` + `storageKey`. */
-  url: string;
-  mime: string;
+  url: string
+  mime: string
   /** The real number from `HeadObject`, not what the client declared in step 1. */
-  sizeBytes: number;
-  originalName: string | null;
+  sizeBytes: number
+  originalName: string | null
   /** Always `null` in this round — the backend does not decode media to read dimensions yet. */
-  width: number | null;
-  height: number | null;
-  durationMs: number | null;
-  checksum: string | null;
-  createdAt: string;
-};
+  width: number | null
+  height: number | null
+  durationMs: number | null
+  checksum: string | null
+  createdAt: string
+}
 
 /**
  * Platform-agnostic file shape for uploads.
@@ -62,19 +62,19 @@ export type MediaAsset = {
 export type UploadFile =
   | File
   | {
-      uri: string;
-      name: string;
-      type: string;
-      size?: number;
-    };
+      uri: string
+      name: string
+      type: string
+      size?: number
+    }
 
 /** Step 2's progress. `total` is 0 when the browser cannot report a length. */
 export type UploadProgress = {
-  loaded: number;
-  total: number;
+  loaded: number
+  total: number
   /** 0–1. Zero when `total` is unknown. */
-  ratio: number;
-};
+  ratio: number
+}
 
 /**
  * A **step 2** failure — that is, storage's, not the API's.
@@ -85,12 +85,12 @@ export type UploadProgress = {
  * a `code` that does not exist.
  */
 export class StorageUploadError extends Error {
-  readonly status: number;
+  readonly status: number
 
   constructor(status: number, message: string) {
-    super(message);
-    this.name = "StorageUploadError";
-    this.status = status;
+    super(message)
+    this.name = 'StorageUploadError'
+    this.status = status
   }
 }
 
@@ -98,5 +98,5 @@ export class StorageUploadError extends Error {
 export function isStorageUploadError(
   error: unknown,
 ): error is StorageUploadError {
-  return error instanceof StorageUploadError;
+  return error instanceof StorageUploadError
 }

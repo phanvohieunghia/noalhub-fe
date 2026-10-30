@@ -1,34 +1,35 @@
-"use client";
+'use client'
 
-import { forwardRef } from "react";
-import { Slot } from "radix-ui";
+import {forwardRef} from 'react'
+import {Slot} from 'radix-ui'
 
-import { Spinner } from "./spinner";
-import { keysOf } from "./variants";
+import {Spinner} from './spinner'
+import {keysOf} from './variants'
 
 const VARIANTS = {
-  primary: "bg-primary text-primary-foreground hover:bg-primary-hover",
-  outline: "border border-border hover:bg-muted",
-  ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",
+  primary: 'bg-primary text-primary-foreground hover:bg-primary-hover',
+  outline: 'border border-border hover:bg-muted',
+  ghost: 'text-muted-foreground hover:bg-muted hover:text-foreground',
   /** Destructive action. `text-background` because `--danger` flips light in dark mode. */
-  danger: "bg-danger text-background hover:bg-danger/90",
+  danger: 'bg-danger text-background hover:bg-danger/90',
   /** A filled but quiet button — used for chips and other in-content controls. */
-  soft: "bg-muted text-foreground hover:bg-muted/60",
+  soft: 'bg-muted text-foreground hover:bg-muted/60',
   /** "Add something that does not exist yet": the dashed border is the affordance. */
-  dashed: "border border-dashed border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+  dashed:
+    'border border-dashed border-border text-muted-foreground hover:bg-muted hover:text-foreground',
   /**
    * Reads as a link, behaves as a button. For in-form shortcuts ("fill the slug
    * from the title") that navigate nowhere — a real `<a>` there would lie to
    * the screen reader and to middle-click. Pair it with `size="inline"`; a box
    * size would put a 40px-tall link in the middle of a paragraph.
    */
-  link: "text-muted-foreground underline underline-offset-2 hover:text-foreground",
-} as const;
+  link: 'text-muted-foreground underline underline-offset-2 hover:text-foreground',
+} as const
 
 const SHAPES = {
-  default: "rounded-md",
-  circle: "rounded-full",
-} as const;
+  default: 'rounded-md',
+  circle: 'rounded-full',
+} as const
 
 /**
  * Size carries the text size too. It cannot live in the base: `text-body-3`
@@ -37,95 +38,96 @@ const SHAPES = {
  */
 const SIZES = {
   /** Larger than the Figma default — hero / primary call-to-action. */
-  lg: "h-12 px-6 text-title-3",
+  lg: 'h-12 px-6 text-title-3',
   /** The Figma default: 40px tall, 16px padding, `title-4` text. */
-  md: "h-10 px-4 text-title-4",
-  sm: "h-8 px-3 text-body-3",
-  xs: "h-7 px-2.5 text-body-4",
+  md: 'h-10 px-4 text-title-4',
+  sm: 'h-8 px-3 text-body-3',
+  xs: 'h-7 px-2.5 text-body-4',
   /** Square, icon only — always pair it with an `aria-label`. */
-  "icon-lg": "size-12",
-  icon: "size-10",
-  "icon-md": "size-8",
-  "icon-sm": "size-7",
-  "icon-xs": "size-6",
+  'icon-lg': 'size-12',
+  icon: 'size-10',
+  'icon-md': 'size-8',
+  'icon-sm': 'size-7',
+  'icon-xs': 'size-6',
   /** No box at all: for `variant="link"` sitting inside a line of text. */
-  inline: "h-auto p-0 text-body-4",
-} as const;
+  inline: 'h-auto p-0 text-body-4',
+} as const
 
-export type ButtonVariant = keyof typeof VARIANTS;
-export type ButtonSize = keyof typeof SIZES;
-export type ButtonShape = keyof typeof SHAPES;
+export type ButtonVariant = keyof typeof VARIANTS
+export type ButtonSize = keyof typeof SIZES
+export type ButtonShape = keyof typeof SHAPES
 
 /** The lists, derived from the tables above — see `variants.ts`. */
-export const BUTTON_VARIANTS = keysOf(VARIANTS);
-export const BUTTON_SIZES = keysOf(SIZES);
-export const BUTTON_SHAPES = keysOf(SHAPES);
+export const BUTTON_VARIANTS = keysOf(VARIANTS)
+export const BUTTON_SIZES = keysOf(SIZES)
+export const BUTTON_SHAPES = keysOf(SHAPES)
 
-type ButtonProps = React.ComponentPropsWithoutRef<"button"> & {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
+type ButtonProps = React.ComponentPropsWithoutRef<'button'> & {
+  variant?: ButtonVariant
+  size?: ButtonSize
   /**
    * Corner rounding. A prop rather than a class passed through `className`: the
    * base's `rounded-md` and an overriding `rounded-full` have the same
    * specificity, so the order in the class string does not decide the winner —
    * the corners come out square at random.
    */
-  shape?: ButtonShape;
+  shape?: ButtonShape
   /**
    * Render onto the child element instead of emitting a `<button>`. Needed when
    * Button acts as a Radix `Trigger` / `Close` — both sides want to be that
    * button, and nesting a button inside a button is invalid HTML.
    */
-  asChild?: boolean;
+  asChild?: boolean
   /**
    * An API call is in flight: shows a spinner, disables the button and sets
    * `aria-busy`. Pass the mutation's pending flag so a second click cannot
    * fire the same request twice. Ignored with `asChild` (no `<button>` of ours).
    */
-  loading?: boolean;
-};
+  loading?: boolean
+}
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  {
-    variant = "primary",
-    size = "md",
-    shape = "default",
-    className = "",
-    asChild,
-    loading = false,
-    children,
-    type = "button",
-    ...props
-  },
-  ref,
-) {
-  const base =
-    "inline-flex cursor-pointer items-center justify-center gap-2 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed";
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  function Button(
+    {
+      variant = 'primary',
+      size = 'md',
+      shape = 'default',
+      className = '',
+      asChild,
+      loading = false,
+      children,
+      type = 'button',
+      ...props
+    },
+    ref,
+  ) {
+    const base =
+      'inline-flex cursor-pointer items-center justify-center gap-2 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed'
 
-  const classes = `${base} ${VARIANTS[variant]} ${SIZES[size]} ${SHAPES[shape]} ${className}`;
+    const classes = `${base} ${VARIANTS[variant]} ${SIZES[size]} ${SHAPES[shape]} ${className}`
 
-  // Slot forwards classes/handlers to the child — but `type` is a <button>
-  // attribute that means nothing on <a>/<span>, so it is only set when we
-  // render the button ourselves.
-  if (asChild) {
+    // Slot forwards classes/handlers to the child — but `type` is a <button>
+    // attribute that means nothing on <a>/<span>, so it is only set when we
+    // render the button ourselves.
+    if (asChild) {
+      return (
+        <Slot.Root ref={ref} className={classes} {...props}>
+          {children}
+        </Slot.Root>
+      )
+    }
+
     return (
-      <Slot.Root ref={ref} className={classes} {...props}>
+      <button
+        ref={ref}
+        type={type}
+        className={classes}
+        aria-busy={loading || undefined}
+        {...props}
+        disabled={props.disabled || loading}>
+        {loading ? <Spinner size="sm" /> : null}
         {children}
-      </Slot.Root>
-    );
-  }
-
-  return (
-    <button
-      ref={ref}
-      type={type}
-      className={classes}
-      aria-busy={loading || undefined}
-      {...props}
-      disabled={props.disabled || loading}
-    >
-      {loading ? <Spinner size="sm" /> : null}
-      {children}
-    </button>
-  );
-});
+      </button>
+    )
+  },
+)

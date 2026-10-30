@@ -1,8 +1,8 @@
 import {
   BLOG_IMAGE_DEV_HOSTS,
   BLOG_IMAGE_HOSTS,
-} from "@noalhub/config/blog-image-hosts.mjs";
-import { z } from "zod";
+} from '@noalhub/config/blog-image-hosts.mjs'
+import {z} from 'zod'
 
 import type {
   BlogBlockNode,
@@ -17,7 +17,7 @@ import type {
   BlogTag,
   BlogTextAlign,
   BlogTextNode,
-} from "./types";
+} from './types'
 
 /* ------------------------------------------------------------------------- *
  * Allowlist — the frontend half of the trust boundary (§3, §3.1, §3.1a)
@@ -30,26 +30,26 @@ import type {
  * can be written but not displayed, or the other way round.
  */
 export const BLOG_BLOCK_TYPES = [
-  "paragraph",
-  "heading",
-  "bulletList",
-  "orderedList",
-  "blockquote",
-  "codeBlock",
-  "horizontalRule",
-  "image",
-] as const;
+  'paragraph',
+  'heading',
+  'bulletList',
+  'orderedList',
+  'blockquote',
+  'codeBlock',
+  'horizontalRule',
+  'image',
+] as const
 
 export const BLOG_MARK_TYPES = [
-  "bold",
-  "italic",
-  "strike",
-  "code",
-  "link",
-] as const;
+  'bold',
+  'italic',
+  'strike',
+  'code',
+  'link',
+] as const
 
 /** `<h1>` is the post title (§6.2) — content only has h2/h3. */
-export const BLOG_HEADING_LEVELS = [2, 3] as const;
+export const BLOG_HEADING_LEVELS = [2, 3] as const
 
 /**
  * Languages for `codeBlock` (§3.1c). This pass only STORES them, no
@@ -58,19 +58,19 @@ export const BLOG_HEADING_LEVELS = [2, 3] as const;
  * list lives in the editor, the backend and the renderer.
  */
 export const BLOG_CODE_LANGUAGES = [
-  "bash",
-  "css",
-  "html",
-  "javascript",
-  "json",
-  "mermaid",
-  "php",
-  "python",
-  "sql",
-  "tsx",
-  "typescript",
-  "yaml",
-] as const;
+  'bash',
+  'css',
+  'html',
+  'javascript',
+  'json',
+  'mermaid',
+  'php',
+  'python',
+  'sql',
+  'tsx',
+  'typescript',
+  'yaml',
+] as const
 
 /**
  * The safe schemes for `link.href` (§3.1a).
@@ -80,7 +80,7 @@ export const BLOG_CODE_LANGUAGES = [
  * This is exactly the stored XSS §3 claims to have closed — without this
  * function that claim is false.
  */
-const SAFE_LINK_PROTOCOLS = ["http:", "https:", "mailto:"];
+const SAFE_LINK_PROTOCOLS = ['http:', 'https:', 'mailto:']
 
 /**
  * The allowed hosts for `image.src` (§3.1a).
@@ -90,23 +90,23 @@ const SAFE_LINK_PROTOCOLS = ["http:", "https:", "mailto:"];
  * places and really did drift; this re-export keeps consumers importing from
  * `@noalhub/api/blog` as before, without needing to know the config package.
  */
-export { BLOG_IMAGE_DEV_HOSTS, BLOG_IMAGE_HOSTS };
+export {BLOG_IMAGE_DEV_HOSTS, BLOG_IMAGE_HOSTS}
 
 /** Three static segments living beside `/blogs/[slug]` — a post whose slug collides cannot be opened (§4.5). */
-export const RESERVED_POST_SLUGS = ["category", "tag", "rss.xml"] as const;
+export const RESERVED_POST_SLUGS = ['category', 'tag', 'rss.xml'] as const
 
-const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 /** `href` may only be `http:`/`https:`/`mailto:` — see `SAFE_LINK_PROTOCOLS`. */
 export function isSafeLinkHref(href: unknown): href is string {
-  if (typeof href !== "string" || href.length === 0) return false;
+  if (typeof href !== 'string' || href.length === 0) return false
   try {
-    return SAFE_LINK_PROTOCOLS.includes(new URL(href).protocol);
+    return SAFE_LINK_PROTOCOLS.includes(new URL(href).protocol)
   } catch {
     // A relative URL (`/gioi-thieu`) cannot be parsed without a base. Posts
     // linking internally is routine, so it is allowed — but only in the `/…`
     // form, so `javascript:…` cannot slip through this door.
-    return href.startsWith("/") && !href.startsWith("//");
+    return href.startsWith('/') && !href.startsWith('//')
   }
 }
 
@@ -121,18 +121,18 @@ export function isSafeLinkHref(href: unknown): href is string {
  * "public images are always https" constraint stays intact.
  */
 export function isSafeImageSrc(src: unknown): src is string {
-  if (typeof src !== "string" || src.length === 0) return false;
+  if (typeof src !== 'string' || src.length === 0) return false
   try {
-    const url = new URL(src);
-    if (url.protocol === "https:") {
-      return BLOG_IMAGE_HOSTS.includes(url.hostname);
+    const url = new URL(src)
+    if (url.protocol === 'https:') {
+      return BLOG_IMAGE_HOSTS.includes(url.hostname)
     }
-    if (url.protocol === "http:") {
-      return BLOG_IMAGE_DEV_HOSTS.includes(url.hostname);
+    if (url.protocol === 'http:') {
+      return BLOG_IMAGE_DEV_HOSTS.includes(url.hostname)
     }
-    return false;
+    return false
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -156,8 +156,8 @@ export function isSafeImageSrc(src: unknown): src is string {
  * rendered are always the same set.
  */
 export function sanitizeBlogDoc(value: unknown): BlogDoc {
-  const content = isRecord(value) && value.type === "doc" ? value.content : null;
-  return { type: "doc", content: sanitizeBlocks(content) };
+  const content = isRecord(value) && value.type === 'doc' ? value.content : null
+  return {type: 'doc', content: sanitizeBlocks(content)}
 }
 
 /**
@@ -165,224 +165,251 @@ export function sanitizeBlogDoc(value: unknown): BlogDoc {
  * rather than throwing: an absurd number in one cell is not a DoS vector, and
  * dropping a whole table over one cell loses more than it saves.
  */
-const MAX_TABLE_SPAN = 20;
+const MAX_TABLE_SPAN = 20
 
 function sanitizeBlocks(value: unknown, allowTable = true): BlogBlockNode[] {
-  if (!Array.isArray(value)) return [];
-  const blocks: BlogBlockNode[] = [];
+  if (!Array.isArray(value)) return []
+  const blocks: BlogBlockNode[] = []
   for (const raw of value) {
-    const node = sanitizeBlock(raw, allowTable);
-    if (node) blocks.push(node);
+    const node = sanitizeBlock(raw, allowTable)
+    if (node) blocks.push(node)
   }
-  return blocks;
+  return blocks
 }
 
 /** `left` (the default) and anything unknown come back as `undefined` — nothing to store. */
 function toTextAlign(value: unknown): BlogTextAlign | undefined {
-  return value === "center" || value === "right" || value === "justify" ? value : undefined;
+  return value === 'center' || value === 'right' || value === 'justify'
+    ? value
+    : undefined
 }
 
 /** A whole number in 1–100, or `undefined` — 100 is "fill the column" and is kept so it overrides a smaller `width`. */
 function toPercent(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 100
+  return typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= 100
     ? value
-    : undefined;
+    : undefined
 }
 
-function sanitizeBlock(raw: unknown, allowTable: boolean): BlogBlockNode | null {
-  if (!isRecord(raw) || typeof raw.type !== "string") return null;
-  const attrs = isRecord(raw.attrs) ? raw.attrs : {};
+function sanitizeBlock(
+  raw: unknown,
+  allowTable: boolean,
+): BlogBlockNode | null {
+  if (!isRecord(raw) || typeof raw.type !== 'string') return null
+  const attrs = isRecord(raw.attrs) ? raw.attrs : {}
 
   switch (raw.type) {
-    case "paragraph": {
-      const textAlign = toTextAlign(attrs.textAlign);
+    case 'paragraph': {
+      const textAlign = toTextAlign(attrs.textAlign)
       return {
-        type: "paragraph",
-        ...(textAlign ? { attrs: { textAlign } } : {}),
+        type: 'paragraph',
+        ...(textAlign ? {attrs: {textAlign}} : {}),
         content: sanitizeInline(raw.content),
-      };
+      }
     }
 
-    case "heading": {
+    case 'heading': {
       // A level outside [2,3,4] falls back to h2 rather than dropping the whole
       // heading: losing a TOC entry beats losing the section under it.
-      const level = attrs.level === 1 || attrs.level === 3 || attrs.level === 4 ? attrs.level : 2;
-      const textAlign = toTextAlign(attrs.textAlign);
+      const level =
+        attrs.level === 1 || attrs.level === 3 || attrs.level === 4
+          ? attrs.level
+          : 2
+      const textAlign = toTextAlign(attrs.textAlign)
       return {
-        type: "heading",
-        attrs: { level, ...(textAlign ? { textAlign } : {}) },
+        type: 'heading',
+        attrs: {level, ...(textAlign ? {textAlign} : {})},
         content: sanitizeInline(raw.content),
-      };
+      }
     }
 
-    case "bulletList":
-    case "orderedList": {
-      const items = sanitizeListItems(raw.content, allowTable);
-      return items.length ? { type: raw.type, content: items } : null;
+    case 'bulletList':
+    case 'orderedList': {
+      const items = sanitizeListItems(raw.content, allowTable)
+      return items.length ? {type: raw.type, content: items} : null
     }
 
-    case "blockquote": {
-      const content = sanitizeBlocks(raw.content, allowTable);
-      return content.length ? { type: "blockquote", content } : null;
+    case 'blockquote': {
+      const content = sanitizeBlocks(raw.content, allowTable)
+      return content.length ? {type: 'blockquote', content} : null
     }
 
-    case "table": {
+    case 'table': {
       // `allowTable` is false inside a cell: a table within a table is dropped.
-      if (!allowTable) return null;
-      const rows = sanitizeTableRows(raw.content);
+      if (!allowTable) return null
+      const rows = sanitizeTableRows(raw.content)
       // A table with no valid row left is noise in the reading flow.
-      return rows.length ? { type: "table", content: rows } : null;
+      return rows.length ? {type: 'table', content: rows} : null
     }
 
-    case "codeBlock": {
+    case 'codeBlock': {
       const language =
-        typeof attrs.language === "string" &&
+        typeof attrs.language === 'string' &&
         (BLOG_CODE_LANGUAGES as readonly string[]).includes(attrs.language)
           ? attrs.language
-          : null;
+          : null
       return {
-        type: "codeBlock",
-        attrs: { language },
+        type: 'codeBlock',
+        attrs: {language},
         // Inside a codeBlock, text carries no marks.
         content: sanitizeInline(raw.content).filter(isTextNode),
-      };
+      }
     }
 
-    case "horizontalRule":
-      return { type: "horizontalRule" };
+    case 'horizontalRule':
+      return {type: 'horizontalRule'}
 
-    case "image": {
+    case 'image': {
       // A src outside the allowlist → drop the image entirely (there is no child text to keep).
-      if (!isSafeImageSrc(attrs.src)) return null;
+      if (!isSafeImageSrc(attrs.src)) return null
       return {
-        type: "image",
+        type: 'image',
         attrs: {
           src: attrs.src,
-          alt: typeof attrs.alt === "string" ? attrs.alt : "",
+          alt: typeof attrs.alt === 'string' ? attrs.alt : '',
           width: toPositiveInt(attrs.width),
           height: toPositiveInt(attrs.height),
-          ...(attrs.align === "center" || attrs.align === "right" ? { align: attrs.align } : {}),
-          ...(toPercent(attrs.widthPercent) ? { widthPercent: toPercent(attrs.widthPercent)! } : {}),
+          ...(attrs.align === 'center' || attrs.align === 'right'
+            ? {align: attrs.align}
+            : {}),
+          ...(toPercent(attrs.widthPercent)
+            ? {widthPercent: toPercent(attrs.widthPercent)!}
+            : {}),
         },
-      };
+      }
     }
 
     default:
       // An unknown node (an extension from a later Tiptap) — dropped silently, never thrown on (§3.1).
-      return null;
+      return null
   }
 }
 
 function sanitizeTableRows(value: unknown): BlogTableRowNode[] {
-  if (!Array.isArray(value)) return [];
-  const rows: BlogTableRowNode[] = [];
+  if (!Array.isArray(value)) return []
+  const rows: BlogTableRowNode[] = []
   for (const raw of value) {
-    if (!isRecord(raw) || raw.type !== "tableRow") continue;
-    const cells = sanitizeTableCells(raw.content);
-    if (cells.length) rows.push({ type: "tableRow", content: cells });
+    if (!isRecord(raw) || raw.type !== 'tableRow') continue
+    const cells = sanitizeTableCells(raw.content)
+    if (cells.length) rows.push({type: 'tableRow', content: cells})
   }
-  return rows;
+  return rows
 }
 
 function sanitizeTableCells(value: unknown): BlogTableCellNode[] {
-  if (!Array.isArray(value)) return [];
-  const cells: BlogTableCellNode[] = [];
+  if (!Array.isArray(value)) return []
+  const cells: BlogTableCellNode[] = []
   for (const raw of value) {
-    if (!isRecord(raw)) continue;
-    if (raw.type !== "tableCell" && raw.type !== "tableHeader") continue;
-    const attrs = isRecord(raw.attrs) ? raw.attrs : {};
+    if (!isRecord(raw)) continue
+    if (raw.type !== 'tableCell' && raw.type !== 'tableHeader') continue
+    const attrs = isRecord(raw.attrs) ? raw.attrs : {}
 
     cells.push({
       type: raw.type,
-      attrs: { colspan: toSpan(attrs.colspan), rowspan: toSpan(attrs.rowspan) },
+      attrs: {colspan: toSpan(attrs.colspan), rowspan: toSpan(attrs.rowspan)},
       // An EMPTY cell is kept, unlike an empty listItem: it is a real cell in
       // the grid, and dropping it shifts every column after it.
       content: sanitizeBlocks(raw.content, false),
-    });
+    })
   }
-  return cells;
+  return cells
 }
 
 /** Missing or odd → 1 (an ordinary cell). Over the cap → clamped, never dropped. */
 function toSpan(value: unknown): number {
-  const n = toPositiveInt(value);
-  return n === null ? 1 : Math.min(n, MAX_TABLE_SPAN);
+  const n = toPositiveInt(value)
+  return n === null ? 1 : Math.min(n, MAX_TABLE_SPAN)
 }
 
-function sanitizeListItems(value: unknown, allowTable = true): BlogListItemNode[] {
-  if (!Array.isArray(value)) return [];
-  const items: BlogListItemNode[] = [];
+function sanitizeListItems(
+  value: unknown,
+  allowTable = true,
+): BlogListItemNode[] {
+  if (!Array.isArray(value)) return []
+  const items: BlogListItemNode[] = []
   for (const raw of value) {
-    if (!isRecord(raw) || raw.type !== "listItem") continue;
-    const content = sanitizeBlocks(raw.content, allowTable);
-    if (content.length) items.push({ type: "listItem", content });
+    if (!isRecord(raw) || raw.type !== 'listItem') continue
+    const content = sanitizeBlocks(raw.content, allowTable)
+    if (content.length) items.push({type: 'listItem', content})
   }
-  return items;
+  return items
 }
 
 function sanitizeInline(value: unknown): BlogInlineNode[] {
-  if (!Array.isArray(value)) return [];
-  const nodes: BlogInlineNode[] = [];
+  if (!Array.isArray(value)) return []
+  const nodes: BlogInlineNode[] = []
   for (const raw of value) {
-    if (!isRecord(raw)) continue;
-    if (raw.type === "hardBreak") {
-      nodes.push({ type: "hardBreak" });
-      continue;
+    if (!isRecord(raw)) continue
+    if (raw.type === 'hardBreak') {
+      nodes.push({type: 'hardBreak'})
+      continue
     }
-    if (raw.type === "inlineImage") {
-      const attrs = isRecord(raw.attrs) ? raw.attrs : {};
-      const width = toPositiveInt(attrs.width);
-      const height = toPositiveInt(attrs.height);
+    if (raw.type === 'inlineImage') {
+      const attrs = isRecord(raw.attrs) ? raw.attrs : {}
+      const width = toPositiveInt(attrs.width)
+      const height = toPositiveInt(attrs.height)
       // No size → no way to size it to the line; no safe src → nothing to keep (§3.1a).
       if (isSafeImageSrc(attrs.src) && width && height) {
         nodes.push({
-          type: "inlineImage",
-          attrs: { src: attrs.src, alt: typeof attrs.alt === "string" ? attrs.alt : "", width, height },
-        });
+          type: 'inlineImage',
+          attrs: {
+            src: attrs.src,
+            alt: typeof attrs.alt === 'string' ? attrs.alt : '',
+            width,
+            height,
+          },
+        })
       }
-      continue;
+      continue
     }
-    if (raw.type !== "text" || typeof raw.text !== "string") continue;
-    if (raw.text.length === 0) continue;
+    if (raw.type !== 'text' || typeof raw.text !== 'string') continue
+    if (raw.text.length === 0) continue
 
-    const marks = sanitizeMarks(raw.marks);
-    nodes.push(marks.length ? { type: "text", text: raw.text, marks } : { type: "text", text: raw.text });
+    const marks = sanitizeMarks(raw.marks)
+    nodes.push(
+      marks.length
+        ? {type: 'text', text: raw.text, marks}
+        : {type: 'text', text: raw.text},
+    )
   }
-  return nodes;
+  return nodes
 }
 
 function sanitizeMarks(value: unknown): BlogMark[] {
-  if (!Array.isArray(value)) return [];
-  const marks: BlogMark[] = [];
+  if (!Array.isArray(value)) return []
+  const marks: BlogMark[] = []
   for (const raw of value) {
-    if (!isRecord(raw) || typeof raw.type !== "string") continue;
-    if (raw.type === "link") {
-      const href = isRecord(raw.attrs) ? raw.attrs.href : undefined;
+    if (!isRecord(raw) || typeof raw.type !== 'string') continue
+    if (raw.type === 'link') {
+      const href = isRecord(raw.attrs) ? raw.attrs.href : undefined
       // A dirty href → drop the MARK but keep the text (§3.1a): a bad link
       // degrades to plain words. `target`/`rel` are deliberately not read from
       // data — the renderer sets them.
-      if (isSafeLinkHref(href)) marks.push({ type: "link", attrs: { href } });
-      continue;
+      if (isSafeLinkHref(href)) marks.push({type: 'link', attrs: {href}})
+      continue
     }
     if ((BLOG_MARK_TYPES as readonly string[]).includes(raw.type)) {
-      marks.push({ type: raw.type } as BlogMark);
+      marks.push({type: raw.type} as BlogMark)
     }
   }
-  return marks;
+  return marks
 }
 
 function isTextNode(node: BlogInlineNode): node is BlogTextNode {
-  return node.type === "text";
+  return node.type === 'text'
 }
 
 function toPositiveInt(value: unknown): number | null {
-  return typeof value === "number" && Number.isInteger(value) && value > 0
+  return typeof value === 'number' && Number.isInteger(value) && value > 0
     ? value
-    : null;
+    : null
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 /* ------------------------------------------------------------------------- *
@@ -392,21 +419,21 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 const nullableString = z
   .string()
   .nullish()
-  .transform((value) => value ?? null);
+  .transform((value) => value ?? null)
 
 /** `content` goes through the sanitizer above, not `z.object` — see §3.1. */
-export const blogDocSchema = z.unknown().transform(sanitizeBlogDoc);
+export const blogDocSchema = z.unknown().transform(sanitizeBlogDoc)
 
 export const blogTaxonomyRefSchema = z.object({
   slug: z.string(),
   name: z.string(),
-});
+})
 
 export const blogAuthorSchema = z.object({
   id: z.string(),
   displayName: z.string(),
   avatarUrl: nullableString,
-});
+})
 
 export const blogPostSeoSchema = z.object({
   metaTitle: nullableString,
@@ -414,9 +441,9 @@ export const blogPostSeoSchema = z.object({
   canonicalUrl: nullableString,
   ogImageUrl: nullableString,
   noindex: z.boolean().catch(false),
-});
+})
 
-export const blogPostStatusSchema = z.enum(["draft", "published", "archived"]);
+export const blogPostStatusSchema = z.enum(['draft', 'published', 'archived'])
 
 export const blogPostSchema = z.object({
   id: z.string(),
@@ -424,7 +451,7 @@ export const blogPostSchema = z.object({
   title: z.string(),
   excerpt: nullableString,
   content: blogDocSchema,
-  contentText: z.string().catch(""),
+  contentText: z.string().catch(''),
   coverImageUrl: nullableString,
   category: blogTaxonomyRefSchema.nullish().transform((v) => v ?? null),
   tags: z.array(blogTaxonomyRefSchema).catch([]),
@@ -434,13 +461,13 @@ export const blogPostSchema = z.object({
   version: z.number().catch(0),
   author: blogAuthorSchema,
   seo: blogPostSeoSchema,
-});
+})
 
 export const blogPostListItemSchema = z.object({
   id: z.string(),
   slug: z.string(),
   title: z.string(),
-  excerpt: z.string().catch(""),
+  excerpt: z.string().catch(''),
   coverImageUrl: nullableString,
   category: blogTaxonomyRefSchema,
   tags: z.array(blogTaxonomyRefSchema).catch([]),
@@ -448,7 +475,7 @@ export const blogPostListItemSchema = z.object({
   updatedAt: z.string(),
   author: blogAuthorSchema,
   readingMinutes: z.number().catch(1),
-});
+})
 
 /**
  * `page`/`limit` use `.catch()` rather than being required — same reason as
@@ -460,14 +487,14 @@ export const blogPostListSchema = z.object({
   total: z.number(),
   page: z.number().catch(1),
   limit: z.number().catch(10),
-});
+})
 
 export const adminBlogPostListSchema = z.object({
   items: z.array(blogPostSchema),
   total: z.number(),
   page: z.number().catch(1),
   limit: z.number().catch(20),
-});
+})
 
 export const blogCategorySchema = z.object({
   id: z.string(),
@@ -476,18 +503,18 @@ export const blogCategorySchema = z.object({
   description: nullableString,
   order: z.number().catch(0),
   postCount: z.number().catch(0),
-});
+})
 
-export const blogCategoryListSchema = z.array(blogCategorySchema);
+export const blogCategoryListSchema = z.array(blogCategorySchema)
 
 export const blogTagSchema = z.object({
   id: z.string(),
   slug: z.string(),
   name: z.string(),
   postCount: z.number().catch(0),
-});
+})
 
-export const blogTagListSchema = z.array(blogTagSchema);
+export const blogTagListSchema = z.array(blogTagSchema)
 
 export const blogPostSlugSchema = z.object({
   id: z.string(),
@@ -499,21 +526,21 @@ export const blogPostSlugSchema = z.object({
     slug: z.string(),
     status: blogPostStatusSchema,
   }),
-});
+})
 
 export const adminBlogSlugListSchema = z.object({
   items: z.array(blogPostSlugSchema),
   total: z.number(),
   page: z.number(),
   limit: z.number(),
-});
+})
 
 export const blogSitemapEntrySchema = z.object({
   slug: z.string(),
   updatedAt: z.string(),
-});
+})
 
-export const blogSitemapEntryListSchema = z.array(blogSitemapEntrySchema);
+export const blogSitemapEntryListSchema = z.array(blogSitemapEntrySchema)
 
 /* ------------------------------------------------------------------------- *
  * Input schemas — the forms in apps/admin
@@ -531,16 +558,16 @@ export const blogSitemapEntryListSchema = z.array(blogSitemapEntrySchema);
 export const blogSlugSchema = z
   .string()
   .trim()
-  .min(1, "validation.slug.required")
-  .max(120, "validation.slug.tooLong")
-  .regex(SLUG_PATTERN, "validation.slug.pattern")
+  .min(1, 'validation.slug.required')
+  .max(120, 'validation.slug.tooLong')
+  .regex(SLUG_PATTERN, 'validation.slug.pattern')
   .refine(
     (slug) => !(RESERVED_POST_SLUGS as readonly string[]).includes(slug),
     // Not a cosmetic rule: these three strings are static segments under
     // `/blogs`, and Next always lets a static segment beat a dynamic one, so the
     // post would never open.
-    { message: "validation.slug.reserved" },
-  );
+    {message: 'validation.slug.reserved'},
+  )
 
 /**
  * The form's URL field: **stays a `string`**, with no `.transform()` to `null`.
@@ -554,16 +581,16 @@ const linkUrlField = z
   .string()
   .trim()
   .max(2048)
-  .refine((v) => v === "" || isSafeLinkHref(v), "validation.url.invalid");
+  .refine((v) => v === '' || isSafeLinkHref(v), 'validation.url.invalid')
 
 const imageUrlField = z
   .string()
   .trim()
   .max(2048)
   .refine(
-    (v) => v === "" || isSafeImageSrc(v),
-    `Ảnh phải thuộc host được phép: ${[...BLOG_IMAGE_HOSTS, ...BLOG_IMAGE_DEV_HOSTS].join(", ")}`,
-  );
+    (v) => v === '' || isSafeImageSrc(v),
+    `Ảnh phải thuộc host được phép: ${[...BLOG_IMAGE_HOSTS, ...BLOG_IMAGE_DEV_HOSTS].join(', ')}`,
+  )
 
 /**
  * The editor's form — **flat**, including the `seo` group that is nested in the
@@ -580,26 +607,26 @@ const imageUrlField = z
  * made yet every time `/posts/new` opens (§2.6, §7.4).
  */
 export const blogPostFormSchema = z.object({
-  title: z.string().trim().min(1, "validation.post.titleRequired").max(200),
+  title: z.string().trim().min(1, 'validation.post.titleRequired').max(200),
   slug: blogSlugSchema,
   excerpt: z.string().trim().max(500),
   // Content is not validated node by node here — `sanitizeBlogDoc` does that
   // when the payload is built, and it FILTERS rather than rejects (§3.1).
   content: z.custom<BlogDoc>(
-    (value) => typeof value === "object" && value !== null,
-    "validation.post.contentInvalid",
+    (value) => typeof value === 'object' && value !== null,
+    'validation.post.contentInvalid',
   ),
   coverImageUrl: imageUrlField,
   categorySlug: z.string(),
-  tagSlugs: z.array(z.string()).max(20, "validation.post.tooManyTags"),
+  tagSlugs: z.array(z.string()).max(20, 'validation.post.tooManyTags'),
   metaTitle: z.string().trim().max(120),
   metaDescription: z.string().trim().max(320),
   canonicalUrl: linkUrlField,
   ogImageUrl: imageUrlField,
   noindex: z.boolean(),
-});
+})
 
-export type BlogPostFormValues = z.infer<typeof blogPostFormSchema>;
+export type BlogPostFormValues = z.infer<typeof blogPostFormSchema>
 
 /**
  * DTO → form values. `null` becomes `""` because inputs cannot hold `null`.
@@ -615,17 +642,17 @@ export function toBlogPostFormValues(post: BlogPost): BlogPostFormValues {
   return {
     title: post.title,
     slug: post.slug,
-    excerpt: post.excerpt ?? "",
+    excerpt: post.excerpt ?? '',
     content: post.content,
-    coverImageUrl: post.coverImageUrl ?? "",
-    categorySlug: post.category?.slug ?? "",
+    coverImageUrl: post.coverImageUrl ?? '',
+    categorySlug: post.category?.slug ?? '',
     tagSlugs: post.tags.map((tag) => tag.slug),
-    metaTitle: post.seo.metaTitle ?? "",
-    metaDescription: post.seo.metaDescription ?? "",
-    canonicalUrl: post.seo.canonicalUrl ?? "",
-    ogImageUrl: post.seo.ogImageUrl ?? "",
+    metaTitle: post.seo.metaTitle ?? '',
+    metaDescription: post.seo.metaDescription ?? '',
+    canonicalUrl: post.seo.canonicalUrl ?? '',
+    ogImageUrl: post.seo.ogImageUrl ?? '',
     noindex: post.seo.noindex,
-  };
+  }
 }
 
 /**
@@ -644,14 +671,15 @@ export function toBlogPostFormValues(post: BlogPost): BlogPostFormValues {
  */
 export function toBlogPostPayload(
   values: BlogPostFormValues,
-  taxonomy: { categories: BlogCategory[]; tags: BlogTag[] },
+  taxonomy: {categories: BlogCategory[]; tags: BlogTag[]},
 ) {
-  const nullable = (value: string) => (value.trim() === "" ? null : value.trim());
+  const nullable = (value: string) =>
+    value.trim() === '' ? null : value.trim()
   const categoryId =
-    taxonomy.categories.find((c) => c.slug === values.categorySlug)?.id ?? null;
+    taxonomy.categories.find((c) => c.slug === values.categorySlug)?.id ?? null
   const tagIds = values.tagSlugs
     .map((slug) => taxonomy.tags.find((tag) => tag.slug === slug)?.id)
-    .filter((id): id is string => Boolean(id));
+    .filter((id): id is string => Boolean(id))
 
   return {
     title: values.title.trim(),
@@ -668,31 +696,31 @@ export function toBlogPostPayload(
       ogImageUrl: nullable(values.ogImageUrl),
       noindex: values.noindex,
     },
-  };
+  }
 }
 
 /** The empty doc for a new post — `content` must never be `undefined`. */
 export function emptyBlogDoc(): BlogDoc {
-  return { type: "doc", content: [] };
+  return {type: 'doc', content: []}
 }
 
 export const blogCategoryFormSchema = z.object({
-  name: z.string().trim().min(1, "validation.category.nameRequired").max(120),
+  name: z.string().trim().min(1, 'validation.category.nameRequired').max(120),
   slug: z
     .string()
     .trim()
-    .min(1, "validation.slug.required")
+    .min(1, 'validation.slug.required')
     .max(120)
-    .regex(SLUG_PATTERN, "validation.slug.pattern"),
+    .regex(SLUG_PATTERN, 'validation.slug.pattern'),
   description: z.string().trim().max(320),
   // `z.number()` plus `valueAsNumber` at the register call, NOT
   // `z.coerce.number()`: coercion makes the schema's INPUT type `unknown`, and
   // react-hook-form holds values in the input type — the resolver would then
   // not match `useForm<BlogCategoryFormValues>`.
-  order: z.number("validation.category.orderNumber").int().min(0).max(999),
-});
+  order: z.number('validation.category.orderNumber').int().min(0).max(999),
+})
 
-export type BlogCategoryFormValues = z.infer<typeof blogCategoryFormSchema>;
+export type BlogCategoryFormValues = z.infer<typeof blogCategoryFormSchema>
 
 /**
  * The `/posts` table's query — parsed straight from the URL searchParams (the
@@ -704,7 +732,7 @@ export const adminBlogPostQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).catch(20),
   q: z.string().trim().min(1).optional().catch(undefined),
   status: blogPostStatusSchema.optional().catch(undefined),
-});
+})
 
 /**
  * `/posts/slugs` reads its filters from the URL, so every field `.catch()`es back
@@ -716,9 +744,9 @@ export const adminBlogSlugQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).catch(10),
   q: z.string().trim().min(1).optional().catch(undefined),
   postId: z.string().trim().min(1).optional().catch(undefined),
-  sort: z.enum(["created", "slug"]).catch("created"),
-  order: z.enum(["asc", "desc"]).catch("desc"),
-});
+  sort: z.enum(['created', 'slug']).catch('created'),
+  order: z.enum(['asc', 'desc']).catch('desc'),
+})
 
 /** The public pages' `?page=`. `limit` is NOT taken from the URL — see §4.5. */
-export const blogPageParamSchema = z.coerce.number().int().min(1);
+export const blogPageParamSchema = z.coerce.number().int().min(1)

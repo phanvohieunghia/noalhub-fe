@@ -1,20 +1,20 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
-import { useRef } from "react";
+import {useTranslations} from 'next-intl'
+import {useRef} from 'react'
 
-import type { QaItemFull } from "@noalhub/api/qa";
-import { Badge } from "@noalhub/ui/badge";
-import { Button } from "@noalhub/ui/button";
-import { HoverFlyout } from "@noalhub/ui/hover-flyout";
-import { Icon, ICONS, LUCIDE } from "@noalhub/ui/icons";
+import type {QaItemFull} from '@noalhub/api/qa'
+import {Badge} from '@noalhub/ui/badge'
+import {Button} from '@noalhub/ui/button'
+import {HoverFlyout} from '@noalhub/ui/hover-flyout'
+import {Icon, ICONS, LUCIDE} from '@noalhub/ui/icons'
 
-import { PostContentPreview } from "./post-content-preview";
-import { docToText } from "./qa-plain-doc";
-import { Typography } from "@noalhub/ui/typography";
+import {PostContentPreview} from './post-content-preview'
+import {docToText} from './qa-plain-doc'
+import {Typography} from '@noalhub/ui/typography'
 
 /** How much of a question is drawn: everything, one line, or a short tile for a grid. */
-export type QaCardDensity = "full" | "compact" | "grid";
+export type QaCardDensity = 'full' | 'compact' | 'grid'
 
 /**
  * One question of a set, read-only: kind and difficulty on top, the numbered
@@ -38,30 +38,34 @@ export function QaQuestionCard({
   onRemove,
   onEdit,
   removing = false,
-  density = "full",
+  density = 'full',
   dragHandle,
 }: {
-  item: QaItemFull;
+  item: QaItemFull
   /** Zero-based position in the set; shown one-based in front of the question. */
-  index: number;
+  index: number
   /** The last question cannot move down. */
-  isLast?: boolean;
+  isLast?: boolean
   /** Each button is drawn only when its handler is given; omit them all to lock the card. */
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
-  onRemove?: () => void;
-  onEdit?: () => void;
-  removing?: boolean;
-  density?: QaCardDensity;
+  onMoveUp?: () => void
+  onMoveDown?: () => void
+  onRemove?: () => void
+  onEdit?: () => void
+  removing?: boolean
+  density?: QaCardDensity
   /** The grip that starts a drag; the page owns the drag logic, the card only places it. */
-  dragHandle?: React.ReactNode;
+  dragHandle?: React.ReactNode
 }) {
-  const t = useTranslations("admin.qa");
+  const t = useTranslations('admin.qa')
 
   const correctIds =
-    item.answerKey && "optionIds" in item.answerKey ? item.answerKey.optionIds : [];
+    item.answerKey && 'optionIds' in item.answerKey
+      ? item.answerKey.optionIds
+      : []
   const accepted =
-    item.answerKey && "accepted" in item.answerKey ? item.answerKey.accepted : [];
+    item.answerKey && 'accepted' in item.answerKey
+      ? item.answerKey.accepted
+      : []
 
   const actions = (
     <>
@@ -69,10 +73,9 @@ export function QaQuestionCard({
         <Button
           variant="ghost"
           size="sm"
-          aria-label={t("sets.moveUp")}
+          aria-label={t('sets.moveUp')}
           disabled={index === 0}
-          onClick={onMoveUp}
-        >
+          onClick={onMoveUp}>
           ↑
         </Button>
       ) : null}
@@ -80,56 +83,68 @@ export function QaQuestionCard({
         <Button
           variant="ghost"
           size="sm"
-          aria-label={t("sets.moveDown")}
+          aria-label={t('sets.moveDown')}
           disabled={isLast}
-          onClick={onMoveDown}
-        >
+          onClick={onMoveDown}>
           ↓
         </Button>
       ) : null}
       {onRemove ? (
-        <Button variant="ghost" size="sm" disabled={removing} onClick={onRemove}>
-          {t("sets.removeItem")}
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={removing}
+          onClick={onRemove}>
+          {t('sets.removeItem')}
         </Button>
       ) : null}
       {onEdit ? (
         <Button
           variant="outline"
           size="icon-md"
-          aria-label={t("sets.editItem")}
-          onClick={onEdit}
-        >
+          aria-label={t('sets.editItem')}
+          onClick={onEdit}>
           <Icon icon={ICONS.edit} />
         </Button>
       ) : null}
     </>
-  );
+  )
 
-  if (density !== "full") {
-    const text = docToText(item.question);
+  if (density !== 'full') {
+    const text = docToText(item.question)
     const body =
       text !== null ? (
         <ClampedHover text={text}>
           <Typography
             variant="body-3"
             as="span"
-            className={density === "grid" ? "line-clamp-2 text-body-4!" : "line-clamp-1"}
-          >
+            className={
+              density === 'grid' ? 'line-clamp-2 text-body-4!' : 'line-clamp-1'
+            }>
             <TextWithImages text={text} />
           </Typography>
         </ClampedHover>
       ) : (
-        <div className={density === "grid" ? "max-h-10 overflow-hidden" : "max-h-6 overflow-hidden"}>
+        <div
+          className={
+            density === 'grid'
+              ? 'max-h-10 overflow-hidden'
+              : 'max-h-6 overflow-hidden'
+          }>
           <PostContentPreview doc={item.question} tagIds={item.tagIds} />
         </div>
-      );
+      )
     const number = (
-      <Typography variant="body-3" as="span" weight={600} className="shrink-0 tabular-nums">
+      <Typography
+        variant="body-3"
+        as="span"
+        weight={600}
+        className="shrink-0 tabular-nums">
         {index + 1}.
       </Typography>
-    );
+    )
 
-    if (density === "compact") {
+    if (density === 'compact') {
       return (
         <article className="flex items-center gap-2 rounded-md border border-border bg-surface px-2 py-1.5">
           {dragHandle}
@@ -140,7 +155,7 @@ export function QaQuestionCard({
           <div className="min-w-0 flex-1">{body}</div>
           {actions}
         </article>
-      );
+      )
     }
 
     return (
@@ -154,7 +169,7 @@ export function QaQuestionCard({
         </div>
         <div className="min-w-0 flex-1">{body}</div>
       </article>
-    );
+    )
   }
 
   return (
@@ -179,14 +194,13 @@ export function QaQuestionCard({
       </div>
 
       {item.options?.map((option, optionIndex) => {
-        const isCorrect = correctIds.includes(option.id);
+        const isCorrect = correctIds.includes(option.id)
         return (
           <div
             key={option.id}
             className={`flex items-center gap-2.5 rounded-md border px-2.5 py-2 text-body-3 bg-muted ${
-              isCorrect ? "border-success" : "border-transparent"
-            }`}
-          >
+              isCorrect ? 'border-success' : 'border-transparent'
+            }`}>
             <Typography variant="body-3" as="span" weight={600}>
               {String.fromCharCode(65 + optionIndex)}
             </Typography>
@@ -194,59 +208,64 @@ export function QaQuestionCard({
               {option.text}
             </Typography>
             {isCorrect ? (
-              <Typography variant="body-4" as="span" className="shrink-0 text-success">
-                {t("sets.correctAnswer")}
+              <Typography
+                variant="body-4"
+                as="span"
+                className="shrink-0 text-success">
+                {t('sets.correctAnswer')}
               </Typography>
             ) : null}
           </div>
-        );
+        )
       })}
 
       {accepted.length > 0 ? (
         <Typography variant="body-3" className="text-muted-foreground">
-          {t("sets.accepted", { answers: accepted.join(" · ") })}
+          {t('sets.accepted', {answers: accepted.join(' · ')})}
         </Typography>
       ) : null}
 
       {item.explanation ? (
         <div className="mt-1 flex flex-col gap-1 border-t border-border pt-3">
-          <Typography variant="body-4" as="span" className="text-muted-foreground">
-            {t("sets.explanation")}
+          <Typography
+            variant="body-4"
+            as="span"
+            className="text-muted-foreground">
+            {t('sets.explanation')}
           </Typography>
           <PostContentPreview doc={item.explanation} />
         </div>
       ) : null}
     </article>
-  );
+  )
 }
 
-const IMAGE = /!\[([^\]]*)\]\(([^\s)]+)(?:\s+"[^"]*")?\)/g;
+const IMAGE = /!\[([^\]]*)\]\(([^\s)]+)(?:\s+"[^"]*")?\)/g
 
 /**
  * A plain-text question may carry markdown images. At this size each one is a small
  * placeholder chip; the pictures are in the hover card (`ClampedHover`), which only
  * mounts them when open, so a screen of 100+ tiles does not fetch 100+ images.
  */
-function TextWithImages({ text }: { text: string }) {
-  const parts: React.ReactNode[] = [];
-  let last = 0;
+function TextWithImages({text}: {text: string}) {
+  const parts: React.ReactNode[] = []
+  let last = 0
   for (const match of text.matchAll(IMAGE)) {
-    const at = match.index ?? 0;
-    if (at > last) parts.push(text.slice(last, at));
-    const [, alt] = match;
+    const at = match.index ?? 0
+    if (at > last) parts.push(text.slice(last, at))
+    const [, alt] = match
     parts.push(
       <span
         key={at}
-        className="mx-0.5 inline-flex items-center gap-0.5 rounded bg-muted px-1 align-middle text-body-4 text-muted-foreground"
-      >
+        className="mx-0.5 inline-flex items-center gap-0.5 rounded bg-muted px-1 align-middle text-body-4 text-muted-foreground">
         <Icon icon={LUCIDE.image} className="size-3" />
         {alt}
       </span>,
-    );
-    last = at + match[0].length;
+    )
+    last = at + match[0].length
   }
-  if (last < text.length) parts.push(text.slice(last));
-  return <>{parts}</>;
+  if (last < text.length) parts.push(text.slice(last))
+  return <>{parts}</>
 }
 
 /**
@@ -255,38 +274,48 @@ function TextWithImages({ text }: { text: string }) {
  * there is something more to see: the text is cut off by `line-clamp`, or it holds an
  * image. The card's content mounts only while open, so images load on hover.
  */
-function ClampedHover({ text, children }: { text: string; children: React.ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const hasImage = new RegExp(IMAGE.source).test(text);
+function ClampedHover({
+  text,
+  children,
+}: {
+  text: string
+  children: React.ReactNode
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const hasImage = new RegExp(IMAGE.source).test(text)
   return (
     <HoverFlyout
       side="top"
       align="start"
       contentClassName="w-[min(24rem,calc(100vw-2rem))] p-3"
       canOpen={() => {
-        const box = ref.current?.firstElementChild;
-        return hasImage || (!!box && box.scrollHeight > box.clientHeight);
+        const box = ref.current?.firstElementChild
+        return hasImage || (!!box && box.scrollHeight > box.clientHeight)
       }}
-      trigger={<div ref={ref}>{children}</div>}
-    >
+      trigger={<div ref={ref}>{children}</div>}>
       <FullText text={text} />
     </HoverFlyout>
-  );
+  )
 }
 
-function FullText({ text }: { text: string }) {
-  const parts: React.ReactNode[] = [];
-  let last = 0;
+function FullText({text}: {text: string}) {
+  const parts: React.ReactNode[] = []
+  let last = 0
   for (const match of text.matchAll(IMAGE)) {
-    const at = match.index ?? 0;
-    if (at > last) parts.push(text.slice(last, at));
-    const [, alt, src] = match;
+    const at = match.index ?? 0
+    if (at > last) parts.push(text.slice(last, at))
+    const [, alt, src] = match
     parts.push(
       // eslint-disable-next-line @next/next/no-img-element -- an author's own URL, any origin
-      <img key={at} src={src} alt={alt} className="my-1 block max-h-60 max-w-full rounded" />,
-    );
-    last = at + match[0].length;
+      <img
+        key={at}
+        src={src}
+        alt={alt}
+        className="my-1 block max-h-60 max-w-full rounded"
+      />,
+    )
+    last = at + match[0].length
   }
-  if (last < text.length) parts.push(text.slice(last));
-  return <div className="text-body-3 whitespace-pre-wrap">{parts}</div>;
+  if (last < text.length) parts.push(text.slice(last))
+  return <div className="text-body-3 whitespace-pre-wrap">{parts}</div>
 }

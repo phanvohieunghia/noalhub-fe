@@ -26,27 +26,27 @@
  * it. Without h4 the backend's sanitizer demotes it to h2, turning a sub-point
  * into a fake chapter, and it does so **silently**.
  */
-export type BlogHeadingLevel = 1 | 2 | 3 | 4;
+export type BlogHeadingLevel = 1 | 2 | 3 | 4
 
 /** The marks allowed on `text` — allowlist §3.1, no others exist. */
 export type BlogMark =
-  | { type: "bold" }
-  | { type: "italic" }
-  | { type: "strike" }
-  | { type: "code" }
+  | {type: 'bold'}
+  | {type: 'italic'}
+  | {type: 'strike'}
+  | {type: 'code'}
   /**
    * An `href` that already passed the scheme allowlist (§3.1a). `target`/`rel`
    * are NOT here: the renderer sets them, data does not get to decide.
    */
-  | { type: "link"; attrs: { href: string } };
+  | {type: 'link'; attrs: {href: string}}
 
 export type BlogTextNode = {
-  type: "text";
-  text: string;
-  marks?: BlogMark[];
-};
+  type: 'text'
+  text: string
+  marks?: BlogMark[]
+}
 
-export type BlogHardBreakNode = { type: "hardBreak" };
+export type BlogHardBreakNode = {type: 'hardBreak'}
 
 /**
  * A small picture sitting in a line of text. Unlike the block `image` it has no
@@ -55,37 +55,38 @@ export type BlogHardBreakNode = { type: "hardBreak" };
  * display, from `![alt](url "=WxH")` found inside a sentence of older content.
  */
 export type BlogInlineImageNode = {
-  type: "inlineImage";
-  attrs: { src: string; alt: string; width: number; height: number };
-};
+  type: 'inlineImage'
+  attrs: {src: string; alt: string; width: number; height: number}
+}
 
-export type BlogInlineNode = BlogTextNode | BlogHardBreakNode | BlogInlineImageNode;
+export type BlogInlineNode =
+  BlogTextNode | BlogHardBreakNode | BlogInlineImageNode
 
 /**
  * Block alignment. Left is the default and is never stored: a missing
  * `textAlign` IS left, so every post written before alignment existed reads the
  * same.
  */
-export type BlogTextAlign = "center" | "right" | "justify";
+export type BlogTextAlign = 'center' | 'right' | 'justify'
 
 export type BlogParagraphNode = {
-  type: "paragraph";
-  attrs?: { textAlign?: BlogTextAlign };
-  content?: BlogInlineNode[];
-};
+  type: 'paragraph'
+  attrs?: {textAlign?: BlogTextAlign}
+  content?: BlogInlineNode[]
+}
 
 export type BlogHeadingNode = {
-  type: "heading";
-  attrs: { level: BlogHeadingLevel; textAlign?: BlogTextAlign };
-  content?: BlogInlineNode[];
-};
+  type: 'heading'
+  attrs: {level: BlogHeadingLevel; textAlign?: BlogTextAlign}
+  content?: BlogInlineNode[]
+}
 
 /** `language` from the fixed allowlist (§3.1c). The renderer does NOT highlight in this pass. */
 export type BlogCodeBlockNode = {
-  type: "codeBlock";
-  attrs: { language: string | null };
-  content?: BlogTextNode[];
-};
+  type: 'codeBlock'
+  attrs: {language: string | null}
+  content?: BlogTextNode[]
+}
 
 /**
  * `width`/`height` are here **from day one** (§3.1b): adding them later would
@@ -94,42 +95,42 @@ export type BlogCodeBlockNode = {
  * `aspect-video` frame.
  */
 export type BlogImageNode = {
-  type: "image";
+  type: 'image'
   attrs: {
-    src: string;
+    src: string
     /** May be empty (a decorative image), but never `null` (§3.1a). */
-    alt: string;
-    width: number | null;
-    height: number | null;
+    alt: string
+    width: number | null
+    height: number | null
     /** Left is the default and is never stored, like `textAlign`. */
-    align?: "center" | "right";
+    align?: 'center' | 'right'
     /**
      * Display width as a share of the column (1–100). `width`/`height` stay the
      * real pixel size — `next/image` needs them for the ratio (§3.1b) — and
      * this only says how much of the column to fill, so it is responsive.
      */
-    widthPercent?: number;
-  };
-};
+    widthPercent?: number
+  }
+}
 
-export type BlogHorizontalRuleNode = { type: "horizontalRule" };
+export type BlogHorizontalRuleNode = {type: 'horizontalRule'}
 
-export type BlogListItemNode = { type: "listItem"; content: BlogBlockNode[] };
+export type BlogListItemNode = {type: 'listItem'; content: BlogBlockNode[]}
 
 export type BlogBulletListNode = {
-  type: "bulletList";
-  content: BlogListItemNode[];
-};
+  type: 'bulletList'
+  content: BlogListItemNode[]
+}
 
 export type BlogOrderedListNode = {
-  type: "orderedList";
-  content: BlogListItemNode[];
-};
+  type: 'orderedList'
+  content: BlogListItemNode[]
+}
 
 export type BlogBlockquoteNode = {
-  type: "blockquote";
-  content: BlogBlockNode[];
-};
+  type: 'blockquote'
+  content: BlogBlockNode[]
+}
 
 /**
  * A table, in Tiptap's exact shape: `table > tableRow > (tableCell |
@@ -144,20 +145,20 @@ export type BlogBlockquoteNode = {
  * clamped — a `rowspan: 999999` from a hand-rolled client is a dead renderer.
  */
 export type BlogTableCellNode = {
-  type: "tableCell" | "tableHeader";
-  attrs: { colspan: number; rowspan: number };
-  content: BlogBlockNode[];
-};
+  type: 'tableCell' | 'tableHeader'
+  attrs: {colspan: number; rowspan: number}
+  content: BlogBlockNode[]
+}
 
 export type BlogTableRowNode = {
-  type: "tableRow";
-  content: BlogTableCellNode[];
-};
+  type: 'tableRow'
+  content: BlogTableCellNode[]
+}
 
 export type BlogTableNode = {
-  type: "table";
-  content: BlogTableRowNode[];
-};
+  type: 'table'
+  content: BlogTableRowNode[]
+}
 
 export type BlogBlockNode =
   | BlogParagraphNode
@@ -168,39 +169,39 @@ export type BlogBlockNode =
   | BlogBulletListNode
   | BlogOrderedListNode
   | BlogBlockquoteNode
-  | BlogTableNode;
+  | BlogTableNode
 
 /** A Tiptap/ProseMirror document — a `jsonb` column on the backend (§3). */
-export type BlogDoc = { type: "doc"; content: BlogBlockNode[] };
+export type BlogDoc = {type: 'doc'; content: BlogBlockNode[]}
 
 /**
  * The two taxonomy axes (§2.6) share a shape but NOT a meaning: categories are
  * a fixed, admin-managed set that gets indexed; tags grow with the posts and
  * are `noindex`. Read `docs/blog.md` §2.6 before merging these two types.
  */
-export type BlogTaxonomyRef = { slug: string; name: string };
+export type BlogTaxonomyRef = {slug: string; name: string}
 
 export type BlogCategory = {
-  id: string;
-  slug: string;
-  name: string;
+  id: string
+  slug: string
+  name: string
   /** The blurb at the top of a category page — what keeps it from being a thin page (§6.5). */
-  description: string | null;
+  description: string | null
   /** The display order in the public nav (§6.1). */
-  order: number;
+  order: number
   /**
    * The public `/blog/categories` counts only `published` posts;
    * `/admin/blog/categories` counts drafts too. Same field name, two numbers.
    */
-  postCount: number;
-};
+  postCount: number
+}
 
 export type BlogTag = {
-  id: string;
-  slug: string;
-  name: string;
-  postCount: number;
-};
+  id: string
+  slug: string
+  name: string
+  postCount: number
+}
 
 /**
  * One row of `blog_post_slugs`: an **old** slug still 301-ing to the post.
@@ -209,92 +210,92 @@ export type BlogTag = {
  * old URL belong to" — see `docs/slug-management.md`.
  */
 export type BlogPostSlug = {
-  id: string;
-  slug: string;
-  createdAt: string;
+  id: string
+  slug: string
+  createdAt: string
   post: {
-    id: string;
-    title: string;
+    id: string
+    title: string
     /** The post's **live** slug, from `blog_posts` — not an old one. */
-    slug: string;
-    status: BlogPostStatus;
-  };
-};
+    slug: string
+    status: BlogPostStatus
+  }
+}
 
-export type BlogSlugSort = "created" | "slug";
+export type BlogSlugSort = 'created' | 'slug'
 
 /**
  * `GET /admin/blog/slugs`. Flat, not nested under a post: the main use is the
  * reverse lookup — you hold an old URL and do not yet know the post.
  */
 export type AdminBlogSlugQuery = {
-  page?: number;
-  limit?: number;
+  page?: number
+  limit?: number
   /** Substring match on the old slug. */
-  q?: string;
-  postId?: string;
-  sort?: BlogSlugSort;
-  order?: "asc" | "desc";
-};
+  q?: string
+  postId?: string
+  sort?: BlogSlugSort
+  order?: 'asc' | 'desc'
+}
 
 export type AdminBlogSlugList = {
-  items: BlogPostSlug[];
-  total: number;
-  page: number;
-  limit: number;
-};
+  items: BlogPostSlug[]
+  total: number
+  page: number
+  limit: number
+}
 
-export type BlogPostStatus = "draft" | "published" | "archived";
+export type BlogPostStatus = 'draft' | 'published' | 'archived'
 
 export type BlogAuthor = {
-  id: string;
-  displayName: string;
-  avatarUrl: string | null;
-};
+  id: string
+  displayName: string
+  avatarUrl: string | null
+}
 
 export type BlogPostSeo = {
   /** `null` → falls back to `title` (§6.2). */
-  metaTitle: string | null;
-  metaDescription: string | null;
+  metaTitle: string | null
+  metaDescription: string | null
   /** Set only when the post is republished from another source. */
-  canonicalUrl: string | null;
+  canonicalUrl: string | null
   /** `null` → falls back to `coverImageUrl` → the default OG image. */
-  ogImageUrl: string | null;
-  noindex: boolean;
-};
+  ogImageUrl: string | null
+  noindex: boolean
+}
 
 /** `BlogPostDto` (§2.3) — the full record, needed only by the post page and the editor. */
 export type BlogPost = {
-  id: string;
-  slug: string;
-  title: string;
+  id: string
+  slug: string
+  title: string
   /** The summary shown in listings. DIFFERENT from `seo.metaDescription`. */
-  excerpt: string | null;
-  content: BlogDoc;
+  excerpt: string | null
+  content: BlogDoc
   /**
    * Plain text generated from `content` by the **backend** (§2.3). Generated on
    * the frontend it would differ per app and be unqueryable in the DB. Used for
    * reading time on the post page.
    */
-  contentText: string;
-  coverImageUrl: string | null;
+  contentText: string
+  coverImageUrl: string | null
   /** `null` is valid ONLY while `status = "draft"` (§2.6). */
-  category: BlogTaxonomyRef | null;
+  category: BlogTaxonomyRef | null
   /**
    * ⚠️ A **set**, not an ordered list — the contract makes no promise that the
    * element order means anything. Do not write code that relies on `tags[0]`
    * (§2.6).
    */
-  tags: BlogTaxonomyRef[];
-  status: BlogPostStatus;
+  tags: BlogTaxonomyRef[]
+  status: BlogPostStatus
   /** `null` until it has been published at least once. */
-  publishedAt: string | null;
-  updatedAt: string;
+  publishedAt: string | null
+  updatedAt: string
   /** Optimistic locking — sent back on `PATCH`; a mismatch is a 409 (§7.3). */
-  version: number;
-  author: BlogAuthor;
-  seo: BlogPostSeo;
-};
+  version: number
+  author: BlogAuthor
+  seo: BlogPostSeo
+}
 
 /**
  * `BlogPostListItemDto` (§2.3a) — its **own** DTO, not a trimmed `BlogPost`.
@@ -302,21 +303,21 @@ export type BlogPost = {
  * `content` nor `contentText`, so the frontend has nothing to compute from.
  */
 export type BlogPostListItem = {
-  id: string;
-  slug: string;
-  title: string;
+  id: string
+  slug: string
+  title: string
   /** NOT nullable in listings — the backend generates it from `contentText` (§2.3b). */
-  excerpt: string;
-  coverImageUrl: string | null;
+  excerpt: string
+  coverImageUrl: string | null
   /** NOT nullable: listings only contain published posts, and publishing requires a category. */
-  category: BlogTaxonomyRef;
-  tags: BlogTaxonomyRef[];
-  publishedAt: string;
-  updatedAt: string;
-  author: BlogAuthor;
+  category: BlogTaxonomyRef
+  tags: BlogTaxonomyRef[]
+  publishedAt: string
+  updatedAt: string
+  author: BlogAuthor
   /** Computed by the BACKEND (§2.3a). Drop this field and listings lose reading time. */
-  readingMinutes: number;
-};
+  readingMinutes: number
+}
 
 /**
  * The offset pagination envelope — **the same shape as `AdminUserList`**,
@@ -324,41 +325,41 @@ export type BlogPostListItem = {
  * it to `notFound()` when `?page` runs past the last page.
  */
 export type BlogPostList = {
-  items: BlogPostListItem[];
-  total: number;
-  page: number;
-  limit: number;
-};
+  items: BlogPostListItem[]
+  total: number
+  page: number
+  limit: number
+}
 
 /**
  * The query for `GET /blog/posts`. `category` and `tag` take **slugs** (not
  * ids) and are independent filters — sent together they AND.
  */
 export type BlogPostQuery = {
-  page?: number;
-  limit?: number;
-  category?: string;
-  tag?: string;
-};
+  page?: number
+  limit?: number
+  category?: string
+  tag?: string
+}
 
 /** `GET /blog/sitemap-entries` — unpaginated, no limit (§2.1). */
 export type BlogSitemapEntry = {
-  slug: string;
-  updatedAt: string;
-};
+  slug: string
+  updatedAt: string
+}
 
 /** The admin table's query. Sorted `updatedAt DESC`, UNLIKE the public list (§2.1a). */
 export type AdminBlogPostQuery = {
-  page?: number;
-  limit?: number;
-  q?: string;
-  status?: BlogPostStatus;
-};
+  page?: number
+  limit?: number
+  q?: string
+  status?: BlogPostStatus
+}
 
 /** `GET /admin/blog/posts` — the same envelope, but the items are full records. */
 export type AdminBlogPostList = {
-  items: BlogPost[];
-  total: number;
-  page: number;
-  limit: number;
-};
+  items: BlogPost[]
+  total: number
+  page: number
+  limit: number
+}

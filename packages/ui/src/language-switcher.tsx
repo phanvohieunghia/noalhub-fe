@@ -1,11 +1,11 @@
-"use client";
+'use client'
 
-import { useChangeLanguage, type UserLanguage } from "@noalhub/api/users";
-import { LOCALES, type Locale } from "@noalhub/i18n/config";
-import { writeLocaleCookie } from "@noalhub/i18n/cookie";
-import { useLocale, useTranslations } from "next-intl";
+import {useChangeLanguage, type UserLanguage} from '@noalhub/api/users'
+import {LOCALES, type Locale} from '@noalhub/i18n/config'
+import {writeLocaleCookie} from '@noalhub/i18n/cookie'
+import {useLocale, useTranslations} from 'next-intl'
 
-import { Button } from "./button";
+import {Button} from './button'
 
 /**
  * Switches the interface language. Shared by web and admin; the part that
@@ -40,45 +40,46 @@ import { Button } from "./button";
  * request (~20ms locally, ~200ms over the network), narrow enough that nobody
  * sees the button hang.
  */
-const PERSIST_GRACE_MS = 600;
+const PERSIST_GRACE_MS = 600
 
 export function LanguageSwitcher({
   onSwitch,
-  className = "",
+  className = '',
 }: {
-  onSwitch: (locale: Locale) => void;
-  className?: string;
+  onSwitch: (locale: Locale) => void
+  className?: string
 }) {
-  const t = useTranslations("nav.languageSwitcher");
-  const active = useLocale();
-  const changeLanguage = useChangeLanguage();
+  const t = useTranslations('nav.languageSwitcher')
+  const active = useLocale()
+  const changeLanguage = useChangeLanguage()
 
   const switchTo = async (locale: Locale) => {
-    if (locale === active || changeLanguage.isPending) return;
+    if (locale === active || changeLanguage.isPending) return
 
-    writeLocaleCookie(locale);
+    writeLocaleCookie(locale)
 
     // Signed out means a 401 — the cookie is enough, and it is all that can be
     // stored for a guest. Swallow the error; there is nothing the user could do
     // with it.
     await Promise.race([
-      changeLanguage.mutateAsync({ language: locale as UserLanguage }).catch(() => {}),
+      changeLanguage
+        .mutateAsync({language: locale as UserLanguage})
+        .catch(() => {}),
       new Promise((resolve) => setTimeout(resolve, PERSIST_GRACE_MS)),
-    ]);
+    ])
 
-    onSwitch(locale);
-  };
+    onSwitch(locale)
+  }
 
   return (
     <div
       role="group"
-      aria-label={t("label")}
-      className={`inline-flex items-center gap-0.5 rounded-full border border-border p-0.5 ${className}`}
-    >
+      aria-label={t('label')}
+      className={`inline-flex items-center gap-0.5 rounded-full border border-border p-0.5 ${className}`}>
       {LOCALES.map((locale) => (
         <Button
           key={locale}
-          variant={locale === active ? "primary" : "ghost"}
+          variant={locale === active ? 'primary' : 'ghost'}
           size="xs"
           shape="circle"
           onClick={() => void switchTo(locale)}
@@ -89,11 +90,10 @@ export function LanguageSwitcher({
           aria-busy={changeLanguage.isPending}
           // `whitespace-nowrap`: the longest label ("Tiếng Việt") wraps onto two
           // lines inside admin's account dropdown, which is only 16rem wide.
-          className="whitespace-nowrap"
-        >
+          className="whitespace-nowrap">
           {t(locale)}
         </Button>
       ))}
     </div>
-  );
+  )
 }

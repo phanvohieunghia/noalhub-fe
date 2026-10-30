@@ -1,21 +1,21 @@
-"use client";
+'use client'
 
-import { useEffect, useId, useRef, useState } from "react";
+import {useEffect, useId, useRef, useState} from 'react'
 
-import { ApiError, ERROR_CODES } from "@noalhub/api/errors";
-import { messageOf, type Message } from "@noalhub/api/message";
-import { useMessage } from "@noalhub/i18n/use-message";
-import { useTranslations } from "next-intl";
+import {ApiError, ERROR_CODES} from '@noalhub/api/errors'
+import {messageOf, type Message} from '@noalhub/api/message'
+import {useMessage} from '@noalhub/i18n/use-message'
+import {useTranslations} from 'next-intl'
 import {
   MEDIA_IMAGE_MIMES,
   MEDIA_KIND_MAX_BYTES,
   isStorageUploadError,
   useUploadMedia,
   type MediaAsset,
-} from "@noalhub/api/media";
-import { Button } from "../button";
-import { AlertError } from "../alert";
-import { Icon, LUCIDE } from "../icons";
+} from '@noalhub/api/media'
+import {Button} from '../button'
+import {AlertError} from '../alert'
+import {Icon, LUCIDE} from '../icons'
 
 /**
  * The "Upload image" button — wrapping `useUploadMedia`'s whole three-step flow
@@ -35,40 +35,40 @@ export function ImageUploadButton({
   label,
   disabled = false,
   autoOpen = false,
-  variant = "button",
+  variant = 'button',
 }: {
-  onUploaded: (asset: MediaAsset) => void;
+  onUploaded: (asset: MediaAsset) => void
   /** Left out, the generic "Upload image" label is used. */
-  label?: string;
-  disabled?: boolean;
+  label?: string
+  disabled?: boolean
   /** Open the file picker as soon as it mounts — for a flow the author already chose ("Upload from computer"). */
-  autoOpen?: boolean;
+  autoOpen?: boolean
   /** `dropzone` is the large dashed area that also takes a dropped file; `button` is the compact default. */
-  variant?: "button" | "dropzone";
+  variant?: 'button' | 'dropzone'
 }) {
-  const t = useTranslations("common.upload");
-  const tc = useTranslations("common.actions");
-  const m = useMessage();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const inputId = useId();
-  const [error, setError] = useState<Message | string | null>(null);
-  const [dragging, setDragging] = useState(false);
-  const upload = useUploadMedia({ allow: MEDIA_IMAGE_MIMES });
+  const t = useTranslations('common.upload')
+  const tc = useTranslations('common.actions')
+  const m = useMessage()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const inputId = useId()
+  const [error, setError] = useState<Message | string | null>(null)
+  const [dragging, setDragging] = useState(false)
+  const upload = useUploadMedia({allow: MEDIA_IMAGE_MIMES})
 
   useEffect(() => {
-    if (autoOpen) inputRef.current?.click();
-  }, [autoOpen]);
+    if (autoOpen) inputRef.current?.click()
+  }, [autoOpen])
 
   const pick = (file: File | undefined) => {
-    if (!file) return;
-    setError(null);
+    if (!file) return
+    setError(null)
     upload.mutate(file, {
       onSuccess: onUploaded,
       onError: (err) => setError(uploadErrorText(err)),
-    });
-  };
+    })
+  }
 
-  const percent = upload.progress ? Math.round(upload.progress.ratio * 100) : 0;
+  const percent = upload.progress ? Math.round(upload.progress.ratio * 100) : 0
 
   return (
     <div className="flex flex-col gap-2">
@@ -76,63 +76,62 @@ export function ImageUploadButton({
         id={inputId}
         ref={inputRef}
         type="file"
-        accept={MEDIA_IMAGE_MIMES.join(",")}
+        accept={MEDIA_IMAGE_MIMES.join(',')}
         className="hidden"
         onChange={(event) => {
-          pick(event.target.files?.[0]);
+          pick(event.target.files?.[0])
           // Reset so re-picking the SAME file still fires `change` (after a
           // failed upload, that is the most natural next action).
-          event.target.value = "";
+          event.target.value = ''
         }}
       />
 
-      {variant === "dropzone" ? (
+      {variant === 'dropzone' ? (
         <div
           role="button"
           tabIndex={disabled || upload.isPending ? -1 : 0}
           aria-disabled={disabled || upload.isPending}
           onClick={() => inputRef.current?.click()}
           onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              inputRef.current?.click();
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault()
+              inputRef.current?.click()
             }
           }}
           onDragOver={(event) => {
-            event.preventDefault();
-            setDragging(true);
+            event.preventDefault()
+            setDragging(true)
           }}
           onDragLeave={() => setDragging(false)}
           onDrop={(event) => {
-            event.preventDefault();
-            setDragging(false);
+            event.preventDefault()
+            setDragging(false)
             if (!disabled && !upload.isPending)
-              pick(event.dataTransfer.files?.[0]);
+              pick(event.dataTransfer.files?.[0])
           }}
           className={`flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed px-4 py-8 text-center transition-colors focus-visible:outline-2 focus-visible:outline-ring aria-disabled:cursor-not-allowed aria-disabled:opacity-60 ${
             dragging
-              ? "border-primary bg-primary/10"
-              : "border-border bg-muted/40 hover:border-primary"
-          }`}
-        >
+              ? 'border-primary bg-primary/10'
+              : 'border-border bg-muted/40 hover:border-primary'
+          }`}>
           <Icon
             icon={LUCIDE.imageUp}
             className="size-8 text-muted-foreground"
           />
           <p className="text-body-3">
             {upload.isPending ? (
-              t("uploading", { percent })
+              t('uploading', {percent})
             ) : (
               <>
                 <span className="font-medium text-primary underline">
-                  {t("dropzoneClick")}
-                </span>{" "}
-                {t("dropzoneOr")}
+                  {t('dropzoneClick')}
+                </span>{' '}
+                {t('dropzoneOr')}
               </>
             )}
           </p>
           <p className="text-body-4 text-muted-foreground">
-            {t("dropzoneMax", {
+            {t('dropzoneMax', {
               size: Math.round(MEDIA_KIND_MAX_BYTES.image / (1024 * 1024)),
             })}
           </p>
@@ -141,11 +140,10 @@ export function ImageUploadButton({
               variant="outline"
               size="sm"
               onClick={(event) => {
-                event.stopPropagation();
-                upload.cancel();
-              }}
-            >
-              {tc("cancel")}
+                event.stopPropagation()
+                upload.cancel()
+              }}>
+              {tc('cancel')}
             </Button>
           ) : null}
         </div>
@@ -154,15 +152,14 @@ export function ImageUploadButton({
           <Button
             variant="outline"
             disabled={disabled || upload.isPending}
-            onClick={() => inputRef.current?.click()}
-          >
+            onClick={() => inputRef.current?.click()}>
             {upload.isPending
-              ? t("uploading", { percent })
-              : (label ?? t("label"))}
+              ? t('uploading', {percent})
+              : (label ?? t('label'))}
           </Button>
           {upload.isPending ? (
             <Button variant="outline" onClick={upload.cancel}>
-              {tc("cancel")}
+              {tc('cancel')}
             </Button>
           ) : null}
         </div>
@@ -174,18 +171,17 @@ export function ImageUploadButton({
           aria-valuenow={percent}
           aria-valuemin={0}
           aria-valuemax={100}
-          className="h-1 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/15"
-        >
+          className="h-1 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/15">
           <div
             className="h-full bg-foreground transition-[width] duration-150"
-            style={{ width: `${percent}%` }}
+            style={{width: `${percent}%`}}
           />
         </div>
       ) : null}
 
       <AlertError message={m(error)} />
     </div>
-  );
+  )
 }
 
 /**
@@ -200,22 +196,22 @@ export function ImageUploadButton({
  * 3. `ApiError`: step 1 or step 3.
  */
 function uploadErrorText(error: unknown): Message | string {
-  if (isStorageUploadError(error)) return error.message;
+  if (isStorageUploadError(error)) return error.message
 
   if (error instanceof ApiError) {
     switch (error.code) {
       case ERROR_CODES.mediaContentMismatch:
-        return { key: "common.upload.contentMismatch" };
+        return {key: 'common.upload.contentMismatch'}
       case ERROR_CODES.mediaNotUploaded:
-        return { key: "common.upload.notUploaded" };
+        return {key: 'common.upload.notUploaded'}
       case ERROR_CODES.mediaTooLarge:
       case ERROR_CODES.mediaMimeNotAllowed:
         // The backend returns the allowlist and the real numbers in `message`.
-        return error.message;
+        return error.message
       default:
-        return error.message || { key: "common.upload.failed" };
+        return error.message || {key: 'common.upload.failed'}
     }
   }
 
-  return messageOf(error);
+  return messageOf(error)
 }

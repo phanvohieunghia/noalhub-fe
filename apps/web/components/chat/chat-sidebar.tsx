@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import { ChatSidebarHeader } from "./chat-sidebar-header";
-import { ConversationList } from "./conversation-list";
+import {ChatSidebarHeader} from './chat-sidebar-header'
+import {ConversationList} from './conversation-list'
 
 export function ChatSidebar() {
   return (
@@ -9,5 +9,5 @@ export function ChatSidebar() {
       <ChatSidebarHeader />
       <ConversationList />
     </div>
-  );
+  )
 }

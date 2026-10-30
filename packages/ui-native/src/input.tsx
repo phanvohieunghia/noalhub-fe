@@ -1,19 +1,14 @@
-import React, { forwardRef } from "react";
-import {
-  Text,
-  TextInput,
-  View,
-  type TextInputProps,
-} from "react-native";
+import React, {forwardRef} from 'react'
+import {Text, TextInput, View, type TextInputProps} from 'react-native'
 
 export type InputProps = TextInputProps & {
-  label?: string;
-  error?: string | null;
-  helperText?: string;
-  rightAccessory?: React.ReactNode;
-  containerClassName?: string;
-  className?: string;
-};
+  label?: string
+  error?: string | null
+  helperText?: string
+  rightAccessory?: React.ReactNode
+  containerClassName?: string
+  className?: string
+}
 
 export const Input = forwardRef<any, InputProps>(function Input(
   {
@@ -21,13 +16,13 @@ export const Input = forwardRef<any, InputProps>(function Input(
     error,
     helperText,
     rightAccessory,
-    containerClassName = "",
-    className = "",
+    containerClassName = '',
+    className = '',
     ...props
   },
   ref,
 ) {
-  const hasError = Boolean(error);
+  const hasError = Boolean(error)
 
   return (
     <View className={`w-full ${containerClassName}`}>
@@ -39,11 +34,8 @@ export const Input = forwardRef<any, InputProps>(function Input(
 
       <View
         className={`flex-row items-center h-12 rounded-xl border bg-surface px-4 ${
-          hasError
-            ? "border-danger"
-            : "border-border"
-        }`}
-      >
+          hasError ? 'border-danger' : 'border-border'
+        }`}>
         <TextInput
           ref={ref}
           className={`flex-1 text-base text-foreground ${className}`}
@@ -59,5 +51,5 @@ export const Input = forwardRef<any, InputProps>(function Input(
         <Text className="text-xs text-muted-foreground mt-1">{helperText}</Text>
       ) : null}
     </View>
-  );
-});
+  )
+})

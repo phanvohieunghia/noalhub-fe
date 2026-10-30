@@ -1,30 +1,30 @@
-"use client";
+'use client'
 
-import { forwardRef } from "react";
-import { ToggleGroup } from "radix-ui";
+import {forwardRef} from 'react'
+import {ToggleGroup} from 'radix-ui'
 
-import { Icon } from "./icons";
-import { Tooltip } from "./tooltip";
-import type { IconName } from "./icons";
+import {Icon} from './icons'
+import {Tooltip} from './tooltip'
+import type {IconName} from './icons'
 
 export type ToggleOption<T extends string = string> = {
-  value: T;
-  icon: IconName;
+  value: T
+  icon: IconName
   /** Accessible name — the buttons carry no visible text, so this is required. */
-  label: string;
-};
+  label: string
+}
 
 type ToggleProps<T extends string> = {
-  options: readonly ToggleOption<T>[];
-  value: T;
-  onValueChange: (value: T) => void;
+  options: readonly ToggleOption<T>[]
+  value: T
+  onValueChange: (value: T) => void
   /** Names the group for screen readers, e.g. "View mode". */
-  "aria-label": string;
-  disabled?: boolean;
-  className?: string;
+  'aria-label': string
+  disabled?: boolean
+  className?: string
   /** `pill` is the muted capsule; `outline` is a bordered box with square-cornered items; `filter` is the same box on a `background` track with a primary-filled active item, for filters inside a `surface` card (where `pill` and `outline` melt into the card). */
-  variant?: "pill" | "outline" | "filter";
-};
+  variant?: 'pill' | 'outline' | 'filter'
+}
 
 /**
  * A single-choice group of icon buttons (list / grid view, and the like), styled
@@ -41,8 +41,8 @@ function ToggleInner<T extends string>(
     value,
     onValueChange,
     disabled,
-    className = "",
-    variant = "pill",
+    className = '',
+    variant = 'pill',
     ...props
   }: ToggleProps<T>,
   ref: React.ForwardedRef<HTMLDivElement>,
@@ -53,18 +53,17 @@ function ToggleInner<T extends string>(
       type="single"
       value={value}
       disabled={disabled}
-      aria-label={props["aria-label"]}
+      aria-label={props['aria-label']}
       onValueChange={(next) => {
-        if (next) onValueChange(next as T);
+        if (next) onValueChange(next as T)
       }}
       className={`inline-flex items-center ${
-        variant === "filter"
-          ? "gap-0.5 rounded-lg border border-border bg-background p-0.5"
-          : variant === "outline"
-            ? "gap-0.5 rounded-lg border border-border bg-surface p-0.5"
-            : "overflow-clip rounded-full bg-muted p-0.5"
-      } ${className}`}
-    >
+        variant === 'filter'
+          ? 'gap-0.5 rounded-lg border border-border bg-background p-0.5'
+          : variant === 'outline'
+            ? 'gap-0.5 rounded-lg border border-border bg-surface p-0.5'
+            : 'overflow-clip rounded-full bg-muted p-0.5'
+      } ${className}`}>
       {options.map((option) => (
         // The label shows as a tooltip on hover and focus rather than a native `title`,
         // which is slow to appear and never shows for the keyboard. The tooltip sits on a
@@ -80,26 +79,25 @@ function ToggleInner<T extends string>(
             focus-visible:ring-2 focus-visible:ring-ring
             disabled:cursor-not-allowed disabled:opacity-50
             ${
-              variant === "filter"
-                ? "size-6 rounded-md data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-                : variant === "outline"
-                  ? "size-6 rounded-md data-[state=on]:bg-muted data-[state=on]:text-foreground"
-                  : "size-7 rounded-full data-[state=on]:bg-surface data-[state=on]:text-foreground data-[state=on]:shadow-sm data-[state=on]:ring-1 data-[state=on]:ring-border"
-            }`}
-            >
+              variant === 'filter'
+                ? 'size-6 rounded-md data-[state=on]:bg-primary data-[state=on]:text-primary-foreground'
+                : variant === 'outline'
+                  ? 'size-6 rounded-md data-[state=on]:bg-muted data-[state=on]:text-foreground'
+                  : 'size-7 rounded-full data-[state=on]:bg-surface data-[state=on]:text-foreground data-[state=on]:shadow-sm data-[state=on]:ring-1 data-[state=on]:ring-border'
+            }`}>
               <Icon
                 icon={option.icon}
-                className={`shrink-0 ${variant === "filter" ? "size-3.5" : "size-4"}`}
+                className={`shrink-0 ${variant === 'filter' ? 'size-3.5' : 'size-4'}`}
               />
             </ToggleGroup.Item>
           </span>
         </Tooltip>
       ))}
     </ToggleGroup.Root>
-  );
+  )
 }
 
 /** `forwardRef` erases generics; the cast restores them for callers. */
 export const Toggle = forwardRef(ToggleInner) as <T extends string>(
-  props: ToggleProps<T> & { ref?: React.Ref<HTMLDivElement> },
-) => React.ReactElement;
+  props: ToggleProps<T> & {ref?: React.Ref<HTMLDivElement>},
+) => React.ReactElement

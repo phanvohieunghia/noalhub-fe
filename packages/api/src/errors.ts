@@ -7,13 +7,13 @@
 /** `ErrorResponseDto` trong OpenAPI spec. */
 export type ApiErrorBody = {
   /** The stable code — switch on this field. */
-  code: string;
+  code: string
   /** The human-readable message. It can change at any time; never parse it. */
-  message: string;
-  statusCode: number;
+  message: string
+  statusCode: number
   /** Present only on VALIDATION_FAILED: per-field errors, as sentences. */
-  details?: string[];
-};
+  details?: string[]
+}
 
 /**
  * The normalized error built from `ErrorResponseDto`.
@@ -24,38 +24,38 @@ export type ApiErrorBody = {
  * message map).
  */
 export class ApiError extends Error {
-  readonly status: number;
-  readonly code: string;
-  readonly details?: string[];
+  readonly status: number
+  readonly code: string
+  readonly details?: string[]
 
   constructor(status: number, body: ApiErrorBody) {
-    super(body.message);
-    this.name = "ApiError";
-    this.status = status;
-    this.code = body.code;
-    this.details = body.details;
+    super(body.message)
+    this.name = 'ApiError'
+    this.status = status
+    this.code = body.code
+    this.details = body.details
   }
 }
 
 /** The error codes the backend promises to keep stable — see `/docs`. */
 export const ERROR_CODES = {
-  validationFailed: "VALIDATION_FAILED",
-  invalidCredentials: "INVALID_CREDENTIALS",
-  unauthenticated: "UNAUTHENTICATED",
-  invalidToken: "INVALID_TOKEN",
-  emailTaken: "EMAIL_TAKEN",
-  userNotFound: "USER_NOT_FOUND",
-  cannotFriendSelf: "CANNOT_FRIEND_SELF",
-  alreadyFriends: "ALREADY_FRIENDS",
-  friendRequestExists: "FRIEND_REQUEST_EXISTS",
-  friendRequestNotFound: "FRIEND_REQUEST_NOT_FOUND",
-  notFriends: "NOT_FRIENDS",
-  cannotDmSelf: "CANNOT_DM_SELF",
-  recipientNotFound: "RECIPIENT_NOT_FOUND",
-  usernameTaken: "USERNAME_TAKEN",
-  usernameChangeTooSoon: "USERNAME_CHANGE_TOO_SOON",
-  passwordNotSet: "PASSWORD_NOT_SET",
-  rateLimited: "RATE_LIMITED",
+  validationFailed: 'VALIDATION_FAILED',
+  invalidCredentials: 'INVALID_CREDENTIALS',
+  unauthenticated: 'UNAUTHENTICATED',
+  invalidToken: 'INVALID_TOKEN',
+  emailTaken: 'EMAIL_TAKEN',
+  userNotFound: 'USER_NOT_FOUND',
+  cannotFriendSelf: 'CANNOT_FRIEND_SELF',
+  alreadyFriends: 'ALREADY_FRIENDS',
+  friendRequestExists: 'FRIEND_REQUEST_EXISTS',
+  friendRequestNotFound: 'FRIEND_REQUEST_NOT_FOUND',
+  notFriends: 'NOT_FRIENDS',
+  cannotDmSelf: 'CANNOT_DM_SELF',
+  recipientNotFound: 'RECIPIENT_NOT_FOUND',
+  usernameTaken: 'USERNAME_TAKEN',
+  usernameChangeTooSoon: 'USERNAME_CHANGE_TOO_SOON',
+  passwordNotSet: 'PASSWORD_NOT_SET',
+  rateLimited: 'RATE_LIMITED',
   /**
    * A valid session without sufficient permission — every `/admin/*` endpoint
    * answers 403 for an ordinary user. UNLIKE `unauthenticated`: a refresh token
@@ -66,27 +66,27 @@ export const ERROR_CODES = {
    * first and treats the code as a secondary signal — if the backend named it
    * differently, the UI is still right.
    */
-  forbidden: "FORBIDDEN",
-  oauthProviderUnsupported: "OAUTH_PROVIDER_UNSUPPORTED",
-  oauthAccountLinkForbidden: "OAUTH_ACCOUNT_LINK_FORBIDDEN",
+  forbidden: 'FORBIDDEN',
+  oauthProviderUnsupported: 'OAUTH_PROVIDER_UNSUPPORTED',
+  oauthAccountLinkForbidden: 'OAUTH_ACCOUNT_LINK_FORBIDDEN',
 
   /**
    * The `blog` feature's codes (`docs/blog.md` §2.3).
    *
    * These match `src/common/errors/error-codes.ts` in the `noalhub-be` repo.
    */
-  postNotFound: "POST_NOT_FOUND",
-  slugTaken: "SLUG_TAKEN",
+  postNotFound: 'POST_NOT_FOUND',
+  slugTaken: 'SLUG_TAKEN',
   /** No row in `blog_post_slugs` with that id — slug management (§3). */
-  slugAliasNotFound: "SLUG_ALIAS_NOT_FOUND",
+  slugAliasNotFound: 'SLUG_ALIAS_NOT_FOUND',
   /** The submitted `version` is stale — two tabs overwriting each other (§7.3). */
-  postConflict: "POST_CONFLICT",
+  postConflict: 'POST_CONFLICT',
   /** A required field is missing at publish time, including a **missing category** (§2.6). */
-  postNotPublishable: "POST_NOT_PUBLISHABLE",
-  categoryNotFound: "CATEGORY_NOT_FOUND",
-  categorySlugTaken: "CATEGORY_SLUG_TAKEN",
+  postNotPublishable: 'POST_NOT_PUBLISHABLE',
+  categoryNotFound: 'CATEGORY_NOT_FOUND',
+  categorySlugTaken: 'CATEGORY_SLUG_TAKEN',
   /** Deleting a category that still has posts — 409, with the count in `message` (§2.2). */
-  categoryNotEmpty: "CATEGORY_NOT_EMPTY",
+  categoryNotEmpty: 'CATEGORY_NOT_EMPTY',
 
   /**
    * The `media` feature's codes (`docs/media.md` §5 in `noalhub-be`).
@@ -96,22 +96,22 @@ export const ERROR_CODES = {
    * failure there is `@noalhub/api/media`'s `StorageUploadError`, not an
    * `ApiError`.
    */
-  mediaMimeNotAllowed: "MEDIA_MIME_NOT_ALLOWED",
-  mediaTooLarge: "MEDIA_TOO_LARGE",
-  mediaAssetNotFound: "MEDIA_ASSET_NOT_FOUND",
+  mediaMimeNotAllowed: 'MEDIA_MIME_NOT_ALLOWED',
+  mediaTooLarge: 'MEDIA_TOO_LARGE',
+  mediaAssetNotFound: 'MEDIA_ASSET_NOT_FOUND',
   /** `HeadObject` found no object: the PUT never ran or failed midway. */
-  mediaNotUploaded: "MEDIA_NOT_UPLOADED",
+  mediaNotUploaded: 'MEDIA_NOT_UPLOADED',
   /** The magic bytes do not match the declared mime, or the SVG will not parse. */
-  mediaContentMismatch: "MEDIA_CONTENT_MISMATCH",
+  mediaContentMismatch: 'MEDIA_CONTENT_MISMATCH',
 
   /**
    * Internal Storybook access (`docs/deployment.md` "Storybook nội bộ" in
    * `noalhub-be`). Two codes only — the list has no update path, just grant and
    * revoke.
    */
-  storybookAccessConflict: "STORYBOOK_ACCESS_CONFLICT",
-  storybookAccessNotFound: "STORYBOOK_ACCESS_NOT_FOUND",
-} as const;
+  storybookAccessConflict: 'STORYBOOK_ACCESS_CONFLICT',
+  storybookAccessNotFound: 'STORYBOOK_ACCESS_NOT_FOUND',
+} as const
 
 /**
  * 403 means a valid session without permission. Used in admin to tell it apart
@@ -125,7 +125,7 @@ export function isForbidden(error: unknown): boolean {
   return (
     error instanceof ApiError &&
     (error.status === 403 || error.code === ERROR_CODES.forbidden)
-  );
+  )
 }
 
 /** 429 — declared by all three admin endpoints. Extracted so the UI never compares strings inline. */
@@ -133,7 +133,7 @@ export function isRateLimited(error: unknown): boolean {
   return (
     error instanceof ApiError &&
     (error.status === 429 || error.code === ERROR_CODES.rateLimited)
-  );
+  )
 }
 
 /**
@@ -143,5 +143,5 @@ export function isRateLimited(error: unknown): boolean {
  * to reload the server's copy.
  */
 export function isPostConflict(error: unknown): boolean {
-  return error instanceof ApiError && error.code === ERROR_CODES.postConflict;
+  return error instanceof ApiError && error.code === ERROR_CODES.postConflict
 }

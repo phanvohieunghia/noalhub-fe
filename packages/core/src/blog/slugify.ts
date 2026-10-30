@@ -13,17 +13,17 @@
 export function slugify(input: string): string {
   return (
     input
-      .normalize("NFD")
+      .normalize('NFD')
       // Drop tone marks and diacritics (U+0300–U+036F) once NFD split them off.
-      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[\u0300-\u036f]/g, '')
       // `đ`/`Đ` is not a `d` with a diacritic, so NFD cannot split it — it has
       // to be replaced by hand, or "đường" becomes "ung" instead of "duong".
-      .replace(/[đĐ]/g, "d")
+      .replace(/[đĐ]/g, 'd')
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
       .slice(0, 120)
       // `slice` can cut right on a dash — clean up once more.
-      .replace(/-+$/g, "")
-  );
+      .replace(/-+$/g, '')
+  )
 }

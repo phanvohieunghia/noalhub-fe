@@ -1,33 +1,37 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
-import { useState } from "react";
+import {useTranslations} from 'next-intl'
+import {useState} from 'react'
 
-import type { BlogDoc } from "@noalhub/api/blog";
-import type { Message } from "@noalhub/api/message";
+import type {BlogDoc} from '@noalhub/api/blog'
+import type {Message} from '@noalhub/api/message'
 import {
   useUpdateQaItem,
   type PatchItemInput,
   type QaDifficulty,
   type QaItemFull,
-} from "@noalhub/api/qa";
-import { applyApiError } from "@noalhub/core/forms/apply-api-error";
-import { useMessage } from "@noalhub/i18n/use-message";
-import { AlertError } from "@noalhub/ui/alert";
-import { TiptapEditor } from "@noalhub/ui/blog/tiptap-editor";
-import { Badge } from "@noalhub/ui/badge";
-import { Button } from "@noalhub/ui/button";
-import { Checkbox } from "@noalhub/ui/checkbox";
-import { Dialog } from "@noalhub/ui/dialog";
-import { Input } from "@noalhub/ui/input";
-import { Select } from "@noalhub/ui/select";
-import { Textarea } from "@noalhub/ui/textarea";
-import { Typography } from "@noalhub/ui/typography";
+} from '@noalhub/api/qa'
+import {applyApiError} from '@noalhub/core/forms/apply-api-error'
+import {useMessage} from '@noalhub/i18n/use-message'
+import {AlertError} from '@noalhub/ui/alert'
+import {TiptapEditor} from '@noalhub/ui/blog/tiptap-editor'
+import {Badge} from '@noalhub/ui/badge'
+import {Button} from '@noalhub/ui/button'
+import {Checkbox} from '@noalhub/ui/checkbox'
+import {Dialog} from '@noalhub/ui/dialog'
+import {Input} from '@noalhub/ui/input'
+import {Select} from '@noalhub/ui/select'
+import {Textarea} from '@noalhub/ui/textarea'
+import {Typography} from '@noalhub/ui/typography'
 
-import { QaItemTagPicker } from "./qa-item-tag-picker";
-import { docToText, isEmptyDoc, textToDoc } from "./qa-plain-doc";
+import {QaItemTagPicker} from './qa-item-tag-picker'
+import {docToText, isEmptyDoc, textToDoc} from './qa-plain-doc'
 
-const DIFFICULTIES = ["easy", "medium", "hard"] as const satisfies readonly QaDifficulty[];
+const DIFFICULTIES = [
+  'easy',
+  'medium',
+  'hard',
+] as const satisfies readonly QaDifficulty[]
 
 /**
  * Edit one question in a modal: difficulty, the question, its options (tick the
@@ -45,97 +49,115 @@ export function QaItemEditDialog({
   sectionTitle,
   onClose,
 }: {
-  item: QaItemFull;
-  shapeLabel: string;
-  sectionTitle: string;
-  onClose: () => void;
+  item: QaItemFull
+  shapeLabel: string
+  sectionTitle: string
+  onClose: () => void
 }) {
-  const t = useTranslations("admin.qa");
-  const tc = useTranslations("common");
-  const m = useMessage();
-  const update = useUpdateQaItem(item.setId);
+  const t = useTranslations('admin.qa')
+  const tc = useTranslations('common')
+  const m = useMessage()
+  const update = useUpdateQaItem(item.setId)
 
-  const initialExplanation = docToText(item.explanation);
-  const initialAnswer = docToText(item.answer);
-  const isChoice = item.options !== null;
-  const isSelfGraded = !isChoice && item.answerKey === null;
+  const initialExplanation = docToText(item.explanation)
+  const initialAnswer = docToText(item.answer)
+  const isChoice = item.options !== null
+  const isSelfGraded = !isChoice && item.answerKey === null
 
-  const [difficulty, setDifficulty] = useState<QaDifficulty | "">(item.difficulty ?? "");
-  const [question, setQuestion] = useState<BlogDoc>(item.question);
-  const [options, setOptions] = useState(item.options ?? []);
+  const [difficulty, setDifficulty] = useState<QaDifficulty | ''>(
+    item.difficulty ?? '',
+  )
+  const [question, setQuestion] = useState<BlogDoc>(item.question)
+  const [options, setOptions] = useState(item.options ?? [])
   const [correct, setCorrect] = useState<string[]>(
-    item.answerKey && "optionIds" in item.answerKey ? item.answerKey.optionIds : [],
-  );
+    item.answerKey && 'optionIds' in item.answerKey
+      ? item.answerKey.optionIds
+      : [],
+  )
   const [accepted, setAccepted] = useState(
-    item.answerKey && "accepted" in item.answerKey ? item.answerKey.accepted.join("\n") : "",
-  );
-  const [answer, setAnswer] = useState(initialAnswer ?? "");
-  const [explanation, setExplanation] = useState(initialExplanation ?? "");
-  const [tagIds, setTagIds] = useState<string[]>(item.tagIds);
-  const [error, setError] = useState<Message | string | null>(null);
+    item.answerKey && 'accepted' in item.answerKey
+      ? item.answerKey.accepted.join('\n')
+      : '',
+  )
+  const [answer, setAnswer] = useState(initialAnswer ?? '')
+  const [explanation, setExplanation] = useState(initialExplanation ?? '')
+  const [tagIds, setTagIds] = useState<string[]>(item.tagIds)
+  const [error, setError] = useState<Message | string | null>(null)
 
   const save = async () => {
-    const cleaned = options.map((option) => ({ ...option, text: option.text.trim() }));
+    const cleaned = options.map((option) => ({
+      ...option,
+      text: option.text.trim(),
+    }))
     const answers = accepted
-      .split("\n")
+      .split('\n')
       .map((line) => line.trim())
-      .filter(Boolean);
+      .filter(Boolean)
 
-    if (isEmptyDoc(question)) return setError(t("form.needQuestion"));
+    if (isEmptyDoc(question)) return setError(t('form.needQuestion'))
     if (isChoice) {
-      if (cleaned.some((option) => option.text === "")) return setError(t("sets.optionEmpty"));
+      if (cleaned.some((option) => option.text === ''))
+        return setError(t('sets.optionEmpty'))
       if (!cleaned.some((option) => correct.includes(option.id))) {
-        return setError(t("sets.needCorrect"));
+        return setError(t('sets.needCorrect'))
       }
     } else if (!isSelfGraded && answers.length === 0) {
-      return setError(t("sets.needAccepted"));
+      return setError(t('sets.needAccepted'))
     }
 
     const input: PatchItemInput = {
-      difficulty: difficulty === "" ? null : difficulty,
+      difficulty: difficulty === '' ? null : difficulty,
       tagIds,
       question,
       ...(initialExplanation !== null
-        ? { explanation: explanation.trim() === "" ? null : textToDoc(explanation) }
+        ? {
+            explanation:
+              explanation.trim() === '' ? null : textToDoc(explanation),
+          }
         : {}),
       ...(isChoice
         ? {
             options: cleaned,
-            answerKey: { optionIds: cleaned.map((o) => o.id).filter((id) => correct.includes(id)) },
+            answerKey: {
+              optionIds: cleaned
+                .map((o) => o.id)
+                .filter((id) => correct.includes(id)),
+            },
           }
         : isSelfGraded
           ? initialAnswer !== null
-            ? { answer: answer.trim() === "" ? null : textToDoc(answer) }
+            ? {answer: answer.trim() === '' ? null : textToDoc(answer)}
             : {}
-          : { answerKey: { accepted: answers } }),
-    };
-
-    setError(null);
-    try {
-      await update.mutateAsync({ id: item.id, input });
-      onClose();
-    } catch (caught) {
-      setError(applyApiError(caught, () => undefined, []));
+          : {answerKey: {accepted: answers}}),
     }
-  };
+
+    setError(null)
+    try {
+      await update.mutateAsync({id: item.id, input})
+      onClose()
+    } catch (caught) {
+      setError(applyApiError(caught, () => undefined, []))
+    }
+  }
 
   return (
     <Dialog
       open
       size="lg"
-      title={t("ws.final.editTitle", { section: sectionTitle })}
-      onClose={onClose}
-    >
+      title={t('ws.final.editTitle', {section: sectionTitle})}
+      onClose={onClose}>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Badge size="sm" className="self-start">
             {shapeLabel}
           </Badge>
           <Select
-            label={t("ws.final.difficulty")}
+            label={t('ws.final.difficulty')}
             value={difficulty}
-            onChange={(event) => setDifficulty(event.target.value as QaDifficulty | "")}
-            placeholder={t("sets.noDifficulty")}
+            onChange={(event) =>
+              setDifficulty(event.target.value as QaDifficulty | '')
+            }
+            placeholder={t('sets.noDifficulty')}
             options={DIFFICULTIES.map((value) => ({
               value,
               label: t(`items.difficulty.${value}`),
@@ -147,7 +169,7 @@ export function QaItemEditDialog({
 
         <div className="flex flex-col gap-1.5">
           <Typography variant="body-3" weight={500}>
-            {t("ws.final.question")}
+            {t('ws.final.question')}
           </Typography>
           <TiptapEditor
             value={question}
@@ -158,15 +180,18 @@ export function QaItemEditDialog({
 
         {isChoice ? (
           <fieldset className="flex flex-col gap-2">
-            <Typography variant="caption" as="legend" className="uppercase text-muted-foreground">
-              {t("ws.final.options")}
+            <Typography
+              variant="caption"
+              as="legend"
+              className="uppercase text-muted-foreground">
+              {t('ws.final.options')}
             </Typography>
             {options.map((option, index) => {
-              const letter = String.fromCharCode(65 + index);
+              const letter = String.fromCharCode(65 + index)
               return (
                 <div key={option.id} className="flex items-center gap-3">
                   <Checkbox
-                    aria-label={t("sets.markCorrect", { letter })}
+                    aria-label={t('sets.markCorrect', {letter})}
                     checked={correct.includes(option.id)}
                     onCheckedChange={(checked) =>
                       setCorrect((current) =>
@@ -178,26 +203,28 @@ export function QaItemEditDialog({
                   />
                   <div className="min-w-0 flex-1">
                     <Input
-                      label={t("sets.optionLabel", { letter })}
+                      label={t('sets.optionLabel', {letter})}
                       hideLabel
                       value={option.text}
                       onChange={(event) =>
                         setOptions((current) =>
                           current.map((entry) =>
-                            entry.id === option.id ? { ...entry, text: event.target.value } : entry,
+                            entry.id === option.id
+                              ? {...entry, text: event.target.value}
+                              : entry,
                           ),
                         )
                       }
                     />
                   </div>
                 </div>
-              );
+              )
             })}
           </fieldset>
         ) : isSelfGraded ? (
           initialAnswer === null ? null : (
             <Textarea
-              label={t("sets.correctAnswer")}
+              label={t('sets.correctAnswer')}
               rows={2}
               value={answer}
               onChange={(event) => setAnswer(event.target.value)}
@@ -205,7 +232,7 @@ export function QaItemEditDialog({
           )
         ) : (
           <Textarea
-            label={t("ws.final.accepted")}
+            label={t('ws.final.accepted')}
             rows={3}
             value={accepted}
             onChange={(event) => setAccepted(event.target.value)}
@@ -214,7 +241,7 @@ export function QaItemEditDialog({
 
         {initialExplanation === null ? null : (
           <Textarea
-            label={t("ws.final.explanation")}
+            label={t('ws.final.explanation')}
             rows={2}
             value={explanation}
             onChange={(event) => setExplanation(event.target.value)}
@@ -225,13 +252,13 @@ export function QaItemEditDialog({
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
-            {tc("actions.cancel")}
+            {tc('actions.cancel')}
           </Button>
           <Button loading={update.isPending} onClick={() => void save()}>
-            {t("ws.final.save")}
+            {t('ws.final.save')}
           </Button>
         </div>
       </div>
     </Dialog>
-  );
+  )
 }

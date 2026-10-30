@@ -1,9 +1,9 @@
-"use client";
+'use client'
 
-import { HoverCard } from "radix-ui";
-import { useState } from "react";
+import {HoverCard} from 'radix-ui'
+import {useState} from 'react'
 
-import { Typography } from "./typography";
+import {Typography} from './typography'
 
 /**
  * A floating panel beside its trigger, opened on hover/focus. Radix HoverCard keeps it open
@@ -15,31 +15,34 @@ export function HoverFlyout({
   label,
   trigger,
   children,
-  side = "right",
-  align = "start",
-  contentClassName = "min-w-44 p-1.5",
+  side = 'right',
+  align = 'start',
+  contentClassName = 'min-w-44 p-1.5',
   canOpen,
 }: {
   /** A small heading above the content; leave it out for a bare card. */
-  label?: string;
-  trigger: React.ReactNode;
-  children: React.ReactNode;
-  side?: "top" | "right" | "bottom" | "left";
-  align?: "start" | "center" | "end";
+  label?: string
+  trigger: React.ReactNode
+  children: React.ReactNode
+  side?: 'top' | 'right' | 'bottom' | 'left'
+  align?: 'start' | 'center' | 'end'
   /** Sizing and padding of the card; replaces the menu-sized default. */
-  contentClassName?: string;
+  contentClassName?: string
   /** Asked on every hover/focus; return `false` to keep the card shut (e.g. nothing is cut off). */
-  canOpen?: () => boolean;
+  canOpen?: () => boolean
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   return (
-    <HoverCard.Root open={open} onOpenChange={(next) => setOpen(next && (canOpen?.() ?? true))} openDelay={80} closeDelay={150}>
+    <HoverCard.Root
+      open={open}
+      onOpenChange={(next) => setOpen(next && (canOpen?.() ?? true))}
+      openDelay={80}
+      closeDelay={150}>
       <HoverCard.Trigger
         asChild
         onFocus={() => setOpen(canOpen?.() ?? true)}
-        onBlur={() => setOpen(false)}
-      >
+        onBlur={() => setOpen(false)}>
         {trigger}
       </HoverCard.Trigger>
       <HoverCard.Portal>
@@ -48,10 +51,12 @@ export function HoverFlyout({
           align={align}
           sideOffset={8}
           collisionPadding={8}
-          className={`z-50 rounded-lg border border-border bg-surface text-foreground shadow-lg ${contentClassName}`}
-        >
+          className={`z-50 rounded-lg border border-border bg-surface text-foreground shadow-lg ${contentClassName}`}>
           {label ? (
-            <Typography variant="body-4" weight={600} className="px-3 pt-1 pb-1.5 text-muted-foreground">
+            <Typography
+              variant="body-4"
+              weight={600}
+              className="px-3 pt-1 pb-1.5 text-muted-foreground">
               {label}
             </Typography>
           ) : null}
@@ -59,5 +64,5 @@ export function HoverFlyout({
         </HoverCard.Content>
       </HoverCard.Portal>
     </HoverCard.Root>
-  );
+  )
 }

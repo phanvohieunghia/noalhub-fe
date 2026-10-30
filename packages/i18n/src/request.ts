@@ -1,8 +1,8 @@
-import { cookies } from "next/headers";
+import {cookies} from 'next/headers'
 
-import { DEFAULT_LOCALE, isLocale, LOCALE_COOKIE, type Locale } from "./config";
-import { formats } from "./formats";
-import { loadAllMessages } from "./messages";
+import {DEFAULT_LOCALE, isLocale, LOCALE_COOKIE, type Locale} from './config'
+import {formats} from './formats'
+import {loadAllMessages} from './messages'
 
 /**
  * Config for `apps/web`. `requestLocale` is the value of the `[locale]` segment.
@@ -15,11 +15,13 @@ import { loadAllMessages } from "./messages";
  * We cannot move yet: Next 16 removed `unstable_rootParams` and the
  * replacement is not out — see `docs/01-app/02-guides/upgrading/version-16.md`.)
  */
-export async function webRequestConfig(requestLocale: Promise<string | undefined>) {
-  const requested = await requestLocale;
-  const locale: Locale = isLocale(requested) ? requested : DEFAULT_LOCALE;
+export async function webRequestConfig(
+  requestLocale: Promise<string | undefined>,
+) {
+  const requested = await requestLocale
+  const locale: Locale = isLocale(requested) ? requested : DEFAULT_LOCALE
 
-  return { locale, formats, messages: await loadAllMessages(locale) };
+  return {locale, formats, messages: await loadAllMessages(locale)}
 }
 
 /**
@@ -28,8 +30,8 @@ export async function webRequestConfig(requestLocale: Promise<string | undefined
  * not need to distinguish languages (`docs/i18n.md` §3.2).
  */
 export async function adminRequestConfig() {
-  const cookie = (await cookies()).get(LOCALE_COOKIE)?.value;
-  const locale: Locale = isLocale(cookie) ? cookie : DEFAULT_LOCALE;
+  const cookie = (await cookies()).get(LOCALE_COOKIE)?.value
+  const locale: Locale = isLocale(cookie) ? cookie : DEFAULT_LOCALE
 
-  return { locale, formats, messages: await loadAllMessages(locale) };
+  return {locale, formats, messages: await loadAllMessages(locale)}
 }

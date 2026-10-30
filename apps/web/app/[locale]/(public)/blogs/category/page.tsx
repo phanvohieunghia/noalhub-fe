@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import {redirect} from 'next/navigation'
 
 /**
  * A bare `/blogs/category` → back to the listing, **not** a 404
@@ -8,5 +8,5 @@ import { redirect } from "next/navigation";
  * and what they want is the listing, not an error page.
  */
 export default function CategoryIndexPage() {
-  redirect("/blogs");
+  redirect('/blogs')
 }

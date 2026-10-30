@@ -1,101 +1,103 @@
-"use client";
+'use client'
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, useRouter } from "@noalhub/i18n/navigation";
-import { useMessage } from "@noalhub/i18n/use-message";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import {zodResolver} from '@hookform/resolvers/zod'
+import {Link, useRouter} from '@noalhub/i18n/navigation'
+import {useMessage} from '@noalhub/i18n/use-message'
+import {useTranslations} from 'next-intl'
+import {useState} from 'react'
+import {useForm} from 'react-hook-form'
 
-import { Button } from "@noalhub/ui/button";
-import { AlertError, AlertSuccess } from "@noalhub/ui/alert";
-import { PasswordInput } from "@noalhub/ui/password-input";
-import { useResetPassword } from "@noalhub/api/auth";
-import { applyApiError } from "@noalhub/core/forms/apply-api-error";
-import { Typography } from "@noalhub/ui/typography";
-import type { Message } from "@noalhub/api/message";
-import { resetPasswordSchema, type ResetPasswordInput } from "@noalhub/api/auth";
+import {Button} from '@noalhub/ui/button'
+import {AlertError, AlertSuccess} from '@noalhub/ui/alert'
+import {PasswordInput} from '@noalhub/ui/password-input'
+import {useResetPassword} from '@noalhub/api/auth'
+import {applyApiError} from '@noalhub/core/forms/apply-api-error'
+import {Typography} from '@noalhub/ui/typography'
+import type {Message} from '@noalhub/api/message'
+import {resetPasswordSchema, type ResetPasswordInput} from '@noalhub/api/auth'
 
-export function ResetPasswordForm({ token }: { token: string }) {
-  const t = useTranslations("web.auth.resetPassword");
-  const tc = useTranslations("common");
-  const m = useMessage();
-  const router = useRouter();
-  const [formError, setFormError] = useState<Message | string | null>(null);
-  const [done, setDone] = useState(false);
-  const resetPassword = useResetPassword(token);
+export function ResetPasswordForm({token}: {token: string}) {
+  const t = useTranslations('web.auth.resetPassword')
+  const tc = useTranslations('common')
+  const m = useMessage()
+  const router = useRouter()
+  const [formError, setFormError] = useState<Message | string | null>(null)
+  const [done, setDone] = useState(false)
+  const resetPassword = useResetPassword(token)
 
   const {
     register,
     handleSubmit,
     setError,
-    formState: { errors, isSubmitting },
-  } = useForm<ResetPasswordInput>({ resolver: zodResolver(resetPasswordSchema) });
+    formState: {errors, isSubmitting},
+  } = useForm<ResetPasswordInput>({resolver: zodResolver(resetPasswordSchema)})
 
   const onSubmit = handleSubmit(async (values) => {
-    setFormError(null);
+    setFormError(null)
     try {
-      await resetPassword.mutateAsync(values);
-      setDone(true);
-      setTimeout(() => router.replace("/login"), 1500);
+      await resetPassword.mutateAsync(values)
+      setDone(true)
+      setTimeout(() => router.replace('/login'), 1500)
     } catch (error) {
-      setFormError(applyApiError(error, setError, ["newPassword", "token"]));
+      setFormError(applyApiError(error, setError, ['newPassword', 'token']))
     }
-  });
+  })
 
   if (!token) {
     return (
       <div className="flex flex-col gap-4">
         <Typography variant="h3" as="h1">
-          {t("invalidLinkTitle")}
+          {t('invalidLinkTitle')}
         </Typography>
-        <AlertError message={t("invalidLink")} />
-        <Link href="/forgot-password" className="text-body-3 underline underline-offset-4">
-          {t("requestNewLink")}
+        <AlertError message={t('invalidLink')} />
+        <Link
+          href="/forgot-password"
+          className="text-body-3 underline underline-offset-4">
+          {t('requestNewLink')}
         </Link>
       </div>
-    );
+    )
   }
 
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <Typography variant="h3" as="h1">
-          {t("title")}
+          {t('title')}
         </Typography>
         <Typography variant="body-3" className="opacity-70">
-          {t("subtitle")}
+          {t('subtitle')}
         </Typography>
       </header>
 
       {done ? (
-        <AlertSuccess message={t("done")} />
+        <AlertSuccess message={t('done')} />
       ) : (
         <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
           <AlertError message={m(formError)} />
 
           <PasswordInput
-            label={t("newPassword")}
-            showPasswordLabel={tc("actions.showPassword")}
-            hidePasswordLabel={tc("actions.hidePassword")}
+            label={t('newPassword')}
+            showPasswordLabel={tc('actions.showPassword')}
+            hidePasswordLabel={tc('actions.hidePassword')}
             autoComplete="new-password"
             error={m(errors.newPassword?.message)}
-            {...register("newPassword")}
+            {...register('newPassword')}
           />
           <PasswordInput
-            label={t("confirmPassword")}
-            showPasswordLabel={tc("actions.showPassword")}
-            hidePasswordLabel={tc("actions.hidePassword")}
+            label={t('confirmPassword')}
+            showPasswordLabel={tc('actions.showPassword')}
+            hidePasswordLabel={tc('actions.hidePassword')}
             autoComplete="new-password"
             error={m(errors.confirmPassword?.message)}
-            {...register("confirmPassword")}
+            {...register('confirmPassword')}
           />
 
           <Button type="submit" loading={isSubmitting}>
-            {isSubmitting ? t("submitting") : t("submit")}
+            {isSubmitting ? t('submitting') : t('submit')}
           </Button>
         </form>
       )}
     </div>
-  );
+  )
 }

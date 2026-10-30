@@ -1,8 +1,8 @@
-import { useDateFormat } from "@noalhub/i18n/use-date-format";
-import { useTranslations } from "next-intl";
+import {useDateFormat} from '@noalhub/i18n/use-date-format'
+import {useTranslations} from 'next-intl'
 
-import type { BlogBlockNode, BlogDoc } from "@noalhub/api/blog";
-import { Typography } from "@noalhub/ui/typography";
+import type {BlogBlockNode, BlogDoc} from '@noalhub/api/blog'
+import {Typography} from '@noalhub/ui/typography'
 
 /*
  * The pieces the blog flow screens draw, kept out of `Blog.stories.tsx` so the
@@ -31,7 +31,7 @@ import { Typography } from "@noalhub/ui/typography";
 
 /** The only host in `BLOG_IMAGE_HOSTS` that serves real pictures. */
 const PHOTO =
-  "https://images.unsplash.com/photo-1618477247222-acbdb0e159b3?w=1200&auto=format&fit=crop&q=80";
+  'https://images.unsplash.com/photo-1618477247222-acbdb0e159b3?w=1200&auto=format&fit=crop&q=80'
 
 /**
  * A list item as the **listing** endpoint returns it — deliberately without
@@ -40,14 +40,14 @@ const PHOTO =
  * from the backend instead of being computed here (`docs/blog.md` §2.3a).
  */
 export type SamplePost = {
-  id: string;
-  slug: string;
-  title: string;
-  excerpt: string;
-  publishedAt: string;
-  readingMinutes: number;
-  cover?: boolean;
-};
+  id: string
+  slug: string
+  title: string
+  excerpt: string
+  publishedAt: string
+  readingMinutes: number
+  cover?: boolean
+}
 
 /**
  * Fixed dates rather than `new Date()`: a story whose output moves with the
@@ -55,13 +55,13 @@ export type SamplePost = {
  * would have a different DOM on every run.
  */
 const DATES = [
-  "2026-08-14T09:00:00.000Z",
-  "2026-07-30T09:00:00.000Z",
-  "2026-07-02T09:00:00.000Z",
-  "2026-06-11T09:00:00.000Z",
-  "2026-05-28T09:00:00.000Z",
-  "2026-05-03T09:00:00.000Z",
-];
+  '2026-08-14T09:00:00.000Z',
+  '2026-07-30T09:00:00.000Z',
+  '2026-07-02T09:00:00.000Z',
+  '2026-06-11T09:00:00.000Z',
+  '2026-05-28T09:00:00.000Z',
+  '2026-05-03T09:00:00.000Z',
+]
 
 /**
  * The sample posts, built in a hook rather than as a module-scope constant:
@@ -69,9 +69,9 @@ const DATES = [
  * language — and at module scope there is no locale yet.
  */
 export function useSamplePosts(count = 6): SamplePost[] {
-  const t = useTranslations("sb.flows.blog.sample");
+  const t = useTranslations('sb.flows.blog.sample')
 
-  return Array.from({ length: count }, (_, index) => ({
+  return Array.from({length: count}, (_, index) => ({
     id: `post-${index + 1}`,
     slug: `sample-post-${index + 1}`,
     title: t(`p${index + 1}Title`),
@@ -79,7 +79,7 @@ export function useSamplePosts(count = 6): SamplePost[] {
     publishedAt: DATES[index] ?? DATES[0]!,
     readingMinutes: 4 + index,
     cover: index < 3,
-  }));
+  }))
 }
 
 /**
@@ -91,21 +91,20 @@ export function useSamplePosts(count = 6): SamplePost[] {
  */
 export function BlogScreen({
   children,
-  className = "",
+  className = '',
 }: {
-  children: React.ReactNode;
-  className?: string;
+  children: React.ReactNode
+  className?: string
 }) {
   return (
     <div
-      className={`border-border bg-background flex max-h-[38rem] w-[min(56rem,92vw)] flex-col gap-8 overflow-y-auto rounded-xl border p-8 ${className}`}
-    >
+      className={`border-border bg-background flex max-h-[38rem] w-[min(56rem,92vw)] flex-col gap-8 overflow-y-auto rounded-xl border p-8 ${className}`}>
       {children}
     </div>
-  );
+  )
 }
 
-export type Crumb = { label: string; current?: boolean };
+export type Crumb = {label: string; current?: boolean}
 
 /**
  * The breadcrumb trail.
@@ -119,11 +118,11 @@ export type Crumb = { label: string; current?: boolean };
  * one source, because structured data on a page with no visible breadcrumb is a
  * mismatch in Google's eyes (`docs/blog.md` §6.2).
  */
-export function Breadcrumb({ items }: { items: Crumb[] }) {
-  const t = useTranslations("web.blog.breadcrumb");
+export function Breadcrumb({items}: {items: Crumb[]}) {
+  const t = useTranslations('web.blog.breadcrumb')
 
   return (
-    <nav aria-label={t("label")} className="text-body-3 opacity-70">
+    <nav aria-label={t('label')} className="text-body-3 opacity-70">
       <ol className="flex flex-wrap items-center gap-1.5">
         {items.map((item, index) => (
           <li key={index} className="flex items-center gap-1.5">
@@ -135,44 +134,44 @@ export function Breadcrumb({ items }: { items: Crumb[] }) {
             <Typography
               as="span"
               variant="body-3"
-              {...(item.current ? { "aria-current": "page" as const } : {})}
-              className={item.current ? undefined : "underline underline-offset-4"}
-            >
+              {...(item.current ? {'aria-current': 'page' as const} : {})}
+              className={
+                item.current ? undefined : 'underline underline-offset-4'
+              }>
               {item.label}
             </Typography>
           </li>
         ))}
       </ol>
     </nav>
-  );
+  )
 }
 
 /** Author · date · reading time — the same line the card and the post header carry. */
 export function PostMeta({
   publishedAt,
   minutes,
-  className = "",
+  className = '',
 }: {
-  publishedAt: string;
-  minutes: number;
-  className?: string;
+  publishedAt: string
+  minutes: number
+  className?: string
 }) {
-  const t = useTranslations("web.blog.post");
-  const s = useTranslations("sb.flows.blog.sample");
-  const df = useDateFormat();
+  const t = useTranslations('web.blog.post')
+  const s = useTranslations('sb.flows.blog.sample')
+  const df = useDateFormat()
 
   return (
     <Typography
       variant="body-4"
-      className={`flex flex-wrap items-center gap-x-2 gap-y-1 opacity-60 ${className}`}
-    >
-      <span>{s("author")}</span>
+      className={`flex flex-wrap items-center gap-x-2 gap-y-1 opacity-60 ${className}`}>
+      <span>{s('author')}</span>
       <span aria-hidden>·</span>
       <time dateTime={publishedAt}>{df.date(publishedAt)}</time>
       <span aria-hidden>·</span>
-      <span>{t("readingTime", { minutes })}</span>
+      <span>{t('readingTime', {minutes})}</span>
     </Typography>
-  );
+  )
 }
 
 /**
@@ -183,14 +182,13 @@ export function PostMeta({
  * for a decoration. `alt=""` because the title sits right beside it — announcing
  * the picture again is noise, which is exactly what the real card does too.
  */
-function Cover({ className = "" }: { className?: string }) {
+function Cover({className = ''}: {className?: string}) {
   return (
     <span
-      className={`relative block overflow-hidden rounded-lg bg-black/5 dark:bg-white/5 ${className}`}
-    >
+      className={`relative block overflow-hidden rounded-lg bg-black/5 dark:bg-white/5 ${className}`}>
       <img src={PHOTO} alt="" className="size-full object-cover" />
     </span>
-  );
+  )
 }
 
 /**
@@ -199,8 +197,8 @@ function Cover({ className = "" }: { className?: string }) {
  * `h2`, not `h3` or `h1`: a listing page has exactly ONE `h1` — its own title —
  * and every card sits directly beneath it (`docs/blog.md` §6.2).
  */
-export function PostCard({ post }: { post: SamplePost }) {
-  const s = useTranslations("sb.flows.blog.sample");
+export function PostCard({post}: {post: SamplePost}) {
+  const s = useTranslations('sb.flows.blog.sample')
 
   return (
     <article className="flex flex-col gap-3">
@@ -211,9 +209,8 @@ export function PostCard({ post }: { post: SamplePost }) {
           as="span"
           variant="body-4"
           weight={500}
-          className="w-fit tracking-wide uppercase opacity-60"
-        >
-          {s("categoryName")}
+          className="w-fit tracking-wide uppercase opacity-60">
+          {s('categoryName')}
         </Typography>
 
         <Typography variant="h5" as="h2" className="leading-snug">
@@ -224,10 +221,13 @@ export function PostCard({ post }: { post: SamplePost }) {
           {post.excerpt}
         </Typography>
 
-        <PostMeta publishedAt={post.publishedAt} minutes={post.readingMinutes} />
+        <PostMeta
+          publishedAt={post.publishedAt}
+          minutes={post.readingMinutes}
+        />
       </div>
     </article>
-  );
+  )
 }
 
 /**
@@ -241,18 +241,17 @@ export function PostGrid({
   posts,
   emptyMessage,
 }: {
-  posts: SamplePost[];
-  emptyMessage: string;
+  posts: SamplePost[]
+  emptyMessage: string
 }) {
   if (posts.length === 0) {
     return (
       <Typography
         variant="body-3"
-        className="border-border rounded-lg border border-dashed px-4 py-12 text-center opacity-60"
-      >
+        className="border-border rounded-lg border border-dashed px-4 py-12 text-center opacity-60">
         {emptyMessage}
       </Typography>
-    );
+    )
   }
 
   return (
@@ -261,7 +260,7 @@ export function PostGrid({
         <PostCard key={post.id} post={post} />
       ))}
     </div>
-  );
+  )
 }
 
 /** A page header: `h1` plus one line of subtitle. */
@@ -269,8 +268,8 @@ export function ScreenHeader({
   title,
   subtitle,
 }: {
-  title: string;
-  subtitle?: string;
+  title: string
+  subtitle?: string
 }) {
   return (
     <header className="flex flex-col gap-2">
@@ -283,7 +282,7 @@ export function ScreenHeader({
         </Typography>
       ) : null}
     </header>
-  );
+  )
 }
 
 /**
@@ -294,23 +293,24 @@ export function ScreenHeader({
  * this a deterministic query, while `tags` is an unordered set where the "first
  * tag" is merely whichever one the author typed first (§2.5, §2.6).
  */
-export function RelatedPosts({ posts }: { posts: SamplePost[] }) {
-  const t = useTranslations("web.blog.post");
-  const df = useDateFormat();
+export function RelatedPosts({posts}: {posts: SamplePost[]}) {
+  const t = useTranslations('web.blog.post')
+  const df = useDateFormat()
 
   // The only post in a category has nothing to show — the real component drops
   // the whole block rather than leaving an empty heading hanging.
-  if (posts.length === 0) return null;
+  if (posts.length === 0) return null
 
   return (
-    <section aria-labelledby="related-heading" className="border-border border-t pt-8">
+    <section
+      aria-labelledby="related-heading"
+      className="border-border border-t pt-8">
       <Typography
         variant="title-4"
         as="h2"
         id="related-heading"
-        className="tracking-wide uppercase opacity-60"
-      >
-        {t("relatedHeading")}
+        className="tracking-wide uppercase opacity-60">
+        {t('relatedHeading')}
       </Typography>
       <ul className="mt-4 grid gap-4 sm:grid-cols-3">
         {posts.map((post) => (
@@ -319,37 +319,39 @@ export function RelatedPosts({ posts }: { posts: SamplePost[] }) {
               as="span"
               variant="body-2"
               weight={500}
-              className="leading-snug underline underline-offset-4"
-            >
+              className="leading-snug underline underline-offset-4">
               {post.title}
             </Typography>
-            <Typography as="time" variant="body-4" dateTime={post.publishedAt} className="opacity-60">
+            <Typography
+              as="time"
+              variant="body-4"
+              dateTime={post.publishedAt}
+              className="opacity-60">
               {df.date(post.publishedAt)}
             </Typography>
           </li>
         ))}
       </ul>
     </section>
-  );
+  )
 }
 
 /** The tag chips under a post, and the whole tag index page. */
-export function TagChips({ tags }: { tags: string[] }) {
+export function TagChips({tags}: {tags: string[]}) {
   return (
     <ul className="flex flex-wrap gap-2">
       {tags.map((tag) => (
         <li
           key={tag}
-          className="border-border bg-surface text-body-4 rounded-full border px-3 py-1 opacity-80"
-        >
+          className="border-border bg-surface text-body-4 rounded-full border px-3 py-1 opacity-80">
           #{tag}
         </li>
       ))}
     </ul>
-  );
+  )
 }
 
-export { Cover, PHOTO };
+export {Cover, PHOTO}
 
 /**
  * The sample document the post screen renders — built in a hook for the same
@@ -361,28 +363,28 @@ export { Cover, PHOTO };
  * contents a two-level list rather than a three-level one.
  */
 export function useSampleDoc(): BlogDoc {
-  const t = useTranslations("sb.flows.blog.sample");
+  const t = useTranslations('sb.flows.blog.sample')
 
   const p = (key: string): BlogBlockNode => ({
-    type: "paragraph",
-    content: [{ type: "text", text: t(key) }],
-  });
+    type: 'paragraph',
+    content: [{type: 'text', text: t(key)}],
+  })
   const h = (level: 2 | 3, key: string): BlogBlockNode => ({
-    type: "heading",
-    attrs: { level },
-    content: [{ type: "text", text: t(key) }],
-  });
+    type: 'heading',
+    attrs: {level},
+    content: [{type: 'text', text: t(key)}],
+  })
 
   return {
-    type: "doc",
+    type: 'doc',
     content: [
-      p("docIntro"),
-      h(2, "docH2A"),
-      p("docBodyA"),
-      h(3, "docH3A"),
-      p("docBodyB"),
-      h(2, "docH2B"),
-      p("docBodyC"),
+      p('docIntro'),
+      h(2, 'docH2A'),
+      p('docBodyA'),
+      h(3, 'docH3A'),
+      p('docBodyB'),
+      h(2, 'docH2B'),
+      p('docBodyC'),
     ],
-  };
+  }
 }

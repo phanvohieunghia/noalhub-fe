@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
-import { Be_Vietnam_Pro, Geist_Mono } from "next/font/google";
+import type {Metadata} from 'next'
+import {Be_Vietnam_Pro, Geist_Mono} from 'next/font/google'
 
 /*
  * ⚠️ `globals.css` must be imported HERE, not in the two layout files.
@@ -10,12 +10,12 @@ import { Be_Vietnam_Pro, Geist_Mono } from "next/font/google";
  * green and still renders complete HTML, only without a single line of
  * Tailwind — and no error anywhere to trace it from.
  */
-import "./globals.css";
-import { appUrl } from "@noalhub/core/blog/seo";
-import { THEME_INIT_SCRIPT } from "@noalhub/core/theme/script";
-import { AuthProvider } from "@noalhub/ui/auth/auth-provider";
-import { QueryProvider } from "@noalhub/ui/query-provider";
-import { ThemeProvider } from "@noalhub/ui/theme/theme-provider";
+import './globals.css'
+import {appUrl} from '@noalhub/core/blog/seo'
+import {THEME_INIT_SCRIPT} from '@noalhub/core/theme/script'
+import {AuthProvider} from '@noalhub/ui/auth/auth-provider'
+import {QueryProvider} from '@noalhub/ui/query-provider'
+import {ThemeProvider} from '@noalhub/ui/theme/theme-provider'
 
 /**
  * The `<html>` shell shared by **both root layouts** of the app.
@@ -47,11 +47,11 @@ import { ThemeProvider } from "@noalhub/ui/theme/theme-provider";
  * 600 for headings — `typography.tsx` itself only uses 400/500/600.
  */
 const beVietnamPro = Be_Vietnam_Pro({
-  variable: "--font-be-vietnam-pro",
-  subsets: ["latin", "vietnamese"],
-  weight: ["300", "400", "500", "600"],
-  display: "swap",
-});
+  variable: '--font-be-vietnam-pro',
+  subsets: ['latin', 'vietnamese'],
+  weight: ['300', '400', '500', '600'],
+  display: 'swap',
+})
 
 /**
  * The ITALIC face has to be loaded separately, or the browser **slants the
@@ -63,17 +63,17 @@ const beVietnamPro = Be_Vietnam_Pro({
  * on `<html>` for Next to keep this `@font-face` at all.
  */
 const beVietnamProItalic = Be_Vietnam_Pro({
-  variable: "--font-be-vietnam-pro-italic",
-  subsets: ["latin", "vietnamese"],
-  weight: "400",
-  style: "italic",
-  display: "swap",
-});
+  variable: '--font-be-vietnam-pro-italic',
+  subsets: ['latin', 'vietnamese'],
+  weight: '400',
+  style: 'italic',
+  display: 'swap',
+})
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+})
 
 /**
  * ⚠️ `metadataBase` has been REQUIRED since the blog arrived: every relative URL
@@ -96,19 +96,23 @@ const geistMono = Geist_Mono({
 export const rootMetadata: Metadata = {
   metadataBase: new URL(appUrl()),
   title: {
-    default: "Noalhub",
-    template: "%s · Noalhub",
+    default: 'Noalhub',
+    template: '%s · Noalhub',
   },
   // Home-screen launch on iOS runs without Safari's bars (see `manifest.ts`).
-  appleWebApp: { capable: true, title: "Noalhub", statusBarStyle: "black-translucent" },
-};
+  appleWebApp: {
+    capable: true,
+    title: 'Noalhub',
+    statusBarStyle: 'black-translucent',
+  },
+}
 
 export function RootHtml({
   lang,
   children,
 }: {
-  lang: string;
-  children: React.ReactNode;
+  lang: string
+  children: React.ReactNode
 }) {
   return (
     // `suppressHydrationWarning` is REQUIRED here: the script below adds the
@@ -117,14 +121,13 @@ export function RootHtml({
     <html
       lang={lang}
       suppressHydrationWarning
-      className={`${beVietnamPro.variable} ${beVietnamProItalic.variable} ${geistMono.variable} h-full antialiased`}
-    >
+      className={`${beVietnamPro.variable} ${beVietnamProItalic.variable} ${geistMono.variable} h-full antialiased`}>
       <head>
         {/* Synchronous, no `defer`/`async`, and it must come before everything
             else — it runs before the first paint so the page does not flash
             white and then go dark. The content is a repo constant; no user data
             is involved. */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{__html: THEME_INIT_SCRIPT}} />
       </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
@@ -134,5 +137,5 @@ export function RootHtml({
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }

@@ -22,7 +22,10 @@
 export function LogoGlyphPaths() {
   return (
     <>
-      <path fill="var(--logo-glyph-a)" d="M88.0996 0L185.4 97.31V152.53L88.0996 56.54V0Z" />
+      <path
+        fill="var(--logo-glyph-a)"
+        d="M88.0996 0L185.4 97.31V152.53L88.0996 56.54V0Z"
+      />
       <path
         fill="var(--logo-glyph-a)"
         d="M89.41 95.99L117.02 123.6L56.54 185.4L138.06 268.24L176.19 230.11V286.65L138.06 323.46L0 185.4L89.41 95.99Z"
@@ -35,23 +38,26 @@ export function LogoGlyphPaths() {
         fill="var(--logo-glyph-b)"
         d="M243.25 39.45L380 177.51L289.27 269.55L262.98 243.26L323.46 177.51L243.25 95.99L203.81 134.12V78.9L243.25 39.45Z"
       />
-      <path fill="var(--logo-glyph-b)" d="M193.29 211.7L289.27 309V366.86L193.29 269.55V211.7Z" />
+      <path
+        fill="var(--logo-glyph-b)"
+        d="M193.29 211.7L289.27 309V366.86L193.29 269.55V211.7Z"
+      />
       <path
         fill="var(--logo-glyph-b)"
         d="M140.69 139.38L168.3 165.68L151.21 185.4L168.3 203.81L140.69 231.42L94.6699 185.4L140.69 139.38Z"
       />
     </>
-  );
+  )
 }
 
 /** The mark: the glyph on a rounded tile (the app icon). */
 export function Logo({
-  className = "size-8",
+  className = 'size-8',
   title,
 }: {
-  className?: string;
+  className?: string
   /** Accessible name. Only pass it when the mark stands without a wordmark. */
-  title?: string;
+  title?: string
 }) {
   return (
     <svg
@@ -59,19 +65,18 @@ export function Logo({
       className={`shrink-0 ${className}`}
       style={
         {
-          "--logo-glyph-a": "var(--logo-tile-a)",
-          "--logo-glyph-b": "var(--logo-tile-b)",
+          '--logo-glyph-a': 'var(--logo-tile-a)',
+          '--logo-glyph-b': 'var(--logo-tile-b)',
         } as React.CSSProperties
       }
-      role={title ? "img" : undefined}
+      role={title ? 'img' : undefined}
       aria-hidden={title ? undefined : true}
-      aria-label={title}
-    >
+      aria-label={title}>
       <rect width="120" height="120" rx="28" fill="var(--logo-tile)" />
       {/* Glyph box from Figma: inset 18.33% sides / 19.43% top, i.e. 76 wide at (22, 23.32). */}
       <g transform="translate(22 23.32) scale(0.2)">
         <LogoGlyphPaths />
       </g>
     </svg>
-  );
+  )
 }

@@ -1,21 +1,21 @@
-"use client";
+'use client'
 
-import type { UseFormReturn } from "react-hook-form";
+import type {UseFormReturn} from 'react-hook-form'
 
-import type { BlogPostFormValues } from "@noalhub/api/blog";
-import { slugify } from "@noalhub/core/blog/slugify";
-import { useAdminBlogSlugs } from "@noalhub/api/blog";
-import { useDateFormat } from "@noalhub/i18n/use-date-format";
-import Link from "next/link";
-import { useMessage } from "@noalhub/i18n/use-message";
-import { useTranslations } from "next-intl";
-import { appUrl, SEO_LIMITS, truncateForSeo } from "@noalhub/core/blog/seo";
-import { Button } from "@noalhub/ui/button";
-import { Input } from "@noalhub/ui/input";
-import { Textarea } from "@noalhub/ui/textarea";
+import type {BlogPostFormValues} from '@noalhub/api/blog'
+import {slugify} from '@noalhub/core/blog/slugify'
+import {useAdminBlogSlugs} from '@noalhub/api/blog'
+import {useDateFormat} from '@noalhub/i18n/use-date-format'
+import Link from 'next/link'
+import {useMessage} from '@noalhub/i18n/use-message'
+import {useTranslations} from 'next-intl'
+import {appUrl, SEO_LIMITS, truncateForSeo} from '@noalhub/core/blog/seo'
+import {Button} from '@noalhub/ui/button'
+import {Input} from '@noalhub/ui/input'
+import {Textarea} from '@noalhub/ui/textarea'
 
-import { ImageUploadButton } from "@noalhub/ui/media/image-upload-button";
-import { Typography } from "@noalhub/ui/typography";
+import {ImageUploadButton} from '@noalhub/ui/media/image-upload-button'
+import {Typography} from '@noalhub/ui/typography'
 
 /**
  * The SEO panel — **show a preview, not just inputs** (`docs/blog.md` §7.2).
@@ -34,34 +34,41 @@ export function SeoPanel({
   publishedSlug,
   postId,
 }: {
-  form: UseFormReturn<BlogPostFormValues>;
+  form: UseFormReturn<BlogPostFormValues>
   /** The slug currently live in public; `null` if the post has never been published. */
-  publishedSlug: string | null;
-  postId: string;
+  publishedSlug: string | null
+  postId: string
 }) {
-  const t = useTranslations("admin.posts.seo");
-  const m = useMessage();
-  const { register, watch, setValue, formState } = form;
-  const values = watch();
+  const t = useTranslations('admin.posts.seo')
+  const m = useMessage()
+  const {register, watch, setValue, formState} = form
+  const values = watch()
 
-  const previewTitle = values.metaTitle.trim() || values.title.trim() || t("noTitle");
+  const previewTitle =
+    values.metaTitle.trim() || values.title.trim() || t('noTitle')
   const previewDescription =
-    values.metaDescription.trim() || values.excerpt.trim() || t("noDescription");
+    values.metaDescription.trim() || values.excerpt.trim() || t('noDescription')
 
-  const slugChangedAfterPublish = publishedSlug !== null && values.slug.trim() !== publishedSlug;
+  const slugChangedAfterPublish =
+    publishedSlug !== null && values.slug.trim() !== publishedSlug
 
   return (
     <aside className="flex flex-col gap-5">
-      <Typography variant="title-4" as="h2" className="uppercase tracking-wide opacity-60">
-        {t("heading")}
+      <Typography
+        variant="title-4"
+        as="h2"
+        className="uppercase tracking-wide opacity-60">
+        {t('heading')}
       </Typography>
 
       {/* The Google result preview */}
       <div className="rounded-lg border border-black/10 p-3 dark:border-white/15">
         <Typography variant="body-4" className="truncate opacity-60">
-          {appUrl()}/blogs/{values.slug || "…"}
+          {appUrl()}/blogs/{values.slug || '…'}
         </Typography>
-        <Typography variant="body-2" className="mt-1 leading-snug text-blue-700 dark:text-blue-400">
+        <Typography
+          variant="body-2"
+          className="mt-1 leading-snug text-blue-700 dark:text-blue-400">
           {truncateForSeo(previewTitle, SEO_LIMITS.title)}
         </Typography>
         <Typography variant="body-3" className="mt-1 leading-snug opacity-75">
@@ -70,19 +77,22 @@ export function SeoPanel({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Input label={t("slugLabel")} {...register("slug")} error={m(formState.errors.slug?.message)} />
+        <Input
+          label={t('slugLabel')}
+          {...register('slug')}
+          error={m(formState.errors.slug?.message)}
+        />
         <Button
           variant="link"
           size="inline"
           className="w-fit"
           onClick={() =>
-            setValue("slug", slugify(watch("title")), {
+            setValue('slug', slugify(watch('title')), {
               shouldValidate: true,
               shouldDirty: true,
             })
-          }
-        >
-          {t("slugFromTitle")}
+          }>
+          {t('slugFromTitle')}
         </Button>
 
         {/*
@@ -96,34 +106,36 @@ export function SeoPanel({
           <Typography
             variant="body-4"
             role="alert"
-            className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300"
-          >
-            {t.rich("slugChanged", {
-              slug: publishedSlug ?? "",
+            className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-300">
+            {t.rich('slugChanged', {
+              slug: publishedSlug ?? '',
               path: (chunks) => <strong>{chunks}</strong>,
             })}
           </Typography>
         ) : null}
-        
+
         {publishedSlug ? <SlugHistory postId={postId} /> : null}
       </div>
 
       <div className="flex flex-col gap-1.5">
         <Input
-          label={t("metaTitle")}
-          placeholder={values.title || t("metaTitlePlaceholder")}
-          {...register("metaTitle")}
+          label={t('metaTitle')}
+          placeholder={values.title || t('metaTitlePlaceholder')}
+          {...register('metaTitle')}
           error={m(formState.errors.metaTitle?.message)}
         />
-        <CharCount value={values.metaTitle || values.title} limit={SEO_LIMITS.title} />
+        <CharCount
+          value={values.metaTitle || values.title}
+          limit={SEO_LIMITS.title}
+        />
       </div>
 
       <div className="flex flex-col gap-1.5">
         <Textarea
-          label={t("metaDescription")}
+          label={t('metaDescription')}
           rows={3}
-          placeholder={t("metaDescriptionPlaceholder")}
-          {...register("metaDescription")}
+          placeholder={t('metaDescriptionPlaceholder')}
+          {...register('metaDescription')}
           error={m(formState.errors.metaDescription?.message)}
         />
         <CharCount
@@ -134,15 +146,15 @@ export function SeoPanel({
 
       <div className="flex flex-col gap-1.5">
         <Input
-          label={t("ogImage")}
-          placeholder={t("ogImagePlaceholder")}
-          {...register("ogImageUrl")}
+          label={t('ogImage')}
+          placeholder={t('ogImagePlaceholder')}
+          {...register('ogImageUrl')}
           error={m(formState.errors.ogImageUrl?.message)}
         />
         <ImageUploadButton
-          label={t("uploadOg")}
+          label={t('uploadOg')}
           onUploaded={(asset) =>
-            setValue("ogImageUrl", asset.url, {
+            setValue('ogImageUrl', asset.url, {
               shouldDirty: true,
               shouldValidate: true,
             })
@@ -157,45 +169,47 @@ export function SeoPanel({
 
       <div className="flex flex-col gap-1.5">
         <Input
-          label={t("canonical")}
-          placeholder={t("canonicalPlaceholder")}
-          {...register("canonicalUrl")}
+          label={t('canonical')}
+          placeholder={t('canonicalPlaceholder')}
+          {...register('canonicalUrl')}
           error={m(formState.errors.canonicalUrl?.message)}
         />
         <Typography variant="body-4" className="opacity-60">
-          {t("canonicalHint")}
+          {t('canonicalHint')}
         </Typography>
       </div>
 
-      <Typography variant="body-3" as="label" className="flex items-start gap-2">
-        <input type="checkbox" {...register("noindex")} className="mt-1" />
+      <Typography
+        variant="body-3"
+        as="label"
+        className="flex items-start gap-2">
+        <input type="checkbox" {...register('noindex')} className="mt-1" />
         <span>
           <Typography variant="body-3" as="span" weight={500}>
-            {t("noindex")}
+            {t('noindex')}
           </Typography>
           <Typography variant="body-4" as="span" className="block opacity-60">
-            {t("noindexHint")}
+            {t('noindexHint')}
           </Typography>
         </span>
       </Typography>
     </aside>
-  );
+  )
 }
 
-function CharCount({ value, limit }: { value: string; limit: number }) {
-  const t = useTranslations("admin.posts.seo");
-  const length = value.trim().length;
-  const over = length > limit;
+function CharCount({value, limit}: {value: string; limit: number}) {
+  const t = useTranslations('admin.posts.seo')
+  const length = value.trim().length
+  const over = length > limit
 
   return (
     <p
       className={`text-body-4 tabular-nums ${
-        over ? "text-amber-700 dark:text-amber-300" : "opacity-60"
-      }`}
-    >
-      {t(over ? "charCountOver" : "charCount", { length, limit })}
+        over ? 'text-amber-700 dark:text-amber-300' : 'opacity-60'
+      }`}>
+      {t(over ? 'charCountOver' : 'charCount', {length, limit})}
     </p>
-  );
+  )
 }
 
 function OgPreview({
@@ -203,11 +217,11 @@ function OgPreview({
   title,
   description,
 }: {
-  image: string;
-  title: string;
-  description: string;
+  image: string
+  title: string
+  description: string
 }) {
-  const t = useTranslations("admin.posts.seo");
+  const t = useTranslations('admin.posts.seo')
 
   return (
     <div className="overflow-hidden rounded-lg border border-black/10 dark:border-white/15">
@@ -216,14 +230,17 @@ function OgPreview({
         // just typed, which may not be in `remotePatterns` yet — sending it
         // through the optimizer means a 400 in the middle of editing.
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={image} alt="" className="aspect-[1200/630] w-full object-cover" />
+        <img
+          src={image}
+          alt=""
+          className="aspect-[1200/630] w-full object-cover"
+        />
       ) : (
         <Typography
           variant="body-4"
           as="div"
-          className="flex aspect-[1200/630] w-full items-center justify-center bg-black/5 opacity-50 dark:bg-white/5"
-        >
-          {t("ogEmpty")}
+          className="flex aspect-[1200/630] w-full items-center justify-center bg-black/5 opacity-50 dark:bg-white/5">
+          {t('ogEmpty')}
         </Typography>
       )}
       <div className="border-t border-black/10 p-2.5 dark:border-white/15">
@@ -235,7 +252,7 @@ function OgPreview({
         </Typography>
       </div>
     </div>
-  );
+  )
 }
 
 /**
@@ -246,30 +263,33 @@ function OgPreview({
  * editor means it gets clicked with the editor's mindset, so the actions live
  * one screen away, behind the link below.
  */
-function SlugHistory({ postId }: { postId: string }) {
-  const t = useTranslations("admin.posts.slugs");
-  const df = useDateFormat();
-  const { data, isPending, isError } = useAdminBlogSlugs({ postId, limit: 50 });
+function SlugHistory({postId}: {postId: string}) {
+  const t = useTranslations('admin.posts.slugs')
+  const df = useDateFormat()
+  const {data, isPending, isError} = useAdminBlogSlugs({postId, limit: 50})
 
   if (isPending) {
     return (
-      <Typography variant="body-4" as="div" className="animate-pulse opacity-60">
-        {t("loading")}
+      <Typography
+        variant="body-4"
+        as="div"
+        className="animate-pulse opacity-60">
+        {t('loading')}
       </Typography>
-    );
+    )
   }
 
   // A post with no old URLs is the normal case — every post that never had its
   // slug changed. Nothing to show, and an empty box would only raise questions.
-  if (isError || data.items.length === 0) return null;
+  if (isError || data.items.length === 0) return null
 
   return (
     <div className="mt-2 flex flex-col gap-2 rounded-md border border-border p-3">
       <Typography variant="title-4" className="opacity-80">
-        {t("panelTitle")}
+        {t('panelTitle')}
       </Typography>
       <Typography variant="body-4" className="opacity-60">
-        {t("panelHint")}
+        {t('panelHint')}
       </Typography>
 
       <ul className="flex flex-col gap-1.5">
@@ -287,10 +307,9 @@ function SlugHistory({ postId }: { postId: string }) {
 
       <Link
         href={`/posts/slugs?postId=${encodeURIComponent(postId)}`}
-        className="text-body-4 font-medium underline underline-offset-2"
-      >
-        {t("manageLink")}
+        className="text-body-4 font-medium underline underline-offset-2">
+        {t('manageLink')}
       </Link>
     </div>
-  );
+  )
 }

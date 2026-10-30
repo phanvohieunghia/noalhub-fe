@@ -1,9 +1,9 @@
-"use client";
+'use client'
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import {zodResolver} from '@hookform/resolvers/zod'
+import {useTranslations} from 'next-intl'
+import {useState} from 'react'
+import {useForm} from 'react-hook-form'
 
 import {
   createCredentialSchema,
@@ -16,20 +16,20 @@ import {
   type AiCredential,
   type AiModel,
   type CreateCredentialInput,
-} from "@noalhub/api/qa";
-import { applyApiError } from "@noalhub/core/forms/apply-api-error";
-import type { Message } from "@noalhub/api/message";
-import { useMessage } from "@noalhub/i18n/use-message";
-import { useDateFormat } from "@noalhub/i18n/use-date-format";
-import { AlertError, AlertWarning } from "@noalhub/ui/alert";
-import { Badge } from "@noalhub/ui/badge";
-import { Button } from "@noalhub/ui/button";
-import { Dialog } from "@noalhub/ui/dialog";
-import { DropdownMenuItem } from "@noalhub/ui/dropdown-menu";
-import { ICONS, LUCIDE } from "@noalhub/ui/icons";
-import { Input } from "@noalhub/ui/input";
-import { Select } from "@noalhub/ui/select";
-import { Skeleton } from "@noalhub/ui/skeleton";
+} from '@noalhub/api/qa'
+import {applyApiError} from '@noalhub/core/forms/apply-api-error'
+import type {Message} from '@noalhub/api/message'
+import {useMessage} from '@noalhub/i18n/use-message'
+import {useDateFormat} from '@noalhub/i18n/use-date-format'
+import {AlertError, AlertWarning} from '@noalhub/ui/alert'
+import {Badge} from '@noalhub/ui/badge'
+import {Button} from '@noalhub/ui/button'
+import {Dialog} from '@noalhub/ui/dialog'
+import {DropdownMenuItem} from '@noalhub/ui/dropdown-menu'
+import {ICONS, LUCIDE} from '@noalhub/ui/icons'
+import {Input} from '@noalhub/ui/input'
+import {Select} from '@noalhub/ui/select'
+import {Skeleton} from '@noalhub/ui/skeleton'
 import {
   TableBody,
   TableCell,
@@ -40,13 +40,13 @@ import {
   TableRoot,
   TableRow,
   TableRowActions,
-} from "@noalhub/ui/table";
-import { Typography } from "@noalhub/ui/typography";
+} from '@noalhub/ui/table'
+import {Typography} from '@noalhub/ui/typography'
 
-import { AdminErrorState } from "../admin-error-state";
+import {AdminErrorState} from '../admin-error-state'
 
-const FIELDS = ["label", "apiKey", "modelId", "monthlyTokenLimit"] as const;
-const COLUMN_COUNT = 5;
+const FIELDS = ['label', 'apiKey', 'modelId', 'monthlyTokenLimit'] as const
+const COLUMN_COUNT = 5
 
 /**
  * The API keys the generate calls run on.
@@ -65,27 +65,27 @@ const COLUMN_COUNT = 5;
  *    a hard delete would erase which key produced which run.
  */
 export function AiCredentialsContent() {
-  const t = useTranslations("admin.qa");
-  const credentials = useAiCredentials();
-  const [adding, setAdding] = useState(false);
-  const [editing, setEditing] = useState<AiCredential | null>(null);
-  const [deleting, setDeleting] = useState<AiCredential | null>(null);
+  const t = useTranslations('admin.qa')
+  const credentials = useAiCredentials()
+  const [adding, setAdding] = useState(false)
+  const [editing, setEditing] = useState<AiCredential | null>(null)
+  const [deleting, setDeleting] = useState<AiCredential | null>(null)
 
-  const rows = credentials.data ?? [];
-  const hasDefault = rows.some((row) => row.isDefault && row.enabled);
+  const rows = credentials.data ?? []
+  const hasDefault = rows.some((row) => row.isDefault && row.enabled)
 
   return (
     <main className="w-full p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="max-w-2xl">
           <Typography variant="h4" as="h1">
-            {t("credentials.title")}
+            {t('credentials.title')}
           </Typography>
           <Typography variant="body-3" className="mt-1 opacity-70">
-            {t("credentials.intro")}
+            {t('credentials.intro')}
           </Typography>
         </div>
-        <Button onClick={() => setAdding(true)}>{t("credentials.add")}</Button>
+        <Button onClick={() => setAdding(true)}>{t('credentials.add')}</Button>
       </div>
 
       {/*
@@ -95,7 +95,7 @@ export function AiCredentialsContent() {
       */}
       {!credentials.isPending && rows.length > 0 && !hasDefault ? (
         <div className="mt-4">
-          <AlertWarning message={t("credentials.noDefault")} />
+          <AlertWarning message={t('credentials.noDefault')} />
         </div>
       ) : null}
 
@@ -108,14 +108,22 @@ export function AiCredentialsContent() {
         </div>
       ) : (
         <div className="mt-4">
-          <TableRoot caption={t("credentials.caption")}>
+          <TableRoot caption={t('credentials.caption')}>
             <TableHead>
               <TableRow>
-                <TableHeaderCell>{t("credentials.columns.label")}</TableHeaderCell>
-                <TableHeaderCell>{t("credentials.columns.providerKey")}</TableHeaderCell>
-                <TableHeaderCell>{t("credentials.columns.model")}</TableHeaderCell>
-                <TableHeaderCell>{t("credentials.columns.budget")}</TableHeaderCell>
-                <TableActionsHeaderCell label={t("actionsColumn")} />
+                <TableHeaderCell>
+                  {t('credentials.columns.label')}
+                </TableHeaderCell>
+                <TableHeaderCell>
+                  {t('credentials.columns.providerKey')}
+                </TableHeaderCell>
+                <TableHeaderCell>
+                  {t('credentials.columns.model')}
+                </TableHeaderCell>
+                <TableHeaderCell>
+                  {t('credentials.columns.budget')}
+                </TableHeaderCell>
+                <TableActionsHeaderCell label={t('actionsColumn')} />
               </TableRow>
             </TableHead>
             <TableBody>
@@ -123,7 +131,7 @@ export function AiCredentialsContent() {
                 <SkeletonRows />
               ) : rows.length === 0 ? (
                 <TableEmptyRow colSpan={COLUMN_COUNT}>
-                  {t("credentials.empty")}
+                  {t('credentials.empty')}
                 </TableEmptyRow>
               ) : (
                 rows.map((row) => (
@@ -148,7 +156,7 @@ export function AiCredentialsContent() {
         <DeleteDialog row={deleting} onClose={() => setDeleting(null)} />
       ) : null}
     </main>
-  );
+  )
 }
 
 function CredentialRow({
@@ -156,28 +164,27 @@ function CredentialRow({
   onEdit,
   onDelete,
 }: {
-  row: AiCredential;
-  onEdit: () => void;
-  onDelete: () => void;
+  row: AiCredential
+  onEdit: () => void
+  onDelete: () => void
 }) {
-  const t = useTranslations("admin.qa");
-  const df = useDateFormat();
-  const disable = useDisableAiCredential();
-  const enable = useUpdateAiCredential(row.id);
+  const t = useTranslations('admin.qa')
+  const df = useDateFormat()
+  const disable = useDisableAiCredential()
+  const enable = useUpdateAiCredential(row.id)
 
   return (
     <TableRow
-      className={row.enabled ? undefined : "opacity-50"}
-      onActivate={onEdit}
-    >
+      className={row.enabled ? undefined : 'opacity-50'}
+      onActivate={onEdit}>
       <TableCell weight={500}>
         <div className="flex items-center gap-2">
           {row.label}
           {row.isDefault ? (
-            <Badge tone="info">{t("credentials.default")}</Badge>
+            <Badge tone="info">{t('credentials.default')}</Badge>
           ) : null}
           {row.enabled ? null : (
-            <Badge tone="neutral">{t("credentials.disabled")}</Badge>
+            <Badge tone="neutral">{t('credentials.disabled')}</Badge>
           )}
         </div>
         <Typography variant="body-4" as="span" className="opacity-60">
@@ -186,27 +193,27 @@ function CredentialRow({
       </TableCell>
       {/* Four characters, never more — this is recognition, not recovery. */}
       <TableCell className="opacity-70">
-        {row.provider} · <Typography variant="body-3" as="span" className="font-mono">
+        {row.provider} ·{' '}
+        <Typography variant="body-3" as="span" className="font-mono">
           …{row.keyLast4}
         </Typography>
       </TableCell>
       <TableCell className="opacity-70">{row.model.label}</TableCell>
       <TableCell className="opacity-70">
         {row.monthlyTokenLimit === null
-          ? t("credentials.unlimited")
-          : t("credentials.tokensPerMonth", { count: row.monthlyTokenLimit })}
+          ? t('credentials.unlimited')
+          : t('credentials.tokensPerMonth', {count: row.monthlyTokenLimit})}
       </TableCell>
-      <TableRowActions label={t("actionsColumn")}>
+      <TableRowActions label={t('actionsColumn')}>
         <DropdownMenuItem icon={ICONS.edit} onSelect={onEdit}>
-          {t("credentials.edit")}
+          {t('credentials.edit')}
         </DropdownMenuItem>
         {row.enabled ? (
           <DropdownMenuItem
             icon={LUCIDE.ban}
             disabled={disable.isPending}
-            onSelect={() => disable.mutate(row.id)}
-          >
-            {t("credentials.disable")}
+            onSelect={() => disable.mutate(row.id)}>
+            {t('credentials.disable')}
           </DropdownMenuItem>
         ) : (
           // PATCH, not a dedicated route: `enabled` is a plain field there, and
@@ -214,51 +221,53 @@ function CredentialRow({
           <DropdownMenuItem
             icon={LUCIDE.circleCheck}
             disabled={enable.isPending}
-            onSelect={() => enable.mutate({ enabled: true })}
-          >
-            {t("credentials.enable")}
+            onSelect={() => enable.mutate({enabled: true})}>
+            {t('credentials.enable')}
           </DropdownMenuItem>
         )}
         {/* Only a key no run points at — a used one has nothing left but disable. */}
         {row.inUse ? null : (
-          <DropdownMenuItem icon={ICONS.delete} tone="danger" onSelect={onDelete}>
-            {t("credentials.delete")}
+          <DropdownMenuItem
+            icon={ICONS.delete}
+            tone="danger"
+            onSelect={onDelete}>
+            {t('credentials.delete')}
           </DropdownMenuItem>
         )}
       </TableRowActions>
     </TableRow>
-  );
+  )
 }
 
-function CreateDialog({ onClose }: { onClose: () => void }) {
-  const t = useTranslations("admin.qa");
-  const tc = useTranslations("common");
-  const m = useMessage();
-  const create = useCreateAiCredential();
-  const models = useAiModels();
-  const [formError, setFormError] = useState<Message | string | null>(null);
+function CreateDialog({onClose}: {onClose: () => void}) {
+  const t = useTranslations('admin.qa')
+  const tc = useTranslations('common')
+  const m = useMessage()
+  const create = useCreateAiCredential()
+  const models = useAiModels()
+  const [formError, setFormError] = useState<Message | string | null>(null)
 
   const {
     register,
     handleSubmit,
     setError,
-    formState: { errors, isSubmitting },
+    formState: {errors, isSubmitting},
   } = useForm<CreateCredentialInput>({
     resolver: zodResolver(createCredentialSchema),
     defaultValues: {
       // Overwritten on submit from the chosen model — see `onSubmit`. It is only
       // here because the resolver validates the field before that.
-      provider: "openrouter",
-      label: "",
-      apiKey: "",
-      modelId: "",
+      provider: 'openrouter',
+      label: '',
+      apiKey: '',
+      modelId: '',
       isDefault: false,
       monthlyTokenLimit: null,
     },
-  });
+  })
 
   const onSubmit = handleSubmit(async (values) => {
-    setFormError(null);
+    setFormError(null)
     /*
      * `provider` comes from the CHOSEN MODEL, it is not a field. A model id
      * belongs to exactly one provider (`ai_models`), so asking for both
@@ -267,61 +276,66 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
      * correctly. This used to be hardcoded `"openrouter"`, which meant no key
      * for any other provider could be created here at all.
      */
-    const provider = models.data?.find((model) => model.id === values.modelId)?.provider;
+    const provider = models.data?.find(
+      (model) => model.id === values.modelId,
+    )?.provider
     if (!provider) {
-      setFormError(t("credentials.modelsLoadFailed"));
-      return;
+      setFormError(t('credentials.modelsLoadFailed'))
+      return
     }
     try {
-      await create.mutateAsync({ ...values, provider });
-      onClose();
+      await create.mutateAsync({...values, provider})
+      onClose()
     } catch (error) {
-      setFormError(applyApiError(error, setError, FIELDS));
+      setFormError(applyApiError(error, setError, FIELDS))
     }
-  });
+  })
 
   return (
-    <Dialog
-      open
-      onClose={onClose}
-      title={t("credentials.addTitle")}
-    >
+    <Dialog open onClose={onClose} title={t('credentials.addTitle')}>
       <form className="space-y-4" onSubmit={(event) => void onSubmit(event)}>
         <Input
-          label={t("credentials.fields.label")}
+          label={t('credentials.fields.label')}
           error={errors.label?.message}
-          {...register("label")}
+          {...register('label')}
         />
         <Input
-          label={t("credentials.fields.apiKey")}
+          label={t('credentials.fields.apiKey')}
           type="password"
           autoComplete="off"
-          hint={t("credentials.fields.apiKeyHint")}
+          hint={t('credentials.fields.apiKeyHint')}
           error={errors.apiKey?.message}
-          {...register("apiKey")}
+          {...register('apiKey')}
         />
         <ModelSelect
           models={models.data ?? []}
           loading={models.isPending}
           error={
             errors.modelId?.message ??
-            (models.isError ? t("credentials.modelsLoadFailed") : undefined)
+            (models.isError ? t('credentials.modelsLoadFailed') : undefined)
           }
-          registration={register("modelId")}
+          registration={register('modelId')}
         />
         <Input
-          label={t("credentials.fields.budget")}
+          label={t('credentials.fields.budget')}
           type="number"
           min={1}
           step={1}
           inputMode="numeric"
-          hint={t("credentials.fields.budgetHint")}
-          error={errors.monthlyTokenLimit ? t("credentials.fields.budgetInvalid") : undefined}
-          {...register("monthlyTokenLimit", { setValueAs: parseBudget })}
+          hint={t('credentials.fields.budgetHint')}
+          error={
+            errors.monthlyTokenLimit
+              ? t('credentials.fields.budgetInvalid')
+              : undefined
+          }
+          {...register('monthlyTokenLimit', {setValueAs: parseBudget})}
         />
-        <Typography variant="body-3" as="label" className="flex items-center gap-2">
-          <input type="checkbox" {...register("isDefault")} />
-          {t("credentials.fields.isDefault")}
+        <Typography
+          variant="body-3"
+          as="label"
+          className="flex items-center gap-2">
+          <input type="checkbox" {...register('isDefault')} />
+          {t('credentials.fields.isDefault')}
         </Typography>
         {/* `useMessage` turns the error KEY into text at render time — the api
             layer returns a key so the sentence follows the reader's locale. */}
@@ -331,43 +345,43 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
             thanh công cụ cạnh nút đóng trên header. Khuôn có sẵn: màn Storybook. */}
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
-            {tc("actions.cancel")}
+            {tc('actions.cancel')}
           </Button>
           <Button type="submit" loading={isSubmitting}>
-            {tc("actions.save")}
+            {tc('actions.save')}
           </Button>
         </div>
       </form>
     </Dialog>
-  );
+  )
 }
 
-function EditDialog({ row, onClose }: { row: AiCredential; onClose: () => void }) {
-  const t = useTranslations("admin.qa");
-  const tc = useTranslations("common");
-  const m = useMessage();
-  const update = useUpdateAiCredential(row.id);
-  const models = useAiModels();
-  const [formError, setFormError] = useState<Message | string | null>(null);
-  const [label, setLabel] = useState(row.label);
-  const [apiKey, setApiKey] = useState("");
-  const [modelId, setModelId] = useState(row.modelId);
-  const [isDefault, setIsDefault] = useState(row.isDefault);
+function EditDialog({row, onClose}: {row: AiCredential; onClose: () => void}) {
+  const t = useTranslations('admin.qa')
+  const tc = useTranslations('common')
+  const m = useMessage()
+  const update = useUpdateAiCredential(row.id)
+  const models = useAiModels()
+  const [formError, setFormError] = useState<Message | string | null>(null)
+  const [label, setLabel] = useState(row.label)
+  const [apiKey, setApiKey] = useState('')
+  const [modelId, setModelId] = useState(row.modelId)
+  const [isDefault, setIsDefault] = useState(row.isDefault)
   const [budget, setBudget] = useState(
-    row.monthlyTokenLimit === null ? "" : String(row.monthlyTokenLimit),
-  );
-  const [budgetError, setBudgetError] = useState(false);
+    row.monthlyTokenLimit === null ? '' : String(row.monthlyTokenLimit),
+  )
+  const [budgetError, setBudgetError] = useState(false)
 
   const save = async () => {
-    setFormError(null);
-    const monthlyTokenLimit = parseBudget(budget);
+    setFormError(null)
+    const monthlyTokenLimit = parseBudget(budget)
     // `parseBudget` hands back NaN or a fraction untouched so this check sees it;
     // sending it would only come back as a VALIDATION_FAILED string.
     const invalid =
       monthlyTokenLimit !== null &&
-      (!Number.isInteger(monthlyTokenLimit) || monthlyTokenLimit < 1);
-    setBudgetError(invalid);
-    if (invalid) return;
+      (!Number.isInteger(monthlyTokenLimit) || monthlyTokenLimit < 1)
+    setBudgetError(invalid)
+    if (invalid) return
     try {
       await update.mutateAsync({
         label,
@@ -376,63 +390,69 @@ function EditDialog({ row, onClose }: { row: AiCredential; onClose: () => void }
         monthlyTokenLimit,
         // Sending an empty string would rotate the key to "" — only send the
         // field when the operator actually typed a new key.
-        ...(apiKey ? { apiKey } : {}),
-      });
-      onClose();
+        ...(apiKey ? {apiKey} : {}),
+      })
+      onClose()
     } catch (error) {
-      setFormError(applyApiError(error, () => undefined, []));
+      setFormError(applyApiError(error, () => undefined, []))
     }
-  };
+  }
 
   return (
     <Dialog
       open
       onClose={onClose}
-      title={t("credentials.editTitle", { label: row.label })}
-    >
+      title={t('credentials.editTitle', {label: row.label})}>
       <div className="space-y-4">
         <Input
-          label={t("credentials.fields.label")}
+          label={t('credentials.fields.label')}
           value={label}
           onChange={(event) => setLabel(event.target.value)}
         />
         <Input
-          label={t("credentials.fields.rotate")}
+          label={t('credentials.fields.rotate')}
           type="password"
           autoComplete="off"
-          hint={t("credentials.fields.rotateHint")}
+          hint={t('credentials.fields.rotateHint')}
           value={apiKey}
           onChange={(event) => setApiKey(event.target.value)}
         />
         <Select
-          label={t("credentials.fields.model")}
+          label={t('credentials.fields.model')}
           value={modelId}
           onChange={(event) => setModelId(event.target.value)}
           // The key's provider is fixed, and a model of another provider is
           // refused with AI_MODEL_NOT_ALLOWED — offer only this provider's.
           options={modelOptions(
-            (models.data ?? []).filter((model) => model.provider === row.provider),
+            (models.data ?? []).filter(
+              (model) => model.provider === row.provider,
+            ),
             t,
           )}
         />
         <Input
-          label={t("credentials.fields.budget")}
+          label={t('credentials.fields.budget')}
           type="number"
           min={1}
           step={1}
           inputMode="numeric"
-          hint={t("credentials.fields.budgetHint")}
-          error={budgetError ? t("credentials.fields.budgetInvalid") : undefined}
+          hint={t('credentials.fields.budgetHint')}
+          error={
+            budgetError ? t('credentials.fields.budgetInvalid') : undefined
+          }
           value={budget}
           onChange={(event) => setBudget(event.target.value)}
         />
-        <Typography variant="body-3" as="label" className="flex items-center gap-2">
+        <Typography
+          variant="body-3"
+          as="label"
+          className="flex items-center gap-2">
           <input
             type="checkbox"
             checked={isDefault}
             onChange={(event) => setIsDefault(event.target.checked)}
           />
-          {t("credentials.fields.isDefault")}
+          {t('credentials.fields.isDefault')}
         </Typography>
         {/* `useMessage` turns the error KEY into text at render time — the api
             layer returns a key so the sentence follows the reader's locale. */}
@@ -440,62 +460,66 @@ function EditDialog({ row, onClose }: { row: AiCredential; onClose: () => void }
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
-            {tc("actions.cancel")}
+            {tc('actions.cancel')}
           </Button>
           <Button onClick={() => void save()} loading={update.isPending}>
-            {tc("actions.save")}
+            {tc('actions.save')}
           </Button>
         </div>
       </div>
     </Dialog>
-  );
+  )
 }
 
-function DeleteDialog({ row, onClose }: { row: AiCredential; onClose: () => void }) {
-  const t = useTranslations("admin.qa");
-  const tc = useTranslations("common");
-  const m = useMessage();
-  const remove = useDeleteAiCredential();
-  const [formError, setFormError] = useState<Message | string | null>(null);
+function DeleteDialog({
+  row,
+  onClose,
+}: {
+  row: AiCredential
+  onClose: () => void
+}) {
+  const t = useTranslations('admin.qa')
+  const tc = useTranslations('common')
+  const m = useMessage()
+  const remove = useDeleteAiCredential()
+  const [formError, setFormError] = useState<Message | string | null>(null)
 
   const confirm = async () => {
-    setFormError(null);
+    setFormError(null)
     try {
-      await remove.mutateAsync(row.id);
-      onClose();
+      await remove.mutateAsync(row.id)
+      onClose()
     } catch (error) {
       // A run that started after the list loaded lands here as
       // AI_CREDENTIAL_IN_USE; the backend message says to disable instead.
-      setFormError(applyApiError(error, () => undefined, []));
+      setFormError(applyApiError(error, () => undefined, []))
     }
-  };
+  }
 
   return (
     <Dialog
       open
       onClose={onClose}
-      title={t("credentials.deleteTitle", { label: row.label })}
-    >
+      title={t('credentials.deleteTitle', {label: row.label})}>
       <div className="space-y-4">
-        <Typography variant="body-3">{t("credentials.deleteBody")}</Typography>
+        <Typography variant="body-3">{t('credentials.deleteBody')}</Typography>
         {formError ? <AlertError message={m(formError)} /> : null}
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
-            {tc("actions.cancel")}
+            {tc('actions.cancel')}
           </Button>
           <Button
             className="text-danger"
             variant="outline"
             onClick={() => void confirm()}
-            loading={remove.isPending}
-          >
-            {t("credentials.delete")}
+            loading={remove.isPending}>
+            {t('credentials.delete')}
           </Button>
         </div>
       </div>
     </Dialog>
-  );
+  )
 }
 
 function ModelSelect({
@@ -504,22 +528,26 @@ function ModelSelect({
   error,
   registration,
 }: {
-  models: ReturnType<typeof useAiModels>["data"] & object;
-  loading: boolean;
-  error?: string;
-  registration: ReturnType<ReturnType<typeof useForm<CreateCredentialInput>>["register"]>;
+  models: ReturnType<typeof useAiModels>['data'] & object
+  loading: boolean
+  error?: string
+  registration: ReturnType<
+    ReturnType<typeof useForm<CreateCredentialInput>>['register']
+  >
 }) {
-  const t = useTranslations("admin.qa");
+  const t = useTranslations('admin.qa')
 
   return (
     <Select
-      label={t("credentials.fields.model")}
-      placeholder={loading ? t("loading") : t("credentials.fields.modelPlaceholder")}
+      label={t('credentials.fields.model')}
+      placeholder={
+        loading ? t('loading') : t('credentials.fields.modelPlaceholder')
+      }
       error={error}
       options={modelOptions(models, t)}
       {...registration}
     />
-  );
+  )
 }
 
 /**
@@ -529,23 +557,23 @@ function ModelSelect({
  */
 function modelOptions(
   models: AiModel[],
-  t: ReturnType<typeof useTranslations<"admin.qa">>,
+  t: ReturnType<typeof useTranslations<'admin.qa'>>,
 ) {
   return models.map((model) => ({
     value: model.id,
     // The two limits decide whether a long source fits before anything is
     // billed (QA_CONTEXT_EXCEEDED / QA_OUTPUT_EXCEEDED) — worth seeing at pick time.
     label: !model.enabled
-      ? t("credentials.modelDisabled", { label: model.label })
+      ? t('credentials.modelDisabled', {label: model.label})
       : model.supportsStructuredOutput
-        ? t("credentials.modelOption", {
+        ? t('credentials.modelOption', {
             label: model.label,
             context: model.contextWindow,
             output: model.maxOutputTokens,
           })
-        : t("credentials.modelUnsupported", { label: model.label }),
+        : t('credentials.modelUnsupported', {label: model.label}),
     disabled: !model.enabled || !model.supportsStructuredOutput,
-  }));
+  }))
 }
 
 /**
@@ -554,8 +582,8 @@ function modelOptions(
  * (zod in the add form, the check in the edit form) is what rejects it.
  */
 function parseBudget(value: unknown): number | null {
-  if (value === "" || value === null || value === undefined) return null;
-  return Number(value);
+  if (value === '' || value === null || value === undefined) return null
+  return Number(value)
 }
 
 function SkeletonRows() {
@@ -563,7 +591,7 @@ function SkeletonRows() {
     <>
       {[0, 1, 2].map((row) => (
         <TableRow key={row}>
-          {Array.from({ length: COLUMN_COUNT }).map((_, cell) => (
+          {Array.from({length: COLUMN_COUNT}).map((_, cell) => (
             <TableCell key={cell}>
               <Skeleton className="h-4 w-full" />
             </TableCell>
@@ -571,5 +599,5 @@ function SkeletonRows() {
         </TableRow>
       ))}
     </>
-  );
+  )
 }

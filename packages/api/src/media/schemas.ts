@@ -1,8 +1,8 @@
-import { z } from "zod";
+import {z} from 'zod'
 
-import type { Message } from "../message";
+import type {Message} from '../message'
 
-import type { MediaKind, UploadFile } from "./types";
+import type {MediaKind, UploadFile} from './types'
 
 /* ------------------------------------------------------------------------- *
  * Allowlist — a copy of the backend's `src/media/media-limits.ts`
@@ -20,24 +20,24 @@ import type { MediaKind, UploadFile } from "./types";
  * error appears later — it is not a security hole.
  */
 export const MEDIA_MIME_TO_KIND: Record<string, MediaKind> = {
-  "image/jpeg": "image",
-  "image/png": "image",
-  "image/webp": "image",
-  "image/avif": "image",
-  "image/svg+xml": "image",
-  "video/mp4": "video",
-  "video/webm": "video",
-  "application/pdf": "file",
-  "application/zip": "file",
-};
+  'image/jpeg': 'image',
+  'image/png': 'image',
+  'image/webp': 'image',
+  'image/avif': 'image',
+  'image/svg+xml': 'image',
+  'video/mp4': 'video',
+  'video/webm': 'video',
+  'application/pdf': 'file',
+  'application/zip': 'file',
+}
 
-const MB = 1024 * 1024;
+const MB = 1024 * 1024
 
 export const MEDIA_KIND_MAX_BYTES: Record<MediaKind, number> = {
   image: 10 * MB,
   video: 200 * MB,
   file: 25 * MB,
-};
+}
 
 /**
  * SVG is far more restricted than ordinary images: the backend's `complete`
@@ -45,27 +45,27 @@ export const MEDIA_KIND_MAX_BYTES: Record<MediaKind, number> = {
  * on the server's RAM — unlike every other mime, which only needs the first 512
  * bytes.
  */
-export const SVG_MIME = "image/svg+xml";
-export const SVG_MAX_BYTES = 512 * 1024;
+export const SVG_MIME = 'image/svg+xml'
+export const SVG_MAX_BYTES = 512 * 1024
 
 /** Only the `kind === "image"` mimes — used for the image input's `accept`. */
 export const MEDIA_IMAGE_MIMES = Object.keys(MEDIA_MIME_TO_KIND).filter(
-  (mime) => MEDIA_MIME_TO_KIND[mime] === "image",
-);
+  (mime) => MEDIA_MIME_TO_KIND[mime] === 'image',
+)
 
 export function mediaKindOf(mime: string): MediaKind | null {
-  return MEDIA_MIME_TO_KIND[mime] ?? null;
+  return MEDIA_MIME_TO_KIND[mime] ?? null
 }
 
 export function maxBytesForMime(mime: string): number | null {
-  const kind = mediaKindOf(mime);
-  if (!kind) return null;
-  return mime === SVG_MIME ? SVG_MAX_BYTES : MEDIA_KIND_MAX_BYTES[kind];
+  const kind = mediaKindOf(mime)
+  if (!kind) return null
+  return mime === SVG_MIME ? SVG_MAX_BYTES : MEDIA_KIND_MAX_BYTES[kind]
 }
 
 function formatBytes(bytes: number): string {
-  if (bytes >= MB) return `${Math.round(bytes / MB)} MB`;
-  return `${Math.round(bytes / 1024)} KB`;
+  if (bytes >= MB) return `${Math.round(bytes / MB)} MB`
+  return `${Math.round(bytes / 1024)} KB`
 }
 
 /**
@@ -78,48 +78,48 @@ function formatBytes(bytes: number): string {
  */
 export function describeMediaRejection(
   file: UploadFile,
-  options: { allow?: readonly string[] } = {},
+  options: {allow?: readonly string[]} = {},
 ): Message | null {
-  const allow = options.allow ?? Object.keys(MEDIA_MIME_TO_KIND);
-  const mime = file.type || "application/octet-stream";
+  const allow = options.allow ?? Object.keys(MEDIA_MIME_TO_KIND)
+  const mime = file.type || 'application/octet-stream'
   if (!allow.includes(mime)) {
     return {
-      key: "validation.file.typeNotAllowed",
+      key: 'validation.file.typeNotAllowed',
       values: {
         type: mime,
-        allowed: allow.map((m) => m.replace(/^[a-z]+\//, "")).join(", "),
+        allowed: allow.map((m) => m.replace(/^[a-z]+\//, '')).join(', '),
       },
-    };
+    }
   }
-  const fileSize = typeof file.size === "number" ? file.size : 0;
-  const max = maxBytesForMime(mime);
+  const fileSize = typeof file.size === 'number' ? file.size : 0
+  const max = maxBytesForMime(mime)
   if (max !== null && fileSize > max) {
     return {
-      key: "validation.file.tooLarge",
-      values: { size: formatBytes(fileSize), max: formatBytes(max) },
-    };
+      key: 'validation.file.tooLarge',
+      values: {size: formatBytes(fileSize), max: formatBytes(max)},
+    }
   }
-  if (file.size === 0) return { key: "validation.file.empty" };
-  return null;
+  if (file.size === 0) return {key: 'validation.file.empty'}
+  return null
 }
 
 /* ------------------------------------------------------------------------- *
  * Response schemas
  * ------------------------------------------------------------------------- */
 
-const mediaKindSchema = z.enum(["image", "video", "file"]);
+const mediaKindSchema = z.enum(['image', 'video', 'file'])
 
 export const presignedUploadSchema = z.object({
   id: z.string(),
   kind: mediaKindSchema,
   uploadUrl: z.string(),
   expiresIn: z.number(),
-});
+})
 
 export const mediaAssetSchema = z.object({
   id: z.string(),
   kind: mediaKindSchema,
-  status: z.enum(["pending", "ready"]),
+  status: z.enum(['pending', 'ready']),
   url: z.string(),
   mime: z.string(),
   sizeBytes: z.number(),
@@ -129,4 +129,4 @@ export const mediaAssetSchema = z.object({
   durationMs: z.number().nullable(),
   checksum: z.string().nullable(),
   createdAt: z.string(),
-});
+})

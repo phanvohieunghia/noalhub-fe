@@ -1,6 +1,6 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import type {Meta, StoryObj} from '@storybook/nextjs-vite'
+import {useTranslations} from 'next-intl'
+import {useMemo, useState} from 'react'
 import {
   TableRoot,
   TableHead,
@@ -13,28 +13,46 @@ import {
   TableActionsHeaderCell,
   TableRowActions,
   type SortDirection,
-} from "@noalhub/ui/table";
-import { DropdownMenuItem } from "@noalhub/ui/dropdown-menu";
-import { Icon, ICONS } from "@noalhub/ui/icons";
-import { Badge } from "@noalhub/ui/badge";
-import { Skeleton } from "@noalhub/ui/skeleton";
+} from '@noalhub/ui/table'
+import {DropdownMenuItem} from '@noalhub/ui/dropdown-menu'
+import {Icon, ICONS} from '@noalhub/ui/icons'
+import {Badge} from '@noalhub/ui/badge'
+import {Skeleton} from '@noalhub/ui/skeleton'
 
 const meta: Meta<typeof TableRoot> = {
-  title: "UI/Data Display/Table",
+  title: 'UI/Data Display/Table',
   component: TableRoot,
   parameters: {
-    layout: "padded",
+    layout: 'padded',
   },
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof TableRoot>;
+export default meta
+type Story = StoryObj<typeof TableRoot>
 
 const sampleUsers = [
-  { id: 1, nameKey: "personA", email: "a@gmail.com", role: "admin", status: "active" },
-  { id: 2, nameKey: "personB", email: "b@gmail.com", role: "editor", status: "active" },
-  { id: 3, nameKey: "personC", email: "c@gmail.com", role: "viewer", status: "suspended" },
-];
+  {
+    id: 1,
+    nameKey: 'personA',
+    email: 'a@gmail.com',
+    role: 'admin',
+    status: 'active',
+  },
+  {
+    id: 2,
+    nameKey: 'personB',
+    email: 'b@gmail.com',
+    role: 'editor',
+    status: 'active',
+  },
+  {
+    id: 3,
+    nameKey: 'personC',
+    email: 'c@gmail.com',
+    role: 'viewer',
+    status: 'suspended',
+  },
+]
 
 /*
  * Person names and column headers come from `sb.table`; `email`/`role`/`status`
@@ -42,38 +60,38 @@ const sampleUsers = [
  */
 export const Default: Story = {
   render: function DefaultStory() {
-    const t = useTranslations("sb.table");
+    const t = useTranslations('sb.table')
 
     return (
-    <TableRoot caption={t("caption")}>
-      <TableHead>
-        <TableRow>
-          <TableHeaderCell>{t("id")}</TableHeaderCell>
-          <TableHeaderCell>{t("columns.name")}</TableHeaderCell>
-          <TableHeaderCell>{t("columns.email")}</TableHeaderCell>
-          <TableHeaderCell>{t("columns.role")}</TableHeaderCell>
-          <TableHeaderCell>{t("columns.status")}</TableHeaderCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {sampleUsers.map((user) => (
-          <TableRow key={user.id}>
-            <TableCell>{user.id}</TableCell>
-            <TableCell weight={500}>{t(user.nameKey)}</TableCell>
-            <TableCell>{user.email}</TableCell>
-            <TableCell>{user.role}</TableCell>
-            <TableCell>
-              <Badge tone={user.status === "active" ? "success" : "warning"}>
-                {user.status}
-              </Badge>
-            </TableCell>
+      <TableRoot caption={t('caption')}>
+        <TableHead>
+          <TableRow>
+            <TableHeaderCell>{t('id')}</TableHeaderCell>
+            <TableHeaderCell>{t('columns.name')}</TableHeaderCell>
+            <TableHeaderCell>{t('columns.email')}</TableHeaderCell>
+            <TableHeaderCell>{t('columns.role')}</TableHeaderCell>
+            <TableHeaderCell>{t('columns.status')}</TableHeaderCell>
           </TableRow>
-        ))}
-      </TableBody>
-    </TableRoot>
-    );
+        </TableHead>
+        <TableBody>
+          {sampleUsers.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell>{user.id}</TableCell>
+              <TableCell weight={500}>{t(user.nameKey)}</TableCell>
+              <TableCell>{user.email}</TableCell>
+              <TableCell>{user.role}</TableCell>
+              <TableCell>
+                <Badge tone={user.status === 'active' ? 'success' : 'warning'}>
+                  {user.status}
+                </Badge>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </TableRoot>
+    )
   },
-};
+}
 
 /*
  * ---------------------------------------------------------------------------
@@ -86,30 +104,31 @@ export const Default: Story = {
  * them to the list request.
  */
 
-type SortKey = "name" | "createdAt";
+type SortKey = 'name' | 'createdAt'
 
 /** asc → desc → off, exactly the cycle `useSlugFilters().toggleSort` implements. */
 function useServerSort() {
-  const [sort, setSort] = useState<SortKey | null>(null);
-  const [order, setOrder] = useState<"asc" | "desc">("asc");
+  const [sort, setSort] = useState<SortKey | null>(null)
+  const [order, setOrder] = useState<'asc' | 'desc'>('asc')
 
   const toggle = (key: SortKey) => {
-    if (sort !== key) return (setSort(key), setOrder("asc"));
-    if (order === "asc") return setOrder("desc");
-    setSort(null);
-  };
+    if (sort !== key) return (setSort(key), setOrder('asc'))
+    if (order === 'asc') return setOrder('desc')
+    setSort(null)
+  }
 
-  const directionOf = (key: SortKey): SortDirection => (sort === key ? order : false);
+  const directionOf = (key: SortKey): SortDirection =>
+    sort === key ? order : false
 
-  return { sort, order, toggle, directionOf };
+  return {sort, order, toggle, directionOf}
 }
 
 const sortableRows = [
-  { id: 1, nameKey: "personA", createdAt: "2026-01-12" },
-  { id: 2, nameKey: "personB", createdAt: "2025-11-03" },
-  { id: 3, nameKey: "personC", createdAt: "2026-03-28" },
-  { id: 4, nameKey: "personD", createdAt: "2025-08-19" },
-];
+  {id: 1, nameKey: 'personA', createdAt: '2026-01-12'},
+  {id: 2, nameKey: 'personB', createdAt: '2025-11-03'},
+  {id: 3, nameKey: 'personC', createdAt: '2026-03-28'},
+  {id: 4, nameKey: 'personD', createdAt: '2025-08-19'},
+]
 
 /**
  * The interactive version. Click a header twice to reverse it and a third time
@@ -122,8 +141,8 @@ const sortableRows = [
  */
 export const Sortable: Story = {
   render: function SortableTable() {
-    const t = useTranslations("sb.table");
-    const { sort, order, toggle, directionOf } = useServerSort();
+    const t = useTranslations('sb.table')
+    const {sort, order, toggle, directionOf} = useServerSort()
 
     /*
      * Translate FIRST, then sort: `localeCompare` has to run on the text the user
@@ -131,34 +150,32 @@ export const Sortable: Story = {
      * following Vietnamese.
      */
     const rows = useMemo(() => {
-      const named = sortableRows.map((row) => ({ ...row, name: t(row.nameKey) }));
-      if (!sort) return named;
-      const sorted = [...named].sort((a, b) => a[sort].localeCompare(b[sort]));
-      return order === "asc" ? sorted : sorted.reverse();
-    }, [sort, order, t]);
+      const named = sortableRows.map((row) => ({...row, name: t(row.nameKey)}))
+      if (!sort) return named
+      const sorted = [...named].sort((a, b) => a[sort].localeCompare(b[sort]))
+      return order === 'asc' ? sorted : sorted.reverse()
+    }, [sort, order, t])
 
     return (
       <div className="flex flex-col gap-3">
         <code className="text-body-4 text-muted-foreground">
-          GET /api/…?sort={sort ?? "—"}&order={sort ? order : "—"}
+          GET /api/…?sort={sort ?? '—'}&order={sort ? order : '—'}
         </code>
-        <TableRoot caption={t("sortable")}>
+        <TableRoot caption={t('sortable')}>
           <TableHead>
             <TableRow>
               <TableSortHeaderCell
-                direction={directionOf("name")}
-                onToggle={() => toggle("name")}
-                sortHint={t("sortHint", { column: t("columns.name") })}
-              >
-                {t("columns.name")}
+                direction={directionOf('name')}
+                onToggle={() => toggle('name')}
+                sortHint={t('sortHint', {column: t('columns.name')})}>
+                {t('columns.name')}
               </TableSortHeaderCell>
-              <TableHeaderCell>{t("columns.email")}</TableHeaderCell>
+              <TableHeaderCell>{t('columns.email')}</TableHeaderCell>
               <TableSortHeaderCell
-                direction={directionOf("createdAt")}
-                onToggle={() => toggle("createdAt")}
-                sortHint={t("sortHint", { column: t("columns.createdAt") })}
-              >
-                {t("columns.createdAt")}
+                direction={directionOf('createdAt')}
+                onToggle={() => toggle('createdAt')}
+                sortHint={t('sortHint', {column: t('columns.createdAt')})}>
+                {t('columns.createdAt')}
               </TableSortHeaderCell>
             </TableRow>
           </TableHead>
@@ -167,15 +184,17 @@ export const Sortable: Story = {
               <TableRow key={row.id}>
                 <TableCell weight={500}>{row.name}</TableCell>
                 <TableCell>{`user${row.id}@gmail.com`}</TableCell>
-                <TableCell className="whitespace-nowrap">{row.createdAt}</TableCell>
+                <TableCell className="whitespace-nowrap">
+                  {row.createdAt}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </TableRoot>
       </div>
-    );
+    )
   },
-};
+}
 
 /**
  * The three states side by side. The inactive column keeps a faint neutral icon
@@ -184,20 +203,29 @@ export const Sortable: Story = {
  */
 export const SortStates: Story = {
   render: function SortStatesStory() {
-    const t = useTranslations("sb.table");
+    const t = useTranslations('sb.table')
 
     return (
-      <TableRoot caption={t("threeStates")}>
+      <TableRoot caption={t('threeStates')}>
         <TableHead>
           <TableRow>
-            <TableSortHeaderCell direction={false} onToggle={() => {}} sortHint={t("unsorted")}>
-              {t("unsortedShort")}
+            <TableSortHeaderCell
+              direction={false}
+              onToggle={() => {}}
+              sortHint={t('unsorted')}>
+              {t('unsortedShort')}
             </TableSortHeaderCell>
-            <TableSortHeaderCell direction="asc" onToggle={() => {}} sortHint={t("asc")}>
-              {t("asc")}
+            <TableSortHeaderCell
+              direction="asc"
+              onToggle={() => {}}
+              sortHint={t('asc')}>
+              {t('asc')}
             </TableSortHeaderCell>
-            <TableSortHeaderCell direction="desc" onToggle={() => {}} sortHint={t("desc")}>
-              {t("desc")}
+            <TableSortHeaderCell
+              direction="desc"
+              onToggle={() => {}}
+              sortHint={t('desc')}>
+              {t('desc')}
             </TableSortHeaderCell>
           </TableRow>
         </TableHead>
@@ -209,9 +237,9 @@ export const SortStates: Story = {
           </TableRow>
         </TableBody>
       </TableRoot>
-    );
+    )
   },
-};
+}
 
 /**
  * More columns than the frame is wide. The table scrolls INSIDE its own border
@@ -220,69 +248,70 @@ export const SortStates: Story = {
  */
 export const Scrollable: Story = {
   render: function ScrollableStory() {
-    const t = useTranslations("sb.table");
+    const t = useTranslations('sb.table')
 
     return (
       <div className="max-w-lg">
-        <TableRoot caption={t("wide")}>
+        <TableRoot caption={t('wide')}>
           <TableHead>
             <TableRow>
               {[
-                t("id"),
-                t("columns.name"),
-                t("columns.email"),
-                t("columns.role"),
-                t("columns.status"),
-                t("columns.createdAt"),
-                t("note"),
-              ].map(
-                (column) => (
-                  <TableHeaderCell key={column}>{column}</TableHeaderCell>
-                ),
-              )}
+                t('id'),
+                t('columns.name'),
+                t('columns.email'),
+                t('columns.role'),
+                t('columns.status'),
+                t('columns.createdAt'),
+                t('note'),
+              ].map((column) => (
+                <TableHeaderCell key={column}>{column}</TableHeaderCell>
+              ))}
             </TableRow>
           </TableHead>
           <TableBody>
             {sampleUsers.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>{user.id}</TableCell>
-                <TableCell weight={500} className="whitespace-nowrap">{t(user.nameKey)}</TableCell>
+                <TableCell weight={500} className="whitespace-nowrap">
+                  {t(user.nameKey)}
+                </TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.role}</TableCell>
                 <TableCell>
-                  <Badge tone={user.status === "active" ? "success" : "warning"}>
+                  <Badge
+                    tone={user.status === 'active' ? 'success' : 'warning'}>
                     {user.status}
                   </Badge>
                 </TableCell>
                 <TableCell className="whitespace-nowrap">2026-01-12</TableCell>
-                <TableCell className="whitespace-nowrap">{t("none")}</TableCell>
+                <TableCell className="whitespace-nowrap">{t('none')}</TableCell>
               </TableRow>
             ))}
           </TableBody>
         </TableRoot>
       </div>
-    );
+    )
   },
-};
+}
 
 /** What the admin screens render while the first page is in flight. */
 export const Loading: Story = {
   render: function LoadingStory() {
-    const t = useTranslations("sb.table");
+    const t = useTranslations('sb.table')
 
     return (
-      <TableRoot caption={t("loading")}>
+      <TableRoot caption={t('loading')}>
         <TableHead>
           <TableRow>
             <TableHeaderCell>ID</TableHeaderCell>
-            <TableHeaderCell>{t("columns.name")}</TableHeaderCell>
+            <TableHeaderCell>{t('columns.name')}</TableHeaderCell>
             <TableHeaderCell>Email</TableHeaderCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {Array.from({ length: 4 }).map((_, row) => (
+          {Array.from({length: 4}).map((_, row) => (
             <TableRow key={row}>
-              {Array.from({ length: 3 }).map((__, cell) => (
+              {Array.from({length: 3}).map((__, cell) => (
                 <TableCell key={cell}>
                   <Skeleton className="h-4 w-full" />
                 </TableCell>
@@ -291,30 +320,30 @@ export const Loading: Story = {
           ))}
         </TableBody>
       </TableRoot>
-    );
+    )
   },
-};
+}
 
 export const EmptyState: Story = {
   render: function EmptyStateStory() {
-    const t = useTranslations("sb.table");
+    const t = useTranslations('sb.table')
 
     return (
-      <TableRoot caption={t("empty")}>
+      <TableRoot caption={t('empty')}>
         <TableHead>
           <TableRow>
             <TableHeaderCell>ID</TableHeaderCell>
-            <TableHeaderCell>{t("columns.name")}</TableHeaderCell>
+            <TableHeaderCell>{t('columns.name')}</TableHeaderCell>
             <TableHeaderCell>Email</TableHeaderCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          <TableEmptyRow colSpan={3}>{t("noResults")}</TableEmptyRow>
+          <TableEmptyRow colSpan={3}>{t('noResults')}</TableEmptyRow>
         </TableBody>
       </TableRoot>
-    );
+    )
   },
-};
+}
 
 /**
  * A row with an actions column. The row itself is the primary action (open /
@@ -323,37 +352,40 @@ export const EmptyState: Story = {
  */
 export const RowActions: Story = {
   render: function RowActionsStory() {
-    const t = useTranslations("sb.table");
-    const [last, setLast] = useState<string | null>(null);
+    const t = useTranslations('sb.table')
+    const [last, setLast] = useState<string | null>(null)
 
     return (
       <div className="flex flex-col gap-3">
-        <code className="text-body-4 text-muted-foreground">{last ?? "—"}</code>
-        <TableRoot caption={t("caption")}>
+        <code className="text-body-4 text-muted-foreground">{last ?? '—'}</code>
+        <TableRoot caption={t('caption')}>
           <TableHead>
             <TableRow>
-              <TableHeaderCell>{t("columns.name")}</TableHeaderCell>
-              <TableHeaderCell>{t("columns.email")}</TableHeaderCell>
-              <TableHeaderCell>{t("columns.role")}</TableHeaderCell>
-              <TableActionsHeaderCell label={t("actions.column")} />
+              <TableHeaderCell>{t('columns.name')}</TableHeaderCell>
+              <TableHeaderCell>{t('columns.email')}</TableHeaderCell>
+              <TableHeaderCell>{t('columns.role')}</TableHeaderCell>
+              <TableActionsHeaderCell label={t('actions.column')} />
             </TableRow>
           </TableHead>
           <TableBody>
             {sampleUsers.map((user) => (
-              <TableRow key={user.id} onActivate={() => setLast(`open #${user.id}`)}>
+              <TableRow
+                key={user.id}
+                onActivate={() => setLast(`open #${user.id}`)}>
                 <TableCell weight={500}>{t(user.nameKey)}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.role}</TableCell>
-                <TableRowActions label={t("actions.label")}>
-                  <DropdownMenuItem icon={ICONS.copy} onSelect={() => setLast(`duplicate #${user.id}`)}>
-                    {t("actions.duplicate")}
+                <TableRowActions label={t('actions.label')}>
+                  <DropdownMenuItem
+                    icon={ICONS.copy}
+                    onSelect={() => setLast(`duplicate #${user.id}`)}>
+                    {t('actions.duplicate')}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     icon={ICONS.delete}
                     tone="danger"
-                    onSelect={() => setLast(`delete #${user.id}`)}
-                  >
-                    {t("actions.delete")}
+                    onSelect={() => setLast(`delete #${user.id}`)}>
+                    {t('actions.delete')}
                   </DropdownMenuItem>
                 </TableRowActions>
               </TableRow>
@@ -361,6 +393,6 @@ export const RowActions: Story = {
           </TableBody>
         </TableRoot>
       </div>
-    );
+    )
   },
-};
+}

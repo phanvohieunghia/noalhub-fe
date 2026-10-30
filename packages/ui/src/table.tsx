@@ -1,12 +1,12 @@
-"use client";
+'use client'
 
-import { useLayoutEffect, useRef } from "react";
+import {useLayoutEffect, useRef} from 'react'
 
-import { Button } from "./button";
-import { DropdownMenu } from "./dropdown-menu";
-import { Icon, ICONS } from "./icons";
-import { Tooltip } from "./tooltip";
-import { Typography, type Weight } from "./typography";
+import {Button} from './button'
+import {DropdownMenu} from './dropdown-menu'
+import {Icon, ICONS} from './icons'
+import {Tooltip} from './tooltip'
+import {Typography, type Weight} from './typography'
 
 /**
  * A "bare" table: styling and a11y only — no state, no knowledge of pagination
@@ -24,45 +24,44 @@ import { Typography, type Weight } from "./typography";
  */
 export function TableRoot({
   caption,
-  className = "",
-  scrollClassName = "",
+  className = '',
+  scrollClassName = '',
   footer,
   fit = true,
   children,
 }: {
   /** A description for screen readers; visually hidden since the page title already says it. */
-  caption: string;
-  className?: string;
+  caption: string
+  className?: string
   /** On the scroll region: a `max-h-*` here makes the rows scroll under a sticky header. */
-  scrollClassName?: string;
+  scrollClassName?: string
   /** Drawn inside the frame under the rows, behind a divider: the count and pager. */
-  footer?: React.ReactNode;
+  footer?: React.ReactNode
   /** Cap the frame at the viewport's bottom edge so only the rows scroll. Default `true`. */
-  fit?: boolean;
-  children: React.ReactNode;
+  fit?: boolean
+  children: React.ReactNode
 }) {
-  const frameRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
-    const frame = frameRef.current;
-    if (!fit || !frame) return;
+    const frame = frameRef.current
+    if (!fit || !frame) return
     const resize = () => {
-      const height = window.innerHeight - frame.getBoundingClientRect().top - 24;
-      frame.style.maxHeight = `${Math.max(height, 240)}px`;
-    };
-    resize();
-    window.addEventListener("resize", resize);
+      const height = window.innerHeight - frame.getBoundingClientRect().top - 24
+      frame.style.maxHeight = `${Math.max(height, 240)}px`
+    }
+    resize()
+    window.addEventListener('resize', resize)
     return () => {
-      window.removeEventListener("resize", resize);
-      frame.style.maxHeight = "";
-    };
-  });
+      window.removeEventListener('resize', resize)
+      frame.style.maxHeight = ''
+    }
+  })
 
   return (
     <div
       ref={frameRef}
-      className={`flex flex-col overflow-hidden rounded-lg border border-border bg-surface ${className}`}
-    >
+      className={`flex flex-col overflow-hidden rounded-lg border border-border bg-surface ${className}`}>
       {/*
         `tabIndex` because this element scrolls: a scrollable region a keyboard
         cannot reach hides the right-hand columns from anyone not using a mouse
@@ -74,16 +73,17 @@ export function TableRoot({
         tabIndex={0}
         role="region"
         aria-label={caption}
-        className={`min-h-0 w-full flex-1 overflow-auto overscroll-contain ${scrollClassName} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset`}
-      >
+        className={`min-h-0 w-full flex-1 overflow-auto overscroll-contain ${scrollClassName} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset`}>
         <table className="w-full border-collapse text-left text-body-3">
           <caption className="sr-only">{caption}</caption>
           {children}
         </table>
       </div>
-      {footer ? <div className="shrink-0 border-t border-border">{footer}</div> : null}
+      {footer ? (
+        <div className="shrink-0 border-t border-border">{footer}</div>
+      ) : null}
     </div>
-  );
+  )
 }
 
 /**
@@ -91,17 +91,21 @@ export function TableRoot({
  * what the Figma `Table` does. The column names are `title-4` in the foreground
  * colour, so they stand out from the data without a tinted band.
  */
-export function TableHead({ children }: { children: React.ReactNode }) {
-  return <thead className="sticky top-0 z-10 border-b border-border bg-surface">{children}</thead>;
+export function TableHead({children}: {children: React.ReactNode}) {
+  return (
+    <thead className="sticky top-0 z-10 border-b border-border bg-surface">
+      {children}
+    </thead>
+  )
 }
 
-export function TableBody({ children }: { children: React.ReactNode }) {
-  return <tbody className="divide-y divide-border">{children}</tbody>;
+export function TableBody({children}: {children: React.ReactNode}) {
+  return <tbody className="divide-y divide-border">{children}</tbody>
 }
 
 /** Anything inside a row that has its own click meaning; a click on it must not also activate the row. */
 const INTERACTIVE =
-  'a, button, input, select, textarea, label, summary, [role="button"], [role="checkbox"], [role="switch"], [role="menuitem"], [data-no-row-activate]';
+  'a, button, input, select, textarea, label, summary, [role="button"], [role="checkbox"], [role="switch"], [role="menuitem"], [data-no-row-activate]'
 
 /**
  * Props that make a `<tr>` the primary action. For the rare row that cannot be a
@@ -111,19 +115,20 @@ const INTERACTIVE =
  * button or field inside it, and not at the end of a text selection.
  */
 export function rowActivateProps(onActivate?: () => void) {
-  if (!onActivate) return {};
+  if (!onActivate) return {}
   return {
     tabIndex: 0,
     onClick: (event: React.MouseEvent<HTMLTableRowElement>) => {
-      if ((event.target as HTMLElement).closest(INTERACTIVE)) return;
-      if (window.getSelection()?.toString()) return;
-      onActivate();
+      if ((event.target as HTMLElement).closest(INTERACTIVE)) return
+      if (window.getSelection()?.toString()) return
+      onActivate()
     },
     onKeyDown: (event: React.KeyboardEvent<HTMLTableRowElement>) => {
       // Only the row itself: Enter on a link or button inside must keep its own meaning.
-      if (event.key === "Enter" && event.target === event.currentTarget) onActivate();
+      if (event.key === 'Enter' && event.target === event.currentTarget)
+        onActivate()
     },
-  };
+  }
 }
 
 /**
@@ -133,31 +138,30 @@ export function rowActivateProps(onActivate?: () => void) {
  * Secondary actions (duplicate, delete) live in a `TableRowActions` cell instead.
  */
 export function TableRow({
-  className = "",
+  className = '',
   children,
   onActivate,
   ...props
-}: React.ComponentPropsWithoutRef<"tr"> & { onActivate?: () => void }) {
+}: React.ComponentPropsWithoutRef<'tr'> & {onActivate?: () => void}) {
   return (
     <tr
       className={`transition-colors hover:bg-muted/60 ${
         onActivate
-          ? "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-          : ""
+          ? 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset'
+          : ''
       } ${className}`}
       {...rowActivateProps(onActivate)}
-      {...props}
-    >
+      {...props}>
       {children}
     </tr>
-  );
+  )
 }
 
 export function TableHeaderCell({
-  className = "",
+  className = '',
   children,
   ...props
-}: React.ComponentPropsWithoutRef<"th">) {
+}: React.ComponentPropsWithoutRef<'th'>) {
   return (
     <Typography
       as="th"
@@ -165,30 +169,28 @@ export function TableHeaderCell({
       weight={600}
       scope="col"
       className={`px-4 py-[18px] whitespace-nowrap text-foreground ${className}`}
-      {...props}
-    >
+      {...props}>
       {children}
     </Typography>
-  );
+  )
 }
 
 export function TableCell({
   weight,
-  className = "",
+  className = '',
   children,
   ...props
-}: React.ComponentPropsWithoutRef<"td"> & { weight?: Weight }) {
+}: React.ComponentPropsWithoutRef<'td'> & {weight?: Weight}) {
   return (
     <Typography
       as="td"
       variant="body-3"
       weight={weight}
       className={`px-4 py-3 align-middle ${className}`}
-      {...(props as React.HTMLAttributes<HTMLElement>)}
-    >
+      {...(props as React.HTMLAttributes<HTMLElement>)}>
       {children}
     </Typography>
-  );
+  )
 }
 
 /**
@@ -200,8 +202,8 @@ export function TableEmptyRow({
   colSpan,
   children,
 }: {
-  colSpan: number;
-  children: React.ReactNode;
+  colSpan: number
+  children: React.ReactNode
 }) {
   return (
     <tr>
@@ -209,16 +211,15 @@ export function TableEmptyRow({
         as="td"
         variant="body-3"
         colSpan={colSpan}
-        className="px-4 py-12 text-center text-muted-foreground"
-      >
+        className="px-4 py-12 text-center text-muted-foreground">
         {children}
       </Typography>
     </tr>
-  );
+  )
 }
 
 /** `false` = this column is not the one being sorted on. */
-export type SortDirection = "asc" | "desc" | false;
+export type SortDirection = 'asc' | 'desc' | false
 
 /**
  * A sortable column header: three states, cycling asc → desc → off.
@@ -244,27 +245,36 @@ export function TableSortHeaderCell({
   direction = false,
   onToggle,
   sortHint,
-  className = "",
+  className = '',
   children,
   ...props
-}: Omit<React.ComponentPropsWithoutRef<"th">, "onToggle"> & {
+}: Omit<React.ComponentPropsWithoutRef<'th'>, 'onToggle'> & {
   /** Omitted or `false` = not sorted on: the neutral up-down icon. Only `asc` / `desc` change the variant. */
-  direction?: SortDirection;
-  onToggle: () => void;
-  sortHint: string;
+  direction?: SortDirection
+  onToggle: () => void
+  sortHint: string
 }) {
   const icon =
-    direction === "asc" ? ICONS.sortAsc : direction === "desc" ? ICONS.sortDesc : ICONS.sortNone;
+    direction === 'asc'
+      ? ICONS.sortAsc
+      : direction === 'desc'
+        ? ICONS.sortDesc
+        : ICONS.sortNone
 
   return (
     <TableHeaderCell
       // `aria-sort` is what tells a screen reader the table is sorted at all;
       // the icon alone says nothing to it.
-      aria-sort={direction === "asc" ? "ascending" : direction === "desc" ? "descending" : "none"}
+      aria-sort={
+        direction === 'asc'
+          ? 'ascending'
+          : direction === 'desc'
+            ? 'descending'
+            : 'none'
+      }
       // `!`: the base header padding has the same specificity, and the button owns the padding here.
       className={`p-0! ${className}`}
-      {...props}
-    >
+      {...props}>
       <button
         type="button"
         onClick={onToggle}
@@ -272,31 +282,30 @@ export function TableSortHeaderCell({
         // A `group` so the neutral icon can come forward on hover: at rest it
         // must stay quiet, or every unsorted header shouts as loudly as the one
         // column actually being sorted on.
-        className="group flex w-full items-center gap-2 px-4 py-[18px] text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-      >
+        className="group flex w-full items-center gap-2 px-4 py-[18px] text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset">
         {children}
         <Icon
           icon={icon}
           className={`size-3.5 shrink-0 transition-opacity ${
-            direction ? "opacity-100" : "opacity-40 group-hover:opacity-100"
+            direction ? 'opacity-100' : 'opacity-40 group-hover:opacity-100'
           }`}
         />
         <span className="sr-only">{sortHint}</span>
       </button>
     </TableHeaderCell>
-  );
+  )
 }
 
 /**
  * The header cell above a `TableRowActions` column: no visible text, but the
  * column still needs a name for screen readers.
  */
-export function TableActionsHeaderCell({ label }: { label: string }) {
+export function TableActionsHeaderCell({label}: {label: string}) {
   return (
     <TableHeaderCell className="w-12">
       <span className="sr-only">{label}</span>
     </TableHeaderCell>
-  );
+  )
 }
 
 /**
@@ -311,27 +320,25 @@ export function TableRowActions({
   children,
 }: {
   /** Accessible name of the trigger, e.g. "Row actions". */
-  label: string;
-  children: React.ReactNode;
+  label: string
+  children: React.ReactNode
 }) {
   return (
     <TableCell
       className="w-12 text-right"
       onClick={(event) => event.stopPropagation()}
-      onKeyDown={(event) => event.stopPropagation()}
-    >
+      onKeyDown={(event) => event.stopPropagation()}>
       <DropdownMenu
         compact
         trigger={
           <Button variant="ghost" size="icon-sm" aria-label={label}>
             <Icon icon={ICONS.more} />
           </Button>
-        }
-      >
+        }>
         {children}
       </DropdownMenu>
     </TableCell>
-  );
+  )
 }
 
 /**
@@ -344,34 +351,36 @@ export function TableRowActions({
 export function TableBulkBar({
   label,
   toolbarLabel,
-  className = "",
+  className = '',
   children,
 }: {
   /** The count, already translated: "4 selected". */
-  label: string;
+  label: string
   /** Accessible name of the toolbar, e.g. "Actions on selected rows". */
-  toolbarLabel: string;
-  className?: string;
-  children: React.ReactNode;
+  toolbarLabel: string
+  className?: string
+  children: React.ReactNode
 }) {
   return (
     <div
       role="toolbar"
       aria-label={toolbarLabel}
-      className={`flex w-fit items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 shadow-lg ${className}`}
-    >
+      className={`flex w-fit items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 shadow-lg ${className}`}>
       <Typography
         as="span"
         variant="title-4"
         role="status"
-        className="text-foreground tabular-nums"
-      >
+        className="text-foreground tabular-nums">
         {label}
       </Typography>
-      <div role="separator" aria-orientation="vertical" className="h-6 w-px bg-border" />
+      <div
+        role="separator"
+        aria-orientation="vertical"
+        className="h-6 w-px bg-border"
+      />
       {children}
     </div>
-  );
+  )
 }
 
 /**
@@ -382,12 +391,15 @@ export function TableBulkBar({
 export function TableBulkAction({
   label,
   icon,
-  variant = "ghost",
+  variant = 'ghost',
   ...props
-}: Omit<React.ComponentPropsWithoutRef<typeof Button>, "children" | "variant" | "size"> & {
-  label: string;
-  icon: string;
-  variant?: "ghost" | "danger";
+}: Omit<
+  React.ComponentPropsWithoutRef<typeof Button>,
+  'children' | 'variant' | 'size'
+> & {
+  label: string
+  icon: string
+  variant?: 'ghost' | 'danger'
 }) {
   return (
     <Tooltip label={label}>
@@ -395,5 +407,5 @@ export function TableBulkAction({
         <Icon icon={icon} className="size-5" />
       </Button>
     </Tooltip>
-  );
+  )
 }

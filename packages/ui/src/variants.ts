@@ -11,6 +11,8 @@
  * The cast is safe by construction and deliberately lives in one place instead
  * of being repeated at each call site.
  */
-export function keysOf<T extends Record<string, unknown>>(lookup: T): (keyof T)[] {
-  return Object.keys(lookup) as (keyof T)[];
+export function keysOf<T extends Record<string, unknown>>(
+  lookup: T,
+): (keyof T)[] {
+  return Object.keys(lookup) as (keyof T)[]
 }

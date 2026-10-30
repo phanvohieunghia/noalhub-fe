@@ -1,23 +1,23 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { Button } from "@noalhub/ui/button";
-import { Icon, ICONS, LUCIDE } from "@noalhub/ui/icons";
-import { Input } from "@noalhub/ui/input";
-import { Tooltip } from "@noalhub/ui/tooltip";
-import { Typography } from "@noalhub/ui/typography";
+import type {Meta, StoryObj} from '@storybook/nextjs-vite'
+import {useTranslations} from 'next-intl'
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
+import {useVirtualizer} from '@tanstack/react-virtual'
+import {Button} from '@noalhub/ui/button'
+import {Icon, ICONS, LUCIDE} from '@noalhub/ui/icons'
+import {Input} from '@noalhub/ui/input'
+import {Tooltip} from '@noalhub/ui/tooltip'
+import {Typography} from '@noalhub/ui/typography'
 
 const meta: Meta<typeof Icon> = {
-  title: "UI/Data Display/Icons",
+  title: 'UI/Data Display/Icons',
   component: Icon,
   parameters: {
-    layout: "padded",
+    layout: 'padded',
   },
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof Icon>;
+export default meta
+type Story = StoryObj<typeof Icon>
 
 /**
  * Zoom levels: the narrower the cell, the more icons fit in a row. `row` is always
@@ -25,71 +25,93 @@ type Story = StoryObj<typeof Icon>;
  * cell taller.
  */
 const ZOOM_STEPS = [
-  { tile: 72, row: 64, icon: "size-4", label: "text-[10px]", box: "gap-1 py-1.5" },
-  { tile: 96, row: 80, icon: "size-5", label: "text-[11px]", box: "gap-1.5 py-2" },
-  { tile: 128, row: 96, icon: "size-6", label: "text-body-4", box: "gap-2 py-3" },
-  { tile: 176, row: 120, icon: "size-8", label: "text-body-3", box: "gap-2 py-4" },
-  { tile: 240, row: 152, icon: "size-10", label: "text-body-2", box: "gap-3 py-5" },
-] as const;
-const DEFAULT_ZOOM = 2;
+  {
+    tile: 72,
+    row: 64,
+    icon: 'size-4',
+    label: 'text-[10px]',
+    box: 'gap-1 py-1.5',
+  },
+  {
+    tile: 96,
+    row: 80,
+    icon: 'size-5',
+    label: 'text-[11px]',
+    box: 'gap-1.5 py-2',
+  },
+  {tile: 128, row: 96, icon: 'size-6', label: 'text-body-4', box: 'gap-2 py-3'},
+  {
+    tile: 176,
+    row: 120,
+    icon: 'size-8',
+    label: 'text-body-3',
+    box: 'gap-2 py-4',
+  },
+  {
+    tile: 240,
+    row: 152,
+    icon: 'size-10',
+    label: 'text-body-2',
+    box: 'gap-3 py-5',
+  },
+] as const
+const DEFAULT_ZOOM = 2
 
-type Zoom = (typeof ZOOM_STEPS)[number];
+type Zoom = (typeof ZOOM_STEPS)[number]
 
 /** The zoom level plus its two buttons, shared by both grids. */
 function useZoom() {
-  const [index, setIndex] = useState(DEFAULT_ZOOM);
-  const zoom = ZOOM_STEPS[index]!;
-  const tIcons = useTranslations("sb.icons");
+  const [index, setIndex] = useState(DEFAULT_ZOOM)
+  const zoom = ZOOM_STEPS[index]!
+  const tIcons = useTranslations('sb.icons')
 
   const controls = (
     <div className="flex items-center gap-1">
       <Button
         variant="outline"
         size="icon-sm"
-        aria-label={tIcons("zoomOut")}
+        aria-label={tIcons('zoomOut')}
         disabled={index === 0}
-        onClick={() => setIndex((current) => Math.max(0, current - 1))}
-      >
+        onClick={() => setIndex((current) => Math.max(0, current - 1))}>
         <Icon icon={LUCIDE.zoomOut} className="size-4" />
       </Button>
       <Button
         variant="outline"
         size="icon-sm"
-        aria-label={tIcons("zoomIn")}
+        aria-label={tIcons('zoomIn')}
         disabled={index === ZOOM_STEPS.length - 1}
         onClick={() =>
           setIndex((current) => Math.min(ZOOM_STEPS.length - 1, current + 1))
-        }
-      >
+        }>
         <Icon icon={LUCIDE.zoomIn} className="size-4" />
       </Button>
     </div>
-  );
-  return { zoom, controls };
+  )
+  return {zoom, controls}
 }
 
 /** Copy-to-clipboard state shared by both grids. */
 function useCopyName() {
-  const [copied, setCopied] = useState<string | null>(null);
-  const [failed, setFailed] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null)
+  const [failed, setFailed] = useState(false)
 
   const copy = useCallback(async (name: string) => {
     try {
       // Undefined outside a secure context (Storybook served over plain HTTP).
-      if (!navigator.clipboard) throw new Error("clipboard unavailable");
-      await navigator.clipboard.writeText(name);
-      setFailed(false);
-      setCopied(name);
+      if (!navigator.clipboard) throw new Error('clipboard unavailable')
+      await navigator.clipboard.writeText(name)
+      setFailed(false)
+      setCopied(name)
       setTimeout(
         () => setCopied((current) => (current === name ? null : current)),
         1200,
-      );
+      )
     } catch {
-      setFailed(true);
+      setFailed(true)
     }
-  }, []);
+  }, [])
 
-  return { copied, failed, copy };
+  return {copied, failed, copy}
 }
 
 function IconTile({
@@ -99,51 +121,49 @@ function IconTile({
   zoom,
   onCopy,
 }: {
-  name: string;
-  iconName: string;
-  isCopied: boolean;
-  zoom: Zoom;
-  onCopy: (name: string) => void;
+  name: string
+  iconName: string
+  isCopied: boolean
+  zoom: Zoom
+  onCopy: (name: string) => void
 }) {
-  const t = useTranslations("sb.icons");
+  const t = useTranslations('sb.icons')
 
   return (
     // Names are truncated with "…", so there has to be somewhere to read them in
     // full: a Tooltip instead of `title` — it appears instantly, is reachable by
     // keyboard, and follows the theme colors.
-    <Tooltip label={t("copyHint", { name })}>
+    <Tooltip label={t('copyHint', {name})}>
       <button
         type="button"
         onClick={() => onCopy(name)}
         className={`flex h-full w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border px-1 text-center transition-colors ${zoom.box} ${
           isCopied
-            ? "border-primary bg-primary/10"
-            : "border-border hover:bg-muted"
-        }`}
-      >
+            ? 'border-primary bg-primary/10'
+            : 'border-border hover:bg-muted'
+        }`}>
         <Icon
           icon={isCopied ? ICONS.success : iconName}
-          className={`shrink-0 ${zoom.icon} ${isCopied ? "text-primary" : "text-foreground"}`}
+          className={`shrink-0 ${zoom.icon} ${isCopied ? 'text-primary' : 'text-foreground'}`}
         />
         <span
-          className={`w-full truncate ${zoom.label} ${isCopied ? "text-primary" : "opacity-70"}`}
-        >
-          {isCopied ? t("copied") : name}
+          className={`w-full truncate ${zoom.label} ${isCopied ? 'text-primary' : 'opacity-70'}`}>
+          {isCopied ? t('copied') : name}
         </span>
       </button>
     </Tooltip>
-  );
+  )
 }
 
-function ClipboardWarning({ failed }: { failed: boolean }) {
-  const t = useTranslations("sb.icons");
+function ClipboardWarning({failed}: {failed: boolean}) {
+  const t = useTranslations('sb.icons')
 
-  if (!failed) return null;
+  if (!failed) return null
   return (
     <Typography variant="body-4" role="alert" className="text-danger">
-      {t("clipboardBlocked")}
+      {t('clipboardBlocked')}
     </Typography>
-  );
+  )
 }
 
 /**
@@ -153,8 +173,8 @@ function ClipboardWarning({ failed }: { failed: boolean }) {
  */
 export const InUse: Story = {
   render: function InUseStory() {
-    const { copied, failed, copy } = useCopyName();
-    const { zoom, controls } = useZoom();
+    const {copied, failed, copy} = useCopyName()
+    const {zoom, controls} = useZoom()
     return (
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-4">
@@ -165,10 +185,9 @@ export const InUse: Story = {
           className="grid gap-4"
           style={{
             gridTemplateColumns: `repeat(auto-fill, minmax(${zoom.tile}px, 1fr))`,
-          }}
-        >
+          }}>
           {Object.entries(ICONS).map(([name, iconName]) => (
-            <div key={name} style={{ height: zoom.row }}>
+            <div key={name} style={{height: zoom.row}}>
               <IconTile
                 name={name}
                 iconName={iconName}
@@ -180,9 +199,9 @@ export const InUse: Story = {
           ))}
         </div>
       </div>
-    );
+    )
   },
-};
+}
 
 /**
  * The entire bundled lucide set (aliases included). The grid is virtualized by
@@ -192,62 +211,62 @@ export const InUse: Story = {
 export const AllLucide: Story = {
   // Fullscreen so the grid can own the viewport height; the padding the meta's
   // "padded" layout would add is applied on the wrapper below instead.
-  parameters: { layout: "fullscreen" },
+  parameters: {layout: 'fullscreen'},
   render: function AllLucideStory() {
-    const t = useTranslations("sb.icons");
-    const [query, setQuery] = useState("");
-    const { copied, failed, copy } = useCopyName();
-    const { zoom, controls } = useZoom();
+    const t = useTranslations('sb.icons')
+    const [query, setQuery] = useState('')
+    const {copied, failed, copy} = useCopyName()
+    const {zoom, controls} = useZoom()
 
-    const all = useMemo(() => Object.entries(LUCIDE) as [string, string][], []);
+    const all = useMemo(() => Object.entries(LUCIDE) as [string, string][], [])
     const matches = useMemo(() => {
-      const needle = query.trim().toLowerCase().replace(/[-\s]/g, "");
-      if (!needle) return all;
+      const needle = query.trim().toLowerCase().replace(/[-\s]/g, '')
+      if (!needle) return all
       return all.filter(
         ([name, icon]) =>
           name.toLowerCase().includes(needle) ||
-          icon.replace(/-/g, "").includes(needle),
-      );
-    }, [all, query]);
+          icon.replace(/-/g, '').includes(needle),
+      )
+    }, [all, query])
     // Column count comes from the real width — the virtualizer needs a row count,
     // so responsive breakpoints in CSS alone would not be enough.
-    const scrollRef = useRef<HTMLDivElement>(null);
-    const [width, setWidth] = useState(0);
+    const scrollRef = useRef<HTMLDivElement>(null)
+    const [width, setWidth] = useState(0)
     useEffect(() => {
-      const element = scrollRef.current;
-      if (!element) return;
+      const element = scrollRef.current
+      if (!element) return
       const observer = new ResizeObserver(([entry]) => {
-        setWidth(entry.contentRect.width);
-      });
-      observer.observe(element);
-      return () => observer.disconnect();
-    }, []);
-    const columns = Math.max(1, Math.floor(width / zoom.tile) || 1);
+        setWidth(entry.contentRect.width)
+      })
+      observer.observe(element)
+      return () => observer.disconnect()
+    }, [])
+    const columns = Math.max(1, Math.floor(width / zoom.tile) || 1)
 
-    const rowCount = Math.ceil(matches.length / columns);
+    const rowCount = Math.ceil(matches.length / columns)
     const virtualizer = useVirtualizer({
       count: rowCount,
       getScrollElement: () => scrollRef.current,
       estimateSize: () => zoom.row,
       overscan: 4,
-    });
+    })
     // Row count and row height both change with the zoom level — they have to be
     // remeasured, otherwise the grid keeps the previous level's total height.
     useEffect(() => {
-      virtualizer.measure();
-    }, [virtualizer, zoom, columns]);
+      virtualizer.measure()
+    }, [virtualizer, zoom, columns])
 
     return (
       <div className="flex h-screen flex-col gap-4 p-4">
         <Input
-          label={t("search")}
-          placeholder={t("searchPlaceholder")}
+          label={t('search')}
+          placeholder={t('searchPlaceholder')}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
         <div className="flex items-center justify-between gap-4">
           <Typography variant="body-4" className="text-muted-foreground">
-            {t("count", { matched: matches.length, total: all.length })}{" "}
+            {t('count', {matched: matches.length, total: all.length})}{' '}
             <code>LUCIDE.</code>
           </Typography>
           {controls}
@@ -255,12 +274,10 @@ export const AllLucide: Story = {
         <ClipboardWarning failed={failed} />
         <div
           ref={scrollRef}
-          className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-border p-2"
-        >
+          className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-border p-2">
           <div
             className="relative w-full"
-            style={{ height: virtualizer.getTotalSize() }}
-          >
+            style={{height: virtualizer.getTotalSize()}}>
             {virtualizer.getVirtualItems().map((row) => (
               <div
                 key={row.key}
@@ -269,8 +286,7 @@ export const AllLucide: Story = {
                   height: row.size,
                   transform: `translateY(${row.start}px)`,
                   gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-                }}
-              >
+                }}>
                 {matches
                   .slice(row.index * columns, row.index * columns + columns)
                   .map(([name, iconName]) => (
@@ -288,6 +304,6 @@ export const AllLucide: Story = {
           </div>
         </div>
       </div>
-    );
+    )
   },
-};
+}

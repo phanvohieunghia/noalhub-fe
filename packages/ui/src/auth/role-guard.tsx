@@ -1,13 +1,13 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import {useTranslations} from 'next-intl'
+import {useRouter} from 'next/navigation'
+import {useEffect} from 'react'
 
-import { satisfiesRole, useMe, type UserRole } from "@noalhub/api/auth";
+import {satisfiesRole, useMe, type UserRole} from '@noalhub/api/auth'
 
-import { Button } from "../button";
-import { Typography } from "../typography";
+import {Button} from '../button'
+import {Typography} from '../typography'
 
 /**
  * The second layer after `AuthGuard`: signed in **and** holding the right role.
@@ -25,51 +25,59 @@ import { Typography } from "../typography";
  * client and anyone can edit it in devtools. The real boundary is still the
  * backend's 403.
  */
-export function RoleGuard({ role, children }: { role: UserRole; children: React.ReactNode }) {
-  const t = useTranslations("common.guard");
-  const me = useMe();
-  const router = useRouter();
+export function RoleGuard({
+  role,
+  children,
+}: {
+  role: UserRole
+  children: React.ReactNode
+}) {
+  const t = useTranslations('common.guard')
+  const me = useMe()
+  const router = useRouter()
 
   // `satisfiesRole`, not `role !== role`: the required role is a FLOOR, so a
   // `super_admin` walking into an `admin` area is allowed — comparing the
   // strings shut the most privileged account out of the admin app entirely.
-  const isDenied = me.isSuccess && !satisfiesRole(me.data, role);
+  const isDenied = me.isSuccess && !satisfiesRole(me.data, role)
 
   useEffect(() => {
     // No auto-redirect. Kicking a user with a VALID session out to `/login` is
     // a loop: they log in, land here, get kicked again, and never get to read
     // why. The screen below states the reason and lets them choose to sign out.
     if (isDenied) {
-      router.prefetch("/login");
+      router.prefetch('/login')
     }
-  }, [isDenied, router]);
+  }, [isDenied, router])
 
-  if (me.isPending) return <RoleSkeleton />;
+  if (me.isPending) return <RoleSkeleton />
 
   // A failure to load `/auth/me` (network, 5xx) is nothing like a wrong role —
   // do not collapse it into "no permission", or the user hunts the wrong cause.
   if (me.isError) {
     return (
       <GuardScreen
-        title={t("sessionErrorTitle")}
-        message={t("sessionErrorMessage")}
+        title={t('sessionErrorTitle')}
+        message={t('sessionErrorMessage')}
       />
-    );
+    )
   }
 
   if (isDenied) {
     return (
       <GuardScreen
-        title={t("deniedTitle")}
-        message={t("deniedMessage", { role, email: me.data.email })}
+        title={t('deniedTitle')}
+        message={t('deniedMessage', {role, email: me.data.email})}
         action={
-          <Button onClick={() => router.replace("/login")}>{t("signInAsOther")}</Button>
+          <Button onClick={() => router.replace('/login')}>
+            {t('signInAsOther')}
+          </Button>
         }
       />
-    );
+    )
   }
 
-  return <>{children}</>;
+  return <>{children}</>
 }
 
 function GuardScreen({
@@ -77,15 +85,14 @@ function GuardScreen({
   message,
   action,
 }: {
-  title: string;
-  message: string;
-  action?: React.ReactNode;
+  title: string
+  message: string
+  action?: React.ReactNode
 }) {
   return (
     <main
       role="alert"
-      className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-3 p-8 text-center"
-    >
+      className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
       <Typography variant="h5" as="h1">
         {title}
       </Typography>
@@ -94,14 +101,16 @@ function GuardScreen({
       </Typography>
       {action}
     </main>
-  );
+  )
 }
 
 function RoleSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-3xl animate-pulse space-y-4 p-8" aria-busy="true">
+    <div
+      className="mx-auto w-full max-w-3xl animate-pulse space-y-4 p-8"
+      aria-busy="true">
       <div className="h-8 w-48 rounded bg-black/10 dark:bg-white/10" />
       <div className="h-4 w-full rounded bg-black/10 dark:bg-white/10" />
     </div>
-  );
+  )
 }

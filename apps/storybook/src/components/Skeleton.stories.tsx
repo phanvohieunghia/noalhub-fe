@@ -1,16 +1,16 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { Skeleton } from "@noalhub/ui/skeleton";
+import type {Meta, StoryObj} from '@storybook/nextjs-vite'
+import {Skeleton} from '@noalhub/ui/skeleton'
 
 const meta: Meta<typeof Skeleton> = {
-  title: "UI/Elements/Skeleton",
+  title: 'UI/Elements/Skeleton',
   component: Skeleton,
   parameters: {
-    layout: "padded",
+    layout: 'padded',
   },
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof Skeleton>;
+export default meta
+type Story = StoryObj<typeof Skeleton>
 
 export const Default: Story = {
   render: () => (
@@ -20,7 +20,7 @@ export const Default: Story = {
       <Skeleton className="h-4 w-5/6" />
     </div>
   ),
-};
+}
 
 export const AvatarCard: Story = {
   render: () => (
@@ -32,4 +32,4 @@ export const AvatarCard: Story = {
       </div>
     </div>
   ),
-};
+}

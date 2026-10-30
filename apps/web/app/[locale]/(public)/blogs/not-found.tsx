@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
+import type {Metadata} from 'next'
 
-import { getLatestPosts } from "@noalhub/api/blog/server";
+import {getLatestPosts} from '@noalhub/api/blog/server'
 
-import { BlogNotFoundContent } from "@/components/blog/not-found-content";
+import {BlogNotFoundContent} from '@/components/blog/not-found-content'
 
 /**
  * The blog area's own 404: the post does not exist, is unpublished, is
@@ -26,12 +26,12 @@ import { BlogNotFoundContent } from "@/components/blog/not-found-content";
  * job, and all that is needed here is to block
  * index.
  */
-export const metadata: Metadata = { robots: { index: false } };
+export const metadata: Metadata = {robots: {index: false}}
 
 export default async function BlogNotFound() {
   // The 404 page must not drag a second failure along: with the backend down it
   // still has to render "not found" plus a way back to `/blogs`.
-  const latest = await getLatestPosts(3).catch(() => []);
+  const latest = await getLatestPosts(3).catch(() => [])
 
-  return <BlogNotFoundContent posts={latest} />;
+  return <BlogNotFoundContent posts={latest} />
 }

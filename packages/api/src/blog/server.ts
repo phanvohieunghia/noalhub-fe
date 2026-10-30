@@ -1,13 +1,13 @@
-import "server-only";
+import 'server-only'
 
-import { API_BASE_URL, apiBaseUrlFrom } from "../config";
+import {API_BASE_URL, apiBaseUrlFrom} from '../config'
 import {
   blogCategoryListSchema,
   blogPostListSchema,
   blogPostSchema,
   blogSitemapEntryListSchema,
   blogTagListSchema,
-} from "./schemas";
+} from './schemas'
 import type {
   BlogCategory,
   BlogPost,
@@ -16,7 +16,7 @@ import type {
   BlogPostQuery,
   BlogSitemapEntry,
   BlogTag,
-} from "./types";
+} from './types'
 
 /**
  * The blog feature's fourth layer: the **server-only** read path, running in
@@ -56,40 +56,40 @@ import type {
  * never touches page 2, while one tag covers all of them.
  */
 export const BLOG_TAGS = {
-  list: "blog-list",
-  categories: "blog-categories",
-  tags: "blog-tags",
-  sitemap: "blog-sitemap",
+  list: 'blog-list',
+  categories: 'blog-categories',
+  tags: 'blog-tags',
+  sitemap: 'blog-sitemap',
   post: (slug: string) => `blog-post:${slug}`,
   category: (slug: string) => `blog-category:${slug}`,
   tag: (slug: string) => `blog-tag:${slug}`,
-} as const;
+} as const
 
 /**
  * Posts per public page (§4.5). The backend's ceiling is 50; this number also
  * defines "past the last page" on `/blogs`, so do not let it differ between
  * call sites.
  */
-export const BLOG_PAGE_SIZE = 10;
+export const BLOG_PAGE_SIZE = 10
 
 /** Related posts fetch 4, drop the current post, and show 3 (§2.5). */
-const RELATED_FETCH_LIMIT = 4;
-const RELATED_DISPLAY_COUNT = 3;
+const RELATED_FETCH_LIMIT = 4
+const RELATED_DISPLAY_COUNT = 3
 
-const LIST_REVALIDATE = 60;
-const DETAIL_REVALIDATE = 300;
-const TAXONOMY_REVALIDATE = 3600;
+const LIST_REVALIDATE = 60
+const DETAIL_REVALIDATE = 300
+const TAXONOMY_REVALIDATE = 3600
 
 /* ---------------------------------- Fetch ---------------------------------- */
 
 /** A non-404 failure on the public read path. `/blogs`'s `error.tsx` catches it (§6.4). */
 export class BlogServerError extends Error {
-  readonly status: number;
+  readonly status: number
 
   constructor(status: number, path: string) {
-    super(`Failed to read blog data (${status}) from ${path}`);
-    this.name = "BlogServerError";
-    this.status = status;
+    super(`Failed to read blog data (${status}) from ${path}`)
+    this.name = 'BlogServerError'
+    this.status = status
   }
 }
 
@@ -107,15 +107,15 @@ export class BlogServerError extends Error {
  * public URL there is the correct behaviour (§4.4a).
  */
 function serverApiBaseUrl(): string {
-  const internal = process.env.API_INTERNAL_URL;
-  return internal ? apiBaseUrlFrom(internal) : API_BASE_URL;
+  const internal = process.env.API_INTERNAL_URL
+  return internal ? apiBaseUrlFrom(internal) : API_BASE_URL
 }
 
 type FetchOptions = {
-  params?: Record<string, string | number | undefined>;
-  tags: string[];
-  revalidate: number;
-};
+  params?: Record<string, string | number | undefined>
+  tags: string[]
+  revalidate: number
+}
 
 /**
  * `next` is Next's addition to the Web API's `RequestInit` — it is only typed
@@ -128,8 +128,8 @@ type FetchOptions = {
  * reads `init.next` directly.
  */
 type NextFetchInit = RequestInit & {
-  next?: { revalidate?: number | false; tags?: string[] };
-};
+  next?: {revalidate?: number | false; tags?: string[]}
+}
 
 /**
  * Returns `null` on 404 and throws `BlogServerError` on every other status —
@@ -137,27 +137,28 @@ type NextFetchInit = RequestInit & {
  */
 async function getJson(
   path: string,
-  { params, tags, revalidate }: FetchOptions,
+  {params, tags, revalidate}: FetchOptions,
 ): Promise<unknown | null> {
-  const url = new URL(`${serverApiBaseUrl()}${path}`);
+  const url = new URL(`${serverApiBaseUrl()}${path}`)
   for (const [key, value] of Object.entries(params ?? {})) {
-    if (value !== undefined && value !== "") url.searchParams.set(key, String(value));
+    if (value !== undefined && value !== '')
+      url.searchParams.set(key, String(value))
   }
 
   // Assigned through a typed variable rather than passing an object literal:
   // TS's excess-property check would reject the literal, since the base
   // `RequestInit` has no `next`.
   const init: NextFetchInit = {
-    headers: { Accept: "application/json" },
-    next: { revalidate, tags },
-  };
+    headers: {Accept: 'application/json'},
+    next: {revalidate, tags},
+  }
 
-  const response = await fetch(url, init);
+  const response = await fetch(url, init)
 
-  if (response.status === 404) return null;
-  if (!response.ok) throw new BlogServerError(response.status, path);
+  if (response.status === 404) return null
+  if (!response.ok) throw new BlogServerError(response.status, path)
 
-  return response.json();
+  return response.json()
 }
 
 /* ----------------------------------- Posts --------------------------------- */
@@ -174,11 +175,11 @@ export async function getPublishedPosts(
 ): Promise<BlogPostList> {
   // An explicit type: `BLOG_TAGS` is `as const`, so inference would produce a
   // literal `"blog-list"[]` array that no other tag could be pushed into.
-  const tags: string[] = [BLOG_TAGS.list];
-  if (query.category) tags.push(BLOG_TAGS.category(query.category));
-  if (query.tag) tags.push(BLOG_TAGS.tag(query.tag));
+  const tags: string[] = [BLOG_TAGS.list]
+  if (query.category) tags.push(BLOG_TAGS.category(query.category))
+  if (query.tag) tags.push(BLOG_TAGS.tag(query.tag))
 
-  const data = await getJson("/blog/posts", {
+  const data = await getJson('/blog/posts', {
     params: {
       page: query.page,
       limit: query.limit ?? BLOG_PAGE_SIZE,
@@ -187,14 +188,14 @@ export async function getPublishedPosts(
     },
     tags,
     revalidate: LIST_REVALIDATE,
-  });
+  })
 
   // A listing has no legitimate 404 case: `?category=does-not-exist` is a
   // backend or contract bug, not "this page does not exist". The route already
   // verified the category/tag exists via `getBlogCategory`/`getBlogTag` (§6.5).
-  if (data === null) throw new BlogServerError(404, "/blog/posts");
+  if (data === null) throw new BlogServerError(404, '/blog/posts')
 
-  return blogPostListSchema.parse(data);
+  return blogPostListSchema.parse(data)
 }
 
 /**
@@ -215,9 +216,9 @@ export async function getPublishedPost(slug: string): Promise<BlogPost | null> {
     // URL is invalidated too.
     tags: [BLOG_TAGS.post(slug)],
     revalidate: DETAIL_REVALIDATE,
-  });
+  })
 
-  return data === null ? null : blogPostSchema.parse(data);
+  return data === null ? null : blogPostSchema.parse(data)
 }
 
 /**
@@ -232,20 +233,20 @@ export async function getRelatedPosts(
   categorySlug: string,
   excludeSlug: string,
 ): Promise<BlogPostListItem[]> {
-  const { items } = await getPublishedPosts({
+  const {items} = await getPublishedPosts({
     category: categorySlug,
     limit: RELATED_FETCH_LIMIT,
-  });
+  })
 
   return items
     .filter((item) => item.slug !== excludeSlug)
-    .slice(0, RELATED_DISPLAY_COUNT);
+    .slice(0, RELATED_DISPLAY_COUNT)
 }
 
 /** The latest few posts — used by `/blogs`'s `not-found.tsx` (§2.5, §6.4). */
 export async function getLatestPosts(limit = 3): Promise<BlogPostListItem[]> {
-  const { items } = await getPublishedPosts({ limit });
-  return items;
+  const {items} = await getPublishedPosts({limit})
+  return items
 }
 
 /* --------------------------- Categories and tags --------------------------- */
@@ -255,16 +256,16 @@ export async function getLatestPosts(limit = 3): Promise<BlogPostListItem[]> {
  * Used by the public layout's nav and by the category pages.
  */
 export async function getBlogCategories(): Promise<BlogCategory[]> {
-  const data = await getJson("/blog/categories", {
+  const data = await getJson('/blog/categories', {
     tags: [BLOG_TAGS.categories],
     revalidate: TAXONOMY_REVALIDATE,
-  });
-  if (data === null) return [];
+  })
+  if (data === null) return []
 
   return blogCategoryListSchema
     .parse(data)
     .slice()
-    .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name, "vi"));
+    .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name, 'vi'))
 }
 
 /**
@@ -278,27 +279,29 @@ export async function getBlogCategories(): Promise<BlogCategory[]> {
 export async function getBlogCategory(
   slug: string,
 ): Promise<BlogCategory | undefined> {
-  const categories = await getBlogCategories();
-  return categories.find((category) => category.slug === slug);
+  const categories = await getBlogCategories()
+  return categories.find((category) => category.slug === slug)
 }
 
 /** `GET /blog/tags` — the tag index at `/blogs/tag`. NOT used for the sitemap (§2.6). */
 export async function getBlogTags(): Promise<BlogTag[]> {
-  const data = await getJson("/blog/tags", {
+  const data = await getJson('/blog/tags', {
     tags: [BLOG_TAGS.tags],
     revalidate: TAXONOMY_REVALIDATE,
-  });
-  if (data === null) return [];
+  })
+  if (data === null) return []
 
   return blogTagListSchema
     .parse(data)
     .slice()
-    .sort((a, b) => b.postCount - a.postCount || a.name.localeCompare(b.name, "vi"));
+    .sort(
+      (a, b) => b.postCount - a.postCount || a.name.localeCompare(b.name, 'vi'),
+    )
 }
 
 export async function getBlogTag(slug: string): Promise<BlogTag | undefined> {
-  const tags = await getBlogTags();
-  return tags.find((tag) => tag.slug === slug);
+  const tags = await getBlogTags()
+  return tags.find((tag) => tag.slug === slug)
 }
 
 /**
@@ -309,11 +312,11 @@ export async function getBlogTag(slug: string): Promise<BlogTag | undefined> {
  * stayed green, so nobody would notice (§2.1).
  */
 export async function getBlogSitemapEntries(): Promise<BlogSitemapEntry[]> {
-  const data = await getJson("/blog/sitemap-entries", {
+  const data = await getJson('/blog/sitemap-entries', {
     tags: [BLOG_TAGS.sitemap],
     revalidate: TAXONOMY_REVALIDATE,
-  });
-  if (data === null) return [];
+  })
+  if (data === null) return []
 
-  return blogSitemapEntryListSchema.parse(data);
+  return blogSitemapEntryListSchema.parse(data)
 }

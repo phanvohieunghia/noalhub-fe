@@ -1,9 +1,9 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { useTranslations } from "next-intl";
-import React from "react";
-import { Button } from "@noalhub/ui/button";
-import { NavigationProgress } from "@noalhub/ui/navigation-progress";
-import { Typography } from "@noalhub/ui/typography";
+import type {Meta, StoryObj} from '@storybook/nextjs-vite'
+import {useTranslations} from 'next-intl'
+import React from 'react'
+import {Button} from '@noalhub/ui/button'
+import {NavigationProgress} from '@noalhub/ui/navigation-progress'
+import {Typography} from '@noalhub/ui/typography'
 
 /**
  * The bar is driven by real route transitions, which do not happen inside
@@ -12,28 +12,29 @@ import { Typography } from "@noalhub/ui/typography";
  * the bar climbs towards its 90% ceiling and disappears on the 15s safety net.
  */
 const meta: Meta<typeof NavigationProgress> = {
-  title: "UI/Feedback/NavigationProgress",
+  title: 'UI/Feedback/NavigationProgress',
   component: NavigationProgress,
-  parameters: { layout: "padded" },
-};
+  parameters: {layout: 'padded'},
+}
 
-export default meta;
-type Story = StoryObj<typeof NavigationProgress>;
+export default meta
+type Story = StoryObj<typeof NavigationProgress>
 
 export const Demo: Story = {
   render: function DemoStory() {
-    const t = useTranslations("sb.navigationProgress");
+    const t = useTranslations('sb.navigationProgress')
 
     return (
-    <div className="relative flex min-h-40 flex-col items-start gap-4 overflow-hidden rounded-xl border border-border p-6">
-      <NavigationProgress className="absolute inset-x-0 top-0" />
-      <Typography variant="body-3" className="text-muted-foreground">
-        {t("note")}
-      </Typography>
-      <Button onClick={() => window.dispatchEvent(new PopStateEvent("popstate"))}>
-        {t("start")}
-      </Button>
+      <div className="relative flex min-h-40 flex-col items-start gap-4 overflow-hidden rounded-xl border border-border p-6">
+        <NavigationProgress className="absolute inset-x-0 top-0" />
+        <Typography variant="body-3" className="text-muted-foreground">
+          {t('note')}
+        </Typography>
+        <Button
+          onClick={() => window.dispatchEvent(new PopStateEvent('popstate'))}>
+          {t('start')}
+        </Button>
       </div>
-    );
+    )
   },
-};
+}

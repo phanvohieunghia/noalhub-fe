@@ -1,27 +1,27 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { useState } from "react";
+import Link from 'next/link'
+import {useState} from 'react'
 
 import {
   useAdminBlogSlugs,
   useDeleteAdminBlogSlug,
   useUpdateAdminBlogSlug,
   type BlogPostSlug,
-} from "@noalhub/api/blog";
-import type { Message } from "@noalhub/api/message";
-import { blogErrorText } from "@noalhub/core/blog/error-message";
-import { slugify } from "@noalhub/core/blog/slugify";
-import { useDateFormat } from "@noalhub/i18n/use-date-format";
-import { useMessage } from "@noalhub/i18n/use-message";
-import { Button } from "@noalhub/ui/button";
-import { Dialog } from "@noalhub/ui/dialog";
-import { DropdownMenuItem } from "@noalhub/ui/dropdown-menu";
-import { ICONS } from "@noalhub/ui/icons";
-import { AlertError } from "@noalhub/ui/alert";
-import { Input } from "@noalhub/ui/input";
-import { Pagination } from "@noalhub/ui/pagination";
-import { Skeleton } from "@noalhub/ui/skeleton";
+} from '@noalhub/api/blog'
+import type {Message} from '@noalhub/api/message'
+import {blogErrorText} from '@noalhub/core/blog/error-message'
+import {slugify} from '@noalhub/core/blog/slugify'
+import {useDateFormat} from '@noalhub/i18n/use-date-format'
+import {useMessage} from '@noalhub/i18n/use-message'
+import {Button} from '@noalhub/ui/button'
+import {Dialog} from '@noalhub/ui/dialog'
+import {DropdownMenuItem} from '@noalhub/ui/dropdown-menu'
+import {ICONS} from '@noalhub/ui/icons'
+import {AlertError} from '@noalhub/ui/alert'
+import {Input} from '@noalhub/ui/input'
+import {Pagination} from '@noalhub/ui/pagination'
+import {Skeleton} from '@noalhub/ui/skeleton'
 import {
   TableActionsHeaderCell,
   TableBody,
@@ -33,15 +33,15 @@ import {
   TableRow,
   TableRowActions,
   TableSortHeaderCell,
-} from "@noalhub/ui/table";
-import { Typography } from "@noalhub/ui/typography";
-import { useTranslations } from "next-intl";
+} from '@noalhub/ui/table'
+import {Typography} from '@noalhub/ui/typography'
+import {useTranslations} from 'next-intl'
 
-import { AdminErrorState } from "../admin-error-state";
-import { PostStatusBadge } from "./post-status-badge";
-import { useSlugFilters } from "./use-slug-filters";
+import {AdminErrorState} from '../admin-error-state'
+import {PostStatusBadge} from './post-status-badge'
+import {useSlugFilters} from './use-slug-filters'
 
-const COLUMN_COUNT = 4;
+const COLUMN_COUNT = 4
 
 /**
  * The old-URL table (`docs/slug-management.md` §5.2).
@@ -54,7 +54,7 @@ const COLUMN_COUNT = 4;
  * one in by hand is how an old URL ends up pointing at the wrong post.
  */
 export function SlugTable() {
-  const t = useTranslations("admin.posts.slugs");
+  const t = useTranslations('admin.posts.slugs')
   const {
     query,
     searchInput,
@@ -63,32 +63,32 @@ export function SlugTable() {
     directionOf,
     clearPostFilter,
     setPage,
-  } = useSlugFilters();
-  const slugs = useAdminBlogSlugs(query);
+  } = useSlugFilters()
+  const slugs = useAdminBlogSlugs(query)
 
-  const [editing, setEditing] = useState<BlogPostSlug | null>(null);
-  const [deleting, setDeleting] = useState<BlogPostSlug | null>(null);
+  const [editing, setEditing] = useState<BlogPostSlug | null>(null)
+  const [deleting, setDeleting] = useState<BlogPostSlug | null>(null)
 
   // The post filter arrives from the editor's link, so the name of the post has
   // to come from the rows themselves — there is no separate post query here.
-  const filteredPost = query.postId ? slugs.data?.items[0]?.post : undefined;
+  const filteredPost = query.postId ? slugs.data?.items[0]?.post : undefined
 
   return (
     <main className="w-full p-6">
       <Typography variant="h4" as="h1">
-        {t("title")}
+        {t('title')}
       </Typography>
       <Typography variant="body-3" className="mt-1 max-w-2xl opacity-70">
-        {t("description")}
+        {t('description')}
       </Typography>
 
       {query.postId ? (
         <div className="mt-4 flex flex-wrap items-center gap-2 rounded-md border border-border bg-surface px-3 py-2">
           <Typography variant="body-3" as="span">
-            {t("filteredByPost", { title: filteredPost?.title ?? "" })}
+            {t('filteredByPost', {title: filteredPost?.title ?? ''})}
           </Typography>
           <Button variant="ghost" size="sm" onClick={clearPostFilter}>
-            {t("clearPostFilter")}
+            {t('clearPostFilter')}
           </Button>
         </div>
       ) : null}
@@ -96,8 +96,8 @@ export function SlugTable() {
       <div className="mt-4 flex flex-wrap items-end gap-3">
         <div className="min-w-56 flex-1">
           <Input
-            label={t("search")}
-            placeholder={t("searchPlaceholder")}
+            label={t('search')}
+            placeholder={t('searchPlaceholder')}
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
           />
@@ -106,29 +106,30 @@ export function SlugTable() {
 
       {slugs.isError ? (
         <div className="mt-4">
-          <AdminErrorState error={slugs.error} onRetry={() => slugs.refetch()} />
+          <AdminErrorState
+            error={slugs.error}
+            onRetry={() => slugs.refetch()}
+          />
         </div>
       ) : (
         <div className="mt-4">
-          <TableRoot caption={t("caption")}>
+          <TableRoot caption={t('caption')}>
             <TableHead>
               <TableRow>
                 <TableSortHeaderCell
-                  direction={directionOf("slug")}
-                  onToggle={() => toggleSort("slug")}
-                  sortHint={t("sortHint", { column: t("columns.oldUrl") })}
-                >
-                  {t("columns.oldUrl")}
+                  direction={directionOf('slug')}
+                  onToggle={() => toggleSort('slug')}
+                  sortHint={t('sortHint', {column: t('columns.oldUrl')})}>
+                  {t('columns.oldUrl')}
                 </TableSortHeaderCell>
-                <TableHeaderCell>{t("columns.post")}</TableHeaderCell>
+                <TableHeaderCell>{t('columns.post')}</TableHeaderCell>
                 <TableSortHeaderCell
-                  direction={directionOf("created")}
-                  onToggle={() => toggleSort("created")}
-                  sortHint={t("sortHint", { column: t("columns.createdAt") })}
-                >
-                  {t("columns.createdAt")}
+                  direction={directionOf('created')}
+                  onToggle={() => toggleSort('created')}
+                  sortHint={t('sortHint', {column: t('columns.createdAt')})}>
+                  {t('columns.createdAt')}
                 </TableSortHeaderCell>
-                <TableActionsHeaderCell label={t("columns.actions")} />
+                <TableActionsHeaderCell label={t('columns.actions')} />
               </TableRow>
             </TableHead>
             <TableBody>
@@ -136,7 +137,7 @@ export function SlugTable() {
                 <SkeletonRows />
               ) : slugs.data.items.length === 0 ? (
                 <TableEmptyRow colSpan={COLUMN_COUNT}>
-                  {query.q || query.postId ? t("emptyFiltered") : t("empty")}
+                  {query.q || query.postId ? t('emptyFiltered') : t('empty')}
                 </TableEmptyRow>
               ) : (
                 slugs.data.items.map((row) => (
@@ -170,7 +171,7 @@ export function SlugTable() {
         <DeleteSlugDialog row={deleting} onClose={() => setDeleting(null)} />
       ) : null}
     </main>
-  );
+  )
 }
 
 function SlugRow({
@@ -178,12 +179,12 @@ function SlugRow({
   onEdit,
   onDelete,
 }: {
-  row: BlogPostSlug;
-  onEdit: () => void;
-  onDelete: () => void;
+  row: BlogPostSlug
+  onEdit: () => void
+  onDelete: () => void
 }) {
-  const t = useTranslations("admin.posts.slugs");
-  const df = useDateFormat();
+  const t = useTranslations('admin.posts.slugs')
+  const df = useDateFormat()
 
   return (
     <TableRow onActivate={onEdit}>
@@ -202,16 +203,16 @@ function SlugRow({
       <TableCell className="whitespace-nowrap opacity-70">
         {df.dateTime(row.createdAt)}
       </TableCell>
-      <TableRowActions label={t("columns.actions")}>
+      <TableRowActions label={t('columns.actions')}>
         <DropdownMenuItem icon={ICONS.edit} onSelect={onEdit}>
-          {t("actions.edit")}
+          {t('actions.edit')}
         </DropdownMenuItem>
         <DropdownMenuItem icon={ICONS.delete} tone="danger" onSelect={onDelete}>
-          {t("actions.delete")}
+          {t('actions.delete')}
         </DropdownMenuItem>
       </TableRowActions>
     </TableRow>
-  );
+  )
 }
 
 /**
@@ -228,58 +229,57 @@ function EditSlugDialog({
   row,
   onClose,
 }: {
-  row: BlogPostSlug;
-  onClose: () => void;
+  row: BlogPostSlug
+  onClose: () => void
 }) {
-  const t = useTranslations("admin.posts.slugs");
-  const tc = useTranslations("common");
-  const m = useMessage();
-  const update = useUpdateAdminBlogSlug();
+  const t = useTranslations('admin.posts.slugs')
+  const tc = useTranslations('common')
+  const m = useMessage()
+  const update = useUpdateAdminBlogSlug()
 
-  const [phase, setPhase] = useState<"edit" | "confirm">("edit");
-  const [value, setValue] = useState(row.slug);
-  const [confirmValue, setConfirmValue] = useState("");
-  const [error, setError] = useState<Message | string | null>(null);
+  const [phase, setPhase] = useState<'edit' | 'confirm'>('edit')
+  const [value, setValue] = useState(row.slug)
+  const [confirmValue, setConfirmValue] = useState('')
+  const [error, setError] = useState<Message | string | null>(null)
 
   // Preview what the backend will actually store — it slugifies before saving,
   // so showing the raw input would promise a URL that never appears.
-  const normalized = slugify(value);
-  const unchanged = normalized === row.slug;
+  const normalized = slugify(value)
+  const unchanged = normalized === row.slug
 
   return (
-    <Dialog open onClose={onClose} title={t("edit.title")}>
-      {phase === "edit" ? (
+    <Dialog open onClose={onClose} title={t('edit.title')}>
+      {phase === 'edit' ? (
         <div className="flex flex-col gap-4">
           <Input
-            label={t("edit.slugLabel")}
+            label={t('edit.slugLabel')}
             value={value}
             autoFocus
             onChange={(event) => setValue(event.target.value)}
           />
           <Typography variant="body-4" className="opacity-70">
-            {t("edit.preview", { url: `/blogs/${normalized || "…"}` })}
+            {t('edit.preview', {url: `/blogs/${normalized || '…'}`})}
           </Typography>
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onClose}>
-              {tc("actions.cancel")}
+              {tc('actions.cancel')}
             </Button>
             <Button
               disabled={!normalized || unchanged}
               onClick={() => {
-                setError(null);
-                setConfirmValue("");
-                setPhase("confirm");
-              }}
-            >
-              {tc("actions.continue")}
+                setError(null)
+                setConfirmValue('')
+                setPhase('confirm')
+              }}>
+              {tc('actions.continue')}
             </Button>
           </div>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
           <Typography variant="body-3">
-            {t.rich("edit.consequence", {
+            {t.rich('edit.consequence', {
               old: `/blogs/${row.slug}`,
               next: `/blogs/${normalized}`,
               title: row.post.title,
@@ -287,11 +287,11 @@ function EditSlugDialog({
             })}
           </Typography>
           <Typography variant="body-4" className="text-warning">
-            {t("edit.unknownTraffic")}
+            {t('edit.unknownTraffic')}
           </Typography>
 
           <Input
-            label={t("edit.confirmLabel", { slug: row.slug })}
+            label={t('edit.confirmLabel', {slug: row.slug})}
             value={confirmValue}
             autoFocus
             onChange={(event) => setConfirmValue(event.target.value)}
@@ -300,31 +300,30 @@ function EditSlugDialog({
           <AlertError message={m(error)} />
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setPhase("edit")}>
-              {tc("actions.back")}
+            <Button variant="outline" onClick={() => setPhase('edit')}>
+              {tc('actions.back')}
             </Button>
             <Button
               className="bg-danger text-white hover:opacity-90"
               disabled={confirmValue.trim() !== row.slug}
               loading={update.isPending}
               onClick={async () => {
-                setError(null);
+                setError(null)
                 try {
-                  await update.mutateAsync({ id: row.id, slug: normalized });
-                  onClose();
+                  await update.mutateAsync({id: row.id, slug: normalized})
+                  onClose()
                 } catch (cause) {
-                  setError(blogErrorText(cause));
-                  setPhase("edit");
+                  setError(blogErrorText(cause))
+                  setPhase('edit')
                 }
-              }}
-            >
-              {update.isPending ? tc("states.saving") : t("edit.submit")}
+              }}>
+              {update.isPending ? tc('states.saving') : t('edit.submit')}
             </Button>
           </div>
         </div>
       )}
     </Dialog>
-  );
+  )
 }
 
 /**
@@ -336,58 +335,57 @@ function DeleteSlugDialog({
   row,
   onClose,
 }: {
-  row: BlogPostSlug;
-  onClose: () => void;
+  row: BlogPostSlug
+  onClose: () => void
 }) {
-  const t = useTranslations("admin.posts.slugs");
-  const tc = useTranslations("common");
-  const m = useMessage();
-  const remove = useDeleteAdminBlogSlug();
-  const [error, setError] = useState<Message | string | null>(null);
+  const t = useTranslations('admin.posts.slugs')
+  const tc = useTranslations('common')
+  const m = useMessage()
+  const remove = useDeleteAdminBlogSlug()
+  const [error, setError] = useState<Message | string | null>(null)
 
   return (
-    <Dialog open onClose={onClose} title={t("delete.title")}>
+    <Dialog open onClose={onClose} title={t('delete.title')}>
       <div className="flex flex-col gap-4">
         <Typography variant="body-3">
-          {t("delete.body", { url: `/blogs/${row.slug}` })}
+          {t('delete.body', {url: `/blogs/${row.slug}`})}
         </Typography>
         <Typography variant="body-4" className="opacity-70">
-          {t("delete.postStaysReachable", { url: `/blogs/${row.post.slug}` })}
+          {t('delete.postStaysReachable', {url: `/blogs/${row.post.slug}`})}
         </Typography>
 
         <AlertError message={m(error)} />
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
-            {tc("actions.cancel")}
+            {tc('actions.cancel')}
           </Button>
           <Button
             className="bg-danger text-white hover:opacity-90"
             loading={remove.isPending}
             onClick={async () => {
-              setError(null);
+              setError(null)
               try {
-                await remove.mutateAsync(row.id);
-                onClose();
+                await remove.mutateAsync(row.id)
+                onClose()
               } catch (cause) {
-                setError(blogErrorText(cause));
+                setError(blogErrorText(cause))
               }
-            }}
-          >
-            {remove.isPending ? tc("states.deleting") : t("delete.submit")}
+            }}>
+            {remove.isPending ? tc('states.deleting') : t('delete.submit')}
           </Button>
         </div>
       </div>
     </Dialog>
-  );
+  )
 }
 
 function SkeletonRows() {
   return (
     <>
-      {Array.from({ length: 5 }).map((_, index) => (
+      {Array.from({length: 5}).map((_, index) => (
         <TableRow key={index}>
-          {Array.from({ length: COLUMN_COUNT }).map((__, cell) => (
+          {Array.from({length: COLUMN_COUNT}).map((__, cell) => (
             <TableCell key={cell}>
               <Skeleton className="h-4 w-full" />
             </TableCell>
@@ -395,5 +393,5 @@ function SkeletonRows() {
         </TableRow>
       ))}
     </>
-  );
+  )
 }

@@ -1,8 +1,8 @@
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import {NextIntlClientProvider} from 'next-intl'
+import {getMessages} from 'next-intl/server'
 
-import { type MessageTree, pickMessages } from "./messages";
-import { SHARED_NAMESPACES, type Namespace } from "./namespaces";
+import {type MessageTree, pickMessages} from './messages'
+import {SHARED_NAMESPACES, type Namespace} from './namespaces'
 
 /**
  * Hands messages down to Client Components — but only **this route's
@@ -22,17 +22,17 @@ export async function IntlProvider({
   namespace,
   children,
 }: {
-  namespace?: Namespace;
-  children: React.ReactNode;
+  namespace?: Namespace
+  children: React.ReactNode
 }) {
-  const messages = (await getMessages()) as MessageTree;
+  const messages = (await getMessages()) as MessageTree
   const namespaces = namespace
     ? [...SHARED_NAMESPACES, namespace]
-    : [...SHARED_NAMESPACES];
+    : [...SHARED_NAMESPACES]
 
   return (
     <NextIntlClientProvider messages={pickMessages(messages, namespaces)}>
       {children}
     </NextIntlClientProvider>
-  );
+  )
 }

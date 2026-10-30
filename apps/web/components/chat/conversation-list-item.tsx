@@ -1,37 +1,37 @@
-"use client";
+'use client'
 
-import { Link } from "@noalhub/i18n/navigation";
-import { useTranslations } from "next-intl";
+import {Link} from '@noalhub/i18n/navigation'
+import {useTranslations} from 'next-intl'
 
-import { Avatar } from "@noalhub/ui/avatar";
-import { PresenceDot } from "./presence-dot";
-import { UnreadBadge } from "./unread-badge";
-import { useChatFormat } from "./use-chat-format";
-import { useAuthStore } from "@noalhub/api/auth";
-import { otherMember } from "@noalhub/core/chat/format";
-import type { Conversation } from "@noalhub/api/chat";
-import { Typography } from "@noalhub/ui/typography";
+import {Avatar} from '@noalhub/ui/avatar'
+import {PresenceDot} from './presence-dot'
+import {UnreadBadge} from './unread-badge'
+import {useChatFormat} from './use-chat-format'
+import {useAuthStore} from '@noalhub/api/auth'
+import {otherMember} from '@noalhub/core/chat/format'
+import type {Conversation} from '@noalhub/api/chat'
+import {Typography} from '@noalhub/ui/typography'
 
 export function ConversationListItem({
   conversation,
   active,
 }: {
-  conversation: Conversation;
-  active: boolean;
+  conversation: Conversation
+  active: boolean
 }) {
-  const t = useTranslations("web.chat.sidebar");
-  const cf = useChatFormat();
-  const currentUserId = useAuthStore((state) => state.user?.id ?? null);
-  const name = cf.conversationName(conversation, currentUserId);
-  const peer = otherMember(conversation, currentUserId);
-  const last = conversation.lastMessage;
+  const t = useTranslations('web.chat.sidebar')
+  const cf = useChatFormat()
+  const currentUserId = useAuthStore((state) => state.user?.id ?? null)
+  const name = cf.conversationName(conversation, currentUserId)
+  const peer = otherMember(conversation, currentUserId)
+  const last = conversation.lastMessage
 
   // A "You: …" prefix distinguishes your own messages without opening the conversation.
   const preview = !last
-    ? t("noMessages")
+    ? t('noMessages')
     : last.senderId === currentUserId
-      ? t("youPrefix", { body: last.body })
-      : last.body;
+      ? t('youPrefix', {body: last.body})
+      : last.body
 
   return (
     <li>
@@ -39,17 +39,19 @@ export function ConversationListItem({
         href={`/chat/${conversation.id}`}
         // `aria-current="page"` is how a screen reader knows which item is open —
         // a background color alone says nothing.
-        aria-current={active ? "page" : undefined}
+        aria-current={active ? 'page' : undefined}
         className={`flex items-center gap-3 rounded-lg p-2 transition-colors ${
           active
-            ? "bg-black/[0.07] dark:bg-white/10"
-            : "hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
-        }`}
-      >
+            ? 'bg-black/[0.07] dark:bg-white/10'
+            : 'hover:bg-black/[0.04] dark:hover:bg-white/[0.06]'
+        }`}>
         <span className="relative shrink-0">
           <Avatar name={name} src={peer?.avatarUrl} />
-          {conversation.type === "direct" ? (
-            <PresenceDot userId={peer?.userId} className="absolute -right-0.5 -bottom-0.5" />
+          {conversation.type === 'direct' ? (
+            <PresenceDot
+              userId={peer?.userId}
+              className="absolute -right-0.5 -bottom-0.5"
+            />
           ) : null}
         </span>
 
@@ -58,7 +60,10 @@ export function ConversationListItem({
             <Typography variant="title-4" as="span" className="truncate">
               {name}
             </Typography>
-            <Typography as="span" variant="body-4" className="shrink-0 opacity-50">
+            <Typography
+              as="span"
+              variant="body-4"
+              className="shrink-0 opacity-50">
               {cf.conversationTimestamp(last?.createdAt ?? null)}
             </Typography>
           </span>
@@ -67,8 +72,7 @@ export function ConversationListItem({
               as="span"
               variant="body-4"
               weight={conversation.unreadCount > 0 ? 500 : 400}
-              className={`truncate ${conversation.unreadCount > 0 ? "" : "opacity-60"}`}
-            >
+              className={`truncate ${conversation.unreadCount > 0 ? '' : 'opacity-60'}`}>
               {preview}
             </Typography>
             <UnreadBadge count={conversation.unreadCount} />
@@ -76,5 +80,5 @@ export function ConversationListItem({
         </span>
       </Link>
     </li>
-  );
+  )
 }

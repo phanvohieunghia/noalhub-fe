@@ -1,13 +1,13 @@
-"use client";
+'use client'
 
-import { forwardRef, useId } from "react";
-import { Checkbox as RadixCheckbox } from "radix-ui";
+import {forwardRef, useId} from 'react'
+import {Checkbox as RadixCheckbox} from 'radix-ui'
 
-import { Icon, ICONS, LUCIDE } from "./icons";
-import { Spinner } from "./spinner";
-import { Typography } from "./typography";
-import type { SpinnerSize } from "./spinner";
-import { keysOf } from "./variants";
+import {Icon, ICONS, LUCIDE} from './icons'
+import {Spinner} from './spinner'
+import {Typography} from './typography'
+import type {SpinnerSize} from './spinner'
+import {keysOf} from './variants'
 
 /**
  * Box size, paired with the icon that sits inside it.
@@ -17,32 +17,35 @@ import { keysOf } from "./variants";
  * a filter list.
  */
 const SIZES = {
-  sm: { box: "size-4 rounded", icon: "size-3", spinner: "xs" },
-  md: { box: "size-5 rounded-md", icon: "size-3.5", spinner: "xs" },
-} as const satisfies Record<string, { box: string; icon: string; spinner: SpinnerSize }>;
+  sm: {box: 'size-4 rounded', icon: 'size-3', spinner: 'xs'},
+  md: {box: 'size-5 rounded-md', icon: 'size-3.5', spinner: 'xs'},
+} as const satisfies Record<
+  string,
+  {box: string; icon: string; spinner: SpinnerSize}
+>
 
-export type CheckboxSize = keyof typeof SIZES;
+export type CheckboxSize = keyof typeof SIZES
 
 /** Derived from the table above — see `variants.ts`. */
-export const CHECKBOX_SIZES = keysOf(SIZES);
+export const CHECKBOX_SIZES = keysOf(SIZES)
 
 type CheckboxProps = Omit<
   React.ComponentPropsWithoutRef<typeof RadixCheckbox.Root>,
-  "children"
+  'children'
 > & {
   /** If omitted, pass an `aria-label` yourself — an unlabelled box is an a11y bug. */
-  label?: string;
+  label?: string
   /** Help text under the label. Hidden while `error` is showing. */
-  hint?: string;
-  error?: string;
-  size?: CheckboxSize;
+  hint?: string
+  error?: string
+  size?: CheckboxSize
   /**
    * A toggle whose result is still in flight — an optimistic switch waiting on
    * its request. Implies `disabled`: the box keeps showing the state the server
    * last confirmed instead of a second click racing the first.
    */
-  loading?: boolean;
-};
+  loading?: boolean
+}
 
 /**
  * A checkbox on Radix's primitive rather than a bare `<input type="checkbox">`:
@@ -58,18 +61,28 @@ export const Checkbox = forwardRef<
   React.ComponentRef<typeof RadixCheckbox.Root>,
   CheckboxProps
 >(function Checkbox(
-  { label, hint, error, size = "md", loading = false, disabled, id, className = "", ...props },
+  {
+    label,
+    hint,
+    error,
+    size = 'md',
+    loading = false,
+    disabled,
+    id,
+    className = '',
+    ...props
+  },
   ref,
 ) {
-  const generatedId = useId();
-  const checkboxId = id ?? generatedId;
-  const errorId = `${checkboxId}-error`;
-  const hintId = `${checkboxId}-hint`;
-  const sizeClasses = SIZES[size];
-  const isDisabled = disabled || loading;
-  const describedBy = error ? errorId : hint ? hintId : undefined;
+  const generatedId = useId()
+  const checkboxId = id ?? generatedId
+  const errorId = `${checkboxId}-error`
+  const hintId = `${checkboxId}-hint`
+  const sizeClasses = SIZES[size]
+  const isDisabled = disabled || loading
+  const describedBy = error ? errorId : hint ? hintId : undefined
   /** Box width + gap, so hint and error line up under the label, not the box. */
-  const indent = size === "sm" ? "ps-[1.625rem]" : "ps-[1.875rem]";
+  const indent = size === 'sm' ? 'ps-[1.625rem]' : 'ps-[1.875rem]'
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -101,15 +114,13 @@ export const Checkbox = forwardRef<
               data-[state=checked]:bg-primary data-[state=checked]:border-primary
               data-[state=indeterminate]:bg-primary data-[state=indeterminate]:border-primary
               aria-[invalid=true]:border-danger aria-[invalid=true]:focus-visible:ring-danger/30
-              ${loading ? "cursor-progress" : isDisabled ? "opacity-50" : ""}
-              ${sizeClasses.box} ${className}`}
-          >
+              ${loading ? 'cursor-progress' : isDisabled ? 'opacity-50' : ''}
+              ${sizeClasses.box} ${className}`}>
             {/* Outside the Indicator: that one only renders while checked, and a
                 pending toggle has to be visible from the unchecked side too. */}
             {loading ? <Spinner size={sizeClasses.spinner} /> : null}
             <RadixCheckbox.Indicator
-              className={`items-center justify-center ${loading ? "hidden" : "flex"}`}
-            >
+              className={`items-center justify-center ${loading ? 'hidden' : 'flex'}`}>
               {/*
                 Both marks are rendered and the Root's `data-state` picks one, so
                 the dash/tick choice follows the real state — including the
@@ -131,10 +142,9 @@ export const Checkbox = forwardRef<
             variant="body-3"
             as="label"
             htmlFor={checkboxId}
-            className={`cursor-pointer select-none ${loading ? "cursor-progress" : ""} ${
-              disabled ? "cursor-not-allowed opacity-50" : ""
-            }`}
-          >
+            className={`cursor-pointer select-none ${loading ? 'cursor-progress' : ''} ${
+              disabled ? 'cursor-not-allowed opacity-50' : ''
+            }`}>
             {label}
           </Typography>
         ) : null}
@@ -144,15 +154,17 @@ export const Checkbox = forwardRef<
           variant="body-3"
           id={errorId}
           role="alert"
-          className={`text-danger ${indent}`}
-        >
+          className={`text-danger ${indent}`}>
           {error}
         </Typography>
       ) : hint ? (
-        <Typography variant="body-3" id={hintId} className={`text-muted-foreground ${indent}`}>
+        <Typography
+          variant="body-3"
+          id={hintId}
+          className={`text-muted-foreground ${indent}`}>
           {hint}
         </Typography>
       ) : null}
     </div>
-  );
-});
+  )
+})

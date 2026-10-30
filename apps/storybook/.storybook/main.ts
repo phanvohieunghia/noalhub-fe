@@ -1,9 +1,9 @@
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import {existsSync} from 'node:fs'
+import {resolve} from 'node:path'
 
-import type { StorybookConfig } from "@storybook/nextjs-vite";
+import type {StorybookConfig} from '@storybook/nextjs-vite'
 
-import { readThemeTokens } from "./theme-tokens.ts";
+import {readThemeTokens} from './theme-tokens.ts'
 
 /**
  * `apps/storybook/.env` (not in git — `.env*` is ignored at the repo root).
@@ -18,8 +18,8 @@ import { readThemeTokens } from "./theme-tokens.ts";
  * `process.cwd()` is the package directory: both `pnpm dev` and `turbo run
  * build-storybook` run the task with cwd set there.
  */
-const envFile = resolve(process.cwd(), ".env");
-if (existsSync(envFile)) process.loadEnvFile(envFile);
+const envFile = resolve(process.cwd(), '.env')
+if (existsSync(envFile)) process.loadEnvFile(envFile)
 
 /**
  * Who this build is for.
@@ -33,15 +33,15 @@ if (existsSync(envFile)) process.loadEnvFile(envFile);
  * The two builds ship as two images (`-storybook`, `-storybook-internal`) and
  * only the internal one sits behind nginx basic auth — see the Dockerfile.
  */
-const audience = process.env.SB_AUDIENCE === "public" ? "public" : "internal";
+const audience = process.env.SB_AUDIENCE === 'public' ? 'public' : 'internal'
 
 /** Stories anyone may see: the design system itself. */
 const PUBLIC_STORIES = [
-  "../src/components/**/*.mdx",
-  "../src/components/**/*.stories.@(js|jsx|mjs|ts|tsx)",
-  "../src/foundations/**/*.mdx",
-  "../src/foundations/**/*.stories.@(js|jsx|mjs|ts|tsx)",
-];
+  '../src/components/**/*.mdx',
+  '../src/components/**/*.stories.@(js|jsx|mjs|ts|tsx)',
+  '../src/foundations/**/*.mdx',
+  '../src/foundations/**/*.stories.@(js|jsx|mjs|ts|tsx)',
+]
 
 /**
  * Team-only stories. The flow maps live here: they spell out how auth behaves —
@@ -49,28 +49,34 @@ const PUBLIC_STORIES = [
  * reveal — which a public component gallery has no reason to hand out.
  */
 const INTERNAL_STORIES = [
-  "../src/internal/**/*.mdx",
-  "../src/internal/**/*.stories.@(js|jsx|mjs|ts|tsx)",
-];
+  '../src/internal/**/*.mdx',
+  '../src/internal/**/*.stories.@(js|jsx|mjs|ts|tsx)',
+]
 
 const config: StorybookConfig = {
   stories:
-    audience === "public" ? PUBLIC_STORIES : [...PUBLIC_STORIES, ...INTERNAL_STORIES],
+    audience === 'public'
+      ? PUBLIC_STORIES
+      : [...PUBLIC_STORIES, ...INTERNAL_STORIES],
   /**
    * Serves `public/` at the root, which is also how Storybook picks up our
    * favicon: the `favicon` preset looks for a `favicon.svg` at the root of a
    * static dir before falling back to its own. `public/favicon.svg` is a copy of
    * the apps' `app/icon.svg` — the mark with fixed brand colors.
    */
-  staticDirs: ["../public"],
+  staticDirs: ['../public'],
   /**
    * `addon-docs` is what compiles `.mdx` and honours the `autodocs` tag set in
    * `preview.tsx` — without it that tag is a no-op (the index had zero `docs`
    * entries) and an MDX page never reaches the sidebar.
    */
-  addons: ["@storybook/addon-a11y", "@storybook/addon-themes", "@storybook/addon-docs"],
+  addons: [
+    '@storybook/addon-a11y',
+    '@storybook/addon-themes',
+    '@storybook/addon-docs',
+  ],
   framework: {
-    name: "@storybook/nextjs-vite",
+    name: '@storybook/nextjs-vite',
     options: {},
   },
   /**
@@ -82,12 +88,12 @@ const config: StorybookConfig = {
    * eleven brand steps under hundreds of Tailwind ones. The file itself is the
    * only place that knows which tokens are OURS.
    */
-  viteFinal: async (viteConfig, { configDir }) => ({
+  viteFinal: async (viteConfig, {configDir}) => ({
     ...viteConfig,
     define: {
       ...viteConfig.define,
       __THEME_TOKENS__: JSON.stringify(readThemeTokens(configDir)),
     },
   }),
-};
-export default config;
+}
+export default config

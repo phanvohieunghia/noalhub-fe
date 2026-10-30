@@ -1,11 +1,11 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
+import {useTranslations} from 'next-intl'
 
-import { Avatar } from "@noalhub/ui/avatar";
-import { MessageBubble } from "./message-bubble";
-import type { ConversationMember, Message } from "@noalhub/api/chat";
-import { Typography } from "@noalhub/ui/typography";
+import {Avatar} from '@noalhub/ui/avatar'
+import {MessageBubble} from './message-bubble'
+import type {ConversationMember, Message} from '@noalhub/api/chat'
+import {Typography} from '@noalhub/ui/typography'
 
 /**
  * A run of consecutive messages from one person: the avatar and name appear
@@ -22,24 +22,26 @@ export function MessageGroup({
   currentUserId,
   onRetry,
 }: {
-  messages: Message[];
-  senderId: string | null;
-  members: Map<string, ConversationMember>;
-  currentUserId: string | null;
-  onRetry: (message: Message) => void;
+  messages: Message[]
+  senderId: string | null
+  members: Map<string, ConversationMember>
+  currentUserId: string | null
+  onRetry: (message: Message) => void
 }) {
-  const t = useTranslations("web.chat.messages");
-  const mine = senderId !== null && senderId === currentUserId;
-  const sender = senderId ? members.get(senderId) : undefined;
+  const t = useTranslations('web.chat.messages')
+  const mine = senderId !== null && senderId === currentUserId
+  const sender = senderId ? members.get(senderId) : undefined
 
   // A null senderId means the sender was deleted from the system (ON DELETE SET NULL).
   const name =
-    senderId === null ? t("deletedUser") : (sender?.displayName ?? t("unknownUser"));
+    senderId === null
+      ? t('deletedUser')
+      : (sender?.displayName ?? t('unknownUser'))
 
-  const memberList = [...members.values()];
+  const memberList = [...members.values()]
 
   return (
-    <div className={`flex gap-2 ${mine ? "flex-row-reverse" : ""}`}>
+    <div className={`flex gap-2 ${mine ? 'flex-row-reverse' : ''}`}>
       {mine ? null : <Avatar name={name} src={sender?.avatarUrl} size="sm" />}
 
       <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -47,8 +49,7 @@ export function MessageGroup({
           <Typography
             as="span"
             variant="body-4"
-            className={`px-1 opacity-60 ${senderId === null ? "italic" : ""}`}
-          >
+            className={`px-1 opacity-60 ${senderId === null ? 'italic' : ''}`}>
             {name}
           </Typography>
         )}
@@ -64,5 +65,5 @@ export function MessageGroup({
         ))}
       </div>
     </div>
-  );
+  )
 }

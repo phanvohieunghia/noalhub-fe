@@ -1,7 +1,7 @@
-import Image from "next/image";
-import { Fragment } from "react";
+import Image from 'next/image'
+import {Fragment} from 'react'
 
-import { isSafeImageSrc, isSafeLinkHref } from "@noalhub/api/blog";
+import {isSafeImageSrc, isSafeLinkHref} from '@noalhub/api/blog'
 import type {
   BlogBlockNode,
   BlogDoc,
@@ -9,12 +9,12 @@ import type {
   BlogInlineNode,
   BlogListItemNode,
   BlogTextNode,
-} from "@noalhub/api/blog";
-import { alignClassName } from "./align-markdown";
-import { MermaidDiagram } from "./mermaid-diagram";
-import { collectHeadings } from "@noalhub/core/blog/headings";
+} from '@noalhub/api/blog'
+import {alignClassName} from './align-markdown'
+import {MermaidDiagram} from './mermaid-diagram'
+import {collectHeadings} from '@noalhub/core/blog/headings'
 
-import "./post-prose.css";
+import './post-prose.css'
 
 /**
  * The Tiptap JSON → React renderer. **One code path** for `apps/web` (the real
@@ -37,75 +37,79 @@ import "./post-prose.css";
  * fetch, cache, editor state) and one path forgetting to filter is enough for
  * stored XSS (§3.1a).
  */
-export function PostContent({ doc, className }: { doc: BlogDoc; className?: string }) {
+export function PostContent({
+  doc,
+  className,
+}: {
+  doc: BlogDoc
+  className?: string
+}) {
   // Walk the tree ONCE for de-duplicated ids — the same function the table of
   // contents uses, so anchors and the TOC cannot diverge (§3.3).
-  const headings = collectHeadings(doc);
-  let headingCursor = 0;
+  const headings = collectHeadings(doc)
+  let headingCursor = 0
 
   return (
-    <div className={className ? `post-prose ${className}` : "post-prose"}>
+    <div className={className ? `post-prose ${className}` : 'post-prose'}>
       {doc.content.map((node, index) => {
         const headingId =
-          node.type === "heading" ? headings[headingCursor++]?.id : undefined;
-        return <Block key={index} node={node} headingId={headingId} />;
+          node.type === 'heading' ? headings[headingCursor++]?.id : undefined
+        return <Block key={index} node={node} headingId={headingId} />
       })}
     </div>
-  );
+  )
 }
 
-function Block({
-  node,
-  headingId,
-}: {
-  node: BlogBlockNode;
-  headingId?: string;
-}) {
+function Block({node, headingId}: {node: BlogBlockNode; headingId?: string}) {
   switch (node.type) {
-    case "paragraph":
+    case 'paragraph':
       // An empty paragraph is how an author adds a pause — keep the line height.
       return (
         <p className={alignClassName(node.attrs?.textAlign)}>
           {node.content?.length ? <Inline nodes={node.content} /> : <br />}
         </p>
-      );
+      )
 
-    case "heading": {
+    case 'heading': {
       // `<h1>` is the post title (§6.2), so content only ever has h2/h3.
-      const Tag = node.attrs.level === 3 ? "h3" : "h2";
+      const Tag = node.attrs.level === 3 ? 'h3' : 'h2'
       return (
         <Tag id={headingId} className={alignClassName(node.attrs.textAlign)}>
           <Inline nodes={node.content ?? []} />
         </Tag>
-      );
+      )
     }
 
-    case "bulletList":
+    case 'bulletList':
       return (
         <ul>
           <ListItems items={node.content} />
         </ul>
-      );
+      )
 
-    case "orderedList":
+    case 'orderedList':
       return (
         <ol>
           <ListItems items={node.content} />
         </ol>
-      );
+      )
 
-    case "blockquote":
+    case 'blockquote':
       return (
         <blockquote>
           {node.content.map((child, index) => (
             <Block key={index} node={child} />
           ))}
         </blockquote>
-      );
+      )
 
-    case "codeBlock":
-      if (node.attrs.language === "mermaid") {
-        return <MermaidDiagram chart={node.content?.map((child) => child.text).join("") ?? ""} />;
+    case 'codeBlock':
+      if (node.attrs.language === 'mermaid') {
+        return (
+          <MermaidDiagram
+            chart={node.content?.map((child) => child.text).join('') ?? ''}
+          />
+        )
       }
       return (
         // `tabIndex` because the block scrolls sideways (`post-prose.css`):
@@ -114,18 +118,21 @@ function Block({
         // `scrollable-region-focusable`).
         <pre tabIndex={0}>
           <code
-            className={node.attrs.language ? `language-${node.attrs.language}` : undefined}
-          >
-            {node.content?.map((child) => child.text).join("") ?? ""}
+            className={
+              node.attrs.language
+                ? `language-${node.attrs.language}`
+                : undefined
+            }>
+            {node.content?.map((child) => child.text).join('') ?? ''}
           </code>
         </pre>
-      );
+      )
 
     /*
      * Wrapped in a scroller: a wide table is the one block that makes the whole
      * page scroll sideways on a phone, and that breaks every other block with it.
      */
-    case "table":
+    case 'table':
       return (
         <div className="post-prose-table-scroll">
           <table>
@@ -133,40 +140,47 @@ function Block({
               {node.content.map((row, index) => (
                 <tr key={index}>
                   {row.content.map((cell, cellIndex) => {
-                    const Tag = cell.type === "tableHeader" ? "th" : "td";
+                    const Tag = cell.type === 'tableHeader' ? 'th' : 'td'
                     return (
                       <Tag
                         key={cellIndex}
                         // `undefined` rather than 1: React omits the attribute
                         // instead of writing the default into the markup.
-                        colSpan={cell.attrs.colspan > 1 ? cell.attrs.colspan : undefined}
-                        rowSpan={cell.attrs.rowspan > 1 ? cell.attrs.rowspan : undefined}
-                      >
+                        colSpan={
+                          cell.attrs.colspan > 1
+                            ? cell.attrs.colspan
+                            : undefined
+                        }
+                        rowSpan={
+                          cell.attrs.rowspan > 1
+                            ? cell.attrs.rowspan
+                            : undefined
+                        }>
                         {cell.content.map((child, childIndex) => (
                           <Block key={childIndex} node={child} />
                         ))}
                       </Tag>
-                    );
+                    )
                   })}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      );
+      )
 
-    case "horizontalRule":
-      return <hr />;
+    case 'horizontalRule':
+      return <hr />
 
-    case "image":
-      return <ContentImage node={node} />;
+    case 'image':
+      return <ContentImage node={node} />
 
     default:
-      return null;
+      return null
   }
 }
 
-function ListItems({ items }: { items: BlogListItemNode[] }) {
+function ListItems({items}: {items: BlogListItemNode[]}) {
   return (
     <>
       {items.map((item, index) => (
@@ -177,7 +191,7 @@ function ListItems({ items }: { items: BlogListItemNode[] }) {
         </li>
       ))}
     </>
-  );
+  )
 }
 
 /**
@@ -189,14 +203,10 @@ function ListItems({ items }: { items: BlogListItemNode[] }) {
  * frame reserved space against CLS, but left a blank band under any other ratio;
  * sized images (the blog editor always measures) still reserve theirs.
  */
-function ContentImage({
-  node,
-}: {
-  node: Extract<BlogBlockNode, { type: "image" }>;
-}) {
-  const { src, alt, width, height, align, widthPercent } = node.attrs;
+function ContentImage({node}: {node: Extract<BlogBlockNode, {type: 'image'}>}) {
+  const {src, alt, width, height, align, widthPercent} = node.attrs
   // The second line of defence — see the note at the top of this file.
-  if (!isSafeImageSrc(src)) return null;
+  if (!isSafeImageSrc(src)) return null
 
   if (width && height) {
     return (
@@ -207,11 +217,15 @@ function ContentImage({
           width={width}
           height={height}
           // A share of the column, with the height following the ratio.
-          style={widthPercent ? { width: `${widthPercent}%`, height: "auto" } : undefined}
+          style={
+            widthPercent
+              ? {width: `${widthPercent}%`, height: 'auto'}
+              : undefined
+          }
           sizes="(max-width: 768px) 100vw, 768px"
         />
       </figure>
-    );
+    )
   }
 
   return (
@@ -221,17 +235,17 @@ function ContentImage({
         alt={alt}
         width={0}
         height={0}
-        style={{ width: "100%", height: "auto" }}
+        style={{width: '100%', height: 'auto'}}
         sizes="(max-width: 768px) 100vw, 768px"
       />
     </figure>
-  );
+  )
 }
 
 /** A small picture inside a sentence: as tall as the text, sitting on its baseline. */
-function InlineImage({ node }: { node: BlogInlineImageNode }) {
-  const { src, alt, width, height } = node.attrs;
-  if (!isSafeImageSrc(src)) return null;
+function InlineImage({node}: {node: BlogInlineImageNode}) {
+  const {src, alt, width, height} = node.attrs
+  if (!isSafeImageSrc(src)) return null
   return (
     <Image
       src={src}
@@ -239,63 +253,68 @@ function InlineImage({ node }: { node: BlogInlineImageNode }) {
       width={width}
       height={height}
       // Preflight makes `img` a block; the inline style also beats `.post-prose img`.
-      style={{ display: "inline", height: "1.25em", width: "auto", verticalAlign: "text-bottom" }}
+      style={{
+        display: 'inline',
+        height: '1.25em',
+        width: 'auto',
+        verticalAlign: 'text-bottom',
+      }}
     />
-  );
+  )
 }
 
-function Inline({ nodes }: { nodes: BlogInlineNode[] }) {
+function Inline({nodes}: {nodes: BlogInlineNode[]}) {
   return (
     <>
       {nodes.map((node, index) => {
-        if (node.type === "hardBreak") return <br key={index} />;
-        if (node.type === "inlineImage") return <InlineImage key={index} node={node} />;
-        return <Text key={index} node={node} />;
+        if (node.type === 'hardBreak') return <br key={index} />
+        if (node.type === 'inlineImage')
+          return <InlineImage key={index} node={node} />
+        return <Text key={index} node={node} />
       })}
     </>
-  );
+  )
 }
 
-function Text({ node }: { node: BlogTextNode }) {
-  const marks = node.marks ?? [];
-  let content: React.ReactNode = node.text;
+function Text({node}: {node: BlogTextNode}) {
+  const marks = node.marks ?? []
+  let content: React.ReactNode = node.text
 
   // Character marks wrap from the inside out; `link` is applied last so it is
   // the outermost tag — `<a><strong>…</strong></a>`, not the other way round.
   for (const mark of marks) {
     switch (mark.type) {
-      case "bold":
-        content = <strong>{content}</strong>;
-        break;
-      case "italic":
-        content = <em>{content}</em>;
-        break;
-      case "strike":
-        content = <s>{content}</s>;
-        break;
-      case "code":
-        content = <code>{content}</code>;
-        break;
+      case 'bold':
+        content = <strong>{content}</strong>
+        break
+      case 'italic':
+        content = <em>{content}</em>
+        break
+      case 'strike':
+        content = <s>{content}</s>
+        break
+      case 'code':
+        content = <code>{content}</code>
+        break
       default:
-        break;
+        break
     }
   }
 
-  const link = marks.find((mark) => mark.type === "link");
+  const link = marks.find((mark) => mark.type === 'link')
   // An href failing the constraints → no <a> is rendered but the child text is
   // KEPT: a bad link degrades to plain text rather than losing words (§3.1a).
   if (link && isSafeLinkHref(link.attrs.href)) {
-    const isInternal = link.attrs.href.startsWith("/");
+    const isInternal = link.attrs.href.startsWith('/')
     content = (
       <a
         href={link.attrs.href}
         // `target`/`rel` are set by the renderer, NEVER taken from data (§3.1a).
-        {...(isInternal ? {} : { target: "_blank", rel: "nofollow noopener" })}
-      >
+        {...(isInternal ? {} : {target: '_blank', rel: 'nofollow noopener'})}>
         {content}
       </a>
-    );
+    )
   }
 
-  return <Fragment>{content}</Fragment>;
+  return <Fragment>{content}</Fragment>
 }

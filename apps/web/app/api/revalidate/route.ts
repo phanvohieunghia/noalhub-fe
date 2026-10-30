@@ -1,15 +1,15 @@
-import { timingSafeEqual } from "node:crypto";
+import {timingSafeEqual} from 'node:crypto'
 
-import { revalidateTag } from "next/cache";
+import {revalidateTag} from 'next/cache'
 
-import { BLOG_TAGS } from "@noalhub/api/blog/server";
+import {BLOG_TAGS} from '@noalhub/api/blog/server'
 
 /** Never cached: this is a command endpoint, not a page. */
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic'
 
-const SLUG_PATTERN = /^[a-z0-9-]+$/;
+const SLUG_PATTERN = /^[a-z0-9-]+$/
 /** A body with thousands of entries is a DoS lever — each entry is a cache invalidation. */
-const MAX_ITEMS_PER_ARRAY = 50;
+const MAX_ITEMS_PER_ARRAY = 50
 
 /**
  * The revalidate webhook — called by the **backend** after a post's status
@@ -38,32 +38,32 @@ const MAX_ITEMS_PER_ARRAY = 50;
  * needed.
  */
 export async function POST(request: Request) {
-  const secret = process.env.WEB_REVALIDATE_SECRET;
+  const secret = process.env.WEB_REVALIDATE_SECRET
   if (!secret) {
     // Unconfigured means refuse outright rather than leave the door unlocked.
     // The blog is still correct, only slower: the 60-second ISR is the safety
     // net already in place (§5.1).
-    return Response.json({ error: "not_configured" }, { status: 503 });
+    return Response.json({error: 'not_configured'}, {status: 503})
   }
 
-  if (!isValidSecret(request.headers.get("x-revalidate-secret"), secret)) {
+  if (!isValidSecret(request.headers.get('x-revalidate-secret'), secret)) {
     // A wrong or missing secret → 401 and NOTHING more is said (§5.2a).
-    return new Response(null, { status: 401 });
+    return new Response(null, {status: 401})
   }
 
-  let body: unknown;
+  let body: unknown
   try {
-    body = await request.json();
+    body = await request.json()
   } catch {
-    return Response.json({ error: "invalid_body" }, { status: 400 });
+    return Response.json({error: 'invalid_body'}, {status: 400})
   }
 
-  const slugs = readSlugArray(body, "slugs");
-  const categories = readSlugArray(body, "categories");
-  const tags = readSlugArray(body, "tags");
+  const slugs = readSlugArray(body, 'slugs')
+  const categories = readSlugArray(body, 'categories')
+  const tags = readSlugArray(body, 'tags')
 
   if (slugs === null || categories === null || tags === null) {
-    return Response.json({ error: "invalid_body" }, { status: 400 });
+    return Response.json({error: 'invalid_body'}, {status: 400})
   }
 
   /**
@@ -81,22 +81,23 @@ export async function POST(request: Request) {
    * works inside a Server Action, not a Route Handler — so `{ expire: 0 }` is
    * the right form for a webhook, and Next's docs say exactly that.
    */
-  const expireNow = { expire: 0 };
+  const expireNow = {expire: 0}
 
-  revalidateTag(BLOG_TAGS.list, expireNow);
-  revalidateTag(BLOG_TAGS.sitemap, expireNow);
-  revalidateTag(BLOG_TAGS.categories, expireNow);
-  revalidateTag(BLOG_TAGS.tags, expireNow);
+  revalidateTag(BLOG_TAGS.list, expireNow)
+  revalidateTag(BLOG_TAGS.sitemap, expireNow)
+  revalidateTag(BLOG_TAGS.categories, expireNow)
+  revalidateTag(BLOG_TAGS.tags, expireNow)
 
   // `slugs` is PLURAL because a slug change must invalidate both the old and the new (§2.4, §5.2b).
-  for (const slug of slugs) revalidateTag(BLOG_TAGS.post(slug), expireNow);
+  for (const slug of slugs) revalidateTag(BLOG_TAGS.post(slug), expireNow)
   // Moving a post to another category makes the backend send BOTH the old and
   // the new one; removing a tag likewise, or `/blogs/tag/<old>` keeps listing
   // that post for another 300 seconds.
-  for (const slug of categories) revalidateTag(BLOG_TAGS.category(slug), expireNow);
-  for (const slug of tags) revalidateTag(BLOG_TAGS.tag(slug), expireNow);
+  for (const slug of categories)
+    revalidateTag(BLOG_TAGS.category(slug), expireNow)
+  for (const slug of tags) revalidateTag(BLOG_TAGS.tag(slug), expireNow)
 
-  return Response.json({ revalidated: true, now: Date.now() });
+  return Response.json({revalidated: true, now: Date.now()})
 }
 
 /**
@@ -108,11 +109,11 @@ export async function POST(request: Request) {
  * blocked from outside by nginx (§5.2c).
  */
 function isValidSecret(provided: string | null, expected: string): boolean {
-  if (!provided) return false;
+  if (!provided) return false
 
-  const a = Buffer.from(provided);
-  const b = Buffer.from(expected);
-  return a.length === b.length && timingSafeEqual(a, b);
+  const a = Buffer.from(provided)
+  const b = Buffer.from(expected)
+  return a.length === b.length && timingSafeEqual(a, b)
 }
 
 /**
@@ -121,17 +122,19 @@ function isValidSecret(provided: string | null, expected: string): boolean {
  * shape → 400.
  */
 function readSlugArray(body: unknown, key: string): string[] | null {
-  if (typeof body !== "object" || body === null) return null;
+  if (typeof body !== 'object' || body === null) return null
 
-  const value = (body as Record<string, unknown>)[key];
-  if (value === undefined) return [];
-  if (!Array.isArray(value) || value.length > MAX_ITEMS_PER_ARRAY) return null;
+  const value = (body as Record<string, unknown>)[key]
+  if (value === undefined) return []
+  if (!Array.isArray(value) || value.length > MAX_ITEMS_PER_ARRAY) return null
 
   // One regex covers all three arrays because post, category and tag slugs share
   // a shape (§2.6). A malformed entry fails the whole request rather than being
   // skipped silently: if the backend sends something wrong it has to be obvious
   // immediately, not a hunt for why the cache never cleared.
-  return value.every((item) => typeof item === "string" && SLUG_PATTERN.test(item))
+  return value.every(
+    (item) => typeof item === 'string' && SLUG_PATTERN.test(item),
+  )
     ? (value as string[])
-    : null;
+    : null
 }

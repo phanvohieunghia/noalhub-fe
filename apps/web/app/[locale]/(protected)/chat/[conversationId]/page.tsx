@@ -1,4 +1,4 @@
-import { ChatPane } from "@/components/chat/chat-pane";
+import {ChatPane} from '@/components/chat/chat-pane'
 
 /**
  * `params` is async in Next 16 (the synchronous form is gone entirely). Await it
@@ -6,8 +6,8 @@ import { ChatPane } from "@/components/chat/chat-pane";
  * the server/client boundary than `useParams()`.
  */
 export default async function ConversationPage(
-  props: PageProps<"/[locale]/chat/[conversationId]">,
+  props: PageProps<'/[locale]/chat/[conversationId]'>,
 ) {
-  const { conversationId } = await props.params;
-  return <ChatPane conversationId={conversationId} />;
+  const {conversationId} = await props.params
+  return <ChatPane conversationId={conversationId} />
 }

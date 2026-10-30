@@ -6,9 +6,9 @@
  * See `docs/i18n.md`.
  */
 
-export const LOCALES = ["vi", "en"] as const;
+export const LOCALES = ['vi', 'en'] as const
 
-export type Locale = (typeof LOCALES)[number];
+export type Locale = (typeof LOCALES)[number]
 
 /**
  * The language used when there is no other signal. Must match the backend's
@@ -16,7 +16,7 @@ export type Locale = (typeof LOCALES)[number];
  * gets one language in the UI and another in `user.language` right after
  * signing up.
  */
-export const DEFAULT_LOCALE: Locale = "vi";
+export const DEFAULT_LOCALE: Locale = 'vi'
 
 /**
  * The buffer that lets SSR know the language **before** calling `/auth/me`. The
@@ -27,15 +27,15 @@ export const DEFAULT_LOCALE: Locale = "vi";
  * otherwise every language change has to round-trip through the server and the
  * UI flashes.
  */
-export const LOCALE_COOKIE = "NOALHUB_LOCALE";
+export const LOCALE_COOKIE = 'NOALHUB_LOCALE'
 
 /** One year. Anything shorter loses the choice for a user returning from a holiday. */
-export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 
 export function isLocale(value: unknown): value is Locale {
   return (
-    typeof value === "string" && (LOCALES as readonly string[]).includes(value)
-  );
+    typeof value === 'string' && (LOCALES as readonly string[]).includes(value)
+  )
 }
 
 /**
@@ -47,11 +47,11 @@ export function isLocale(value: unknown): value is Locale {
  * library into the edge bundle just to sort two items is not worth it.
  */
 export function localeFromAcceptLanguage(header: string | null): Locale | null {
-  if (!header) return null;
-  for (const part of header.split(",")) {
-    const tag = part.split(";")[0]?.trim().toLowerCase();
-    const base = tag?.split("-")[0];
-    if (isLocale(base)) return base;
+  if (!header) return null
+  for (const part of header.split(',')) {
+    const tag = part.split(';')[0]?.trim().toLowerCase()
+    const base = tag?.split('-')[0]
+    if (isLocale(base)) return base
   }
-  return null;
+  return null
 }

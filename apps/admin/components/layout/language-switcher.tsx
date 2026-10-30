@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import { LanguageSwitcher } from "@noalhub/ui/language-switcher";
-import { useRouter } from "next/navigation";
+import {LanguageSwitcher} from '@noalhub/ui/language-switcher'
+import {useRouter} from 'next/navigation'
 
 /**
  * The admin `LanguageSwitcher`: admin URLs carry no locale (§3.2), so it only
@@ -12,8 +12,10 @@ import { useRouter } from "next/navigation";
  * server-rendered part is refetched — and the server-rendered part is where the
  * messages live.
  */
-export function AdminLanguageSwitcher({ className }: { className?: string }) {
-  const router = useRouter();
+export function AdminLanguageSwitcher({className}: {className?: string}) {
+  const router = useRouter()
 
-  return <LanguageSwitcher onSwitch={() => router.refresh()} className={className} />;
+  return (
+    <LanguageSwitcher onSwitch={() => router.refresh()} className={className} />
+  )
 }

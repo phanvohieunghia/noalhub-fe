@@ -1,89 +1,89 @@
-"use client";
+'use client'
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Dialog as RadixDialog } from "radix-ui";
+import {useCallback, useEffect, useRef, useState} from 'react'
+import {Dialog as RadixDialog} from 'radix-ui'
 
-import { useTranslations } from "next-intl";
+import {useTranslations} from 'next-intl'
 
-import { Button } from "./button";
-import { Icon, ICONS } from "./icons";
-import { Typography } from "./typography";
+import {Button} from './button'
+import {Icon, ICONS} from './icons'
+import {Typography} from './typography'
 
 type DialogProps = {
-  open: boolean;
-  onClose: () => void;
-  title: string;
+  open: boolean
+  onClose: () => void
+  title: string
   /**
    * `md` is the centred card; `lg` is the same card at 720px for forms with
    * two columns of fields (it scrolls when the viewport is shorter). `fullscreen` fills the viewport instead — for
    * content that needs the room (a diagram to pan and zoom, a large preview);
    * its body is the scroll container, so the header stays put.
    */
-  size?: DialogSize;
+  size?: DialogSize
   /** An iconify name shown before the title (e.g. a verdict check). */
-  icon?: string;
+  icon?: string
   /** Colours the title and icon: a result dialog reads as success / danger at a glance. */
-  tone?: DialogTone;
+  tone?: DialogTone
   /** Sits between the title and the close button — a toolbar for the content. */
-  actions?: React.ReactNode;
+  actions?: React.ReactNode
   /**
    * Leave out the header's close button — for a window that has its own way out
    * (an editor's exit-full-screen button). `Esc` and the overlay still close it.
    */
-  hideClose?: boolean;
+  hideClose?: boolean
   /**
    * Stack the header in the middle — a large icon above a larger title — for a
    * verdict that is the whole point of the dialog (a right or wrong answer).
    */
-  centered?: boolean;
+  centered?: boolean
   /** Blur the page behind the overlay — for a verdict that should own the screen. */
-  blurOverlay?: boolean;
-  children: React.ReactNode;
-};
+  blurOverlay?: boolean
+  children: React.ReactNode
+}
 
-export type DialogSize = "md" | "lg" | "xl" | "fullscreen" | "inset";
-export type DialogTone = "default" | "success" | "danger";
+export type DialogSize = 'md' | 'lg' | 'xl' | 'fullscreen' | 'inset'
+export type DialogTone = 'default' | 'success' | 'danger'
 
 const TITLE_TONES = {
-  default: "",
-  success: "text-success",
-  danger: "text-danger",
-} as const;
+  default: '',
+  success: 'text-success',
+  danger: 'text-danger',
+} as const
 
 /** A result dialog wears its verdict: a tone-coloured border and a faint tint over the surface. */
 const CARD_TONES = {
-  default: "",
-  success: "border border-success",
-  danger: "border border-danger",
-} as const;
+  default: '',
+  success: 'border border-success',
+  danger: 'border border-danger',
+} as const
 
 const BODY_TONES = {
-  default: "",
-  success: "rounded-[inherit] bg-success/8",
-  danger: "rounded-[inherit] bg-danger/8",
-} as const;
+  default: '',
+  success: 'rounded-[inherit] bg-success/8',
+  danger: 'rounded-[inherit] bg-danger/8',
+} as const
 
 const CONTENT_SIZES = {
-  md: "top-1/2 left-1/2 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-xl shadow-xl",
-  lg: "top-1/2 left-1/2 max-h-[calc(100dvh-2rem)] w-[min(45rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border shadow-xl",
-  xl: "top-1/2 left-1/2 max-h-[calc(100dvh-2rem)] w-[min(64rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border shadow-xl",
-  fullscreen: "inset-0 flex flex-col",
+  md: 'top-1/2 left-1/2 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-xl shadow-xl',
+  lg: 'top-1/2 left-1/2 max-h-[calc(100dvh-2rem)] w-[min(45rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border shadow-xl',
+  xl: 'top-1/2 left-1/2 max-h-[calc(100dvh-2rem)] w-[min(64rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border shadow-xl',
+  fullscreen: 'inset-0 flex flex-col',
   /** Inset from the viewport with the page showing around it. */
   inset:
-    "inset-4 flex flex-col overflow-hidden rounded-lg border border-border shadow-xl md:inset-10",
-} as const;
+    'inset-4 flex flex-col overflow-hidden rounded-lg border border-border shadow-xl md:inset-10',
+} as const
 
 const BODY_SIZES = {
-  md: "flex flex-col gap-4 p-5",
-  lg: "flex flex-col gap-4 p-6",
-  xl: "flex flex-col gap-4 p-6",
-  fullscreen: "flex min-h-0 flex-1 flex-col gap-4 p-5",
-  inset: "flex min-h-0 flex-1 flex-col",
-} as const;
+  md: 'flex flex-col gap-4 p-5',
+  lg: 'flex flex-col gap-4 p-6',
+  xl: 'flex flex-col gap-4 p-6',
+  fullscreen: 'flex min-h-0 flex-1 flex-col gap-4 p-5',
+  inset: 'flex min-h-0 flex-1 flex-col',
+} as const
 
 /** Kept in sync with `--animate-popup-out` / `--animate-slide-out-right`. */
-export const DIALOG_EXIT_MS = 150;
-export const DRAWER_EXIT_MS = 160;
+export const DIALOG_EXIT_MS = 150
+export const DRAWER_EXIT_MS = 160
 
 /**
  * Plays the exit animation before telling the parent the modal is closed.
@@ -98,28 +98,28 @@ export const DRAWER_EXIT_MS = 160;
  * (see `theme.css`), not nothing — so the delay still matches what is on screen.
  */
 function useAnimatedClose(onClose: () => void, exitMs: number) {
-  const [closing, setClosing] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [closing, setClosing] = useState(false)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(
     () => () => {
-      if (timer.current) clearTimeout(timer.current);
+      if (timer.current) clearTimeout(timer.current)
     },
     [],
-  );
+  )
 
   const requestClose = useCallback(() => {
-    setClosing(true);
+    setClosing(true)
     timer.current = setTimeout(() => {
-      setClosing(false);
-      onClose();
-    }, exitMs);
-  }, [onClose, exitMs]);
+      setClosing(false)
+      onClose()
+    }, exitMs)
+  }, [onClose, exitMs])
 
-  return { closing, requestClose };
+  return {closing, requestClose}
 }
 
-export { useAnimatedClose };
+export {useAnimatedClose}
 
 /**
  * A modal built on Radix Dialog: focus trap, `Esc`, background scroll lock,
@@ -133,55 +133,55 @@ export function Dialog({
   open,
   onClose,
   title,
-  size = "md",
+  size = 'md',
   icon,
-  tone = "default",
+  tone = 'default',
   actions,
   hideClose = false,
   centered = false,
   blurOverlay = false,
   children,
 }: DialogProps) {
-  const t = useTranslations("common");
-  const { closing, requestClose } = useAnimatedClose(onClose, DIALOG_EXIT_MS);
+  const t = useTranslations('common')
+  const {closing, requestClose} = useAnimatedClose(onClose, DIALOG_EXIT_MS)
 
   return (
     <RadixDialog.Root
       open={open && !closing}
-      onOpenChange={(next) => !next && requestClose()}
-    >
+      onOpenChange={(next) => !next && requestClose()}>
       <RadixDialog.Portal>
-        <RadixDialog.Overlay className={`fixed inset-0 z-50 bg-black/40 ${blurOverlay ? "backdrop-blur-sm" : ""} data-[state=open]:animate-overlay-in data-[state=closed]:animate-overlay-out`} />
+        <RadixDialog.Overlay
+          className={`fixed inset-0 z-50 bg-black/40 ${blurOverlay ? 'backdrop-blur-sm' : ''} data-[state=open]:animate-overlay-in data-[state=closed]:animate-overlay-out`}
+        />
         <RadixDialog.Content
-          className={`fixed z-50 ${tone === "default" ? "bg-background" : "bg-surface"} text-foreground focus:outline-none ${
+          className={`fixed z-50 ${tone === 'default' ? 'bg-background' : 'bg-surface'} text-foreground focus:outline-none ${
             centered
-              ? "will-change-[transform,opacity] data-[state=open]:animate-verdict-in data-[state=closed]:animate-verdict-out"
-              : "data-[state=open]:animate-popup-in data-[state=closed]:animate-popup-out"
-          } ${CONTENT_SIZES[size]} ${CARD_TONES[tone]}`}
-        >
+              ? 'will-change-[transform,opacity] data-[state=open]:animate-verdict-in data-[state=closed]:animate-verdict-out'
+              : 'data-[state=open]:animate-popup-in data-[state=closed]:animate-popup-out'
+          } ${CONTENT_SIZES[size]} ${CARD_TONES[tone]}`}>
           <div className={`${BODY_SIZES[size]} ${BODY_TONES[tone]}`}>
             <div
               className={
-                size === "inset"
-                  ? "flex items-center justify-between gap-4 border-b border-border px-4 py-3"
+                size === 'inset'
+                  ? 'flex items-center justify-between gap-4 border-b border-border px-4 py-3'
                   : centered
-                    ? "flex flex-col items-center gap-3 text-center"
-                    : "flex items-start justify-between gap-4"
-              }
-            >
+                    ? 'flex flex-col items-center gap-3 text-center'
+                    : 'flex items-start justify-between gap-4'
+              }>
               {/* Radix requires a Title — it is the source of aria-labelledby. */}
               <RadixDialog.Title asChild>
                 <Typography
-                  variant={size === "inset" ? "title-3" : centered ? "h4" : "h6"}
+                  variant={
+                    size === 'inset' ? 'title-3' : centered ? 'h4' : 'h6'
+                  }
                   as="h2"
                   className={`flex min-w-0 items-center gap-2 ${
-                    centered ? "flex-col" : "flex-1 truncate"
-                  } ${TITLE_TONES[tone]}`}
-                >
+                    centered ? 'flex-col' : 'flex-1 truncate'
+                  } ${TITLE_TONES[tone]}`}>
                   {icon ? (
                     <Icon
                       icon={icon}
-                      className={`shrink-0 ${centered ? "size-16" : "size-5"}`}
+                      className={`shrink-0 ${centered ? 'size-16' : 'size-5'}`}
                     />
                   ) : null}
                   {title}
@@ -195,16 +195,17 @@ export function Dialog({
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    aria-label={t("actions.close")}
-                    className="-m-1"
-                  >
+                    aria-label={t('actions.close')}
+                    className="-m-1">
                     <Icon icon={ICONS.close} />
                   </Button>
                 </RadixDialog.Close>
               )}
             </div>
-            {size === "inset" ? (
-              <div className="flex min-h-0 flex-1 flex-col bg-surface p-4">{children}</div>
+            {size === 'inset' ? (
+              <div className="flex min-h-0 flex-1 flex-col bg-surface p-4">
+                {children}
+              </div>
             ) : (
               children
             )}
@@ -212,5 +213,5 @@ export function Dialog({
         </RadixDialog.Content>
       </RadixDialog.Portal>
     </RadixDialog.Root>
-  );
+  )
 }

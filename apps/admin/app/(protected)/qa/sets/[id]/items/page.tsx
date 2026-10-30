@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import {redirect} from 'next/navigation'
 
 /**
  * `/qa/sets/[id]/items` has no screen of its own — the set's questions are
@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
  */
 export default async function QaSetItemsPage({
   params,
-}: PageProps<"/qa/sets/[id]/items">) {
-  const { id } = await params;
-  redirect(`/qa/sets/${id}`);
+}: PageProps<'/qa/sets/[id]/items'>) {
+  const {id} = await params
+  redirect(`/qa/sets/${id}`)
 }

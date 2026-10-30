@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { Icon } from "./icons";
+import {Icon} from './icons'
 
 /**
  * `tone` is a theme token name, never a colour: the classes are spelled out here because
@@ -12,13 +12,16 @@ import { Icon } from "./icons";
  * light mode a dark red with pale text, in dark mode a light red with dark text — both
  * readable without a hardcoded white.
  */
-const TONES: Record<string, { frame: string; chip: string }> = {
-  danger: { frame: "border-danger/70", chip: "bg-danger text-background" },
-  warning: { frame: "border-warning/70", chip: "bg-warning text-background" },
-  success: { frame: "border-success/70", chip: "bg-success text-background" },
-  primary: { frame: "border-primary/70", chip: "bg-primary text-primary-foreground" },
-};
-const NEUTRAL = { frame: "border-border", chip: "bg-foreground text-background" };
+const TONES: Record<string, {frame: string; chip: string}> = {
+  danger: {frame: 'border-danger/70', chip: 'bg-danger text-background'},
+  warning: {frame: 'border-warning/70', chip: 'bg-warning text-background'},
+  success: {frame: 'border-success/70', chip: 'bg-success text-background'},
+  primary: {
+    frame: 'border-primary/70',
+    chip: 'bg-primary text-primary-foreground',
+  },
+}
+const NEUTRAL = {frame: 'border-border', chip: 'bg-foreground text-background'}
 
 /** The label for `locale`, else English, else `fallback` (the tag's key). */
 export function pickTagLabel(
@@ -26,15 +29,15 @@ export function pickTagLabel(
   locale: string,
   fallback: string,
 ): string {
-  return label[locale] ?? label.en ?? fallback;
+  return label[locale] ?? label.en ?? fallback
 }
 
 /** What `TaggedFrame` needs to draw a tag — the learner view of `qa_item_tags`. */
 export type TaggedFrameTag = {
-  id: string;
-  key: string;
-  meta: { icon: string; tone: string; label: Record<string, string> };
-};
+  id: string
+  key: string
+  meta: {icon: string; tone: string; label: Record<string, string>}
+}
 
 /** A tag as a small filled label: its icon and name, in capitals. */
 export function TagChip({
@@ -42,20 +45,19 @@ export function TagChip({
   tone,
   label,
 }: {
-  icon: string;
-  tone: string;
-  label: string;
+  icon: string
+  tone: string
+  label: string
 }) {
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-caption font-bold uppercase tracking-wide ${
         (TONES[tone] ?? NEUTRAL).chip
-      }`}
-    >
+      }`}>
       <Icon icon={icon} className="size-3.5 shrink-0" />
       {label}
     </span>
-  );
+  )
 }
 
 /**
@@ -71,19 +73,18 @@ export function TaggedFrame({
   locale,
   children,
 }: {
-  tags: readonly TaggedFrameTag[];
-  locale: string;
-  children: React.ReactNode;
+  tags: readonly TaggedFrameTag[]
+  locale: string
+  children: React.ReactNode
 }) {
-  const first = tags[0];
-  if (!first) return <>{children}</>;
+  const first = tags[0]
+  if (!first) return <>{children}</>
 
   return (
     <div
       className={`relative mt-3 rounded-2xl border-2 p-4 pt-6 ${
         (TONES[first.meta.tone] ?? NEUTRAL).frame
-      }`}
-    >
+      }`}>
       <div className="absolute -top-3 left-4 flex flex-wrap gap-1.5">
         {tags.map((tag) => (
           <TagChip
@@ -96,5 +97,5 @@ export function TaggedFrame({
       </div>
       {children}
     </div>
-  );
+  )
 }

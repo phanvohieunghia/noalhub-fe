@@ -1,15 +1,15 @@
-import type { BlogPostFormValues } from "@noalhub/api/blog";
+import type {BlogPostFormValues} from '@noalhub/api/blog'
 
 /** The slug the backend generates for an empty draft — a sign the post has no real title yet. */
-const DEFAULT_SLUG_PREFIX = "bai-viet-khong-ten";
+const DEFAULT_SLUG_PREFIX = 'bai-viet-khong-ten'
 
 export type PublishIssue = {
-  id: string;
+  id: string
   /** An i18n key under `admin.posts.publish.issues.*` — this file knows no locale. */
-  messageKey: string;
+  messageKey: string
   /** `true` disables Publish. `false` is a soft warning that still allows publishing. */
-  blocking: boolean;
-};
+  blocking: boolean
+}
 
 /**
  * The Publish button's checklist (`docs/blog.md` §7.4).
@@ -25,51 +25,51 @@ export type PublishIssue = {
  */
 export function publishChecklist(
   values: BlogPostFormValues,
-  { hasUnsavedChanges }: { hasUnsavedChanges: boolean },
+  {hasUnsavedChanges}: {hasUnsavedChanges: boolean},
 ): PublishIssue[] {
-  const issues: PublishIssue[] = [];
+  const issues: PublishIssue[] = []
 
   if (!values.categorySlug) {
     issues.push({
-      id: "category",
-      messageKey: "category",
+      id: 'category',
+      messageKey: 'category',
       blocking: true,
-    });
+    })
   }
 
   // Publishing with unsaved edits means readers see the OLD content while the
   // editor shows the new — with no autosave, that gap is entirely silent (§7.3).
   if (hasUnsavedChanges) {
     issues.push({
-      id: "unsaved",
-      messageKey: "unsaved",
+      id: 'unsaved',
+      messageKey: 'unsaved',
       blocking: true,
-    });
+    })
   }
 
   if (!values.metaDescription.trim() && !values.excerpt.trim()) {
     issues.push({
-      id: "description",
-      messageKey: "description",
+      id: 'description',
+      messageKey: 'description',
       blocking: false,
-    });
+    })
   }
 
   if (!values.coverImageUrl.trim()) {
     issues.push({
-      id: "cover",
-      messageKey: "cover",
+      id: 'cover',
+      messageKey: 'cover',
       blocking: false,
-    });
+    })
   }
 
   if (values.slug.startsWith(DEFAULT_SLUG_PREFIX)) {
     issues.push({
-      id: "slug",
-      messageKey: "slug",
+      id: 'slug',
+      messageKey: 'slug',
       blocking: false,
-    });
+    })
   }
 
-  return issues;
+  return issues
 }

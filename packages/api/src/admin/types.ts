@@ -15,9 +15,9 @@
  * has not built. Do not add them here before the spec does.
  */
 
-import type { UserRole } from "../auth/types";
+import type {UserRole} from '../auth/types'
 
-export type { UserRole };
+export type {UserRole}
 
 /**
  * `AdminUserDto` — the full record for admins. DIFFERENT from `User` (your own
@@ -26,27 +26,27 @@ export type { UserRole };
  * `email`/`role`.
  */
 export type AdminUser = {
-  id: string;
-  email: string;
-  username: string;
-  role: UserRole;
-  displayName: string | null;
-  avatarUrl: string | null;
+  id: string
+  email: string
+  username: string
+  role: UserRole
+  displayName: string | null
+  avatarUrl: string | null
   /**
    * `null` means the email is unverified. The `pending_verification` state in
    * §3b is **derived from this field**; the backend stores no separate column.
    */
-  emailVerifiedAt: string | null;
+  emailVerifiedAt: string | null
   /**
    * When they last went offline. **NOT an online state** — the admin endpoints
    * do not read presence (the spec says so outright). The UI label must be
    * "last active", never a green/gray dot.
    */
-  lastSeenAt: string | null;
+  lastSeenAt: string | null
   /** `null` means the username has never been changed. */
-  usernameChangedAt: string | null;
-  createdAt: string;
-};
+  usernameChangedAt: string | null
+  createdAt: string
+}
 
 /**
  * `AdminUserListDto` — **offset** pagination, quite unlike chat's cursor.
@@ -54,23 +54,23 @@ export type AdminUser = {
  * rather than trusting client state.
  */
 export type AdminUserList = {
-  items: AdminUser[];
-  total: number;
-  page: number;
-  limit: number;
-};
+  items: AdminUser[]
+  total: number
+  page: number
+  limit: number
+}
 
 /** The query for `GET /admin/users`. `limit` maxes at **100** (a backend constraint). */
 export type AdminUserListQuery = {
-  page?: number;
-  limit?: number;
+  page?: number
+  limit?: number
   /** Fuzzy match across email + username. */
-  q?: string;
-  role?: UserRole;
+  q?: string
+  role?: UserRole
   /** Defaults to `createdAt` / `desc` on the server. */
-  sort?: "createdAt" | "username" | "email" | "role";
-  order?: "asc" | "desc";
-};
+  sort?: 'createdAt' | 'username' | 'email' | 'role'
+  order?: 'asc' | 'desc'
+}
 
 /**
  * `AdminStatsDto`. The spec states the backend does **not** cache: the figures
@@ -81,22 +81,22 @@ export type AdminUserListQuery = {
  * `suspendedUsers`/`bannedUsers` are proposals not present in the spec.
  */
 export type AdminStats = {
-  totalUsers: number;
-  verifiedUsers: number;
-  newUsersLast7Days: number;
-  admins: number;
-};
+  totalUsers: number
+  verifiedUsers: number
+  newUsersLast7Days: number
+  admins: number
+}
 
-export const ADMIN_SIGNUP_RANGES = ["week", "month", "year"] as const;
-export type AdminSignupRange = (typeof ADMIN_SIGNUP_RANGES)[number];
+export const ADMIN_SIGNUP_RANGES = ['week', 'month', 'year'] as const
+export type AdminSignupRange = (typeof ADMIN_SIGNUP_RANGES)[number]
 
 export type AdminSignupPoint = {
   /** ISO timestamp of the bucket's start (UTC): midnight, or the 1st of the month. */
-  date: string;
-  newUsers: number;
+  date: string
+  newUsers: number
   /** How many of `newUsers` have a verified email *now* (not at signup time). */
-  verifiedNewUsers: number;
-};
+  verifiedNewUsers: number
+}
 
 /**
  * `AdminSignupsDto` — `GET /admin/stats/signups?range=`. Rolling windows in UTC:
@@ -104,14 +104,14 @@ export type AdminSignupPoint = {
  * bucket of `year` is partial. `points` is dense (empty buckets are `0`).
  */
 export type AdminSignups = {
-  range: AdminSignupRange;
+  range: AdminSignupRange
   /** `day` for week/month, `month` for year. */
-  granularity: "day" | "month";
-  points: AdminSignupPoint[];
-  total: number;
+  granularity: 'day' | 'month'
+  points: AdminSignupPoint[]
+  total: number
   /** Total of the immediately preceding period of the same length. */
-  previousTotal: number;
-};
+  previousTotal: number
+}
 
 /**
  * `StorybookAccessDto` — one email allowed into the internal Storybook at
@@ -127,23 +127,23 @@ export type AdminSignups = {
  * there is no `user` object to expand here.
  */
 export type StorybookAccess = {
-  id: string;
-  email: string;
+  id: string
+  email: string
   /** Why this email is on the list. Free text, may be absent. */
-  note: string | null;
+  note: string | null
   /** The admin who granted it, or `null` once that account is deleted. */
-  createdBy: string | null;
-  createdAt: string;
-};
+  createdBy: string | null
+  createdAt: string
+}
 
 /** The body of `POST /admin/storybook-access`. */
 export type GrantStorybookAccessInput = {
-  email: string;
-  note?: string;
-};
+  email: string
+  note?: string
+}
 
-export const ADMIN_QA_PERIODS = ["day", "week", "month", "all"] as const;
-export type AdminQaPeriod = (typeof ADMIN_QA_PERIODS)[number];
+export const ADMIN_QA_PERIODS = ['day', 'week', 'month', 'all'] as const
+export type AdminQaPeriod = (typeof ADMIN_QA_PERIODS)[number]
 
 /**
  * `AdminQaQuestionStatsDto` — `GET /admin/stats/qa-questions?datasetId=&period=`.
@@ -153,12 +153,12 @@ export type AdminQaPeriod = (typeof ADMIN_QA_PERIODS)[number];
  */
 export type AdminQaQuestionStats = {
   items: {
-    itemId: string;
+    itemId: string
     /** TipTap/ProseMirror JSON. */
-    question: unknown;
-    answered: number;
-    correct: number;
-  }[];
-  totalAnswers: number;
-  totalCorrect: number;
-};
+    question: unknown
+    answered: number
+    correct: number
+  }[]
+  totalAnswers: number
+  totalCorrect: number
+}

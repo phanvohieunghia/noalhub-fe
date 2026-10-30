@@ -8,74 +8,74 @@ import {
   OUTLINE_OUTPUT_RATIO,
   type AiModel,
   type QaOutlineEntry,
-} from "@noalhub/api/qa";
+} from '@noalhub/api/qa'
 
 /** `system` is unknown here (it depends on the prompt picked), so a typical size. */
-const TYPICAL_SYSTEM_TOKENS = 2_500;
+const TYPICAL_SYSTEM_TOKENS = 2_500
 
 export type RunFit =
   | {
-      ok: true;
+      ok: true
       /** Model calls the run will take: sections are packed into calls by token budget. */
-      calls: number;
+      calls: number
     }
   | {
       /** One section alone is over what a call can read, and a section is never cut. */
-      ok: false;
-      reason: "section";
-      title: string;
-      tokens: number;
-      budget: number;
-      model: string;
+      ok: false
+      reason: 'section'
+      title: string
+      tokens: number
+      budget: number
+      model: string
     }
   | {
       /** The question count leaves no room for source text on this model. */
-      ok: false;
-      reason: "model";
-      model: string;
+      ok: false
+      reason: 'model'
+      model: string
     }
   | {
       /** More calls are needed for the output than there are sections to split across. */
-      ok: false;
-      reason: "output";
-      capacity: number;
-      maxCount: number;
-      calls: number;
-      sections: number;
-      model: string;
-    };
+      ok: false
+      reason: 'output'
+      capacity: number
+      maxCount: number
+      calls: number
+      sections: number
+      model: string
+    }
 
 /** The backend's `qaChunkBudgetTokens`; `system` is a typical size, the backend's exact answer wins. */
 function qaChunkBudget(model: AiModel, maxCount: number | undefined): number {
-  const outputCap = Math.floor(model.maxOutputTokens * CHUNK_OUTPUT_SAFETY);
+  const outputCap = Math.floor(model.maxOutputTokens * CHUNK_OUTPUT_SAFETY)
   const reserve = Math.min(
     outputCap,
     maxCount !== undefined ? maxCount * EST_TOKENS_PER_ITEM : outputCap,
-  );
+  )
   return Math.min(
     model.contextWindow -
       TYPICAL_SYSTEM_TOKENS -
       CHUNK_CONTEXT_MARGIN_TOKENS -
       reserve,
     CHUNK_TARGET_INPUT_TOKENS,
-  );
+  )
 }
 
-export const tokensOf = (chars: number) => Math.ceil(chars / CHARS_PER_TOKEN);
+export const tokensOf = (chars: number) => Math.ceil(chars / CHARS_PER_TOKEN)
 
 /** Greedy, in outline order — the backend's `planSectionChunks`, counting calls only. */
 function packCount(sizes: number[], limitTokens: number): number {
-  let calls = 0;
-  let current = 0;
+  let calls = 0
+  let current = 0
   for (const size of sizes) {
     if (calls > 0 && tokensOf(current + size) <= limitTokens) {
-      current += size;
+      current += size
     } else {
-      calls += 1;
-      current = size;
+      calls += 1
+      current = size
     }
   }
-  return calls;
+  return calls
 }
 
 /**
@@ -94,61 +94,59 @@ export function checkRunFit({
   maxCount,
   model,
 }: {
-  entries: QaOutlineEntry[];
-  anchors: string[];
+  entries: QaOutlineEntry[]
+  anchors: string[]
   /** Left out when the run has no upper bound. */
-  maxCount?: number;
-  model: AiModel;
+  maxCount?: number
+  model: AiModel
 }): RunFit {
-  const picked = entries.filter((entry) => anchors.includes(entry.anchor));
+  const picked = entries.filter((entry) => anchors.includes(entry.anchor))
   const capacity = Math.max(
     1,
     Math.floor(
       (model.maxOutputTokens * CHUNK_OUTPUT_SAFETY) / EST_TOKENS_PER_ITEM,
     ),
-  );
+  )
   const budget = qaChunkBudget(
     model,
     maxCount === undefined ? undefined : Math.min(maxCount, capacity),
-  );
+  )
   if (budget < MIN_CHUNK_TOKENS) {
-    return { ok: false, reason: "model", model: model.label };
+    return {ok: false, reason: 'model', model: model.label}
   }
 
-  const sizes = picked.map((entry) => entry.charCount + entry.title.length);
-  const tooLong = picked.find(
-    (entry, index) => tokensOf(sizes[index]) > budget,
-  );
+  const sizes = picked.map((entry) => entry.charCount + entry.title.length)
+  const tooLong = picked.find((entry, index) => tokensOf(sizes[index]) > budget)
   if (tooLong) {
     return {
       ok: false,
-      reason: "section",
+      reason: 'section',
       title: tooLong.title,
       tokens: tokensOf(sizes[picked.indexOf(tooLong)]),
       budget,
       model: model.label,
-    };
+    }
   }
 
-  const minCalls = maxCount === undefined ? 1 : Math.ceil(maxCount / capacity);
-  let limit = budget;
-  let calls = packCount(sizes, limit);
+  const minCalls = maxCount === undefined ? 1 : Math.ceil(maxCount / capacity)
+  let limit = budget
+  let calls = packCount(sizes, limit)
   while (calls < minCalls && calls < picked.length) {
-    limit = Math.floor(limit * 0.8);
-    calls = packCount(sizes, limit);
+    limit = Math.floor(limit * 0.8)
+    calls = packCount(sizes, limit)
   }
   if (calls < minCalls) {
     return {
       ok: false,
-      reason: "output",
+      reason: 'output',
       capacity,
       maxCount: maxCount ?? 0,
       calls: minCalls,
       sections: picked.length,
       model: model.label,
-    };
+    }
   }
-  return { ok: true, calls };
+  return {ok: true, calls}
 }
 
 /**
@@ -163,9 +161,9 @@ export function outlineChunkBudget(model: AiModel): number {
       TYPICAL_SYSTEM_TOKENS -
       CHUNK_CONTEXT_MARGIN_TOKENS) /
       (1 + OUTLINE_OUTPUT_RATIO),
-  );
+  )
   const byOutput = Math.floor(
     (model.maxOutputTokens * CHUNK_OUTPUT_SAFETY) / OUTLINE_OUTPUT_RATIO,
-  );
-  return Math.min(byContext, byOutput, CHUNK_TARGET_INPUT_TOKENS);
+  )
+  return Math.min(byContext, byOutput, CHUNK_TARGET_INPUT_TOKENS)
 }
