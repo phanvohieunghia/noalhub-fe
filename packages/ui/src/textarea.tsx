@@ -113,7 +113,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           }}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
-          className={`rounded-md border border-border bg-transparent px-3 py-2 text-body-3 outline-none transition-colors
+          className={`rounded-md border border-border bg-surface text-surface-foreground px-3 py-2 text-body-3 outline-none transition-colors
             focus:border-foreground/60
             disabled:opacity-50
             aria-[invalid=true]:border-danger

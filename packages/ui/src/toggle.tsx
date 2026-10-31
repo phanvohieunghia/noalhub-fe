@@ -12,6 +12,11 @@ export type ToggleOption<T extends string = string> = {
   icon: IconName
   /** Accessible name — the buttons carry no visible text, so this is required. */
   label: string
+  /**
+   * Drawn like a disabled option (faded) but still pressable, so the caller can say *why* it
+   * is not available instead of the click doing nothing. Marked `aria-disabled` for readers.
+   */
+  dimmed?: boolean
 }
 
 type ToggleProps<T extends string> = {
@@ -74,7 +79,8 @@ function ToggleInner<T extends string>(
             <ToggleGroup.Item
               value={option.value}
               aria-label={option.label}
-              className={`flex shrink-0 cursor-pointer items-center justify-center text-muted-foreground outline-none transition-colors
+              aria-disabled={option.dimmed || undefined}
+              className={`flex shrink-0 ${option.dimmed ? 'opacity-40' : ''} cursor-pointer items-center justify-center text-muted-foreground outline-none transition-colors
             hover:text-foreground
             focus-visible:ring-2 focus-visible:ring-ring
             disabled:cursor-not-allowed disabled:opacity-50

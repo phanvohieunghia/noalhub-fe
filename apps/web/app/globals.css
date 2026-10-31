@@ -78,3 +78,14 @@ body {
     }
   }
 }
+
+/* In-page search on the knowledge page (CSS Custom Highlight API): every hit, and the
+   one the arrows are on. The ranges are painted, never wrapped in elements. */
+::highlight(knowledge-search) {
+  background-color: color-mix(in srgb, var(--color-warning) 35%, transparent);
+  color: inherit;
+}
+::highlight(knowledge-search-active) {
+  background-color: var(--color-warning);
+  color: var(--color-background);
+}

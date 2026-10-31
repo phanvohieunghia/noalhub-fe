@@ -159,6 +159,7 @@ export function QaSetsContent() {
       <div className="mt-4 max-w-xs">
         <Select
           label={t('sets.filterStatus')}
+          hideLabel
           value={status}
           onChange={(event) => {
             setStatus(event.target.value as QaSetStatus | '')

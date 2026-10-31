@@ -1,5 +1,6 @@
 'use client'
 
+import {DifficultyBadge} from '@noalhub/ui/difficulty'
 import {useTranslations} from 'next-intl'
 import Link from 'next/link'
 import {useState} from 'react'
@@ -97,7 +98,10 @@ export function QaItemSearchContent({type}: {type: string}) {
                   <Badge>{shapeLabel(item.type, t)}</Badge>
                   <Badge>{t(`items.kinds.${item.kind}`)}</Badge>
                   {item.difficulty ? (
-                    <Badge>{t(`items.difficulty.${item.difficulty}`)}</Badge>
+                    <DifficultyBadge
+                      level={item.difficulty}
+                      label={t(`items.difficulty.${item.difficulty}`)}
+                    />
                   ) : null}
                   <div className="flex-1" />
                   <Switch

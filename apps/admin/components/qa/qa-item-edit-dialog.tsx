@@ -1,9 +1,10 @@
 'use client'
 
+import {DifficultyPicker} from '@noalhub/ui/difficulty'
 import {useTranslations} from 'next-intl'
 import {useState} from 'react'
 
-import type {BlogDoc} from '@noalhub/api/blog'
+import {expandMarkdownImages, type BlogDoc} from '@noalhub/api/blog'
 import type {Message} from '@noalhub/api/message'
 import {
   useUpdateQaItem,
@@ -26,12 +27,6 @@ import {ToastError} from '@noalhub/ui/toast'
 
 import {QaItemTagPicker} from './qa-item-tag-picker'
 import {docToText, isEmptyDoc, textToDoc} from './qa-plain-doc'
-
-const DIFFICULTIES = [
-  'easy',
-  'medium',
-  'hard',
-] as const satisfies readonly QaDifficulty[]
 
 /**
  * Edit one question in a modal: difficulty, the question, its options (tick the
@@ -67,7 +62,11 @@ export function QaItemEditDialog({
   const [difficulty, setDifficulty] = useState<QaDifficulty | ''>(
     item.difficulty ?? '',
   )
-  const [question, setQuestion] = useState<BlogDoc>(item.question)
+  const [question, setQuestion] = useState<BlogDoc>(() =>
+    // Older questions hold `![alt](url)` as typed characters. Turn them into pictures
+    // so the editor shows what the learner sees; saving then stores real image nodes.
+    expandMarkdownImages(item.question),
+  )
   const [options, setOptions] = useState(item.options ?? [])
   const [correct, setCorrect] = useState<string[]>(
     item.answerKey && 'optionIds' in item.answerKey
@@ -145,27 +144,34 @@ export function QaItemEditDialog({
       open
       size="lg"
       title={t('ws.final.editTitle', {section: sectionTitle})}
-      onClose={onClose}>
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <Badge size="sm" className="self-start">
+      // The shape is fixed, so it rides in the title row instead of taking a row of its own.
+      actions={
+        shapeLabel ? (
+          <Badge size="sm" className="whitespace-nowrap">
             {shapeLabel}
           </Badge>
-          <Select
+        ) : null
+      }
+      onClose={onClose}>
+      <div className="flex flex-col gap-4">
+        {/* Difficulty and tags share a row; on a narrow screen they stack. */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+          <DifficultyPicker
             label={t('ws.final.difficulty')}
             value={difficulty}
-            onChange={(event) =>
-              setDifficulty(event.target.value as QaDifficulty | '')
-            }
-            placeholder={t('sets.noDifficulty')}
-            options={DIFFICULTIES.map((value) => ({
-              value,
-              label: t(`items.difficulty.${value}`),
-            }))}
+            onChange={setDifficulty}
+            labels={{
+              easy: t('items.difficulty.easy'),
+              medium: t('items.difficulty.medium'),
+              hard: t('items.difficulty.hard'),
+            }}
+          />
+          <QaItemTagPicker
+            className="min-w-0 sm:flex-1"
+            value={tagIds}
+            onChange={setTagIds}
           />
         </div>
-
-        <QaItemTagPicker value={tagIds} onChange={setTagIds} />
 
         <div className="flex flex-col gap-1.5">
           <Typography variant="body-3" weight={500}>
@@ -174,7 +180,8 @@ export function QaItemEditDialog({
           <TiptapEditor
             value={question}
             onChange={setQuestion}
-            contentClassName="min-h-32 max-h-80 overflow-y-auto"
+            contentClassName="min-h-40! max-h-64 overflow-y-auto"
+            noMinimap
           />
         </div>
 

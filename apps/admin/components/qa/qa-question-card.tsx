@@ -1,5 +1,6 @@
 'use client'
 
+import {DifficultyBadge} from '@noalhub/ui/difficulty'
 import {useTranslations} from 'next-intl'
 import {useRef} from 'react'
 
@@ -178,7 +179,10 @@ export function QaQuestionCard({
         {dragHandle}
         <Badge size="sm">{t(`items.kinds.${item.kind}`)}</Badge>
         {item.difficulty ? (
-          <Badge size="sm">{t(`items.difficulty.${item.difficulty}`)}</Badge>
+          <DifficultyBadge
+            level={item.difficulty}
+            label={t(`items.difficulty.${item.difficulty}`)}
+          />
         ) : null}
         <div className="flex-1" />
         {actions}

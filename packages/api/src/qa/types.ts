@@ -508,6 +508,16 @@ export type QaDatasetPlay = {
   items: QaItemPlay[]
 }
 
+/** The pasted source text behind a bank, for the learner to read like an article. */
+export type QaKnowledge = {
+  id: string
+  title: string
+  description: string | null
+  /** The outline version an admin chose to show learners; `null` falls back to `sources`. */
+  outline: QaOutlineContent | null
+  sources: {id: string; title: string | null; content: string | null}[]
+}
+
 /** A dataset with at least one published question — the learner's catalogue entry. */
 export type QaDatasetSummary = {
   id: string
@@ -627,3 +637,56 @@ export type QaItemTag = {
 
 /** `QaItemTagPlayDto` — a tag as a learner sees it (no `description`). */
 export type QaItemTagPlay = Pick<QaItemTag, 'id' | 'key' | 'meta'>
+
+/* ---------------------------- Question feedback ---------------------------- */
+
+export const QA_FEEDBACK_REASONS = [
+  'wrong_answer',
+  'wrong_content',
+  'unclear',
+  'other',
+] as const
+export type QaFeedbackReason = (typeof QA_FEEDBACK_REASONS)[number]
+
+export type QaFeedbackStatus = 'pending' | 'resolved' | 'dismissed'
+
+/** `QaFeedbackDto` — a learner's report about one question, as an admin sees it. */
+export type QaFeedback = {
+  id: string
+  reason: QaFeedbackReason
+  note: string | null
+  status: QaFeedbackStatus
+  adminNote: string | null
+  reviewedAt: string | null
+  createdAt: string
+  itemId: string
+  datasetId: string | null
+  datasetTitle: string | null
+  setId: string | null
+  /** The section (chapter) of the source document the question's set belongs to. */
+  sectionTitle: string | null
+  /** The set's shape key (`multiple_choice`…). */
+  questionType: string | null
+  /** The whole question, enough to open the edit form. */
+  item: QaItemFull | null
+  reporter: {
+    id: string
+    username: string
+    displayName: string | null
+    email: string
+  } | null
+}
+
+export type QaFeedbackPage = {
+  items: QaFeedback[]
+  total: number
+  page: number
+  limit: number
+}
+
+export type QaFeedbackQuery = {
+  page?: number
+  limit?: number
+  status?: QaFeedbackStatus
+  datasetId?: string
+}

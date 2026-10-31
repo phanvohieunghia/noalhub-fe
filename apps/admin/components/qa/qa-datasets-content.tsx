@@ -39,6 +39,7 @@ import {Typography} from '@noalhub/ui/typography'
 import {ToastError} from '@noalhub/ui/toast'
 
 import {AdminErrorState} from '../admin-error-state'
+import {AdminPageTitle} from '../admin-page-title'
 
 const COLUMN_COUNT = 5
 
@@ -67,12 +68,10 @@ export function QaDatasetsContent() {
     <main className="w-full p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="max-w-2xl">
-          <Typography variant="h4" as="h1">
-            {t('datasets.title')}
-          </Typography>
-          <Typography variant="body-3" className="mt-1 opacity-70">
-            {t('datasets.intro')}
-          </Typography>
+          <AdminPageTitle
+            title={t('datasets.title')}
+            hint={t('datasets.intro')}
+          />
         </div>
         <Button onClick={() => setCreating(true)}>{t('datasets.add')}</Button>
       </div>

@@ -58,6 +58,7 @@ import {
   rowActivateProps,
   TableRowActions,
 } from '@noalhub/ui/table'
+import {AdminPageTitle} from '../admin-page-title'
 import {Textarea} from '@noalhub/ui/textarea'
 
 import {AdminErrorState} from '../admin-error-state'
@@ -113,12 +114,7 @@ export function CategoryManager() {
     <main className="w-full p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <Typography variant="h4" as="h1">
-            {t('title')}
-          </Typography>
-          <Typography variant="body-3" className="mt-1 opacity-70">
-            {t('intro')}
-          </Typography>
+          <AdminPageTitle title={t('title')} hint={t('intro')} />
         </div>
         <Button onClick={() => setEditing('new')}>{t('add')}</Button>
       </div>

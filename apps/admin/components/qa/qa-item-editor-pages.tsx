@@ -7,20 +7,15 @@ import {useQaSet, useQaSets} from '@noalhub/api/qa'
 import {AlertWarning} from '@noalhub/ui/alert'
 import {Select} from '@noalhub/ui/select'
 import {Skeleton} from '@noalhub/ui/skeleton'
-import {Typography} from '@noalhub/ui/typography'
 
 import {AdminErrorState} from '../admin-error-state'
 import {QaItemForm} from './qa-item-form'
+import {AdminPageTitle} from '../admin-page-title'
 
 function PageHeading({title, intro}: {title: string; intro: string}) {
   return (
     <div className="max-w-2xl">
-      <Typography variant="h4" as="h1">
-        {title}
-      </Typography>
-      <Typography variant="body-3" className="mt-1 text-muted-foreground">
-        {intro}
-      </Typography>
+      <AdminPageTitle title={title} hint={intro} />
     </div>
   )
 }

@@ -26,6 +26,8 @@ type DialogProps = {
   tone?: DialogTone
   /** Sits between the title and the close button — a toolbar for the content. */
   actions?: React.ReactNode
+  /** Drawn right after the title text, beside it — a small hint icon rather than a toolbar. */
+  titleExtra?: React.ReactNode
   /**
    * Leave out the header's close button — for a window that has its own way out
    * (an editor's exit-full-screen button). `Esc` and the overlay still close it.
@@ -41,7 +43,7 @@ type DialogProps = {
   children: React.ReactNode
 }
 
-export type DialogSize = 'md' | 'lg' | 'xl' | 'fullscreen' | 'inset'
+export type DialogSize = 'md' | 'lg' | 'xl' | 'wide' | 'fullscreen' | 'inset'
 export type DialogTone = 'default' | 'success' | 'danger'
 
 const TITLE_TONES = {
@@ -66,17 +68,20 @@ const BODY_TONES = {
 const CONTENT_SIZES = {
   md: 'top-1/2 left-1/2 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-xl shadow-xl',
   lg: 'top-1/2 left-1/2 max-h-[calc(100dvh-2rem)] w-[min(45rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border shadow-xl',
-  xl: 'top-1/2 left-1/2 max-h-[calc(100dvh-2rem)] w-[min(64rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border shadow-xl',
+  xl: 'top-1/2 left-1/2 max-h-[calc(100dvh-2rem)] w-[min(64rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border shadow-xl transition-[width] duration-300 ease-out motion-reduce:transition-none',
+  /** Every screen width, 16px from each side — for content that is itself a wide screen (a desktop preview). */
+  wide: 'top-1/2 left-1/2 max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border shadow-xl transition-[width] duration-300 ease-out motion-reduce:transition-none',
   fullscreen: 'inset-0 flex flex-col',
   /** Inset from the viewport with the page showing around it. */
   inset:
-    'inset-4 flex flex-col overflow-hidden rounded-lg border border-border shadow-xl md:inset-10',
+    'inset-4 flex flex-col overflow-hidden rounded-lg border border-border shadow-xl',
 } as const
 
 const BODY_SIZES = {
   md: 'flex flex-col gap-4 p-5',
   lg: 'flex flex-col gap-4 p-6',
   xl: 'flex flex-col gap-4 p-6',
+  wide: 'flex flex-col gap-4 p-6',
   fullscreen: 'flex min-h-0 flex-1 flex-col gap-4 p-5',
   inset: 'flex min-h-0 flex-1 flex-col',
 } as const
@@ -137,6 +142,7 @@ export function Dialog({
   icon,
   tone = 'default',
   actions,
+  titleExtra,
   hideClose = false,
   centered = false,
   blurOverlay = false,
@@ -154,6 +160,16 @@ export function Dialog({
           className={`fixed inset-0 z-50 bg-black/40 ${blurOverlay ? 'backdrop-blur-sm' : ''} data-[state=open]:animate-overlay-in data-[state=closed]:animate-overlay-out`}
         />
         <RadixDialog.Content
+          // A hint icon beside the title would otherwise be the first thing focused — and open its
+          // own tooltip the moment the dialog does. Focus the dialog itself instead.
+          onOpenAutoFocus={
+            titleExtra
+              ? (event) => {
+                  event.preventDefault()
+                  ;(event.currentTarget as HTMLElement | null)?.focus()
+                }
+              : undefined
+          }
           className={`fixed z-50 ${tone === 'default' ? 'bg-background' : 'bg-surface'} text-foreground focus:outline-none ${
             centered
               ? 'will-change-[transform,opacity] data-[state=open]:animate-verdict-in data-[state=closed]:animate-verdict-out'
@@ -184,7 +200,8 @@ export function Dialog({
                       className={`shrink-0 ${centered ? 'size-16' : 'size-5'}`}
                     />
                   ) : null}
-                  {title}
+                  <span className="min-w-0 truncate">{title}</span>
+                  {titleExtra}
                 </Typography>
               </RadixDialog.Title>
               {actions ? (

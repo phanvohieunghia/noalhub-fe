@@ -34,6 +34,7 @@ import {GenerateSetsButton} from './generate-sets-button'
 import {TableOfContents} from './table-of-contents'
 import {findOutlineHeading, useOutlineScrollSpy} from './use-outline-scroll-spy'
 import {QaResizeHandle} from './qa-resize-handle'
+import {AdminPageTitle} from '../admin-page-title'
 
 const FORMATS: readonly QaContentFormat[] = ['doc', 'markdown']
 const EMPTY_DOC: BlogDoc = {type: 'doc', content: [{type: 'paragraph'}]}
@@ -187,12 +188,10 @@ function Loaded({
     <main className="w-full p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Typography variant="h4" as="h1">
-            {t('outlines.version', {version: initial.version})}
-          </Typography>
-          <Typography variant="body-3" className="mt-1 opacity-70">
-            {t('outlines.editorIntro')}
-          </Typography>
+          <AdminPageTitle
+            title={t('outlines.version', {version: initial.version})}
+            hint={t('outlines.editorIntro')}
+          />
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" asChild>

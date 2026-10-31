@@ -69,6 +69,7 @@ export function PostTable() {
         </div>
         <Select
           label={t('table.statusLabel')}
+          hideLabel
           placeholder={t('table.allStatuses')}
           value={query.status ?? ''}
           onChange={(event) => setStatus(event.target.value)}

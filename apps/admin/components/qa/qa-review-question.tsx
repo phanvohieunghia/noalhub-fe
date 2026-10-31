@@ -1,5 +1,6 @@
 'use client'
 
+import {DifficultyBadge} from '@noalhub/ui/difficulty'
 import {useTranslations} from 'next-intl'
 import {useEffect, useRef, useState} from 'react'
 
@@ -89,7 +90,10 @@ export function QaReviewQuestion({
         <Badge size="sm">{shapeLabel}</Badge>
         <Badge size="sm">{t(`items.kinds.${item.kind}`)}</Badge>
         {item.difficulty ? (
-          <Badge size="sm">{t(`items.difficulty.${item.difficulty}`)}</Badge>
+          <DifficultyBadge
+            level={item.difficulty}
+            label={t(`items.difficulty.${item.difficulty}`)}
+          />
         ) : null}
         {tags?.map((tag) => (
           <Badge key={tag} size="sm">

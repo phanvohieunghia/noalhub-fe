@@ -190,6 +190,9 @@
     "showSource": "Edit markdown source",
     "hideSource": "Back to the editor",
     "source": "Markdown source",
+    "showToLearners": "Show to learners",
+    "shownHint": "Currently shown to learners",
+    "showFailed": "Could not change the shown version.",
     "deleteVersion": "Delete this version",
     "deleteLastHint": "The only version cannot be deleted",
     "deleteTitle": "Delete {name}?",
@@ -408,7 +411,7 @@
     "previewFailed": "Could not load a question of this type.",
     "stateEmpty": "No questions yet",
     "statePartial": "Partly published ({published}/{total})",
-    "previewTags": "Tags (preview only — nothing is saved)",
+    "previewTags": "Try tags · not saved",
     "tagsLabel": "Tags",
     "tagsHint": "Shown to learners as a framed card with the label on its edge.",
     "sample": {
@@ -435,7 +438,31 @@
       "answerLong3": "Give way to every vehicle already in the junction, then continue only when the road is clear in both directions",
       "answerLong4": "Keep the current speed and lane, because the vehicle that is flashing its lights is the one that must give way",
       "answerLong5": "Sound the horn briefly to warn the other road users and then pull over to the right-hand side of the road"
-    }
+    },
+    "tagsPlaceholder": "Select tags",
+    "previewBack": "Back",
+    "previewShowHeader": "Show header",
+    "previewHideHeader": "Hide header",
+    "previewProgress": "Progress",
+    "previewReport": "Report a problem with this question",
+    "previewPosition": "Question {current} of {total}",
+    "deviceTooSmall": "Your screen is too small for this view. Use a bigger screen to see it.",
+    "previewTotal": "Questions in set",
+    "previewStage": "Answered so far",
+    "themeLabel": "Theme",
+    "themes": {
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "tagsClear": "Clear all tags",
+    "sections": {
+      "view": "View",
+      "progress": "Simulate progress",
+      "example": "Question to preview"
+    },
+    "previewOptions": "Options",
+    "previewTotalOption": "{count, plural, one {# question} other {# questions}} in the set",
+    "previewAnsweredOption": "{answered} of {total} answered · {percent}%"
   },
   "generate": {
     "button": "Generate question sets",
@@ -801,5 +828,51 @@
       "success": "Green (success)",
       "primary": "Brand (primary)"
     }
+  },
+  "feedbacks": {
+    "title": "Question reports",
+    "intro": "Problems learners reported on questions. Resolve a report once the question is fixed, or dismiss it if nothing is wrong.",
+    "caption": "Question reports",
+    "status": "Status",
+    "allStatuses": "All",
+    "statuses": {
+      "pending": "Pending",
+      "resolved": "Resolved",
+      "dismissed": "Dismissed"
+    },
+    "reasons": {
+      "wrong_answer": "Wrong answer",
+      "wrong_content": "Wrong content",
+      "unclear": "Unclear",
+      "other": "Other"
+    },
+    "columns": {
+      "question": "Question",
+      "report": "Report",
+      "reporter": "Reported by",
+      "date": "Date",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "empty": "No reports.",
+    "deletedUser": "Deleted user",
+    "adminNote": "Admin note: {note}",
+    "resolve": "Resolve",
+    "dismiss": "Dismiss",
+    "reopen": "Reopen",
+    "dialog": {
+      "resolved": "Resolve this report",
+      "dismissed": "Dismiss this report",
+      "pending": "Reopen this report"
+    },
+    "adminNoteLabel": "Admin note",
+    "adminNoteHint": "Optional. Only admins see this.",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "saved": "Report updated.",
+    "edit": "Edit question",
+    "deletedQuestion": "Question deleted",
+    "dataset": "Dataset",
+    "allDatasets": "All datasets"
   }
 }

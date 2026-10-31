@@ -48,7 +48,8 @@
       "ai": "AI",
       "edit": "Edit",
       "qaModels": "AI models",
-      "qaTags": "Question tags"
+      "qaTags": "Question tags",
+      "qaFeedbacks": "Question reports"
     },
     "disabled": {
       "conversations": "Waiting on backend: no /admin/conversations endpoint yet (admin-plan §3)",

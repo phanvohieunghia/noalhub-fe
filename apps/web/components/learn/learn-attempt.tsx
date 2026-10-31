@@ -21,6 +21,8 @@ import {applyApiError} from '@noalhub/core/forms/apply-api-error'
 import {useMessage} from '@noalhub/i18n/use-message'
 import {QaContent} from '@noalhub/ui/blog/qa-content'
 import {QaQuestion} from '@noalhub/ui/blog/qa-question'
+import {LearnAttemptHeader} from '@noalhub/ui/learn-attempt-header'
+import {LearnQuestionBox} from '@noalhub/ui/qa-choice-list'
 import {Button} from '@noalhub/ui/button'
 import {Dialog} from '@noalhub/ui/dialog'
 import {Icon, LUCIDE} from '@noalhub/ui/icons'
@@ -29,13 +31,9 @@ import {Tooltip} from '@noalhub/ui/tooltip'
 import {Typography} from '@noalhub/ui/typography'
 
 import {AnswerInput} from './answer-input'
+import {QuestionFeedbackDialog} from './question-feedback'
 import {playCorrect, playWrong, unlockSounds} from '@noalhub/core/sounds'
 import {ToastError} from '@noalhub/ui/toast'
-
-/** Questions per progress section, once the set is long enough to need sections. */
-const SECTION_SIZE = 10
-/** Up to this many questions the progress is one bar of per-question cells. */
-const SINGLE_BAR_MAX = 10
 
 /**
  * Taking a dataset, one question at a time.
@@ -54,9 +52,6 @@ const SINGLE_BAR_MAX = 10
  * publishes more mid-attempt. A question unpublished mid-attempt just stops
  * being served; nothing the learner did is lost — the log only ever appends.
  */
-/** How long the header stays down before it folds away again. */
-const HEADER_VISIBLE_MS = 3000
-
 /**
  * The URL names the **set**, not an attempt: the attempt is resolved on every load
  * (starting one is idempotent — an open attempt comes back as itself), so a reload,
@@ -107,26 +102,7 @@ function LearnAttemptRun({attemptId}: {attemptId: string}) {
   const [latest, setLatest] = useState<QaAttempt | null>(null)
   const [error, setError] = useState<Message | string | null>(null)
   const [confirmLeave, setConfirmLeave] = useState(false)
-  // The position label lives in a tooltip: hover/focus open it, and a tap pins
-  // it for a moment (Radix itself closes on click and ignores touch).
-  const [tipHover, setTipHover] = useState(false)
-  const [tipPinned, setTipPinned] = useState(false)
-  useEffect(() => {
-    if (!tipPinned) return
-    const timer = window.setTimeout(() => setTipPinned(false), 2000)
-    return () => window.clearTimeout(timer)
-  }, [tipPinned])
-  // The header is there on arrival, folds away after a few seconds to give the
-  // question the room, and the handle brings it back for the same few seconds.
-  const [headerOpen, setHeaderOpen] = useState(true)
-  useEffect(() => {
-    if (!headerOpen) return
-    const timer = window.setTimeout(
-      () => setHeaderOpen(false),
-      HEADER_VISIBLE_MS,
-    )
-    return () => window.clearTimeout(timer)
-  }, [headerOpen])
+  const [reporting, setReporting] = useState(false)
   // The verdict rings when the server answers, after the tap that sent the answer
   // is over — and some browsers start audio only from inside a tap, so the
   // sitting's first tap does it.
@@ -244,17 +220,6 @@ function LearnAttemptRun({attemptId}: {attemptId: string}) {
   // that must not swap the question (and its explanation) for the summary.
   const done = !shown && (attempt.status !== 'in_progress' || !current)
   const position = Math.min(total, attempt.answeredCount + (shown ? 0 : 1))
-  // Every question is one cell. A short set is a single bar; past ten the bar
-  // is cut into sections of ten cells each.
-  const sectionSize =
-    total <= SINGLE_BAR_MAX ? Math.max(1, total) : SECTION_SIZE
-  const sections = Array.from(
-    {length: Math.max(1, Math.ceil(total / sectionSize))},
-    (_, i) => ({
-      start: i * sectionSize,
-      size: Math.max(1, Math.min(sectionSize, total - i * sectionSize)),
-    }),
-  )
   // Self-graded wording only when the whole bank is flashcards; a mixed bank
   // counts "correct", since most of its answers are machine-graded.
   const selfGraded =
@@ -271,104 +236,31 @@ function LearnAttemptRun({attemptId}: {attemptId: string}) {
       }`}>
       {/* The summary stands alone: its own buttons say where to go next. */}
       {done ? null : (
-        <header className="shrink-0">
-          {/* The title row folds with a grid-row transition so the question below slides
-            up with it; `inert` keeps the folded controls out of the tab order. The
-            progress bar stays. */}
-          <div
-            inert={!headerOpen}
-            className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:duration-200 ${
-              headerOpen
-                ? 'grid-rows-[1fr] opacity-100'
-                : 'grid-rows-[0fr] opacity-0'
-            }`}>
-            {/* The fold clips (overflow-hidden), so the padding must cover the back button's
-                -ml-2 and its hover circle, or the circle is cut off on the left. */}
-            <div className="-mx-3 -my-1 min-h-0 overflow-hidden px-3 py-1">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  shape="circle"
-                  aria-label={t('attempt.back')}
-                  className="-ml-2 shrink-0"
-                  // Nothing is lost by leaving (answers are saved as they go), but a
-                  // stray tap should not end the sitting — only ask while it is open.
-                  onClick={() =>
-                    done ? router.push('/learn') : setConfirmLeave(true)
-                  }>
-                  <Icon icon={LUCIDE.arrowLeft} />
-                </Button>
-                {/* One line with an ellipsis; the full title is the tooltip. */}
-                <Tooltip label={set.data.datasetTitle} side="bottom">
-                  <Typography
-                    variant="h4"
-                    as="h1"
-                    className="min-w-0 flex-1 truncate">
-                    {set.data.datasetTitle}
-                  </Typography>
-                </Tooltip>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <Tooltip
-              label={
-                done
-                  ? t('attempt.progressLabel')
-                  : t('attempt.questionOf', {current: position, total})
-              }
-              open={tipHover || tipPinned}
-              onOpenChange={setTipHover}>
-              <div
-                role="progressbar"
-                tabIndex={0}
-                aria-label={t('attempt.progressLabel')}
-                aria-valuemin={0}
-                aria-valuemax={total}
-                aria-valuenow={attempt.answeredCount}
-                aria-valuetext={t('attempt.questionOf', {
-                  current: position,
-                  total,
-                })}
-                onClick={() => setTipPinned(true)}
-                className="flex min-w-0 flex-1 cursor-pointer gap-1.5 rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
-                {sections.map(({start, size}) => (
-                  <div
-                    key={start}
-                    // A section is as wide as the questions it holds, so a short
-                    // last one does not read as a full stretch of the set.
-                    style={{flexGrow: size, flexBasis: 0}}
-                    className="flex gap-0.5 rounded-md border border-border p-0.5">
-                    {Array.from({length: size}, (_, i) => (
-                      <div
-                        key={i}
-                        className={`h-2 flex-1 rounded-xs transition-colors duration-300 ${
-                          start + i < attempt.answeredCount
-                            ? 'bg-primary'
-                            : 'bg-muted'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </Tooltip>
-            <Button
-              variant="ghost"
-              size="icon"
-              shape="circle"
-              aria-label={t(
-                headerOpen ? 'attempt.hideHeader' : 'attempt.showHeader',
-              )}
-              aria-expanded={headerOpen}
-              onClick={() => setHeaderOpen((open) => !open)}
-              className="-mr-2 shrink-0">
-              <Icon icon={headerOpen ? LUCIDE.chevronUp : LUCIDE.chevronDown} />
-            </Button>
-          </div>
-        </header>
+        <LearnAttemptHeader
+          title={set.data.datasetTitle}
+          answered={attempt.answeredCount}
+          total={total}
+          position={position}
+          labels={{
+            back: t('attempt.back'),
+            showHeader: t('attempt.showHeader'),
+            hideHeader: t('attempt.hideHeader'),
+            progress: t('attempt.progressLabel'),
+            report: t('feedback.open'),
+            position: ({current, total: of, sectionSize}) =>
+              sectionSize
+                ? t('attempt.questionOfSections', {
+                    current,
+                    total: of,
+                    size: sectionSize,
+                  })
+                : t('attempt.questionOf', {current, total: of}),
+          }}
+          // Nothing is lost by leaving (answers are saved as they go), but a
+          // stray tap should not end the sitting — only ask while it is open.
+          onBack={() => setConfirmLeave(true)}
+          onReport={current ? () => setReporting(true) : undefined}
+        />
       )}
 
       {done ? (
@@ -383,9 +275,9 @@ function LearnAttemptRun({attemptId}: {attemptId: string}) {
         <article className="flex min-h-0 flex-1 flex-col gap-5">
           {/* The whole question (text, frame, picture) stays under half the screen, and the
               picture is what shrinks to make it so — the answers keep their room. */}
-          <div className="flex max-h-[45vh] min-h-0 shrink-0 flex-col text-body-1 font-semibold [&>div]:flex [&>div]:min-h-0 [&>div]:flex-col">
+          <LearnQuestionBox>
             <QaQuestion doc={current.question} tagIds={current.tagIds} />
-          </div>
+          </LearnQuestionBox>
 
           <AnswerInput
             key={current.id}
@@ -399,6 +291,14 @@ function LearnAttemptRun({attemptId}: {attemptId: string}) {
             <Feedback result={shown.result} onNext={next} last={isLast} />
           ) : null}
         </article>
+      ) : null}
+
+      {reporting && current ? (
+        <QuestionFeedbackDialog
+          key={current.id}
+          itemId={current.id}
+          onClose={() => setReporting(false)}
+        />
       ) : null}
 
       <ToastError message={error ? m(error) : null} />
@@ -424,6 +324,7 @@ function LearnAttemptRun({attemptId}: {attemptId: string}) {
           onClose={() => setConfirmLeave(false)}
           title={t('attempt.leaveTitle')}
           tone="danger"
+          blurOverlay
           icon={LUCIDE.circleX}>
           <Typography variant="body-3" className="text-muted-foreground">
             {t('attempt.leaveBody')}

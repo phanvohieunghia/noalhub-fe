@@ -45,6 +45,7 @@ import {
 import {Typography} from '@noalhub/ui/typography'
 
 import {AdminErrorState} from '../admin-error-state'
+import {AdminPageTitle} from '../admin-page-title'
 
 const FIELDS = ['label', 'apiKey', 'modelId', 'monthlyTokenLimit'] as const
 const COLUMN_COUNT = 5
@@ -79,12 +80,10 @@ export function AiCredentialsContent() {
     <main className="w-full p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="max-w-2xl">
-          <Typography variant="h4" as="h1">
-            {t('credentials.title')}
-          </Typography>
-          <Typography variant="body-3" className="mt-1 opacity-70">
-            {t('credentials.intro')}
-          </Typography>
+          <AdminPageTitle
+            title={t('credentials.title')}
+            hint={t('credentials.intro')}
+          />
         </div>
         <Button onClick={() => setAdding(true)}>{t('credentials.add')}</Button>
       </div>

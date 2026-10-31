@@ -7,6 +7,7 @@ import type {Message} from '@noalhub/api/message'
 import {
   useDeleteQaOutline,
   useQaOutlines,
+  useSetCurrentQaOutline,
   type QaOutlineSummary,
 } from '@noalhub/api/qa'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
@@ -14,7 +15,7 @@ import {useMessage} from '@noalhub/i18n/use-message'
 import {Button} from '@noalhub/ui/button'
 import {Dialog} from '@noalhub/ui/dialog'
 import {DropdownMenu, DropdownMenuItem} from '@noalhub/ui/dropdown-menu'
-import {ICONS, Icon} from '@noalhub/ui/icons'
+import {ICONS, Icon, LUCIDE} from '@noalhub/ui/icons'
 import {Select} from '@noalhub/ui/select'
 import {Typography} from '@noalhub/ui/typography'
 import {ToastError} from '@noalhub/ui/toast'
@@ -79,9 +80,10 @@ export function OutlineVersionSelect({
           ...items.map((outline) => ({
             value: outline.id,
             // A named version shows its name; "v*" is only the fallback.
-            label:
+            label: `${outline.isCurrent ? '✓ ' : ''}${
               outline.label?.trim() ||
-              t('outlines.versionShort', {version: outline.version}),
+              t('outlines.versionShort', {version: outline.version})
+            }`,
           })),
         ]}
       />
@@ -115,6 +117,7 @@ export function OutlineVersionMenu({
   const tc = useTranslations('common')
   const m = useMessage()
   const remove = useDeleteQaOutline(datasetId)
+  const setCurrent = useSetCurrentQaOutline(datasetId)
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<Message | string | null>(null)
   const only = versionCount <= 1
@@ -151,6 +154,19 @@ export function OutlineVersionMenu({
           </Button>
         }>
         <DropdownMenuItem
+          icon={LUCIDE.eye}
+          disabled={outline.isCurrent || setCurrent.isPending}
+          onSelect={() => setCurrent.mutate(outline.id)}>
+          <span className="flex flex-col">
+            {t('outlines.showToLearners')}
+            {outline.isCurrent ? (
+              <span className="text-body-4 text-muted-foreground">
+                {t('outlines.shownHint')}
+              </span>
+            ) : null}
+          </span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
           icon={ICONS.delete}
           tone="danger"
           disabled={only}
@@ -165,6 +181,9 @@ export function OutlineVersionMenu({
           </span>
         </DropdownMenuItem>
       </DropdownMenu>
+      {setCurrent.isError ? (
+        <ToastError message={t('outlines.showFailed')} />
+      ) : null}
       {open ? (
         <Dialog open onClose={close} title={t('outlines.deleteTitle', {name})}>
           <div className="space-y-4">

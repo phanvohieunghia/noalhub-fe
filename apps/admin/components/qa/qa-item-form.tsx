@@ -1,5 +1,6 @@
 'use client'
 
+import {DifficultyPicker} from '@noalhub/ui/difficulty'
 import {useTranslations} from 'next-intl'
 import {useRouter} from 'next/navigation'
 import {useState} from 'react'
@@ -42,11 +43,6 @@ const KINDS = [
   'recall',
   'analysis',
 ] as const satisfies readonly QaItemKind[]
-const DIFFICULTIES = [
-  'easy',
-  'medium',
-  'hard',
-] as const satisfies readonly QaDifficulty[]
 const MIN_OPTIONS = 2
 
 type OptionDraft = {id: string; text: string}
@@ -246,17 +242,15 @@ export function QaItemForm({
             options={sections}
           />
         ) : null}
-        <Select
+        <DifficultyPicker
           label={t('sets.difficultyLabel')}
           value={difficulty}
-          onChange={(event) =>
-            setDifficulty(event.target.value as QaDifficulty | '')
-          }
-          placeholder={t('sets.noDifficulty')}
-          options={DIFFICULTIES.map((value) => ({
-            value,
-            label: t(`items.difficulty.${value}`),
-          }))}
+          onChange={setDifficulty}
+          labels={{
+            easy: t('items.difficulty.easy'),
+            medium: t('items.difficulty.medium'),
+            hard: t('items.difficulty.hard'),
+          }}
         />
       </div>
 

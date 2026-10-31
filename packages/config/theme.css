@@ -153,7 +153,10 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-:root {
+/* `.light` repeats the light tokens so a block can be forced light inside a dark page
+   (a preview of the light theme) — the way `.dark` forces dark inside a light one. */
+:root,
+.light {
   --background: var(--color-neutral-50);
   --foreground: var(--color-brand-900);
   --surface: #ffffff;

@@ -43,5 +43,9 @@
     "typeNotAllowed": "Định dạng \"{type}\" không được phép. Cho phép: {allowed}",
     "tooLarge": "File {size} vượt giới hạn {max} cho định dạng này.",
     "empty": "File rỗng."
+  },
+  "qaFeedback": {
+    "noteRequired": "Hãy mô tả vấn đề bạn gặp",
+    "noteTooLong": "Ghi chú quá dài (tối đa 1000 ký tự)"
   }
 }

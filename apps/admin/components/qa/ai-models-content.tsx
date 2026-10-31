@@ -38,6 +38,7 @@ import {Typography} from '@noalhub/ui/typography'
 import {ToastError} from '@noalhub/ui/toast'
 
 import {AdminErrorState} from '../admin-error-state'
+import {AdminPageTitle} from '../admin-page-title'
 
 const COLUMN_COUNT = 5
 const PROVIDERS = aiProviderNameSchema.options
@@ -70,12 +71,7 @@ export function AiModelsContent() {
     <main className="w-full p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="max-w-2xl">
-          <Typography variant="h4" as="h1">
-            {t('models.title')}
-          </Typography>
-          <Typography variant="body-3" className="mt-1 opacity-70">
-            {t('models.intro')}
-          </Typography>
+          <AdminPageTitle title={t('models.title')} hint={t('models.intro')} />
         </div>
         <Button onClick={() => setAdding(true)}>{t('models.add')}</Button>
       </div>

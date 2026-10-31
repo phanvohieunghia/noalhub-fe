@@ -1,6 +1,10 @@
 import {http} from '../client'
 import {ApiError} from '../errors'
 import {
+  qaFeedbackPageSchema,
+  qaFeedbackPendingCountSchema,
+  qaFeedbackReceiptSchema,
+  qaFeedbackSchema,
   addSourceSchema,
   aiCredentialListSchema,
   aiCredentialSchema,
@@ -46,6 +50,7 @@ import {
   qaItemListPlaySchema,
   qaDatasetListPlaySchema,
   qaDatasetPlaySchema,
+  qaKnowledgeSchema,
   qaStatsSchema,
   startGenerationSchema,
   type AddSourceInput,
@@ -70,7 +75,11 @@ import {
   type UpdateTemplateInput,
   type WriteItemInput,
 } from './schemas'
+import type {ReviewQaFeedbackInput, SubmitQaFeedbackInput} from './schemas'
 import type {
+  QaFeedback,
+  QaFeedbackPage,
+  QaFeedbackQuery,
   AiCredential,
   BrowseItemsQuery,
   QaAnswerResult,
@@ -81,6 +90,7 @@ import type {
   QaItemTagPlay,
   QaAttemptPlay,
   QaDatasetPlay,
+  QaKnowledge,
   QaDatasetSummary,
   QaStatsRow,
   AiModel,
@@ -517,6 +527,19 @@ export async function deleteOutline(id: string): Promise<void> {
   await http.delete(`/admin/qa/outlines/${id}`, {authRequired: true})
 }
 
+/** Marks the version learners see; the backend clears the flag on every other one. */
+export async function setCurrentOutline(
+  datasetId: string,
+  outlineId: string,
+): Promise<QaOutlineSummary> {
+  const {data} = await http.put<QaOutlineSummary>(
+    `/admin/qa/datasets/${datasetId}/current-outline`,
+    {outlineId},
+    {authRequired: true, schema: qaOutlineSummarySchema},
+  )
+  return data
+}
+
 export async function updateOutlineLabel(
   id: string,
   label: string | null,
@@ -764,12 +787,14 @@ export async function searchItems(
  * the admin side.
  */
 export async function browseDatasets(
+  q: string,
   signal?: AbortSignal,
 ): Promise<{items: QaDatasetSummary[]; total: number}> {
   const {data} = await http.get<{items: QaDatasetSummary[]; total: number}>(
     '/qa/datasets',
     {
       authRequired: true,
+      params: q ? {q} : undefined,
       schema: qaDatasetListPlaySchema,
       signal,
     },
@@ -784,6 +809,18 @@ export async function getPlayDataset(
   const {data} = await http.get<QaDatasetPlay>(`/qa/datasets/${id}`, {
     authRequired: true,
     schema: qaDatasetPlaySchema,
+    signal,
+  })
+  return data
+}
+
+export async function getKnowledge(
+  id: string,
+  signal?: AbortSignal,
+): Promise<QaKnowledge> {
+  const {data} = await http.get<QaKnowledge>(`/qa/datasets/${id}/knowledge`, {
+    authRequired: true,
+    schema: qaKnowledgeSchema,
     signal,
   })
   return data
@@ -931,5 +968,53 @@ export async function listPlayItemTags(
     schema: qaItemTagPlayListSchema,
     signal,
   })
+  return data
+}
+
+/* ---------------------------- Question feedback ---------------------------- */
+
+/** POST /qa/items/{id}/feedback → 201. 404 QA_ITEM_NOT_FOUND, 409 QA_FEEDBACK_DUPLICATE. */
+export async function submitItemFeedback(
+  itemId: string,
+  input: SubmitQaFeedbackInput,
+): Promise<void> {
+  await http.post(`/qa/items/${itemId}/feedback`, input, {
+    authRequired: true,
+    schema: qaFeedbackReceiptSchema,
+  })
+}
+
+export async function listFeedbacks(
+  query: QaFeedbackQuery,
+  signal?: AbortSignal,
+): Promise<QaFeedbackPage> {
+  const {data} = await http.get<QaFeedbackPage>('/admin/qa/feedbacks', {
+    authRequired: true,
+    params: query,
+    schema: qaFeedbackPageSchema,
+    signal,
+  })
+  return data
+}
+
+export async function countPendingFeedbacks(
+  signal?: AbortSignal,
+): Promise<number> {
+  const {data} = await http.get<{count: number}>(
+    '/admin/qa/feedbacks/pending-count',
+    {authRequired: true, schema: qaFeedbackPendingCountSchema, signal},
+  )
+  return data.count
+}
+
+export async function reviewFeedback(
+  id: string,
+  input: ReviewQaFeedbackInput,
+): Promise<QaFeedback> {
+  const {data} = await http.patch<QaFeedback>(
+    `/admin/qa/feedbacks/${id}`,
+    input,
+    {authRequired: true, schema: qaFeedbackSchema},
+  )
   return data
 }

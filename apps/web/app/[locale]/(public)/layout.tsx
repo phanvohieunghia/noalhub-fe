@@ -40,7 +40,7 @@ export default async function PublicLayout({
 
         <nav
           aria-label={t('categoriesNav')}
-          className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3 text-body-3">
+          className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-body-3">
           {categories.map((category) => (
             <Link
               key={category.slug}
@@ -51,7 +51,7 @@ export default async function PublicLayout({
           ))}
         </nav>
 
-        <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
           {children}
         </main>
 

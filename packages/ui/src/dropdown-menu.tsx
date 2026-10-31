@@ -59,7 +59,8 @@ export function DropdownMenuItem({
   className = '',
 }: {
   children: React.ReactNode
-  onSelect?: () => void
+  /** Call `event.preventDefault()` to keep the menu open — for a menu of toggles. */
+  onSelect?: (event: Event) => void
   disabled?: boolean
   /** An iconify name drawn before the label at 16px — every action in a row menu carries one. */
   icon?: string

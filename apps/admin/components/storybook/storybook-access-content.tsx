@@ -36,6 +36,7 @@ import {ToastError} from '@noalhub/ui/toast'
 import {useTranslations} from 'next-intl'
 
 import {AdminErrorState} from '../admin-error-state'
+import {AdminPageTitle} from '../admin-page-title'
 
 const FIELDS = ['email', 'note'] as const
 const COLUMN_COUNT = 4
@@ -68,12 +69,10 @@ export function StorybookAccessContent() {
     <main className="w-full p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="max-w-2xl">
-          <Typography variant="h4" as="h1">
-            {t('title')}
-          </Typography>
-          <Typography variant="body-3" className="mt-1 opacity-70">
-            {t('intro', {url: STORYBOOK_INTERNAL_URL})}
-          </Typography>
+          <AdminPageTitle
+            title={t('title')}
+            hint={t('intro', {url: STORYBOOK_INTERNAL_URL})}
+          />
         </div>
         <Button onClick={() => setAdding(true)}>{t('add')}</Button>
       </div>

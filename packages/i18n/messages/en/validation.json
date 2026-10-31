@@ -43,5 +43,9 @@
     "typeNotAllowed": "The format \"{type}\" is not allowed. Allowed: {allowed}",
     "tooLarge": "This {size} file is over the {max} limit for that format.",
     "empty": "That file is empty."
+  },
+  "qaFeedback": {
+    "noteRequired": "Tell us what is wrong",
+    "noteTooLong": "That note is too long (max 1000 characters)"
   }
 }

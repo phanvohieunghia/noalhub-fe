@@ -179,6 +179,7 @@ export function QaTemplatesContent() {
       <div className="w-80 max-w-full">
         <Select
           label={t('templates.filterKind')}
+          hideLabel
           value={kind}
           onChange={(event) => {
             setKind(event.target.value as QaPromptKind | '')

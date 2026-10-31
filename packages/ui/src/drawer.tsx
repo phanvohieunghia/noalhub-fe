@@ -53,6 +53,8 @@ type DrawerProps = {
   title: string
   /** Which edge the panel comes from. Default `right`. */
   side?: DrawerSide
+  /** Cover the whole width (a left/right panel is a 22rem column by default) — for small screens. */
+  fullWidth?: boolean
   children: React.ReactNode
 }
 
@@ -70,6 +72,7 @@ export function Drawer({
   onClose,
   title,
   side = 'right',
+  fullWidth = false,
   children,
 }: DrawerProps) {
   const t = useTranslations('common')
@@ -82,7 +85,11 @@ export function Drawer({
       <RadixDialog.Portal>
         <RadixDialog.Overlay className="fixed inset-0 z-50 bg-black/40 data-[state=open]:animate-overlay-in data-[state=closed]:animate-overlay-out" />
         <RadixDialog.Content
-          className={`fixed z-50 bg-background text-foreground shadow-xl focus:outline-none ${SIDES[side].panel}`}>
+          className={`fixed z-50 bg-background text-foreground shadow-xl focus:outline-none ${
+            fullWidth
+              ? SIDES[side].panel.replace('w-[min(22rem,100vw)]', 'w-screen')
+              : SIDES[side].panel
+          }`}>
           <div
             className={`flex flex-col gap-4 overflow-y-auto p-5 ${SIDES[side].body}`}>
             <div className="flex items-start justify-between gap-4">

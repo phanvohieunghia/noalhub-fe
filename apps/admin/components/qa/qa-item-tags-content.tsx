@@ -42,6 +42,7 @@ import {ToastError, toast} from '@noalhub/ui/toast'
 import {Typography} from '@noalhub/ui/typography'
 
 import {AdminErrorState} from '../admin-error-state'
+import {AdminPageTitle} from '../admin-page-title'
 
 const COLUMN_COUNT = 4
 const LUCIDE_NAMES: ReadonlySet<string> = new Set(Object.values(LUCIDE))
@@ -68,12 +69,7 @@ export function QaItemTagsContent() {
     <main className="w-full p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="max-w-2xl">
-          <Typography variant="h4" as="h1">
-            {t('tags.title')}
-          </Typography>
-          <Typography variant="body-3" className="mt-1 opacity-70">
-            {t('tags.intro')}
-          </Typography>
+          <AdminPageTitle title={t('tags.title')} hint={t('tags.intro')} />
         </div>
         <Button onClick={() => setAdding(true)}>{t('tags.add')}</Button>
       </div>

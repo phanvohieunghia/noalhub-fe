@@ -14,6 +14,7 @@ import {Typography} from '@noalhub/ui/typography'
 
 import {AdminErrorState} from '../admin-error-state'
 import {QaTypePreview} from './qa-learner-preview'
+import {AdminPageTitle} from '../admin-page-title'
 
 /**
  * The question-type catalogue: one row per type, not per question. The name and
@@ -26,18 +27,13 @@ export function QaItemTypesContent() {
   const types = useQaQuestionTypes()
   const update = useUpdateQaQuestionType()
   const [previewing, setPreviewing] = useState<string | null>(null)
-  const [view, setView] = useState<'list' | 'grid'>('list')
+  const [view, setView] = useState<'list' | 'grid'>('grid')
 
   return (
     <main className="flex w-full flex-col gap-4 p-6">
       <div className="flex items-start justify-between gap-3">
         <div className="flex max-w-160 flex-col gap-1">
-          <Typography variant="h4" as="h1">
-            {t('items.title')}
-          </Typography>
-          <Typography variant="body-3" className="text-muted-foreground">
-            {t('items.intro')}
-          </Typography>
+          <AdminPageTitle title={t('items.title')} hint={t('items.intro')} />
         </div>
         <div
           role="group"

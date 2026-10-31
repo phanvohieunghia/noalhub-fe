@@ -40,6 +40,7 @@ import {useTranslations} from 'next-intl'
 import {AdminErrorState} from '../admin-error-state'
 import {PostStatusBadge} from './post-status-badge'
 import {useSlugFilters} from './use-slug-filters'
+import {AdminPageTitle} from '../admin-page-title'
 
 const COLUMN_COUNT = 4
 
@@ -75,12 +76,7 @@ export function SlugTable() {
 
   return (
     <main className="w-full p-6">
-      <Typography variant="h4" as="h1">
-        {t('title')}
-      </Typography>
-      <Typography variant="body-3" className="mt-1 max-w-2xl opacity-70">
-        {t('description')}
-      </Typography>
+      <AdminPageTitle title={t('title')} hint={t('description')} />
 
       {query.postId ? (
         <div className="mt-4 flex flex-wrap items-center gap-2 rounded-md border border-border bg-surface px-3 py-2">

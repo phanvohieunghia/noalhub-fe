@@ -116,3 +116,28 @@ export function isEmptyDoc(node: unknown): boolean {
   if (typeof text === 'string' && text.trim() !== '') return false
   return (content ?? []).every(isEmptyDoc)
 }
+
+/**
+ * Every bit of text in a document, flattened to one line — for a table cell that
+ * should show the question without its pictures, lists or formatting. Unlike
+ * `docToText` this never gives up: it is for reading, not for editing, so nothing
+ * is written back. Markdown image syntax left in the text is dropped too.
+ */
+export function docPlainText(doc: BlogDoc | null): string {
+  if (doc === null) return ''
+  const parts: string[] = []
+  const walk = (node: unknown) => {
+    if (typeof node !== 'object' || node === null) return
+    const n = node as {type?: string; text?: string; content?: unknown[]}
+    if (n.type === 'text' && typeof n.text === 'string') parts.push(n.text)
+    else if (n.type === 'hardBreak') parts.push(' ')
+    n.content?.forEach(walk)
+    if (n.type === 'paragraph' || n.type === 'heading') parts.push(' ')
+  }
+  walk(doc)
+  return parts
+    .join('')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}

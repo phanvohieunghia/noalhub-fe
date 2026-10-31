@@ -4,6 +4,8 @@
     "intro": "Các bộ câu hỏi đã đăng. Chọn một bộ để làm.",
     "filterKind": "Lọc theo dạng câu",
     "allKinds": "Mọi dạng",
+    "menu": "Menu",
+    "knowledge": "Kiến thức",
     "stats": "Thống kê",
     "itemCount": "{count} câu",
     "start": "Bắt đầu",
@@ -22,7 +24,6 @@
     "startedOn": "Bắt đầu <date></date>",
     "completedOn": "Hoàn thành <date></date>",
     "startAgain": "Làm lại",
-    "showing": "Hiển thị {shown}/{total} bộ",
     "loadMore": "Xem thêm",
     "featured": "Làm tiếp bộ đang dở",
     "countLabel": "Làm bao nhiêu câu?",
@@ -33,6 +34,8 @@
     "title": "Bộ câu hỏi",
     "start": "Bắt đầu làm",
     "resumeHint": "Bấm lại vẫn an toàn: nếu bạn đang làm dở bộ này thì hệ thống mở lại đúng lượt đó, không tạo lượt mới.",
+    "discard": "Bỏ lượt này",
+    "confirmResume": "Bạn đã trả lời {answered}/{total} câu. Tiếp tục để làm nốt, hoặc bỏ lượt này (kết quả vẫn lưu trong lịch sử) rồi bắt đầu lại.",
     "notFound": "Không tìm thấy bộ này",
     "notFoundBody": "Bộ có thể đã được gỡ, hoặc chưa từng tồn tại.",
     "startFailed": "Không bắt đầu được. Thử lại nhé."
@@ -72,7 +75,8 @@
     "summaryCorrect": "Đúng {rate}%",
     "summaryKnown": "Đã nhớ {rate}%, theo bạn tự đánh giá",
     "showExplanation": "Xem giải thích",
-    "autoClose": "Tự đóng sau {seconds} giây · chạm để đóng ngay"
+    "autoClose": "Tự đóng sau {seconds} giây · chạm để đóng ngay",
+    "questionOfSections": "Câu {current}/{total} · mỗi đoạn {size} câu"
   },
   "answer": {
     "submit": "Trả lời",
@@ -83,7 +87,6 @@
     "selfNote": "Thẻ ghi nhớ do bạn tự đánh giá, nên kết quả được tính riêng khỏi nhóm máy chấm.",
     "selfPrompt": "Nhớ lại câu trả lời trong đầu trước, rồi tự đánh giá thật lòng là bạn đã nhớ hay chưa. Mặt sau của thẻ hiện ra sau khi bạn chọn.",
     "singleHint": "Chọn một đáp án.",
-    "submit": "Trả lời",
     "multiHint": "Có thể có nhiều đáp án đúng — chọn tất cả các ý đúng.",
     "shortcuts": "Nhấn 1–{max} để chọn, Enter để trả lời"
   },
@@ -165,5 +168,41 @@
     "short_answer": "Trả lời ngắn",
     "fill_blank": "Điền chỗ trống",
     "flashcard": "Thẻ ghi nhớ"
+  },
+  "feedback": {
+    "open": "Báo lỗi câu hỏi này",
+    "title": "Báo lỗi câu hỏi",
+    "intro": "Cho chúng tôi biết câu hỏi có vấn đề gì. Admin sẽ xem xét.",
+    "reasonLabel": "Vấn đề là gì?",
+    "reasons": {
+      "wrong_answer": "Đáp án đúng bị sai",
+      "wrong_content": "Nội dung câu hỏi sai",
+      "unclear": "Khó hiểu",
+      "other": "Vấn đề khác"
+    },
+    "noteLabel": "Chi tiết",
+    "notePlaceholder": "Mô tả vấn đề…",
+    "noteOptional": "Không bắt buộc",
+    "submit": "Gửi báo cáo",
+    "cancel": "Huỷ",
+    "sent": "Cảm ơn bạn! Admin sẽ xem xét.",
+    "duplicate": "Bạn đã báo câu này rồi — đang chờ duyệt."
+  },
+  "knowledge": {
+    "title": "Kiến thức",
+    "intro": "Tài liệu đằng sau từng bộ câu hỏi. Mở một bộ để đọc.",
+    "empty": "Chưa có bộ câu hỏi nào được đăng.",
+    "toc": "Mục lục",
+    "search": "Tìm kiếm",
+    "searchPlaceholder": "Tìm trong trang này",
+    "searchNone": "Không có kết quả",
+    "searchCount": "{current} / {total}",
+    "searchPrev": "Kết quả trước",
+    "searchNext": "Kết quả tiếp theo",
+    "searchClose": "Đóng tìm kiếm",
+    "tools": "Công cụ",
+    "toTop": "Lên đầu trang",
+    "noSource": "Bộ này chưa có tài liệu để đọc.",
+    "back": "Quay lại"
   }
 }

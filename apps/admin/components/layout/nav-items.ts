@@ -33,6 +33,7 @@ export type NavLabelKey =
   | 'items.qaSets'
   | 'items.qaItems'
   | 'items.qaTags'
+  | 'items.qaFeedbacks'
   | 'items.qaTemplates'
   | 'items.qaCredentials'
   | 'items.qaModels'
@@ -105,6 +106,7 @@ export const NAV_ITEMS: NavItem[] = [
       {href: '/qa/sets', labelKey: 'items.qaSets'},
       {href: '/qa/items', labelKey: 'items.qaItems'},
       {href: '/qa/tags', labelKey: 'items.qaTags'},
+      {href: '/qa/feedbacks', labelKey: 'items.qaFeedbacks'},
     ],
   },
   /*

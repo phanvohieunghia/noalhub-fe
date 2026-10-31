@@ -4,6 +4,8 @@
     "intro": "Published question banks. Pick one to take.",
     "filterKind": "Filter by question kind",
     "allKinds": "All kinds",
+    "menu": "Menu",
+    "knowledge": "Knowledge",
     "stats": "Statistics",
     "itemCount": "{count, plural, one {# question} other {# questions}}",
     "start": "Start",
@@ -22,7 +24,6 @@
     "startedOn": "Started <date></date>",
     "completedOn": "Completed <date></date>",
     "startAgain": "Start again",
-    "showing": "Showing {shown} of {total, plural, one {# bank} other {# banks}}",
     "loadMore": "Load more",
     "featured": "Pick up where you left off",
     "countLabel": "How many questions?",
@@ -33,6 +34,8 @@
     "title": "Question bank",
     "start": "Start",
     "resumeHint": "Clicking again is safe: if you already have this bank open, it reopens that same attempt rather than starting a new one.",
+    "discard": "Discard this run",
+    "confirmResume": "You have answered {answered} of {total}. Continue to finish it, or discard this run (it stays in your history) and start over.",
     "notFound": "This question bank was not found",
     "notFoundBody": "It may have been withdrawn, or it never existed.",
     "startFailed": "Could not start. Try again."
@@ -72,7 +75,8 @@
     "summaryCorrect": "{rate}% answered correctly",
     "summaryKnown": "{rate}% remembered, by your own judgement",
     "showExplanation": "Show explanation",
-    "autoClose": "Closes in {seconds}s · tap to close now"
+    "autoClose": "Closes in {seconds}s · tap to close now",
+    "questionOfSections": "Question {current} of {total} · {size} per section"
   },
   "answer": {
     "submit": "Answer",
@@ -83,7 +87,6 @@
     "selfNote": "Flashcards are self-assessed, so the result is counted apart from machine-graded questions.",
     "selfPrompt": "Recall the answer in your head first, then say honestly whether you knew it. The back of the card shows after you choose.",
     "singleHint": "Pick one answer.",
-    "submit": "Answer",
     "multiHint": "More than one answer may be correct — pick all that apply.",
     "shortcuts": "Press 1–{max} to pick, Enter to answer"
   },
@@ -165,5 +168,41 @@
     "short_answer": "Short answer",
     "fill_blank": "Fill in the blank",
     "flashcard": "Flashcard"
+  },
+  "feedback": {
+    "open": "Report a problem with this question",
+    "title": "Report this question",
+    "intro": "Tell the team what is wrong. An admin will review it.",
+    "reasonLabel": "What is wrong?",
+    "reasons": {
+      "wrong_answer": "The correct answer is wrong",
+      "wrong_content": "The question content is wrong",
+      "unclear": "Hard to understand",
+      "other": "Something else"
+    },
+    "noteLabel": "Details",
+    "notePlaceholder": "Describe the problem…",
+    "noteOptional": "Optional",
+    "submit": "Send report",
+    "cancel": "Cancel",
+    "sent": "Thanks! An admin will take a look.",
+    "duplicate": "You already reported this question — it is waiting for review."
+  },
+  "knowledge": {
+    "title": "Knowledge",
+    "intro": "The material behind each question bank. Open one to read it.",
+    "empty": "No question bank has been published yet.",
+    "toc": "Contents",
+    "search": "Search",
+    "searchPlaceholder": "Search this page",
+    "searchNone": "No match",
+    "searchCount": "{current} / {total}",
+    "searchPrev": "Previous match",
+    "searchNext": "Next match",
+    "searchClose": "Close search",
+    "tools": "Tools",
+    "toTop": "Back to top",
+    "noSource": "This bank has no reading material.",
+    "back": "Back"
   }
 }

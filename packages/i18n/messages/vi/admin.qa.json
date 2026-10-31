@@ -190,6 +190,9 @@
     "showSource": "Sửa mã markdown",
     "hideSource": "Về trình soạn thảo",
     "source": "Mã markdown",
+    "showToLearners": "Hiện cho người học",
+    "shownHint": "Đang hiện cho người học",
+    "showFailed": "Không đổi được bản đang hiện.",
     "deleteVersion": "Xóa version này",
     "deleteLastHint": "Không xóa được version duy nhất",
     "deleteTitle": "Xóa {name}?",
@@ -408,7 +411,7 @@
     "previewFailed": "Không tải được câu hỏi của loại này.",
     "stateEmpty": "Chưa có câu hỏi",
     "statePartial": "Xuất bản một phần ({published}/{total})",
-    "previewTags": "Nhãn (chỉ để xem thử, không lưu)",
+    "previewTags": "Thử gắn nhãn · không lưu",
     "tagsLabel": "Nhãn",
     "tagsHint": "Người học thấy câu hỏi trong một khung kèm nhãn ở viền.",
     "sample": {
@@ -435,7 +438,31 @@
       "answerLong3": "Nhường đường cho mọi phương tiện đang ở trong nút giao, chỉ đi tiếp khi đường thông thoáng cả hai hướng",
       "answerLong4": "Giữ nguyên tốc độ và làn đường vì xe đang nháy đèn mới là xe phải nhường đường",
       "answerLong5": "Bấm còi ngắn để cảnh báo những người tham gia giao thông khác rồi tấp vào lề đường bên phải"
-    }
+    },
+    "tagsPlaceholder": "Chọn nhãn",
+    "previewBack": "Quay lại",
+    "previewShowHeader": "Hiện thanh tiêu đề",
+    "previewHideHeader": "Ẩn thanh tiêu đề",
+    "previewProgress": "Tiến độ",
+    "previewReport": "Báo lỗi câu hỏi này",
+    "previewPosition": "Câu {current}/{total}",
+    "deviceTooSmall": "Màn hình của bạn quá nhỏ để xem kiểu này. Hãy dùng màn hình lớn hơn để xem giao diện.",
+    "previewTotal": "Số câu của bộ",
+    "previewStage": "Đã làm",
+    "themeLabel": "Giao diện",
+    "themes": {
+      "light": "Sáng",
+      "dark": "Tối"
+    },
+    "tagsClear": "Bỏ chọn tất cả nhãn",
+    "sections": {
+      "view": "Cách xem",
+      "progress": "Giả lập tiến độ",
+      "example": "Câu hỏi để xem thử"
+    },
+    "previewOptions": "Tùy chọn",
+    "previewTotalOption": "Bộ có {count} câu",
+    "previewAnsweredOption": "Đã làm {answered}/{total} câu · {percent}%"
   },
   "generate": {
     "button": "Sinh bộ câu hỏi",
@@ -801,5 +828,51 @@
       "success": "Xanh lá (thành công)",
       "primary": "Màu thương hiệu"
     }
+  },
+  "feedbacks": {
+    "title": "Báo lỗi câu hỏi",
+    "intro": "Các vấn đề người học báo trên câu hỏi. Đánh dấu đã xử lý khi đã sửa câu hỏi, hoặc bác bỏ nếu không có gì sai.",
+    "caption": "Báo lỗi câu hỏi",
+    "status": "Trạng thái",
+    "allStatuses": "Tất cả",
+    "statuses": {
+      "pending": "Đang chờ",
+      "resolved": "Đã xử lý",
+      "dismissed": "Đã bác bỏ"
+    },
+    "reasons": {
+      "wrong_answer": "Sai đáp án",
+      "wrong_content": "Sai nội dung",
+      "unclear": "Khó hiểu",
+      "other": "Khác"
+    },
+    "columns": {
+      "question": "Câu hỏi",
+      "report": "Báo cáo",
+      "reporter": "Người báo",
+      "date": "Ngày",
+      "status": "Trạng thái",
+      "actions": "Thao tác"
+    },
+    "empty": "Chưa có báo cáo nào.",
+    "deletedUser": "Người dùng đã xoá",
+    "adminNote": "Ghi chú admin: {note}",
+    "resolve": "Đã xử lý",
+    "dismiss": "Bác bỏ",
+    "reopen": "Mở lại",
+    "dialog": {
+      "resolved": "Đánh dấu đã xử lý",
+      "dismissed": "Bác bỏ báo cáo",
+      "pending": "Mở lại báo cáo"
+    },
+    "adminNoteLabel": "Ghi chú của admin",
+    "adminNoteHint": "Không bắt buộc. Chỉ admin thấy.",
+    "cancel": "Huỷ",
+    "confirm": "Xác nhận",
+    "saved": "Đã cập nhật báo cáo.",
+    "edit": "Xem & sửa câu hỏi",
+    "deletedQuestion": "Câu hỏi đã bị xoá",
+    "dataset": "Bộ câu hỏi",
+    "allDatasets": "Tất cả bộ câu hỏi"
   }
 }

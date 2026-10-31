@@ -454,9 +454,12 @@ export function TiptapEditor({
   contentClassName,
   fullscreen,
   savedKey,
+  noMinimap,
 }: {
   value: BlogDoc
   onChange: (doc: BlogDoc) => void
+  /** Leave out the minimap and its toolbar toggle — for a small editor in a dialog. */
+  noMinimap?: boolean
   /** Bump after a successful save: the change highlights clear and the saved text becomes the baseline. */
   savedKey?: number
   /** Draws the full-screen toggle as the toolbar's first button. */
@@ -480,6 +483,7 @@ export function TiptapEditor({
       contentClassName={contentClassName}
       fullscreen={fullscreen}
       savedKey={savedKey}
+      noMinimap={noMinimap}
     />
   )
 }
@@ -500,8 +504,11 @@ export function RichTextEditor({
   toolbarExtra,
   onReady,
   savedKey,
+  noMinimap = false,
 }: {
   content: BlogDoc | string
+  /** Leave out the minimap and its toolbar toggle. */
+  noMinimap?: boolean
   /** How Tiptap parses `content`. `"markdown"` needs the `Markdown` extension. */
   contentType?: 'json' | 'markdown'
   /** Appended to the allowlisted set — never a node the renderers drop. */
@@ -793,7 +800,7 @@ export function RichTextEditor({
         editor={editor}
         fullscreen={fullscreen}
         extra={toolbarExtra}
-        minimap={{on: minimap, onToggle: toggleMinimap}}
+        minimap={noMinimap ? undefined : {on: minimap, onToggle: toggleMinimap}}
         onLink={() => setLinkOpen(true)}
         onImage={setImageMode}
       />
@@ -802,12 +809,12 @@ export function RichTextEditor({
         <EditorContent
           editor={editor}
           className={`min-h-0 min-w-0 flex-1 ${
-            minimap
+            minimap && !noMinimap
               ? '[&_.ProseMirror]:[scrollbar-width:none] [&_.ProseMirror::-webkit-scrollbar]:hidden'
               : ''
           }`}
         />
-        {minimap ? <EditorMinimap editor={editor} /> : null}
+        {minimap && !noMinimap ? <EditorMinimap editor={editor} /> : null}
       </div>
 
       {dropUpload.isPending ? (
@@ -949,7 +956,7 @@ function Toolbar({
   editor: Editor
   fullscreen?: EditorFullscreen
   extra?: React.ReactNode
-  minimap: {on: boolean; onToggle: () => void}
+  minimap?: {on: boolean; onToggle: () => void}
   onLink: () => void
   onImage: (mode: 'upload' | 'url') => void
 }) {
@@ -1295,12 +1302,14 @@ function Toolbar({
       ) : null}
 
       <div className="ml-auto flex items-center gap-1">
-        <ToolbarButton
-          label={t(minimap.on ? 'hideMinimap' : 'showMinimap')}
-          active={minimap.on}
-          onClick={minimap.onToggle}
-          icon={LUCIDE.map}
-        />
+        {minimap ? (
+          <ToolbarButton
+            label={t(minimap.on ? 'hideMinimap' : 'showMinimap')}
+            active={minimap.on}
+            onClick={minimap.onToggle}
+            icon={LUCIDE.map}
+          />
+        ) : null}
         {extra}
       </div>
     </div>

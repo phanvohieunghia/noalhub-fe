@@ -189,6 +189,11 @@
 .post-prose > figure:first-child {
   margin-top: 0;
 }
+/* Same for a heading that opens the prose: its 2.5rem of air is for separating it from
+   what came before, and there is nothing before it. */
+.post-prose > :first-child {
+  margin-top: 0;
+}
 .post-prose > :last-child {
   margin-bottom: 0;
 }
@@ -238,7 +243,9 @@
  * other block along with it.
  */
 .post-prose-table-scroll {
-  overflow-x: auto;
+  overflow: auto;
+  /* Never taller than one screen: past that the table scrolls inside its own box. */
+  max-height: 90dvh;
 }
 
 .post-prose table {
@@ -246,7 +253,10 @@
   /* `auto` over `fixed`: column widths are not stored (the editor has resizing
      off), so let the content decide. */
   table-layout: auto;
-  width: 100%;
+  /* Fill the column, but never squeeze below what the cells ask for: past that the
+     wrapper scrolls sideways, which beats a column one word wide. */
+  width: max-content;
+  min-width: 100%;
 }
 
 .post-prose th,
@@ -257,11 +267,23 @@
   line-height: var(--text-body-3--line-height);
   text-align: left;
   vertical-align: top;
+  /* Width comes first: a column keeps growing with its content, up to one screen
+     wide (less the 16px page gutters), before its text wraps and the row gets taller. */
+  max-width: calc(100vw - 32px);
 }
 
 .post-prose th {
-  background: color-mix(in srgb, currentColor 6%, transparent);
   font-weight: 600;
+  /* Keep the header in view while the body scrolls. The tint is translucent, so it
+     sits on an opaque layer or rows would show through it. */
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-image: linear-gradient(
+    color-mix(in srgb, currentColor 6%, transparent),
+    color-mix(in srgb, currentColor 6%, transparent)
+  );
+  background-color: var(--color-background);
 }
 
 /* Blocks inside a cell keep the rhythm of the cell, not of the article. */

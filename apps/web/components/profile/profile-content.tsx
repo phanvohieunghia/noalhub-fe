@@ -3,9 +3,12 @@
 import {useDateFormat} from '@noalhub/i18n/use-date-format'
 import {useTranslations} from 'next-intl'
 
+import {LogoutButton} from '@/components/auth/logout-button'
+import {WebLanguageSwitcher} from '@/components/layout/language-switcher'
 import {ChangeUsernameForm} from '@/components/profile/change-username-form'
 import {Avatar} from '@noalhub/ui/avatar'
 import {Spinner} from '@noalhub/ui/spinner'
+import {ThemeToggle} from '@noalhub/ui/theme/theme-toggle'
 import {useAuthStore} from '@noalhub/api/auth'
 import {useMe} from '@noalhub/api/auth'
 import type {User} from '@noalhub/api/users'
@@ -73,7 +76,40 @@ export function ProfileContent() {
         </Typography>
         <ChangeUsernameForm user={user} />
       </section>
+
+      <AccountSettings />
     </main>
+  )
+}
+
+/**
+ * Appearance, language and sign-out. From `md` up they live in the header's account menu;
+ * on a phone that menu is a tap away from a tiny avatar, so the profile page carries the
+ * same controls where people look for them.
+ */
+function AccountSettings() {
+  const t = useTranslations('web.profile.settings')
+  const tn = useTranslations('nav')
+
+  return (
+    <section className="flex flex-col gap-4 rounded-lg border border-black/10 p-4 md:hidden dark:border-white/15">
+      <Typography variant="h5" as="h2">
+        {t('heading')}
+      </Typography>
+      <div className="flex items-center justify-between gap-2">
+        <Typography variant="body-3" className="opacity-70">
+          {tn('appearance')}
+        </Typography>
+        <ThemeToggle />
+      </div>
+      <div className="flex items-center justify-between gap-2">
+        <Typography variant="body-3" className="opacity-70">
+          {tn('language')}
+        </Typography>
+        <WebLanguageSwitcher className="shrink-0" />
+      </div>
+      <LogoutButton className="w-full" />
+    </section>
   )
 }
 

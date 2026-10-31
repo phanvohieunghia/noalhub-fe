@@ -7,7 +7,8 @@ import type {QaAnswerResult, QaItemPlay, QaResponse} from '@noalhub/api/qa'
 import {Button} from '@noalhub/ui/button'
 import {Icon, LUCIDE} from '@noalhub/ui/icons'
 import {Input} from '@noalhub/ui/input'
-import {QaOptionCard, type QaOptionState} from '@noalhub/ui/qa-option-card'
+import {QaChoiceList, isCompactChoices} from '@noalhub/ui/qa-choice-list'
+import {type QaOptionState} from '@noalhub/ui/qa-option-card'
 import {Typography} from '@noalhub/ui/typography'
 
 import {playSelect} from '@noalhub/core/sounds'
@@ -16,9 +17,6 @@ import {playSelect} from '@noalhub/core/sounds'
 function elapsedSince(start: number) {
   return Math.max(0, Date.now() - start)
 }
-
-/** An option at most this long counts as short — see `compact` in `AnswerInput`. */
-const SHORT_OPTION_CHARS = 40
 
 /**
  * The three ways to answer, picked by the item's shape (`item.templateKey`) — not
@@ -61,12 +59,7 @@ export function AnswerInput({
   const {templateKey} = item
   const locked = result !== null || disabled === true
   const options = templateKey !== 'flashcard' ? (item.options ?? []) : []
-  // Short answers sit in a 2-wide grid; one long answer sends the whole set back
-  // to full-width rows so the text never gets squeezed into half a card. An odd count
-  // (3, 5…) would leave a lone card in the last row, so it stays a list too.
-  const compact =
-    options.length % 2 === 0 &&
-    options.every((option) => option.text.length <= SHORT_OPTION_CHARS)
+  const compact = isCompactChoices(options)
   const single = templateKey === 'true_false' || templateKey === 'single_choice'
 
   const send = (response: QaResponse) =>
@@ -144,40 +137,24 @@ export function AnswerInput({
             {t('answer.multiHint')}
           </Typography>
         )}
-        {/* The answers get the height the question leaves over and split it evenly (no card taller
-            than 40vh, unless its text needs more), so they
-            fill the screen instead of huddling at the top. When they would not fit (a phone,
-            four long options) the cards keep a readable height and only THIS box scrolls —
-            the question stays in view. The padding keeps focus rings and shadows from being
-            clipped by the scroll box. */}
-        <div className="-m-1 min-h-0 flex-1 overflow-y-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div
-            role={single ? 'radiogroup' : 'group'}
-            aria-label={single ? t('answer.singleHint') : t('answer.multiHint')}
-            className={`grid min-h-full auto-rows-fr gap-2 [&>*]:max-h-[40vh] [&>*]:self-center ${compact ? 'grid-cols-2' : ''}`}>
-            {options.map((option) => (
-              <QaOptionCard
-                key={option.id}
-                text={option.text}
-                role={single ? 'radio' : 'checkbox'}
-                shape={single ? 'round' : 'square'}
-                state={optionState({
-                  chosen: picked.includes(option.id),
-                  result,
-                  pickCount: picked.length,
-                })}
-                disabled={locked}
-                centered={compact}
-                // Single-answer: tapping the active option again sends it.
-                onClick={() =>
-                  single && picked.includes(option.id)
-                    ? send({optionIds: [option.id]})
-                    : toggle(option.id)
-                }
-              />
-            ))}
-          </div>
-        </div>
+        <QaChoiceList
+          options={options}
+          multi={!single}
+          label={single ? t('answer.singleHint') : t('answer.multiHint')}
+          compact={compact}
+          disabled={locked}
+          stateOf={(id) =>
+            optionState({
+              chosen: picked.includes(id),
+              result,
+              pickCount: picked.length,
+            })
+          }
+          // Single-answer: tapping the active option again sends it.
+          onPick={(id) =>
+            single && picked.includes(id) ? send({optionIds: [id]}) : toggle(id)
+          }
+        />
         {single || locked ? null : (
           <Button
             className="shrink-0"

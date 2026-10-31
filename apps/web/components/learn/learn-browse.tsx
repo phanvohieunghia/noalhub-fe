@@ -1,5 +1,6 @@
 'use client'
 
+import {DifficultyBadge} from '@noalhub/ui/difficulty'
 import {useTranslations} from 'next-intl'
 import Link from 'next/link'
 import {useRouter} from 'next/navigation'
@@ -8,6 +9,7 @@ import {useMemo, useState} from 'react'
 import {
   QA_COUNT_OPTIONS,
   useBrowseQaDatasets,
+  useFinishQaAttempt,
   useQaAttempts,
   useStartQaAttempt,
   type QaAttempt,
@@ -19,24 +21,22 @@ import {useDateFormat} from '@noalhub/i18n/use-date-format'
 import {Badge, type BadgeTone} from '@noalhub/ui/badge'
 import {Button} from '@noalhub/ui/button'
 import {Dialog} from '@noalhub/ui/dialog'
+import {DropdownMenu, DropdownMenuItem} from '@noalhub/ui/dropdown-menu'
 import {Icon, ICONS, LUCIDE} from '@noalhub/ui/icons'
 import {Input} from '@noalhub/ui/input'
 import {Select} from '@noalhub/ui/select'
 import {Skeleton} from '@noalhub/ui/skeleton'
-import {Tooltip} from '@noalhub/ui/tooltip'
 import {Typography} from '@noalhub/ui/typography'
 import {ToastError} from '@noalhub/ui/toast'
+
+import {useDebouncedValue} from './use-debounced-value'
 
 const KINDS = ['theory', 'practice', 'recall', 'analysis'] as const
 const DIFFICULTIES = ['easy', 'medium', 'hard'] as const
 /** How many cards one "Load more" reveals — two rows of the three-column grid. */
 const PAGE_SIZE = 6
-
-const DIFFICULTY_TONE: Record<QaDifficulty, BadgeTone> = {
-  easy: 'success',
-  medium: 'warning',
-  hard: 'danger',
-}
+/** Past this many answers, picking an open attempt up asks whether to keep it. */
+const CONFIRM_RESUME_AFTER = 10
 
 /**
  * The way into the learner surface.
@@ -49,19 +49,22 @@ const DIFFICULTY_TONE: Record<QaDifficulty, BadgeTone> = {
  * Two different words for two different situations: starting is a decision,
  * continuing is picking up something already half-done.
  *
- * Search, kind and difficulty filter **client-side** over the published list:
- * the browse endpoint takes no filter, and the list is the learner's whole
- * catalogue, small enough to hold in memory.
+ * Search goes to the backend (title match, debounced 300ms). Kind and
+ * difficulty still filter **client-side** over what came back: the endpoint
+ * takes no such filter, and the catalogue is small enough to hold in memory.
  */
 export function LearnBrowse() {
   const t = useTranslations('web.learn')
+  const router = useRouter()
   const [kind, setKind] = useState<QaItemKind | ''>('')
   const [difficulty, setDifficulty] = useState<QaDifficulty | ''>('')
   const [search, setSearch] = useState('')
   const [visible, setVisible] = useState(PAGE_SIZE)
   const [opened, setOpened] = useState<QaDatasetSummary | null>(null)
 
-  const datasets = useBrowseQaDatasets()
+  // The title search runs on the backend, one request per pause in typing.
+  const needle = useDebouncedValue(search.trim())
+  const datasets = useBrowseQaDatasets(needle)
   const attempts = useQaAttempts()
 
   // One open attempt per dataset (the backend guarantees it) → its progress by dataset id.
@@ -90,12 +93,10 @@ export function LearnBrowse() {
     return map
   }, [attempts.data, openByDataset])
 
-  const needle = search.trim().toLowerCase()
   const rows = (datasets.data?.items ?? []).filter(
     (row) =>
       (kind === '' || row.itemKinds.includes(kind)) &&
-      (difficulty === '' || row.difficulties.includes(difficulty)) &&
-      (needle === '' || row.title.toLowerCase().includes(needle)),
+      (difficulty === '' || row.difficulties.includes(difficulty)),
   )
   const shown = rows.slice(0, visible)
 
@@ -126,65 +127,77 @@ export function LearnBrowse() {
               <Typography variant="h2" as="h1">
                 {t('browse.title')}
               </Typography>
-              <Typography variant="body-3" className="text-muted-foreground">
-                {t('browse.intro')}
-              </Typography>
             </div>
-            <div className="flex shrink-0 gap-2">
-              <Tooltip label={t('history.open')} side="bottom">
-                <Button variant="outline" size="icon" asChild>
-                  <Link href="/learn/history" aria-label={t('history.open')}>
-                    <Icon icon={LUCIDE.history} />
-                  </Link>
+            <DropdownMenu
+              trigger={
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label={t('browse.menu')}>
+                  <Icon icon={LUCIDE.menu} />
                 </Button>
-              </Tooltip>
-              <Tooltip label={t('browse.stats')} side="bottom">
-                <Button variant="outline" size="icon" asChild>
-                  <Link href="/learn/stats" aria-label={t('browse.stats')}>
-                    <Icon icon={LUCIDE.chartColumn} />
-                  </Link>
-                </Button>
-              </Tooltip>
-            </div>
+              }
+              compact>
+              <DropdownMenuItem
+                icon={LUCIDE.history}
+                onSelect={() => router.push('/learn/history')}>
+                {t('history.open')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                icon={LUCIDE.chartColumn}
+                onSelect={() => router.push('/learn/stats')}>
+                {t('browse.stats')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                icon={LUCIDE.bookOpen}
+                onSelect={() => router.push('/learn/knowledge')}>
+                {t('browse.knowledge')}
+              </DropdownMenuItem>
+            </DropdownMenu>
           </header>
 
-          <Input
-            label={t('browse.searchLabel')}
-            hideLabel
-            type="search"
-            leadingIcon={ICONS.search}
-            placeholder={t('browse.searchPlaceholder')}
-            value={search}
-            onChange={(event) => onFilter(setSearch)(event.target.value)}
-          />
+          {/* One row from `lg`: the search takes what is left, the two filters a fixed width. */}
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_13rem_13rem]">
+            <Input
+              label={t('browse.searchLabel')}
+              hideLabel
+              type="search"
+              leadingIcon={ICONS.search}
+              placeholder={t('browse.searchPlaceholder')}
+              value={search}
+              onChange={(event) => onFilter(setSearch)(event.target.value)}
+            />
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Select
-              label={t('browse.filterKind')}
-              hideLabel
-              value={kind}
-              onChange={(event) =>
-                onFilter(setKind)(event.target.value as QaItemKind | '')
-              }
-              placeholder={t('browse.allKinds')}
-              options={KINDS.map((value) => ({
-                value,
-                label: t(`kinds.${value}`),
-              }))}
-            />
-            <Select
-              label={t('browse.difficultyLabel')}
-              hideLabel
-              value={difficulty}
-              onChange={(event) =>
-                onFilter(setDifficulty)(event.target.value as QaDifficulty | '')
-              }
-              placeholder={t('browse.anyDifficulty')}
-              options={DIFFICULTIES.map((value) => ({
-                value,
-                label: t(`difficulty.${value}`),
-              }))}
-            />
+            <div className="grid gap-3 sm:grid-cols-2 lg:contents">
+              <Select
+                label={t('browse.filterKind')}
+                hideLabel
+                value={kind}
+                onChange={(event) =>
+                  onFilter(setKind)(event.target.value as QaItemKind | '')
+                }
+                placeholder={t('browse.allKinds')}
+                options={KINDS.map((value) => ({
+                  value,
+                  label: t(`kinds.${value}`),
+                }))}
+              />
+              <Select
+                label={t('browse.difficultyLabel')}
+                hideLabel
+                value={difficulty}
+                onChange={(event) =>
+                  onFilter(setDifficulty)(
+                    event.target.value as QaDifficulty | '',
+                  )
+                }
+                placeholder={t('browse.anyDifficulty')}
+                options={DIFFICULTIES.map((value) => ({
+                  value,
+                  label: t(`difficulty.${value}`),
+                }))}
+              />
+            </div>
           </div>
 
           {datasets.isPending ? (
@@ -224,21 +237,15 @@ export function LearnBrowse() {
                 ))}
               </ul>
 
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <Typography variant="body-4" className="text-muted-foreground">
-                  {t('browse.showing', {
-                    shown: shown.length,
-                    total: rows.length,
-                  })}
-                </Typography>
-                {shown.length < rows.length ? (
+              {shown.length < rows.length ? (
+                <div className="flex justify-center">
                   <Button
                     variant="outline"
                     onClick={() => setVisible((n) => n + PAGE_SIZE)}>
                     {t('browse.loadMore')}
                   </Button>
-                ) : null}
-              </div>
+                </div>
+              ) : null}
             </>
           )}
         </div>
@@ -275,6 +282,7 @@ function DatasetDialog({
   const t = useTranslations('web.learn')
   const router = useRouter()
   const start = useStartQaAttempt()
+  const finish = useFinishQaAttempt()
   // Only sizes smaller than the bank are offered — "20" of 12 questions is just "all".
   const sizes = QA_COUNT_OPTIONS.filter((size) => size < dataset.itemCount)
   // `null` = all of them. Ten is a sitting; a bank smaller than that is taken whole.
@@ -283,6 +291,15 @@ function DatasetDialog({
   )
   // An open attempt already has its questions — the picker would be a lie.
   const resuming = attempt !== undefined
+
+  // A run this far along is worth a second look: continue it, or drop it.
+  const confirming =
+    attempt !== undefined && attempt.answeredCount > CONFIRM_RESUME_AFTER
+
+  const discard = () => {
+    if (!attempt) return
+    finish.mutate(attempt.id, {onSuccess: onClose})
+  }
 
   const begin = () =>
     start.mutate(
@@ -316,9 +333,11 @@ function DatasetDialog({
           </Badge>
         ))}
         {dataset.difficulties.map((value) => (
-          <Badge key={value} tone={DIFFICULTY_TONE[value]}>
-            {t(`difficulty.${value}`)}
-          </Badge>
+          <DifficultyBadge
+            key={value}
+            level={value}
+            label={t(`difficulty.${value}`)}
+          />
         ))}
       </div>
 
@@ -344,13 +363,31 @@ function DatasetDialog({
         />
       ) : null}
 
-      {start.isError ? <ToastError message={t('dataset.startFailed')} /> : null}
+      {start.isError || finish.isError ? (
+        <ToastError message={t('dataset.startFailed')} />
+      ) : null}
 
       <div className="space-y-2">
         <Button className="w-full" onClick={begin} loading={start.isPending}>
           {resuming ? t('browse.continue') : t('dataset.start')}
         </Button>
-        {resuming ? (
+        {confirming && attempt ? (
+          <Button
+            className="w-full"
+            variant="outline"
+            onClick={discard}
+            loading={finish.isPending}>
+            {t('dataset.discard')}
+          </Button>
+        ) : null}
+        {confirming && attempt ? (
+          <Typography variant="body-4" className="text-muted-foreground">
+            {t('dataset.confirmResume', {
+              answered: attempt.answeredCount,
+              total: attempt.itemCount,
+            })}
+          </Typography>
+        ) : resuming ? (
           <Typography variant="body-4" className="text-muted-foreground">
             {t('dataset.resumeHint')}
           </Typography>
@@ -397,9 +434,11 @@ function DatasetCard({
         <div className="flex flex-wrap gap-1.5">
           {featured ? <Badge tone="info">{t('browse.featured')}</Badge> : null}
           {dataset.difficulties.map((value) => (
-            <Badge key={value} tone={DIFFICULTY_TONE[value]}>
-              {t(`difficulty.${value}`)}
-            </Badge>
+            <DifficultyBadge
+              key={value}
+              level={value}
+              label={t(`difficulty.${value}`)}
+            />
           ))}
         </div>
         <Typography variant="title-2" as="h2">

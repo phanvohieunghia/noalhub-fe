@@ -72,6 +72,7 @@ export function UsersContent() {
         </div>
         <Select
           label={t('role')}
+          hideLabel
           placeholder={t('allRoles')}
           value={query.role ?? ''}
           onChange={(event) => setRole(event.target.value)}

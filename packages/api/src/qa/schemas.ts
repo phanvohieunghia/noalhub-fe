@@ -794,6 +794,26 @@ export const qaDatasetPlaySchema = z.object({
   items: z.array(qaItemPlaySchema),
 })
 
+export const qaKnowledgeSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: nullableString,
+  /** The outline version an admin chose to show learners; `null` falls back to `sources`. */
+  outline: z
+    .discriminatedUnion('contentFormat', [
+      z.object({contentFormat: z.literal('doc'), content: richDoc}),
+      z.object({contentFormat: z.literal('markdown'), content: z.string()}),
+    ])
+    .nullable(),
+  sources: z.array(
+    z.object({
+      id: z.string(),
+      title: nullableString,
+      content: nullableString,
+    }),
+  ),
+})
+
 export const qaDatasetSummarySchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -956,3 +976,71 @@ export const updateItemTagSchema = z.object({
 
 export type CreateItemTagInput = z.infer<typeof createItemTagSchema>
 export type UpdateItemTagInput = z.infer<typeof updateItemTagSchema>
+
+/* ---------------------------- Question feedback ---------------------------- */
+
+const qaFeedbackReasonSchema = z.enum([
+  'wrong_answer',
+  'wrong_content',
+  'unclear',
+  'other',
+])
+
+export const qaFeedbackSchema = z.object({
+  id: z.string(),
+  reason: qaFeedbackReasonSchema,
+  note: nullableString,
+  status: z.enum(['pending', 'resolved', 'dismissed']),
+  adminNote: nullableString,
+  reviewedAt: nullableString,
+  createdAt: z.string(),
+  itemId: z.string(),
+  datasetId: nullableString,
+  datasetTitle: nullableString,
+  setId: nullableString,
+  sectionTitle: nullableString,
+  questionType: nullableString,
+  item: z.lazy(() => qaItemFullSchema).nullable(),
+  reporter: z
+    .object({
+      id: z.string(),
+      username: z.string(),
+      displayName: nullableString,
+      email: z.string(),
+    })
+    .nullable(),
+})
+
+export const qaFeedbackPageSchema = z.object({
+  items: z.array(qaFeedbackSchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+})
+
+export const qaFeedbackPendingCountSchema = z.object({count: z.number()})
+
+export const qaFeedbackReceiptSchema = z.object({id: z.string()})
+
+/** `note` is required when the reason is `other` — the backend enforces it too. */
+export const submitQaFeedbackSchema = z
+  .object({
+    reason: qaFeedbackReasonSchema,
+    note: z
+      .string()
+      .trim()
+      .max(1000, 'validation.qaFeedback.noteTooLong')
+      .optional(),
+  })
+  .refine((v) => v.reason !== 'other' || Boolean(v.note), {
+    path: ['note'],
+    message: 'validation.qaFeedback.noteRequired',
+  })
+
+export const reviewQaFeedbackSchema = z.object({
+  status: z.enum(['pending', 'resolved', 'dismissed']),
+  adminNote: z.string().trim().max(1000).optional(),
+})
+
+export type SubmitQaFeedbackInput = z.infer<typeof submitQaFeedbackSchema>
+export type ReviewQaFeedbackInput = z.infer<typeof reviewQaFeedbackSchema>

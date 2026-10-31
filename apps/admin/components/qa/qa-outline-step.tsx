@@ -231,12 +231,8 @@ export function OutlineStep({
       <OutlineWorkbench
         datasetId={datasetId}
         sourceLarge={sourceLarge}
-        // The badge in the section list marks the newest version.
-        outline={
-          detail.data
-            ? {...detail.data, isCurrent: detail.data.id === latest?.id}
-            : undefined
-        }
+        // The badge in the section list marks the version shown to learners.
+        outline={detail.data}
         onStarted={handleStarted}
         versionPicker={
           <>

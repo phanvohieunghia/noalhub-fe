@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  keepPreviousData,
   useInfiniteQuery,
   useMutation,
   useQueries,
@@ -26,6 +27,8 @@ import type {
   SubmitAnswerInput,
   UpdateCredentialInput,
   UpdateItemTagInput,
+  ReviewQaFeedbackInput,
+  SubmitQaFeedbackInput,
   UpdateModelInput,
   UpdateDatasetInput,
   UpdateSetInput,
@@ -33,6 +36,7 @@ import type {
   WriteItemInput,
 } from './schemas'
 import type {
+  QaFeedbackQuery,
   BrowseItemsQuery,
   QaGeneration,
   QaItemPlay,
@@ -56,6 +60,10 @@ export const qaKeys = {
   credentials: () => [...qaKeys.all, 'credentials'] as const,
   models: () => [...qaKeys.all, 'models'] as const,
   itemTags: () => [...qaKeys.all, 'item-tags'] as const,
+  feedbacks: () => [...qaKeys.all, 'feedbacks'] as const,
+  feedbackList: (query: QaFeedbackQuery) =>
+    [...qaKeys.feedbacks(), 'list', query] as const,
+  feedbackPending: () => [...qaKeys.feedbacks(), 'pending'] as const,
 
   templates: () => [...qaKeys.all, 'templates'] as const,
   templateList: (kind?: QaPromptKind) =>
@@ -92,7 +100,8 @@ export const qaKeys = {
      own subtree — invalidating "sets" after publishing must not wipe a
      learner's open attempt out of the cache. */
   play: () => [...qaKeys.all, 'play'] as const,
-  playDatasets: () => [...qaKeys.play(), 'datasets'] as const,
+  playDatasets: (q = '') => [...qaKeys.play(), 'datasets', q] as const,
+  knowledge: (id: string) => [...qaKeys.play(), 'knowledge', id] as const,
   playDataset: (id: string) => [...qaKeys.play(), 'dataset', id] as const,
   playItems: (query: BrowseItemsQuery) =>
     [...qaKeys.play(), 'items', query] as const,
@@ -499,6 +508,22 @@ export function useUpdateQaOutline(id: string, datasetId: string) {
   })
 }
 
+export function useSetCurrentQaOutline(datasetId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (outlineId: string) =>
+      qaApi.setCurrentOutline(datasetId, outlineId),
+    onSuccess: () => {
+      // The flag moves between rows, so the list and every cached version are stale.
+      queryClient.invalidateQueries({
+        queryKey: qaKeys.outlineList(datasetId),
+      })
+      queryClient.invalidateQueries({queryKey: qaKeys.outlines()})
+      queryClient.invalidateQueries({queryKey: qaKeys.play()})
+    },
+  })
+}
+
 export function useDeleteQaOutline(datasetId: string) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -890,10 +915,12 @@ function invalidateSet(
 
 /* ------------------------------ learner surface ---------------------------- */
 
-export function useBrowseQaDatasets() {
+/** `q` is matched against the dataset title by the backend; debounce it at the call site. */
+export function useBrowseQaDatasets(q = '') {
   return useQuery({
-    queryKey: qaKeys.playDatasets(),
-    queryFn: ({signal}) => qaApi.browseDatasets(signal),
+    queryKey: qaKeys.playDatasets(q),
+    queryFn: ({signal}) => qaApi.browseDatasets(q, signal),
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -901,6 +928,15 @@ export function usePlayQaDataset(id: string | undefined) {
   return useQuery({
     queryKey: qaKeys.playDataset(id ?? ''),
     queryFn: ({signal}) => qaApi.getPlayDataset(id!, signal),
+    enabled: Boolean(id),
+  })
+}
+
+/** The source text behind a published bank — read-only, for the learner. */
+export function useQaKnowledge(id: string | undefined) {
+  return useQuery({
+    queryKey: qaKeys.knowledge(id ?? ''),
+    queryFn: ({signal}) => qaApi.getKnowledge(id!, signal),
     enabled: Boolean(id),
   })
 }
@@ -1076,5 +1112,41 @@ export function usePlayItemTags() {
     queryKey: qaKeys.playTags(),
     queryFn: ({signal}) => qaApi.listPlayItemTags(signal),
     staleTime: 5 * 60 * 1000,
+  })
+}
+
+/* ---------------------------- Question feedback ---------------------------- */
+
+/** Learner: report the question on screen. Nothing to invalidate — they never read it back. */
+export function useSubmitQaFeedback(itemId: string) {
+  return useMutation({
+    mutationFn: (input: SubmitQaFeedbackInput) =>
+      qaApi.submitItemFeedback(itemId, input),
+  })
+}
+
+export function useQaFeedbacks(query: QaFeedbackQuery = {}) {
+  return useQuery({
+    queryKey: qaKeys.feedbackList(query),
+    queryFn: ({signal}) => qaApi.listFeedbacks(query, signal),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useQaFeedbackPendingCount() {
+  return useQuery({
+    queryKey: qaKeys.feedbackPending(),
+    queryFn: ({signal}) => qaApi.countPendingFeedbacks(signal),
+    refetchInterval: 60_000,
+  })
+}
+
+export function useReviewQaFeedback() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({id, ...input}: ReviewQaFeedbackInput & {id: string}) =>
+      qaApi.reviewFeedback(id, input),
+    onSuccess: () =>
+      queryClient.invalidateQueries({queryKey: qaKeys.feedbacks()}),
   })
 }
