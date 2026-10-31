@@ -150,7 +150,7 @@ export function LearnBrowse() {
               </DropdownMenuItem>
               <DropdownMenuItem
                 icon={LUCIDE.bookOpen}
-                onSelect={() => router.push('/learn/knowledge')}>
+                onSelect={() => router.push('/knowledge?from=learn')}>
                 {t('browse.knowledge')}
               </DropdownMenuItem>
             </DropdownMenu>

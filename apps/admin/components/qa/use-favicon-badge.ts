@@ -17,7 +17,10 @@ export function useFaviconBadge(active: boolean) {
     const source = links[0]?.href
     if (!source) return
 
-    const originals = links.map((link) => link.href)
+    const originals = links.map((link) => ({
+      href: link.href,
+      type: link.type,
+    }))
     let cancelled = false
     const image = new Image()
     image.onload = () => {
@@ -42,14 +45,20 @@ export function useFaviconBadge(active: boolean) {
       ctx.strokeStyle = '#fff'
       ctx.stroke()
       const href = canvas.toDataURL('image/png')
-      for (const link of links) link.href = href
+      // The badge is a PNG: a leftover `type="image/svg+xml"` makes the browser
+      // decode it as SVG and drop the icon.
+      for (const link of links) {
+        link.type = 'image/png'
+        link.href = href
+      }
     }
     image.src = source
 
     return () => {
       cancelled = true
       links.forEach((link, index) => {
-        link.href = originals[index]!
+        link.href = originals[index]!.href
+        link.type = originals[index]!.type
       })
     }
   }, [active])

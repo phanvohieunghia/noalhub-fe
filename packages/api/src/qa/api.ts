@@ -814,12 +814,31 @@ export async function getPlayDataset(
   return data
 }
 
+/**
+ * The public catalogue behind the Knowledge pages: same banks as `browseDatasets`
+ * but readable signed out, so no `openAttemptId`.
+ */
+export async function browseKnowledge(
+  q: string,
+  signal?: AbortSignal,
+): Promise<{items: QaDatasetSummary[]; total: number}> {
+  const {data} = await http.get<{items: QaDatasetSummary[]; total: number}>(
+    '/qa/knowledge',
+    {
+      params: q ? {q} : undefined,
+      schema: qaDatasetListPlaySchema,
+      signal,
+    },
+  )
+  return data
+}
+
 export async function getKnowledge(
   id: string,
   signal?: AbortSignal,
 ): Promise<QaKnowledge> {
+  // Public: knowledge reads without a session, so no Bearer token is attached.
   const {data} = await http.get<QaKnowledge>(`/qa/datasets/${id}/knowledge`, {
-    authRequired: true,
     schema: qaKnowledgeSchema,
     signal,
   })

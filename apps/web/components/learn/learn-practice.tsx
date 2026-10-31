@@ -11,6 +11,8 @@ import {QaQuestion} from '@noalhub/ui/blog/qa-question'
 import {Skeleton} from '@noalhub/ui/skeleton'
 import {Typography} from '@noalhub/ui/typography'
 
+import {InfoTip} from './info-tip'
+
 /**
  * The questions you are currently getting wrong, across every set and every
  * shape.
@@ -45,10 +47,8 @@ export function LearnPractice() {
         <Typography variant="h4" as="h1" className="min-w-0 flex-1 break-words">
           {t('practice.title')}
         </Typography>
+        <InfoTip text={t('practice.intro')} />
       </div>
-      <Typography variant="body-3" className="mt-1 opacity-70">
-        {t('practice.intro')}
-      </Typography>
 
       <div className="mt-6 space-y-3">
         {wrong.isPending || attempts.isPending ? (

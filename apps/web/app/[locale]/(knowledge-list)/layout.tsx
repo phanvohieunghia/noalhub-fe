@@ -1,12 +1,11 @@
 import {setRequestLocale} from 'next-intl/server'
 
+import {MobileNav} from '@/components/layout/mobile-nav'
+import {SiteFooter} from '@/components/layout/site-footer'
 import {SiteHeader} from '@/components/layout/site-header'
 
-/**
- * Reading a bank's material: the app header stays on desktop, but there is no bottom
- * nav — the page pins its own bar and a floating button, and the nav would sit under both.
- */
-export default async function ReadingLayout({
+/** The public Knowledge catalogue: app header, footer and, on phones, the bottom nav. */
+export default async function KnowledgeListLayout({
   children,
   params,
 }: LayoutProps<'/[locale]'>) {
@@ -17,6 +16,8 @@ export default async function ReadingLayout({
     <div className="flex min-h-full flex-1 flex-col">
       <SiteHeader />
       <div className="flex-1">{children}</div>
+      <SiteFooter />
+      <MobileNav />
     </div>
   )
 }

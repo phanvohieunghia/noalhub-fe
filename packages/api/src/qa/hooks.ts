@@ -100,6 +100,7 @@ export const qaKeys = {
      own subtree — invalidating "sets" after publishing must not wipe a
      learner's open attempt out of the cache. */
   play: () => [...qaKeys.all, 'play'] as const,
+  knowledgeList: (q = '') => [...qaKeys.play(), 'knowledge-list', q] as const,
   playDatasets: (q = '') => [...qaKeys.play(), 'datasets', q] as const,
   knowledge: (id: string) => [...qaKeys.play(), 'knowledge', id] as const,
   playDataset: (id: string) => [...qaKeys.play(), 'dataset', id] as const,
@@ -920,6 +921,15 @@ export function useBrowseQaDatasets(q = '') {
   return useQuery({
     queryKey: qaKeys.playDatasets(q),
     queryFn: ({signal}) => qaApi.browseDatasets(q, signal),
+    placeholderData: keepPreviousData,
+  })
+}
+
+/** The public Knowledge catalogue — works signed out. */
+export function useBrowseKnowledge(q = '') {
+  return useQuery({
+    queryKey: qaKeys.knowledgeList(q),
+    queryFn: ({signal}) => qaApi.browseKnowledge(q, signal),
     placeholderData: keepPreviousData,
   })
 }

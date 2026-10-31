@@ -16,6 +16,8 @@ import {Icon, LUCIDE} from '@noalhub/ui/icons'
 import {Skeleton} from '@noalhub/ui/skeleton'
 import {Typography} from '@noalhub/ui/typography'
 
+import {InfoTip} from './info-tip'
+
 /**
  * Every attempt the learner has taken, newest first; one tap opens its review.
  *
@@ -60,14 +62,10 @@ export function LearnHistory() {
             <Icon icon={LUCIDE.arrowLeft} />
           </Link>
         </Button>
-        <div className="min-w-0">
-          <Typography variant="h4" as="h1" className="truncate">
-            {t('history.title')}
-          </Typography>
-          <Typography variant="body-4" className="text-muted-foreground">
-            {t('history.intro')}
-          </Typography>
-        </div>
+        <Typography variant="h4" as="h1" className="min-w-0 flex-1 truncate">
+          {t('history.title')}
+        </Typography>
+        <InfoTip text={t('history.intro')} />
       </header>
 
       {attempts.isPending ? (

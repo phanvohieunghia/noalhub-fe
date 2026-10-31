@@ -6,7 +6,7 @@ import {LearnKnowledgeDetail} from '@/components/learn/learn-knowledge'
 
 export async function generateMetadata({
   params,
-}: PageProps<'/[locale]/learn/knowledge/[id]'>): Promise<Metadata> {
+}: PageProps<'/[locale]/knowledge/[id]'>): Promise<Metadata> {
   const {locale} = await params
   const t = await getTranslations({locale, namespace: 'web.learn'})
   return {title: t('knowledge.title')}
@@ -14,7 +14,7 @@ export async function generateMetadata({
 
 export default async function Page({
   params,
-}: PageProps<'/[locale]/learn/knowledge/[id]'>) {
+}: PageProps<'/[locale]/knowledge/[id]'>) {
   const {locale, id} = await params
   setRequestLocale(locale)
 

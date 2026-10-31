@@ -4,10 +4,11 @@ import {MarkdownContent} from '@noalhub/ui/blog/markdown-content'
 import {PostContent} from '@noalhub/ui/blog/post-content'
 import {useTranslations} from 'next-intl'
 import Link from 'next/link'
+import {useSearchParams} from 'next/navigation'
 import {memo, useEffect, useRef, useState} from 'react'
 
 import {
-  useBrowseQaDatasets,
+  useBrowseKnowledge,
   useQaKnowledge,
   type QaKnowledge,
 } from '@noalhub/api/qa'
@@ -19,6 +20,7 @@ import {ScrollToTopButton} from '@noalhub/ui/scroll-to-top-button'
 import {Skeleton} from '@noalhub/ui/skeleton'
 import {Typography} from '@noalhub/ui/typography'
 
+import {InfoTip} from './info-tip'
 import {KnowledgeSearchBar, useArticleSearch} from './knowledge-search'
 
 /** How long the pinned bar stays once scrolling stops. */
@@ -65,7 +67,8 @@ function BackHeader({
   pinned = false,
   overlay,
 }: {
-  href: string
+  /** Omit for no back button — the page was not reached from anywhere to go back to. */
+  href?: string
   title: string
   actions?: React.ReactNode
   /** Pin to the top and fade away while reading — see `useAutoHideBar`. */
@@ -88,17 +91,19 @@ function BackHeader({
             }`
           : 'flex items-center gap-2'
       }>
-      <Button
-        variant="ghost"
-        size="icon"
-        shape="circle"
-        asChild
-        aria-label={t('knowledge.back')}
-        className="-ml-2 shrink-0">
-        <Link href={href}>
-          <Icon icon={LUCIDE.arrowLeft} />
-        </Link>
-      </Button>
+      {href ? (
+        <Button
+          variant="ghost"
+          size="icon"
+          shape="circle"
+          asChild
+          aria-label={t('knowledge.back')}
+          className="-ml-2 shrink-0">
+          <Link href={href}>
+            <Icon icon={LUCIDE.arrowLeft} />
+          </Link>
+        </Button>
+      ) : null}
       <Typography variant="h4" as="h1" className="min-w-0 flex-1 truncate">
         {title}
       </Typography>
@@ -115,15 +120,19 @@ function BackHeader({
 /** Every published bank, by title; opening one reads its source like an article. */
 export function LearnKnowledge() {
   const t = useTranslations('web.learn')
-  const datasets = useBrowseQaDatasets()
+  const datasets = useBrowseKnowledge()
   const rows = datasets.data?.items ?? []
+  // The catalogue is public: only the practice menu sends people here with
+  // `?from=learn`, so only they get a way back.
+  const fromLearn = useSearchParams().get('from') === 'learn'
 
   return (
     <main className="mx-auto w-full max-w-3xl space-y-5 p-4 sm:p-6">
-      <BackHeader href="/learn" title={t('knowledge.title')} />
-      <Typography variant="body-3" className="text-muted-foreground">
-        {t('knowledge.intro')}
-      </Typography>
+      <BackHeader
+        href={fromLearn ? '/learn' : undefined}
+        title={t('knowledge.title')}
+        actions={<InfoTip text={t('knowledge.intro')} />}
+      />
 
       {datasets.isPending ? (
         <div className="space-y-3">
@@ -140,7 +149,7 @@ export function LearnKnowledge() {
           {rows.map((dataset) => (
             <li key={dataset.id}>
               <Link
-                href={`/learn/knowledge/${dataset.id}`}
+                href={`/knowledge/${dataset.id}`}
                 className="flex items-center gap-3 rounded-xl border border-border bg-surface p-4 transition-colors hover:border-primary/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
                 <Typography
                   variant="title-3"
@@ -386,7 +395,7 @@ export function LearnKnowledgeDetail({datasetId}: {datasetId: string}) {
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-3 p-4 sm:p-6">
       <BackHeader
         pinned
-        href="/learn/knowledge"
+        href="/knowledge"
         title={knowledge.data?.title ?? t('knowledge.title')}
         overlay={
           search.open ? <KnowledgeSearchBar search={search} /> : undefined

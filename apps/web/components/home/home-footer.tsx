@@ -1,3 +1,4 @@
+import {getKnowledgeDatasets} from '@noalhub/api/qa/server'
 import {Link} from '@noalhub/i18n/navigation'
 import {getTranslations} from 'next-intl/server'
 
@@ -12,13 +13,14 @@ import {Typography} from '@noalhub/ui/typography'
  */
 export async function HomeFooter() {
   const t = await getTranslations('web.home.footer')
+  const knowledge = await getKnowledgeDatasets()
 
   const links = [
     {href: '/blogs', label: t('posts')},
     {href: '/blogs', label: t('categories')},
     {href: '/learn', label: t('practice')},
+    {href: '/knowledge', label: t('knowledge')},
     {href: '/chat', label: t('messages')},
-    {href: '/friends', label: t('friends')},
   ] as const
 
   return (
@@ -58,6 +60,21 @@ export async function HomeFooter() {
             ))}
           </nav>
         </div>
+        {knowledge.length > 0 ? (
+          <nav
+            aria-label={t('knowledge')}
+            className="flex flex-wrap gap-x-5.5 gap-y-2 text-body-4 opacity-85">
+            <span className="font-medium">{t('knowledge')}</span>
+            {knowledge.map((dataset) => (
+              <Link
+                key={dataset.id}
+                href={`/knowledge/${dataset.id}`}
+                className="hover:underline">
+                {dataset.title}
+              </Link>
+            ))}
+          </nav>
+        ) : null}
         <div className="flex items-center justify-between border-t border-brand-50/20 pt-4 text-body-4 opacity-70">
           <Typography variant="body-4">
             © {new Date().getFullYear()} Noalhub

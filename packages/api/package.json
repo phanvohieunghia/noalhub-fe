@@ -19,6 +19,7 @@
     "./friends": "./src/friends/index.ts",
     "./media": "./src/media/index.ts",
     "./qa": "./src/qa/index.ts",
+    "./qa/server": "./src/qa/server.ts",
     "./users": "./src/users/index.ts"
   },
   "dependencies": {
