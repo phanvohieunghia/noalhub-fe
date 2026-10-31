@@ -469,6 +469,22 @@ export function useQaOutline(id: string | undefined) {
   })
 }
 
+export function useCreateQaOutline(datasetId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: {content: string; label?: string | null}) =>
+      qaApi.createOutline(datasetId, input),
+    onSuccess: (outline) => {
+      queryClient.setQueryData(qaKeys.outline(outline.id), outline)
+      queryClient.invalidateQueries({
+        queryKey: qaKeys.outlineList(datasetId),
+      })
+      // The first version moves the dataset from `ready` to `outlined`.
+      queryClient.invalidateQueries({queryKey: qaKeys.datasets()})
+    },
+  })
+}
+
 export function useUpdateQaOutline(id: string, datasetId: string) {
   const queryClient = useQueryClient()
   return useMutation({

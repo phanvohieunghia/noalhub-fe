@@ -73,6 +73,7 @@ export function AnalyzeButton({
         </Tooltip>
       ) : (
         <Button disabled={disabled} onClick={() => setOpen(true)}>
+          <Icon icon={LUCIDE.sparkles} className="size-4" />
           {t('analyze.button')}
         </Button>
       )}

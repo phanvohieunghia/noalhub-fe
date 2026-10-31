@@ -472,6 +472,19 @@ export async function getOutline(
   return data
 }
 
+/** A version typed by hand: no run behind it, markdown only. Becomes the newest version. */
+export async function createOutline(
+  datasetId: string,
+  input: {content: string; label?: string | null},
+): Promise<QaOutline> {
+  const {data} = await http.post<QaOutline>(
+    `/admin/qa/datasets/${datasetId}/outlines`,
+    input,
+    {authRequired: true, schema: qaOutlineSchema},
+  )
+  return data
+}
+
 /**
  * Sends `content` (with its `contentFormat`) only. `outline` is derived — the
  * backend recomputes it on every write, and posting a second copy is how the

@@ -7,12 +7,14 @@ import type {BlogDoc} from '@noalhub/api/blog'
 import {formatCompactNumber} from '@noalhub/core/format-number'
 import {
   CHARS_PER_TOKEN,
+  useCreateQaOutline,
   useQaOutline,
   useQaSources,
   useUpdateQaOutline,
   type QaOutline,
 } from '@noalhub/api/qa'
 import {AlertWarning} from '@noalhub/ui/alert'
+import {Button} from '@noalhub/ui/button'
 import {ICONS, Icon, LUCIDE} from '@noalhub/ui/icons'
 import {MetricsCard, type MetricItem} from '@noalhub/ui/metrics-card'
 import {
@@ -148,6 +150,7 @@ export function OutlineStep({
   const {outlines, latest, selected, picked, select} =
     useOutlineVersion(datasetId)
   const detail = useQaOutline(selected?.id)
+  const create = useCreateQaOutline(datasetId)
 
   // A run in flight is one more entry in the picker, not a takeover of the step: the
   // finished versions stay reachable, and only the pending one shows the placeholders.
@@ -188,11 +191,28 @@ export function OutlineStep({
         <Typography variant="body-3" className="text-muted-foreground">
           {t('ws.outline.empty')}
         </Typography>
-        <AnalyzeButton
-          datasetId={datasetId}
-          disabled={(sources.data?.length ?? 0) === 0}
-          onStarted={handleStarted}
-        />
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <AnalyzeButton
+            datasetId={datasetId}
+            disabled={(sources.data?.length ?? 0) === 0}
+            onStarted={handleStarted}
+          />
+          <Button
+            variant="outline"
+            disabled={create.isPending}
+            onClick={() =>
+              create.mutate(
+                {content: `## ${t('ws.outline.newSection')}\n`},
+                {onSuccess: (outline) => select(outline.id)},
+              )
+            }>
+            <Icon icon={LUCIDE.plus} className="size-4" />
+            {t('ws.outline.createManual')}
+          </Button>
+        </div>
+        {create.isError ? (
+          <ToastError message={t('ws.outline.createFailed')} />
+        ) : null}
         <RunOutcome generationId={generationId} />
       </section>
     )

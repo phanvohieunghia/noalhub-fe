@@ -82,6 +82,7 @@ type ButtonProps = React.ComponentPropsWithoutRef<'button'> & {
    * An API call is in flight: shows a spinner, disables the button and sets
    * `aria-busy`. Pass the mutation's pending flag so a second click cannot
    * fire the same request twice. Ignored with `asChild` (no `<button>` of ours).
+   * On `icon-*` sizes the spinner replaces the icon instead of sitting beside it.
    */
   loading?: boolean
 }
@@ -126,7 +127,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
         disabled={props.disabled || loading}>
         {loading ? <Spinner size="sm" /> : null}
-        {children}
+        {/* An icon-only button has no room for both: the spinner replaces the icon. */}
+        {loading && size.startsWith('icon-') ? null : children}
       </button>
     )
   },

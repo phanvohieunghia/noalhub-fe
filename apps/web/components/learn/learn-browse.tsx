@@ -75,6 +75,21 @@ export function LearnBrowse() {
     return map
   }, [attempts.data])
 
+  // Latest finished attempt per dataset, so a bank you already completed is not shown as new.
+  const doneByDataset = useMemo(() => {
+    const map = new Map<string, QaAttempt>()
+    for (const attempt of attempts.data ?? []) {
+      if (attempt.answeredCount === 0) continue
+      if (openByDataset.get(attempt.datasetId)?.id === attempt.id) continue
+      const prev = map.get(attempt.datasetId)
+      const at = attempt.finishedAt ?? attempt.startedAt
+      if (!prev || at > (prev.finishedAt ?? prev.startedAt)) {
+        map.set(attempt.datasetId, attempt)
+      }
+    }
+    return map
+  }, [attempts.data, openByDataset])
+
   const needle = search.trim().toLowerCase()
   const rows = (datasets.data?.items ?? []).filter(
     (row) =>
@@ -194,6 +209,7 @@ export function LearnBrowse() {
                     featured
                     dataset={featured}
                     attempt={openByDataset.get(featured.id)}
+                    lastDone={doneByDataset.get(featured.id)}
                     onOpen={() => setOpened(featured)}
                   />
                 ) : null}
@@ -202,6 +218,7 @@ export function LearnBrowse() {
                     key={dataset.id}
                     dataset={dataset}
                     attempt={openByDataset.get(dataset.id)}
+                    lastDone={doneByDataset.get(dataset.id)}
                     onOpen={() => setOpened(dataset)}
                   />
                 ))}
@@ -351,11 +368,13 @@ function isAnsweredThrough(attempt: QaAttempt) {
 function DatasetCard({
   dataset,
   attempt,
+  lastDone,
   onOpen,
   featured = false,
 }: {
   dataset: QaDatasetSummary
   attempt?: QaAttempt
+  lastDone?: QaAttempt
   onOpen: () => void
   featured?: boolean
 }) {
@@ -453,27 +472,61 @@ function DatasetCard({
       <div className="mt-auto flex items-center gap-3 border-t border-border pt-4">
         <Typography
           variant="body-4"
-          className="flex flex-1 items-center gap-1.5 text-muted-foreground">
+          className="flex min-w-0 flex-1 items-start gap-1.5 text-muted-foreground">
           <Icon
-            icon={attempt ? LUCIDE.clock : LUCIDE.circleDashed}
-            className="size-3.5 shrink-0"
+            icon={
+              attempt
+                ? LUCIDE.clock
+                : lastDone
+                  ? LUCIDE.circleCheck
+                  : LUCIDE.circleDashed
+            }
+            className={`mt-0.5 size-3.5 shrink-0 ${
+              attempt
+                ? 'text-primary'
+                : lastDone
+                  ? 'text-success'
+                  : 'text-muted-foreground'
+            }`}
           />
-          {attempt
-            ? t('browse.startedOn', {date: df.date(attempt.startedAt)})
-            : t('browse.notStarted')}
+          <span className="min-w-0">
+            {attempt
+              ? t.rich('browse.startedOn', {
+                  date: () => (
+                    <span className="whitespace-nowrap">
+                      {df.date(attempt.startedAt)}
+                    </span>
+                  ),
+                })
+              : lastDone
+                ? t.rich('browse.completedOn', {
+                    date: () => (
+                      <span className="whitespace-nowrap">
+                        {df.date(lastDone.finishedAt ?? lastDone.startedAt)}
+                      </span>
+                    ),
+                  })
+                : t('browse.notStarted')}
+          </span>
         </Typography>
         {/* Continue skips the modal: there is nothing left to decide. */}
         {attempt ? (
-          <Button asChild shape="circle" className="pr-4 pl-5">
+          <Button
+            asChild
+            shape="circle"
+            className="shrink-0 pr-4 pl-5 whitespace-nowrap">
             <Link href={`/learn/sets/${attempt.datasetId}`}>
               {t('browse.continue')}
               <Icon icon={LUCIDE.arrowRight} />
             </Link>
           </Button>
         ) : (
-          <Button shape="circle" onClick={onOpen} className="pr-5 pl-4">
+          <Button
+            shape="circle"
+            onClick={onOpen}
+            className="shrink-0 pr-5 pl-4 whitespace-nowrap">
             <Icon icon={LUCIDE.play} className="size-4 fill-current" />
-            {t('browse.start')}
+            {lastDone ? t('browse.startAgain') : t('browse.start')}
           </Button>
         )}
       </div>
