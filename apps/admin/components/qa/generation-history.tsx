@@ -14,8 +14,11 @@ import {
 } from '@noalhub/api/qa'
 import {Badge, type BadgeTone} from '@noalhub/ui/badge'
 import {Button} from '@noalhub/ui/button'
+import {Dialog} from '@noalhub/ui/dialog'
+import {Icon, LUCIDE} from '@noalhub/ui/icons'
 import {Skeleton} from '@noalhub/ui/skeleton'
 import {toast} from '@noalhub/ui/toast'
+import {Tooltip} from '@noalhub/ui/tooltip'
 import {Typography} from '@noalhub/ui/typography'
 
 import {useAiRunChoice} from './ai-run-picker'
@@ -27,6 +30,9 @@ const STATUS_TONE: Record<QaGenerationListItem['status'], BadgeTone> = {
   partial: 'warning',
   failed: 'danger',
 }
+
+/** Missing sections listed before the rest fold behind a button. */
+const LOST_PREVIEW = 8
 
 const CHUNK_STATUS_TONE: Record<QaChunkSummary['status'], BadgeTone> = {
   pending: 'neutral',
@@ -80,6 +86,9 @@ export function GenerationRunCard({
   const lost = Object.entries(run.sectionErrors ?? {})
   const ok = Math.max(sent.length - lost.length, 0)
   const titleOf = (anchor: string) => run.sectionTitles[anchor] ?? anchor
+  const [showAllLost, setShowAllLost] = useState(false)
+  // A run that lost 43 sections would push everything else below the fold.
+  const shownLost = showAllLost ? lost : lost.slice(0, LOST_PREVIEW)
 
   // A `failed` run has no `sectionErrors`: the backend re-runs every section it sent.
   const redo = run.status === 'partial' ? lost.length : sent.length
@@ -125,7 +134,7 @@ export function GenerationRunCard({
             {t('generation.history.sectionsMissing', {count: lost.length})}
           </Typography>
           <ul className="list-disc space-y-0.5 pl-5">
-            {lost.map(([anchor, reason]) => (
+            {shownLost.map(([anchor, reason]) => (
               <li key={anchor}>
                 <Typography variant="body-4">
                   <span className="font-medium">{titleOf(anchor)}</span>
@@ -135,6 +144,18 @@ export function GenerationRunCard({
               </li>
             ))}
           </ul>
+          {lost.length > LOST_PREVIEW ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowAllLost((value) => !value)}>
+              {showAllLost
+                ? t('generation.history.showFewerLost')
+                : t('generation.history.showMoreLost', {
+                    count: lost.length - LOST_PREVIEW,
+                  })}
+            </Button>
+          ) : null}
         </div>
       ) : null}
 
@@ -259,11 +280,6 @@ function ChunkList({run}: {run: QaGenerationListItem}) {
               )
             })}
           </ul>
-          {chunk.status === 'failed' && chunk.retriesLeft === 0 ? (
-            <Typography variant="body-4" className="text-danger">
-              {t('generation.history.noRetriesLeft')}
-            </Typography>
-          ) : null}
         </li>
       ))}
     </ul>
@@ -338,9 +354,7 @@ function ChunkRetryControls({
         {t('generation.history.retryChunks', {count: retryable.length})}
       </Button>
       <Typography variant="body-4" className="text-muted-foreground">
-        {t('generation.history.retryChunksCost', {
-          left: Math.min(...retryable.map((chunk) => chunk.retriesLeft)),
-        })}
+        {t('generation.history.retryChunksCost')}
       </Typography>
     </div>
   )
@@ -353,7 +367,7 @@ function ChunkRetryControls({
  * Starts on the runs that need attention. A history that opens as a wall of successful
  * runs hides the one failed row the person came looking for.
  */
-export function GenerationHistory({
+function GenerationHistoryBody({
   datasetId,
   onRetried,
 }: {
@@ -368,29 +382,21 @@ export function GenerationHistory({
   if (history.isError || !history.data) return null
 
   const runs = history.data
-  const needsAttention = runs.filter(
-    (run) => run.status === 'partial' || run.status === 'failed',
-  )
-  // Nothing ever ran: the page's empty state already says so.
-  if (runs.length === 0) return null
-
+  const needsAttention = runs.filter(isProblem)
   const visible = showAll ? runs : needsAttention
 
   return (
-    <section className="space-y-2 rounded-lg border border-border bg-surface p-3">
+    <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Typography variant="title-3" as="h2">
-            {t('generation.history.title')}
-          </Typography>
-          {needsAttention.length > 0 ? (
-            <Badge size="sm" tone="warning">
-              {t('generation.history.needsAttention', {
-                count: needsAttention.length,
-              })}
-            </Badge>
-          ) : null}
-        </div>
+        {needsAttention.length > 0 ? (
+          <Badge size="sm" tone="warning">
+            {t('generation.history.needsAttention', {
+              count: needsAttention.length,
+            })}
+          </Badge>
+        ) : (
+          <span />
+        )}
         <Button
           variant="ghost"
           size="sm"
@@ -412,6 +418,64 @@ export function GenerationHistory({
           ))}
         </div>
       )}
-    </section>
+    </div>
+  )
+}
+
+function isProblem(run: QaGenerationListItem): boolean {
+  return run.status === 'partial' || run.status === 'failed'
+}
+
+/**
+ * The history lives behind a button on the actions bar and opens in a dialog: a failed
+ * run can list dozens of sections and its chunks, which does not belong in the page flow
+ * between the toolbar and the sets. The badge on the button is what stays visible — a
+ * run that needs attention must not be something you find only by opening the dialog.
+ */
+export function GenerationHistoryButton({
+  datasetId,
+  onRetried,
+}: {
+  datasetId: string
+  onRetried?: (generationId: string) => void
+}) {
+  const t = useTranslations('admin.qa')
+  const history = useQaGenerationHistory(datasetId)
+  const [open, setOpen] = useState(false)
+
+  // Nothing ever ran: an empty history is not worth a button.
+  if (!history.data || history.data.length === 0) return null
+  const problems = history.data.filter(isProblem).length
+
+  return (
+    <>
+      <Tooltip label={t('generation.history.title')}>
+        <span className="relative inline-flex">
+          <Button
+            variant="outline"
+            size="icon-md"
+            aria-label={t('generation.history.title')}
+            onClick={() => setOpen(true)}>
+            <Icon icon={LUCIDE.history} />
+          </Button>
+          {problems > 0 ? (
+            <span className="pointer-events-none absolute -top-1.5 -right-1.5">
+              <Badge size="sm" tone="warning">
+                {problems}
+              </Badge>
+            </span>
+          ) : null}
+        </span>
+      </Tooltip>
+      {open ? (
+        <Dialog
+          open
+          onClose={() => setOpen(false)}
+          size="xl"
+          title={t('generation.history.title')}>
+          <GenerationHistoryBody datasetId={datasetId} onRetried={onRetried} />
+        </Dialog>
+      ) : null}
+    </>
   )
 }

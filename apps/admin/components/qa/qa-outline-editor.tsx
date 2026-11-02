@@ -205,6 +205,8 @@ function Loaded({
             datasetId={datasetId}
             outlineId={outlineId}
             sections={initial.outline}
+            label={t('generate.button')}
+            iconOnly
           />
           <Button onClick={() => void save()} loading={update.isPending}>
             {tc('actions.save')}

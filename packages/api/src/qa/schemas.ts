@@ -352,7 +352,6 @@ export const qaChunkSummarySchema = z.object({
   status: chunkStatus,
   attempts: z.array(qaChunkAttemptSchema),
   canRetry: z.boolean(),
-  retriesLeft: z.number(),
   keyChangeAllowed: z.boolean(),
 })
 

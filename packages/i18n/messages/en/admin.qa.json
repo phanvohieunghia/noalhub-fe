@@ -320,12 +320,13 @@
       "attemptTitle": "Try {attempt}",
       "attemptRetryOf": "re-run of try {from}",
       "attemptKeyError": "key error",
-      "noRetriesLeft": "No re-runs left (at most 2 per part).",
       "retryChunks": "Re-run {count} failed parts",
-      "retryChunksCost": "Billed per call, up to {left} re-runs left per part. Existing questions stay; new ones are added to the existing set.",
+      "retryChunksCost": "Billed per call. A failed part is tried once more automatically if the first call fails; you can re-run as often as you like. Existing questions stay; new ones are added to the existing set.",
       "keyHint": "The previous key failed or is switched off — you may pick another key to re-run with.",
       "changeKey": "Change key",
       "keepKey": "Keep the previous key",
+      "showMoreLost": "Show {count} more",
+      "showFewerLost": "Show fewer",
       "retryCost": "Billed like a new run and creates a new draft set; the sets above are not changed."
     }
   },

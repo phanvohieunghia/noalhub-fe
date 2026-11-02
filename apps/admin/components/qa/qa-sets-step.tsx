@@ -46,7 +46,7 @@ import {Typography} from '@noalhub/ui/typography'
 
 import {GenerateSetsButton} from './generate-sets-button'
 import {useFitHeight} from './use-fit-height'
-import {GenerationHistory} from './generation-history'
+import {GenerationHistoryButton} from './generation-history'
 import {useOutlineVersion} from './use-outline-version'
 import {PostContentPreview} from './post-content-preview'
 import {TruncatedTooltip} from './truncated-tooltip'
@@ -210,8 +210,13 @@ export function SetsStep({
           {t('ws.sets.empty')}
         </Typography>
         {/* The outline version is picked inside the dialog. */}
-        {generateNext}
-        <GenerationHistory datasetId={datasetId} onRetried={onStarted} />
+        <div className="flex items-center gap-2">
+          {generateNext}
+          <GenerationHistoryButton
+            datasetId={datasetId}
+            onRetried={onStarted}
+          />
+        </div>
       </section>
     )
   }
@@ -297,14 +302,18 @@ export function SetsStep({
               </div>
             </>
           )}
+          {/* Settled `partial`/`failed` runs live behind this, read from the database:
+              the page's own state is gone after a reload, and with it the retry button.
+              A retry hands its id to `onStarted` and is followed like any fresh run. */}
+          <GenerationHistoryButton
+            datasetId={datasetId}
+            onRetried={onStarted}
+          />
           {generateNext}
         </div>
       </div>
       {firstRun ? <SetsGenerating /> : null}
-      {/* Settled `partial`/`failed` runs live here, read from the database: the page's
-          own `generationId` is gone after a reload, and with it the retry button.
-          A retry hands its new id to `onStarted`, so it is followed like any fresh run. */}
-      <GenerationHistory datasetId={datasetId} onRetried={onStarted} />
+
       {firstRun ? null : (
         <div
           ref={listRef}

@@ -203,7 +203,6 @@ export type QaChunkSummary = {
   /** Every try, oldest first; a later one points back with `retryOfChunkId`. */
   attempts: QaChunkAttempt[]
   canRetry: boolean
-  retriesLeft: number
   /** May send a different `credentialId`: the previous key failed or was switched off. */
   keyChangeAllowed: boolean
 }
