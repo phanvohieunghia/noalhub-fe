@@ -293,6 +293,7 @@ export const addSourceSchema = z.object({
   order: z.number().int().min(0).optional(),
 })
 
+export type RetryChunksInput = z.infer<typeof retryChunksSchema>
 export type CreateDatasetInput = z.infer<typeof createDatasetSchema>
 export type UpdateDatasetInput = z.infer<typeof updateDatasetSchema>
 export type AddSourceInput = z.infer<typeof addSourceSchema>
@@ -325,10 +326,89 @@ export const qaGenerationSchema = z.object({
   createdAt: z.string(),
 })
 
+const chunkStatus = z.enum(['pending', 'running', 'succeeded', 'failed'])
+
+/** One try of one chunk. A retried chunk has several, oldest first. */
+export const qaChunkAttemptSchema = z.object({
+  id: z.string(),
+  attempt: z.number(),
+  status: chunkStatus,
+  error: nullableString,
+  /** The try failed because of the key itself (401/403), not the content. */
+  keyError: z.boolean(),
+  retryOfChunkId: nullableString,
+  model: nullableString,
+  inputTokens: nullableNumber,
+  outputTokens: nullableNumber,
+  startedAt: nullableString,
+  finishedAt: nullableString,
+})
+
+/** A chunk with all its tries, and the retry rules the backend already worked out. */
+export const qaChunkSummarySchema = z.object({
+  position: z.number(),
+  anchors: z.array(z.string()),
+  /** The latest try's status. */
+  status: chunkStatus,
+  attempts: z.array(qaChunkAttemptSchema),
+  canRetry: z.boolean(),
+  retriesLeft: z.number(),
+  keyChangeAllowed: z.boolean(),
+})
+
+/**
+ * One row of a dataset's run history. No `promptSnapshot`: the list endpoint leaves it
+ * out (it is tens of KB per row); open a single run for that.
+ */
+export const qaGenerationListItemSchema = z.object({
+  id: z.string(),
+  status: z.enum(['queued', 'running', 'succeeded', 'partial', 'failed']),
+  kind: z.enum(['outline', 'qa']),
+  outlineId: nullableString,
+  model: z.string(),
+  error: nullableString,
+  sectionAnchors: z
+    .array(z.string())
+    .nullish()
+    .transform((v) => v ?? null),
+  sectionErrors: z
+    .record(z.string(), z.string())
+    .nullish()
+    .transform((v) => v ?? null),
+  sectionTitles: z.record(z.string(), z.string()),
+  /** Empty for an outline run, and for question-set runs older than chunking. */
+  chunks: z.array(qaChunkSummarySchema),
+  resultCount: z.number(),
+  chunkTotal: nullableNumber,
+  chunkDone: nullableNumber,
+  inputTokens: nullableNumber,
+  outputTokens: nullableNumber,
+  cacheReadInputTokens: nullableNumber,
+  sets: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      status: z.string(),
+    }),
+  ),
+  startedAt: nullableString,
+  finishedAt: nullableString,
+  createdAt: z.string(),
+})
+
+export const qaGenerationListSchema = z.array(qaGenerationListItemSchema)
+
 /** The running (`queued`/`running`) run of each kind, or `null`. */
 export const qaActiveGenerationsSchema = z.object({
   outline: qaGenerationSchema.nullable(),
   qa: qaGenerationSchema.nullable(),
+})
+
+export const retryChunksSchema = z.object({
+  /** Positions of the failed chunks to re-run; left out = every failed chunk with tries left. */
+  positions: z.array(z.number().int().min(1)).min(1).optional(),
+  /** Only accepted when the previous try failed because of the key. */
+  credentialId: z.string().uuid().optional(),
 })
 
 export const startGenerationSchema = z.object({

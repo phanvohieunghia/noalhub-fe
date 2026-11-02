@@ -117,6 +117,7 @@ export function QaDatasetDetail({datasetId}: {datasetId: string}) {
           <OutlineStep
             datasetId={datasetId}
             sourceLarge={dataset?.sourceCharWarning ?? false}
+            active={step === 'outline'}
             generationId={generationId}
             generating={generating}
             onStarted={setGenerationId}
@@ -127,7 +128,6 @@ export function QaDatasetDetail({datasetId}: {datasetId: string}) {
         <div className={step === 'sets' ? 'contents' : 'hidden'}>
           <SetsStep
             datasetId={datasetId}
-            generationId={setsGenerationId}
             generating={generatingSets}
             onStarted={setSetsGenerationId}
           />

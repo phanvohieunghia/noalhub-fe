@@ -285,7 +285,49 @@
     "pollFailed": "Không đọc được trạng thái lần chạy.",
     "chunks": "Đã xong {done}/{total} phần",
     "retry": "Chạy lại phần hỏng",
-    "retryFailed": "Không bắt đầu chạy lại được. Thử lại."
+    "retryFailed": "Không bắt đầu chạy lại được. Thử lại.",
+    "history": {
+      "title": "Lịch sử các lần sinh",
+      "needsAttention": "{count} lần cần xử lý",
+      "showAll": "Hiện cả lần thành công ({count})",
+      "onlyProblems": "Chỉ hiện lần có vấn đề",
+      "allGood": "Không có lần nào hỏng hoặc thiếu mục.",
+      "status": {
+        "queued": "Đang chờ",
+        "running": "Đang chạy",
+        "succeeded": "Thành công",
+        "partial": "Thiếu mục",
+        "failed": "Hỏng"
+      },
+      "kind": {
+        "outline": "Phân tích mục lục",
+        "qa": "Sinh bộ câu hỏi"
+      },
+      "sectionsOk": "Đạt {ok}/{total} mục.",
+      "sectionsNone": "Không mục nào ra kết quả ({total} mục đã gửi).",
+      "sectionsMissing": "{count} mục không có kết quả:",
+      "setsMade": "Đã tạo {count} bộ (giữ nguyên khi chạy lại):",
+      "noSets": "Lần này chưa tạo được bộ nào.",
+      "retryMissing": "Chạy lại {count} mục thiếu",
+      "retryAll": "Chạy lại toàn bộ {count} mục",
+      "chunkTitle": "Phần {position}",
+      "chunkStatus": {
+        "pending": "Chờ chạy",
+        "running": "Đang chạy",
+        "succeeded": "Xong",
+        "failed": "Hỏng"
+      },
+      "attemptTitle": "Lần {attempt}",
+      "attemptRetryOf": "chạy lại từ lần {from}",
+      "attemptKeyError": "key lỗi",
+      "noRetriesLeft": "Hết lượt chạy lại (tối đa 2 lần mỗi phần).",
+      "retryChunks": "Chạy lại {count} phần hỏng",
+      "retryChunksCost": "Tính tiền theo từng lần gọi, còn tối đa {left} lần chạy lại mỗi phần. Câu đã có giữ nguyên; câu mới được thêm vào bộ đã có.",
+      "keyHint": "Key lần trước bị lỗi hoặc đã tắt — có thể chọn key khác để chạy lại.",
+      "changeKey": "Đổi key",
+      "keepKey": "Dùng lại key cũ",
+      "retryCost": "Tính tiền như một lần sinh mới và tạo bộ nháp mới; bộ đã có ở trên không bị đổi."
+    }
   },
   "sets": {
     "title": "Bộ câu hỏi",

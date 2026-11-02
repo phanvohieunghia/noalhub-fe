@@ -13,6 +13,7 @@ import {
   qaDatasetListSchema,
   qaDatasetSchema,
   qaActiveGenerationsSchema,
+  qaGenerationListSchema,
   qaGenerationSchema,
   qaChunkPreviewSchema,
   previewChunksSchema,
@@ -62,6 +63,7 @@ import {
   type CreateTemplateInput,
   type DuplicateTemplateInput,
   type GenerateSetsInput,
+  type RetryChunksInput,
   type PatchItemInput,
   type ReorderItemsInput,
   type StartAnalyzeInput,
@@ -99,6 +101,7 @@ import type {
   QaDatasetSourceFull,
   QaActiveGenerations,
   QaGeneration,
+  QaGenerationListItem,
   QaChunkPreview,
   QaItemFull,
   QaItemList,
@@ -433,6 +436,23 @@ export async function retryGeneration(
   return data
 }
 
+/**
+ * Re-runs the failed chunks of a question-set run **inside the same run**: each one gets
+ * a new row (next attempt), the run reopens as `queued`, and the sets already written
+ * keep their questions. Unlike `retryGeneration`, nothing here starts a second run.
+ */
+export async function retryChunks(
+  id: string,
+  input: RetryChunksInput,
+): Promise<StartGenerationResponse> {
+  const {data} = await http.post<StartGenerationResponse>(
+    `/admin/qa/generations/${id}/chunks/retry`,
+    input,
+    {authRequired: true, schema: startGenerationSchema},
+  )
+  return data
+}
+
 export async function getActiveGenerations(
   datasetId: string,
   signal?: AbortSignal,
@@ -440,6 +460,21 @@ export async function getActiveGenerations(
   const {data} = await http.get<QaActiveGenerations>(
     `/admin/qa/datasets/${datasetId}/generations/active`,
     {authRequired: true, schema: qaActiveGenerationsSchema, signal},
+  )
+  return data
+}
+
+/**
+ * Every run of a dataset, newest first. The only way back to a `partial`/`failed` run
+ * after a reload: the page itself only remembers the id of the run it just started.
+ */
+export async function listGenerations(
+  datasetId: string,
+  signal?: AbortSignal,
+): Promise<QaGenerationListItem[]> {
+  const {data} = await http.get<QaGenerationListItem[]>(
+    `/admin/qa/datasets/${datasetId}/generations`,
+    {authRequired: true, schema: qaGenerationListSchema, signal},
   )
   return data
 }

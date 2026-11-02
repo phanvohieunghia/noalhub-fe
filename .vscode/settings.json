@@ -7,5 +7,21 @@
   "i18n-ally.sourceLanguage": "vi",
   "i18n-ally.displayLanguage": "vi",
   "i18n-ally.enabledFrameworks": ["next-intl"],
-  "i18n-ally.annotationInPlace": true
+  "i18n-ally.annotationInPlace": true,
+  "workbench.colorCustomizations": {
+    "editor.lineHighlightBackground": "#1073cf2d",
+    "editor.lineHighlightBorder": "#9fced11f",
+    "statusBar.noFolderBackground": "#151540",
+    "statusBar.noFolderForeground": "#FBFBFE",
+    "activityBar.background": "#151540",
+    "titleBar.activeBackground": "#1D1D5A",
+    "titleBar.activeForeground": "#FBFBFE",
+    "titleBar.inactiveBackground": "#151540",
+    "titleBar.inactiveForeground": "#FBFBFE",
+    "statusBar.background": "#151540",
+    "statusBar.foreground": "#FBFBFE",
+    "statusBar.debuggingBackground": "#151540",
+    "statusBar.debuggingForeground": "#FBFBFE"
+  },
+  "windowColors.baseColor": "#151540"
 }

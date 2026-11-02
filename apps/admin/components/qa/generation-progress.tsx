@@ -6,6 +6,7 @@ import {useEffect, useState} from 'react'
 import {
   isGenerationRunning,
   useQaGeneration,
+  useQaGenerationHistory,
   useRetryQaGeneration,
 } from '@noalhub/api/qa'
 import {AlertInfo, AlertWarning} from '@noalhub/ui/alert'
@@ -13,6 +14,8 @@ import {Button} from '@noalhub/ui/button'
 import {Spinner} from '@noalhub/ui/spinner'
 import {ToastError, toast} from '@noalhub/ui/toast'
 import {Typography} from '@noalhub/ui/typography'
+
+import {GenerationRunCard} from './generation-history'
 
 /**
  * After the worker has had this long and the row is still `queued`, say so.
@@ -51,6 +54,9 @@ export function GenerationProgress({
   const t = useTranslations('admin.qa')
   const generation = useQaGeneration(generationId)
   const retry = useRetryQaGeneration()
+  // The single-run endpoint carries no section titles or sets; the history row does.
+  // The same query feeds the history panel, so this is a cache hit, not a second call.
+  const history = useQaGenerationHistory(generation.data?.datasetId ?? '')
   const [startedAt] = useState(() => Date.now())
   const [waitedLong, setWaitedLong] = useState(false)
 
@@ -112,6 +118,13 @@ export function GenerationProgress({
 
   const data = generation.data
   if (!data) return null
+
+  // A finished run that lost something is drawn as the history card: which sections
+  // worked, which did not (by title), the sets it already made, and the retry.
+  const run = history.data?.find((row) => row.id === data.id)
+  if (run && (data.status === 'failed' || data.status === 'partial')) {
+    return <GenerationRunCard run={run} onRetried={onRetry} />
+  }
 
   const retryButton =
     onRetry && data.kind === 'qa' ? (

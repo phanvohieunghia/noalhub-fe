@@ -20,6 +20,7 @@ import type {
   CreateTemplateInput,
   DuplicateTemplateInput,
   GenerateSetsInput,
+  RetryChunksInput,
   PatchItemInput,
   PreviewChunksInput,
   ReorderItemsInput,
@@ -79,6 +80,8 @@ export const qaKeys = {
   generation: (id: string) => [...qaKeys.generations(), id] as const,
   activeGenerations: (datasetId: string) =>
     [...qaKeys.generations(), 'active', datasetId] as const,
+  generationHistory: (datasetId: string) =>
+    [...qaKeys.generations(), 'history', datasetId] as const,
 
   outlines: () => [...qaKeys.all, 'outlines'] as const,
   outlineList: (datasetId: string) =>
@@ -397,13 +400,20 @@ export function useQaGeneration(id: string | undefined) {
   // outline version instead, so its lists are refreshed the same way.
   const status = query.data?.status
   const kind = query.data?.kind
+  const datasetId = query.data?.datasetId
   const finished = status !== undefined && !isGenerationRunning(status)
   useEffect(() => {
     if (!finished) return
     void queryClient.invalidateQueries({
       queryKey: kind === 'outline' ? qaKeys.outlines() : qaKeys.sets(),
     })
-  }, [finished, kind, queryClient])
+    // The history lists this run's outcome and sets; without this it keeps the
+    // `running` row it fetched before the run ended.
+    if (datasetId)
+      void queryClient.invalidateQueries({
+        queryKey: qaKeys.generationHistory(datasetId),
+      })
+  }, [finished, kind, datasetId, queryClient])
 
   return query
 }
@@ -417,6 +427,24 @@ export function useQaActiveGenerations(datasetId: string) {
   return useQuery({
     queryKey: qaKeys.activeGenerations(datasetId),
     queryFn: ({signal}) => qaApi.getActiveGenerations(datasetId, signal),
+    staleTime: 0,
+  })
+}
+
+/**
+ * Every run of a dataset, newest first — what lets a `partial`/`failed` run be found
+ * and retried after a reload. Polls while any row is still going, so a run started
+ * from another tab shows up settling here too.
+ */
+export function useQaGenerationHistory(datasetId: string) {
+  return useQuery({
+    queryKey: qaKeys.generationHistory(datasetId),
+    queryFn: ({signal}) => qaApi.listGenerations(datasetId, signal),
+    enabled: Boolean(datasetId),
+    refetchInterval: (query) =>
+      query.state.data?.some((run) => isGenerationRunning(run.status))
+        ? 5000
+        : false,
     staleTime: 0,
   })
 }
@@ -456,6 +484,21 @@ export function useRetryQaGeneration() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => qaApi.retryGeneration(id),
+    onSuccess: () =>
+      queryClient.invalidateQueries({queryKey: qaKeys.generations()}),
+  })
+}
+
+/**
+ * Re-run the failed chunks of a question-set run in the same run. The run goes back to
+ * `queued`, so the history refetches (it polls while anything is running) and the
+ * dataset's `active` run changes — both live under `qaKeys.generations()`.
+ */
+export function useRetryQaChunks() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({id, ...input}: {id: string} & RetryChunksInput) =>
+      qaApi.retryChunks(id, input),
     onSuccess: () =>
       queryClient.invalidateQueries({queryKey: qaKeys.generations()}),
   })

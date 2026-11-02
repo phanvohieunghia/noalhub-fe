@@ -284,8 +284,50 @@
     "tokens": "Tokens: {input} in · {output} out · {cached} read from cache",
     "pollFailed": "Could not read the run's status.",
     "chunks": "Part {done} of {total} done",
-    "retry": "Retry the failed parts",
-    "retryFailed": "Could not start the retry. Try again."
+    "retry": "Re-run the failed part",
+    "retryFailed": "Could not start the re-run. Try again.",
+    "history": {
+      "title": "Generation history",
+      "needsAttention": "{count} need attention",
+      "showAll": "Show successful runs too ({count})",
+      "onlyProblems": "Only show problem runs",
+      "allGood": "No run failed or came back with missing sections.",
+      "status": {
+        "queued": "Queued",
+        "running": "Running",
+        "succeeded": "Succeeded",
+        "partial": "Missing sections",
+        "failed": "Failed"
+      },
+      "kind": {
+        "outline": "Outline analysis",
+        "qa": "Question-set generation"
+      },
+      "sectionsOk": "{ok} of {total} sections worked.",
+      "sectionsNone": "No section produced anything ({total} sent).",
+      "sectionsMissing": "{count} sections have no result:",
+      "setsMade": "{count} sets created (kept as they are on re-run):",
+      "noSets": "This run created no sets.",
+      "retryMissing": "Re-run {count} missing sections",
+      "retryAll": "Re-run all {count} sections",
+      "chunkTitle": "Part {position}",
+      "chunkStatus": {
+        "pending": "Waiting",
+        "running": "Running",
+        "succeeded": "Done",
+        "failed": "Failed"
+      },
+      "attemptTitle": "Try {attempt}",
+      "attemptRetryOf": "re-run of try {from}",
+      "attemptKeyError": "key error",
+      "noRetriesLeft": "No re-runs left (at most 2 per part).",
+      "retryChunks": "Re-run {count} failed parts",
+      "retryChunksCost": "Billed per call, up to {left} re-runs left per part. Existing questions stay; new ones are added to the existing set.",
+      "keyHint": "The previous key failed or is switched off — you may pick another key to re-run with.",
+      "changeKey": "Change key",
+      "keepKey": "Keep the previous key",
+      "retryCost": "Billed like a new run and creates a new draft set; the sets above are not changed."
+    }
   },
   "sets": {
     "title": "Question sets",

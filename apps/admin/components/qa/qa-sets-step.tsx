@@ -46,7 +46,7 @@ import {Typography} from '@noalhub/ui/typography'
 
 import {GenerateSetsButton} from './generate-sets-button'
 import {useFitHeight} from './use-fit-height'
-import {RunOutcome} from './generation-progress'
+import {GenerationHistory} from './generation-history'
 import {useOutlineVersion} from './use-outline-version'
 import {PostContentPreview} from './post-content-preview'
 import {TruncatedTooltip} from './truncated-tooltip'
@@ -87,13 +87,10 @@ const COLLAPSE_ABOVE = 5
  */
 export function SetsStep({
   datasetId,
-  generationId,
   generating,
   onStarted,
 }: {
   datasetId: string
-  /** The run started from this screen, if any — see `QaDatasetDetail`. */
-  generationId?: string
   generating: boolean
   onStarted: (generationId: string) => void
 }) {
@@ -214,7 +211,7 @@ export function SetsStep({
         </Typography>
         {/* The outline version is picked inside the dialog. */}
         {generateNext}
-        <RunOutcome generationId={generationId} />
+        <GenerationHistory datasetId={datasetId} onRetried={onStarted} />
       </section>
     )
   }
@@ -304,7 +301,10 @@ export function SetsStep({
         </div>
       </div>
       {firstRun ? <SetsGenerating /> : null}
-      <RunOutcome generationId={generationId} />
+      {/* Settled `partial`/`failed` runs live here, read from the database: the page's
+          own `generationId` is gone after a reload, and with it the retry button.
+          A retry hands its new id to `onStarted`, so it is followed like any fresh run. */}
+      <GenerationHistory datasetId={datasetId} onRetried={onStarted} />
       {firstRun ? null : (
         <div
           ref={listRef}

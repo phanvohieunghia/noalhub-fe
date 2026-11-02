@@ -178,6 +178,65 @@ export const FORBIDDEN_PROMPT_VARIABLES = [
 export type QaGenerationStatus =
   'queued' | 'running' | 'succeeded' | 'partial' | 'failed'
 
+export type QaChunkStatus = 'pending' | 'running' | 'succeeded' | 'failed'
+
+export type QaChunkAttempt = {
+  id: string
+  attempt: number
+  status: QaChunkStatus
+  error: string | null
+  /** Failed because of the key itself (401/403), not the content. */
+  keyError: boolean
+  retryOfChunkId: string | null
+  model: string | null
+  inputTokens: number | null
+  outputTokens: number | null
+  startedAt: string | null
+  finishedAt: string | null
+}
+
+export type QaChunkSummary = {
+  position: number
+  anchors: string[]
+  /** The latest try's status. */
+  status: QaChunkStatus
+  /** Every try, oldest first; a later one points back with `retryOfChunkId`. */
+  attempts: QaChunkAttempt[]
+  canRetry: boolean
+  retriesLeft: number
+  /** May send a different `credentialId`: the previous key failed or was switched off. */
+  keyChangeAllowed: boolean
+}
+
+/**
+ * A run in a dataset's history. `sets` is what the run produced — a `partial` run
+ * still owns the sets of the sections that worked, and retrying never touches them.
+ */
+export type QaGenerationListItem = {
+  id: string
+  status: QaGenerationStatus
+  kind: QaPromptKind
+  outlineId: string | null
+  model: string
+  error: string | null
+  /** Sections sent (question-set runs only), to compare with `sectionErrors`. */
+  sectionAnchors: string[] | null
+  sectionErrors: Record<string, string> | null
+  /** `{anchor: title}` for every anchor in `sectionAnchors`; falls back to the anchor. */
+  sectionTitles: Record<string, string>
+  chunks: QaChunkSummary[]
+  resultCount: number
+  chunkTotal: number | null
+  chunkDone: number | null
+  inputTokens: number | null
+  outputTokens: number | null
+  cacheReadInputTokens: number | null
+  sets: Array<{id: string; title: string; status: string}>
+  startedAt: string | null
+  finishedAt: string | null
+  createdAt: string
+}
+
 /** What is still running on a dataset — survives a reload, unlike the page's own state. */
 export type QaActiveGenerations = {
   outline: QaGeneration | null

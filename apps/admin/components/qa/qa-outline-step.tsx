@@ -51,7 +51,14 @@ const WARNING_AUTO_CLOSE_MS = 3000
  * tooltip. It opens by itself when it first mounts so the warning is not missed,
  * then falls back to hover / focus.
  */
-function LongDocWarning({message}: {message: string}) {
+function LongDocWarning({
+  message,
+  active,
+}: {
+  message: string
+  /** False while the step is hidden: the bubble is portaled, so it would outlive the panel. */
+  active: boolean
+}) {
   const [auto, setAuto] = useState(true)
   const [hovered, setHovered] = useState(false)
   useEffect(() => {
@@ -63,7 +70,7 @@ function LongDocWarning({message}: {message: string}) {
     <Tooltip
       label={message}
       side="bottom"
-      open={auto || hovered}
+      open={active && (auto || hovered)}
       onOpenChange={setHovered}>
       <span
         role="img"
@@ -132,6 +139,7 @@ const OUTLINE_WIDTH = {initial: 240, min: 240, max: 560} as const
 export function OutlineStep({
   datasetId,
   sourceLarge,
+  active,
   generationId,
   generating,
   onStarted,
@@ -139,6 +147,8 @@ export function OutlineStep({
   datasetId: string
   /** The backend's verdict on the source size (`sourceCharWarning`); the threshold lives there. */
   sourceLarge: boolean
+  /** Whether this step is the one on screen; it stays mounted while hidden. */
+  active: boolean
   /** The run started from this screen, if any — see `QaDatasetDetail`. */
   generationId?: string
   generating: boolean
@@ -231,6 +241,7 @@ export function OutlineStep({
       <OutlineWorkbench
         datasetId={datasetId}
         sourceLarge={sourceLarge}
+        active={active}
         // The badge in the section list marks the version shown to learners.
         outline={detail.data}
         onStarted={handleStarted}
@@ -374,6 +385,7 @@ function TocSkeleton() {
 function OutlineWorkbench({
   datasetId,
   sourceLarge,
+  active,
   outline,
   onStarted,
   versionPicker,
@@ -381,6 +393,7 @@ function OutlineWorkbench({
 }: {
   datasetId: string
   sourceLarge: boolean
+  active: boolean
   /** `undefined` while a version is loading: the editor and section list show placeholders. */
   outline: QaOutline | undefined
   onStarted: (generationId: string) => void
@@ -540,7 +553,10 @@ function OutlineWorkbench({
         meta={
           <div className="hidden items-center gap-2 lg:flex">
             {sourceLarge ? (
-              <LongDocWarning message={t('ws.outline.longWarning')} />
+              <LongDocWarning
+                message={t('ws.outline.longWarning')}
+                active={active}
+              />
             ) : null}
             <MetricsCard
               title={t('ws.outline.metrics.title')}
