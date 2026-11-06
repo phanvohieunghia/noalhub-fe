@@ -8,7 +8,7 @@ const ITEMS: BottomNavItem[] = [
     key: 'practice',
     label: 'Practice',
     icon: LUCIDE.graduationCap,
-    href: '/learn',
+    href: '/practice',
   },
   {key: 'chat', label: 'Chat', icon: LUCIDE.messageCircle, href: '/chat'},
   {key: 'profile', label: 'Profile', icon: LUCIDE.userRound, href: '/profile'},

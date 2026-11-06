@@ -5,8 +5,20 @@
  * resolved by Tailwind against the file system, not against package exports.
  */
 @import '../../../packages/config/theme.css';
+@import '../../../packages/config/field.css';
 
 /* `@noalhub/ui` lives outside this app's root, so Tailwind has to be told to
  * scan it or every class used only inside the package is tree-shaken away. */
 @source "../../../packages/ui/src";
 @source "../src";
+
+/*
+ * The apps' fonts (`apps/web/app/root-html.tsx` loads them with `next/font`).
+ * `preview-head.html` brings the same families in from Google Fonts; without
+ * them every story fell back to the system font and looked unlike the app.
+ */
+@theme inline {
+  --font-sans: 'Be Vietnam Pro', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --font-serif: 'Newsreader', Georgia, serif;
+}

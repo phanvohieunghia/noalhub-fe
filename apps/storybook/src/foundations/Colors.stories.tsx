@@ -43,8 +43,16 @@ const {semantic, scales} = __THEME_TOKENS__
 const SEMANTIC_GROUPS: {title: string; note: string; tokens: string[]}[] = [
   {
     title: 'Surfaces',
-    note: 'In dark mode `surface` is LIGHTER than `background`, not white.',
-    tokens: ['--background', '--surface', '--muted', '--highlight', '--border'],
+    note: 'In dark mode `surface` is LIGHTER than `background`, not white. `field` is the coloured ground public-page panels sit on.',
+    tokens: [
+      '--background',
+      '--surface',
+      '--field',
+      '--field-ink',
+      '--muted',
+      '--highlight',
+      '--border',
+    ],
   },
   {
     title: 'Text',
@@ -97,7 +105,7 @@ const SCALE_NOTES: Record<string, string> = {
     'Raw material for the semantic tokens. 500→950 are our extension: all four source colors are too light to carry text.',
   neutral:
     "Grays tinted with the brand hue — overrides Tailwind's own `neutral`.",
-  blush: 'Off the teal axis; the background of highlight and callout areas.',
+  blush: 'Off the blue axis; the background of highlight and callout areas.',
 }
 
 const ALL_TOKENS = [...semantic, ...Object.values(scales).flat()]

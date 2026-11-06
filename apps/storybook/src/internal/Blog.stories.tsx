@@ -46,9 +46,9 @@ import {
  * subtly wrong here goes wrong in the gap between "the row changed in Postgres"
  * and "the cached page changed", which is what the diagrams below trace.
  *
- * There are no rebuilt screens here, unlike `chat-parts.tsx`: the blog's real
- * components live in `@noalhub/ui` and already have stories under `UI/Blog`, so
- * the flow map links straight to those.
+ * The post card, grid, breadcrumb and related-posts block are the real
+ * `@noalhub/ui/blog/*` components (see `blog-parts.tsx`), so the flow map links
+ * straight to them.
  */
 
 const meta: Meta = {
@@ -405,6 +405,23 @@ export const List: Story = {
           total={26}
           label={t('list.pagination')}
         />
+      </BlogScreen>
+    )
+  },
+}
+
+/** `/blogs` — editorial rows. */
+export const ListRows: Story = {
+  parameters: {layout: 'centered'},
+  render: function ListRowsScreen() {
+    const t = useTranslations('web.blog')
+    const posts = useSamplePosts(6)
+
+    return (
+      <BlogScreen>
+        <Breadcrumb items={[{label: t('breadcrumb.blog'), current: true}]} />
+        <ScreenHeader title={t('list.title')} subtitle={t('list.subtitle')} />
+        <PostGrid posts={posts} emptyMessage={t('list.empty')} variant="row" />
       </BlogScreen>
     )
   },

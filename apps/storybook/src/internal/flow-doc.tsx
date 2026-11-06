@@ -453,8 +453,8 @@ export function NoteList({notes}: {notes: string[]}) {
 /* ----------------------------------------------------------------- diagrams */
 
 export type FlowNode = {
-  /** Story id — the box links to the screen it names. */
-  href: string
+  /** Story id — the box links to the screen it names. Left out, the box is plain. */
+  href?: string
   x: number
   y: number
   label: string
@@ -558,47 +558,61 @@ export function FlowMap({
           ))}
       </g>
 
-      {nodes.map(({href, x, y, label, note, primary, end}) => (
-        <a
-          key={href + x + y}
-          className="flow-node"
-          style={{textDecoration: 'none'}}
-          // `./` is required: this renders inside `iframe.html`, so a bare
-          // `?path=…` resolves to `iframe.html?path=…` and opens the story
-          // stripped of the Storybook shell.
-          href={`./?path=/story/${href}`}
-          target="_top">
-          <rect
-            x={x}
-            y={y}
-            width={NODE_WIDTH}
-            height={NODE_HEIGHT}
-            rx={10}
-            fill={primary ? 'var(--primary)' : 'var(--background)'}
-            stroke={end || primary ? 'var(--primary)' : 'var(--border)'}
-            strokeWidth={end ? 2 : 1}
-          />
-          <text
-            x={x + NODE_WIDTH / 2}
-            y={y + 23}
-            textAnchor="middle"
-            fontSize="13.5"
-            fontWeight="500"
-            fill={primary ? 'var(--primary-foreground)' : 'var(--foreground)'}>
-            {label}
-          </text>
-          <text
-            x={x + NODE_WIDTH / 2}
-            y={y + 39}
-            textAnchor="middle"
-            fontSize="10.5"
-            fill={
-              primary ? 'var(--primary-foreground)' : 'var(--muted-foreground)'
-            }>
-            {note}
-          </text>
-        </a>
-      ))}
+      {nodes.map(({href, x, y, label, note, primary, end}) => {
+        const box = (
+          <>
+            <rect
+              x={x}
+              y={y}
+              width={NODE_WIDTH}
+              height={NODE_HEIGHT}
+              rx={10}
+              fill={primary ? 'var(--primary)' : 'var(--background)'}
+              stroke={end || primary ? 'var(--primary)' : 'var(--border)'}
+              strokeWidth={end ? 2 : 1}
+            />
+            <text
+              x={x + NODE_WIDTH / 2}
+              y={y + 23}
+              textAnchor="middle"
+              fontSize="13.5"
+              fontWeight="500"
+              fill={
+                primary ? 'var(--primary-foreground)' : 'var(--foreground)'
+              }>
+              {label}
+            </text>
+            <text
+              x={x + NODE_WIDTH / 2}
+              y={y + 39}
+              textAnchor="middle"
+              fontSize="10.5"
+              fill={
+                primary
+                  ? 'var(--primary-foreground)'
+                  : 'var(--muted-foreground)'
+              }>
+              {note}
+            </text>
+          </>
+        )
+
+        if (!href) return <g key={label + x + y}>{box}</g>
+
+        return (
+          <a
+            key={href + x + y}
+            className="flow-node"
+            style={{textDecoration: 'none'}}
+            // `./` is required: this renders inside `iframe.html`, so a bare
+            // `?path=…` resolves to `iframe.html?path=…` and opens the story
+            // stripped of the Storybook shell.
+            href={`./?path=/story/${href}`}
+            target="_top">
+            {box}
+          </a>
+        )
+      })}
     </svg>
   )
 }
@@ -766,10 +780,9 @@ export function SequenceDiagram({
  * The closing note every flow page carries: what this page is, and what it is
  * not.
  *
- * The default says "these screens are rebuilt, not imported" — true for Chat and
- * Presence, which redraw the layout from primitives. Blog links to the real
- * `UI/Blog` components instead, so it passes its own pair of keys rather than
- * carrying a caveat that does not apply to it.
+ * The default text describes the Chat/Presence screens, which are now drawn with
+ * the real `@noalhub/ui/chat/*` components and keep only sample data of their
+ * own. Blog and QA pass their own pair of keys.
  */
 export function SourceNote({
   sectionKey = 'sourceSection',

@@ -302,7 +302,7 @@
       "legendRequest": "FE calls out",
       "legendPush": "BE responds or pushes",
       "legendAccent": "watch this one",
-      "source": "`Chat.stories.tsx`, `Presence.stories.tsx` and `chat-parts.tsx` rebuild the **layout** from `@noalhub/ui` primitives instead of importing `apps/web/components/chat/*`: the apps are built and deployed independently and may not import across each other, and the real components need `@noalhub/api` hooks plus a live Socket.IO connection to render at all. Change the real components without changing these stories and the map drifts. The rules behind every step live in `docs/chat.md`.",
+      "source": "`Chat.stories.tsx`, `Presence.stories.tsx` and `chat-parts.tsx` draw the **layout** with the real `@noalhub/ui/chat/*` components — the same ones `apps/web/components/chat/*` renders; only the data (sample people, presence, socket) is stand-in, because the app's containers need `@noalhub/api` hooks and a live Socket.IO connection to render at all. Change the state rules without changing these stories and the map drifts. The rules behind every step live in `docs/chat.md`.",
       "expand": "Open full screen",
       "zoomIn": "Zoom in",
       "zoomOut": "Zoom out",
@@ -311,7 +311,8 @@
       "cacheSection": "Cache tags — what clears what",
       "slugSection": "Sequence — an old slug",
       "docsSection": "Where the rules actually live",
-      "blogSource": "This page documents `packages/api/src/blog/server.ts`, `apps/web/app/api/revalidate/route.ts` and `apps/admin/components/posts/post-editor.tsx` — it does not rebuild them. The boxes in the flow map link to the `UI/Blog` component stories, which are the real components from `@noalhub/ui`. The full rules, including the parts the backend owns, live in `docs/blog.md`."
+      "blogSource": "This page documents `packages/api/src/blog/server.ts`, `apps/web/app/api/revalidate/route.ts` and `apps/admin/components/posts/post-editor.tsx` — it does not rebuild them. The boxes in the flow map link to the `UI/Blog` component stories, which are the real components from `@noalhub/ui`. The full rules, including the parts the backend owns, live in `docs/blog.md`.",
+      "qaSource": "`QA.stories.tsx` records `packages/api/src/qa/api.ts` and `docs/qa-learner.md` — it does not rebuild any screen, because the admin and web apps build and deploy independently and must not import each other. Change an endpoint or rule in `packages/api/src/qa` without updating this page and the diagram drifts. Backend rules live in `noalhub-be/docs/qa.md`."
     },
     "chat": {
       "title": "The chat flow",
@@ -648,6 +649,103 @@
         "docBodyB": "The old slug is still cached under a tag of its own, and it is still serving. Revalidate only the new one and the old URL answers from yesterday.",
         "docH2B": "Where the sixty seconds comes from",
         "docBodyC": "`revalidate` is the floor, not the plan. If the webhook is lost the site still corrects itself; the failure mode is delay, never wrong data."
+      }
+    },
+    "qa": {
+      "title": "Q&A — from source material to learner",
+      "lead": "Q&A has two halves that meet at one point: the **published final set**. Admins turn sources into an outline, generate questions, review them and move the approved ones into the final set. Learners only see datasets with at least one published question — sets, outlines and generations never reach them.",
+      "authorSection": "Admin — author and publish a question set",
+      "authorCaption": "The admin workbench's four steps: sources → outline → question sets → final set.",
+      "learnSection": "Learner — take a quiz and send feedback",
+      "learnCaption": "Each run is an attempt whose question list is fixed up front; learner feedback flows back to the admin queue.",
+      "authorLanes": {
+        "ui": "Admin UI",
+        "uiNote": "apps/admin · qa-editor-shell",
+        "be": "Backend",
+        "beNote": "/admin/qa",
+        "run": "Generation run",
+        "runNote": "background",
+        "db": "Final set",
+        "dbNote": "published questions"
+      },
+      "authorSteps": {
+        "1": "addSource — POST /datasets/{id}/sources",
+        "2": "startAnalyze — POST /datasets/{id}/analyze",
+        "3": "returns the run; UI follows it via generations/active",
+        "4": "generateSets — POST /generate-sets (super_admin)",
+        "5": "one click = one run = many sets",
+        "6": "partial/failed → retry the run or single chunks",
+        "7": "bulkReviewItems — approved / rejected",
+        "8": "addToFinalSet — POST /datasets/{id}/final-set",
+        "9": "copy approved questions into the final set"
+      },
+      "authorNotes": {
+        "1": "**Only super_admin can generate questions.** `generateSets` produces many sets in one click; everything else under `/admin/qa` needs `admin`.",
+        "2": "**Generation can partly succeed.** A `partial`/`failed` run is retried whole or per chunk (`retry`, `chunks/retry`). That is a new run, billed separately.",
+        "3": "**Review before the final set.** Only `approved` questions are copied by `addToFinalSet`; the copy is what learners answer, so later edits to the draft never rewrite quiz history (`docs/qa-learner.md` §1).",
+        "4": "**itemIds narrows the copy.** `addToFinalSet` without a list copies every approved question of the dataset."
+      },
+      "learnLanes": {
+        "ui": "Learner UI",
+        "uiNote": "apps/web · mobile",
+        "be": "Backend",
+        "beNote": "/qa",
+        "attempt": "Attempt",
+        "attemptNote": "fixed question sample",
+        "admin": "Admin queue",
+        "adminNote": "/admin/qa/feedbacks"
+      },
+      "learnSteps": {
+        "1": "browseDatasets — GET /qa/datasets",
+        "2": "only datasets with published questions",
+        "3": "startAttempt — POST /datasets/{id}/attempts { count? }",
+        "4": "random pick of 5/10/20/all, fixed into the attempt",
+        "5": "QaAttempt — idempotent; count ignored for an open attempt",
+        "6": "getAttemptPlay — GET /attempts/{id}",
+        "7": "the attempt's questions, without answers",
+        "8": "submitAnswer — POST /attempts/{id}/answers",
+        "9": "result of the question just answered",
+        "10": "finishAttempt — POST /attempts/{id}/finish",
+        "11": "reviewAttempt — GET /attempts/{id}/answers",
+        "12": "submitItemFeedback — POST /items/{id}/feedback",
+        "13": "queued; admins handle it with PATCH /admin/qa/feedbacks/{id}"
+      },
+      "learnNotes": {
+        "1": "**Reopening always lines up.** Every open of the quiz screen calls the idempotent `startAttempt` to pick up the open attempt, so a reload or another device continues where you left off.",
+        "2": "**The progress denominator never moves.** The backend fixes the question list into the attempt at start, so an admin publishing more questions mid-quiz does not turn 8/10 into 8/11.",
+        "3": "**Review only has answered questions.** `reviewAttempt` returns no entry for a question that was not taken.",
+        "4": "**Duplicate feedback is refused.** A second submission for the same question returns `409 QA_FEEDBACK_DUPLICATE`; an unknown question returns `404 QA_ITEM_NOT_FOUND`."
+      },
+      "flowCaption": "Admin on the top row, learner below; the two halves meet at the published dataset.",
+      "nodes": {
+        "source": "Sources",
+        "sourceNote": "addSource",
+        "outline": "Outline",
+        "outlineNote": "analyze sources",
+        "generate": "Generate questions",
+        "generateNote": "super_admin · one run",
+        "review": "Review",
+        "reviewNote": "approved / rejected",
+        "final": "Final set",
+        "finalNote": "copy approved questions",
+        "published": "Published dataset",
+        "publishedNote": "all a learner sees",
+        "browse": "Browse datasets",
+        "browseNote": "GET /qa/datasets",
+        "start": "Start",
+        "startNote": "pick 5/10/20/all",
+        "answer": "Answer",
+        "answerNote": "one question at a time",
+        "finish": "Finish & review",
+        "finishNote": "finish · review",
+        "feedback": "Send feedback",
+        "feedbackNote": "report a question",
+        "queue": "Admin queue",
+        "queueNote": "handle feedback"
+      },
+      "edges": {
+        "onlyPublished": "published questions only",
+        "toQueue": "awaiting review"
       }
     }
   },

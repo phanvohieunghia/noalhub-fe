@@ -3,9 +3,23 @@ import {useTranslations} from 'next-intl'
 
 import {useMessage} from '@noalhub/i18n/use-message'
 
-import {Button} from '@noalhub/ui/button'
-import {Icon, ICONS} from '@noalhub/ui/icons'
+import {
+  AUTH_LINK_CLASS,
+  AuthFooter,
+  AuthForm,
+  AuthPage,
+  OAUTH_PROVIDERS,
+  OAuthButtons as OAuthButtonsView,
+} from '@noalhub/ui/auth/auth-form'
+import {AuthFrame} from '@noalhub/ui/auth/auth-frame'
+import {FieldBackdrop} from '@noalhub/ui/auth/field-backdrop'
 import {Input} from '@noalhub/ui/input'
+import {LanguageSwitcher} from '@noalhub/ui/language-switcher'
+import {LogoLockup} from '@noalhub/ui/logo-lockup'
+import {QueryProvider} from '@noalhub/ui/query-provider'
+import {ThemeProvider} from '@noalhub/ui/theme/theme-provider'
+import {ThemeToggle} from '@noalhub/ui/theme/theme-toggle'
+import {PasswordInput} from '@noalhub/ui/password-input'
 import {AlertError, AlertSuccess} from '@noalhub/ui/alert'
 import {Typography} from '@noalhub/ui/typography'
 
@@ -14,64 +28,90 @@ import {Typography} from '@noalhub/ui/typography'
  * them. The diagram that ties them together lives in `Auth.mdx`, which links to
  * each story by id — renaming an export breaks a link there.
  *
- * The screens are rebuilt from the `@noalhub/ui` primitives instead of importing
- * `apps/web/components/auth/*`: the apps are built and deployed independently
- * and nothing may import across them (AGENTS.md), and those components call
- * `@noalhub/api` hooks that would need a live backend to render at all. What is
- * reproduced here is the LAYOUT and the copy; the real forms keep the
- * react-hook-form + zod wiring. Both read the same `web.auth` messages, so the
- * locale toolbar switches this exactly like the app.
+ * The screens are composed from `@noalhub/ui/auth/auth-form` — the same kit
+ * `apps/web/components/auth/*` is built from (heading, form + submit button,
+ * footer line, OAuth block), plus the same `Input` / `PasswordInput` fields. So a
+ * change to any of those lands here too, instead of leaving the story showing an
+ * old screen. What the real forms add on top is only the react-hook-form + zod
+ * wiring and the API calls, none of which is visual. Both read the same
+ * `web.auth` messages, so the locale toolbar switches this exactly like the app.
  */
 
-/** The card the auth layout puts every screen in. */
+/**
+ * The whole auth screen as the app shows it: the coloured field, the panel, the
+ * brand side and the form column. `AuthFrame` is the markup `AuthShell` renders
+ * (the app adds only the GSAP entrance), so this IS the page, not a lookalike.
+ *
+ * Form-level messages are drawn as in-flow `Alert`s, not the toasts the app
+ * raises: a toast is global and floats, so a docs page that renders every story
+ * at once would stack them all on top of each other.
+ */
 function AuthScreen({children}: {children: React.ReactNode}) {
-  return <div className="flex w-full max-w-sm flex-col gap-6">{children}</div>
-}
+  const t = useTranslations('web.auth.shell')
 
-function ScreenHeader({title, subtitle}: {title: string; subtitle?: string}) {
   return (
-    <header className="flex flex-col gap-1">
-      <Typography variant="h3" as="h1">
-        {title}
-      </Typography>
-      {subtitle ? (
-        <Typography variant="body-3" className="opacity-70">
-          {subtitle}
-        </Typography>
-      ) : null}
-    </header>
+    <ThemeProvider>
+      <QueryProvider>
+        <AuthFrame
+          className="min-h-[44rem] w-[min(72rem,94vw)] overflow-hidden rounded-xl"
+          field={<FieldBackdrop position="absolute" />}
+          logo={
+            <a
+              href="#"
+              aria-label="Noalhub"
+              onClick={(event) => event.preventDefault()}
+              className="w-fit">
+              <LogoLockup className="text-title-3" />
+            </a>
+          }
+          tools={
+            <>
+              <ThemeToggle />
+              <LanguageSwitcher compact onSwitch={() => {}} />
+            </>
+          }
+          tagline={t('tagline')}
+          features={(['chat', 'practice', 'blog'] as const).map((key) =>
+            t(`features.${key}`),
+          )}
+          copyright={`© ${new Date().getFullYear()} Noalhub`}>
+          {children}
+        </AuthFrame>
+      </QueryProvider>
+    </ThemeProvider>
   )
 }
+
+const noop = (event: React.FormEvent) => event.preventDefault()
 
 /** The "or / Google / GitHub" block shared by login and register. */
 function OAuthButtons() {
   const t = useTranslations('web.auth.oauth')
 
   return (
-    <div className="flex flex-col gap-3">
-      {/*
-        `text-muted-foreground` chứ không phải `opacity-50` như trong app:
-        opacity-50 trên chữ nhỏ cho tương phản 3.94:1, dưới ngưỡng WCAG AA
-        (4.5:1), và `a11y: { test: "error" }` biến nó thành story đỏ trong CI.
-        `apps/web/components/auth/oauth-buttons.tsx` vẫn đang dùng opacity-50 —
-        đó là lỗi thật của app, không phải của story.
-      */}
-      <div className="text-body-4 text-muted-foreground flex items-center gap-3 uppercase tracking-wide">
-        <span className="h-px flex-1 bg-current" />
-        {t('divider')}
-        <span className="h-px flex-1 bg-current" />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <Button variant="outline">
-          <Icon icon={ICONS.google} />
-          Google
-        </Button>
-        <Button variant="outline">
-          <Icon icon={ICONS.github} />
-          GitHub
-        </Button>
-      </div>
-    </div>
+    <OAuthButtonsView dividerLabel={t('divider')} providers={OAUTH_PROVIDERS} />
+  )
+}
+
+function PasswordField({
+  label,
+  autoComplete,
+  error,
+}: {
+  label: string
+  autoComplete: string
+  error?: string
+}) {
+  const tc = useTranslations('common')
+
+  return (
+    <PasswordInput
+      label={label}
+      showPasswordLabel={tc('actions.showPassword')}
+      hidePasswordLabel={tc('actions.hidePassword')}
+      autoComplete={autoComplete}
+      error={error}
+    />
   )
 }
 
@@ -92,28 +132,27 @@ export const Login: Story = {
 
     return (
       <AuthScreen>
-        <ScreenHeader title={t('title')} subtitle={t('subtitle')} />
-        <form className="flex flex-col gap-4" noValidate>
-          <Input label={t('email')} type="email" autoComplete="email" />
-          <Input
-            label={t('password')}
-            type="password"
-            autoComplete="current-password"
-          />
-          <div className="flex justify-end">
-            <a href="#" className="text-body-3 underline underline-offset-4">
-              {t('forgot')}
+        <AuthPage title={t('title')}>
+          <AuthForm onSubmit={noop} submitLabel={t('submit')}>
+            <Input label={t('email')} type="email" autoComplete="email" />
+            <PasswordField
+              label={t('password')}
+              autoComplete="current-password"
+            />
+            <div className="flex justify-end">
+              <a href="#" className="text-body-3 underline underline-offset-4">
+                {t('forgot')}
+              </a>
+            </div>
+          </AuthForm>
+          <OAuthButtons />
+          <AuthFooter>
+            {t('noAccount')}{' '}
+            <a href="#" className={AUTH_LINK_CLASS}>
+              {t('register')}
             </a>
-          </div>
-          <Button type="submit">{t('submit')}</Button>
-        </form>
-        <OAuthButtons />
-        <Typography variant="body-3" className="text-center opacity-70">
-          {t('noAccount')}{' '}
-          <a href="#" className="underline underline-offset-4">
-            {t('register')}
-          </a>
-        </Typography>
+          </AuthFooter>
+        </AuthPage>
       </AuthScreen>
     )
   },
@@ -125,8 +164,7 @@ export const Login: Story = {
  * Both are KEYS translated at render time, not pre-written sentences — so
  * switching language in the toolbar switches the error copy too. That is exactly
  * what the app does: zod and the backend return keys, `useMessage()` translates
- * them (`docs/i18n.md` §7.3). Inlining Vietnamese sentences here would leave the
- * story looking correct in `vi` and wrong the moment it is switched to `en`.
+ * them (`docs/i18n.md` §7.3). The app shows the form-level one as a toast; here it is an inline alert.
  */
 export const LoginRejected: Story = {
   render: function LoginRejectedScreen() {
@@ -135,21 +173,21 @@ export const LoginRejected: Story = {
 
     return (
       <AuthScreen>
-        <ScreenHeader title={t('title')} subtitle={t('subtitle')} />
-        <form className="flex flex-col gap-4" noValidate>
-          <AlertError message={m('common.errors.generic')} />
-          <Input
-            label={t('email')}
-            type="email"
-            defaultValue="noah@noalhub.dev"
-          />
-          <Input
-            label={t('password')}
-            type="password"
-            error={m('validation.password.tooShort')}
-          />
-          <Button type="submit">{t('submit')}</Button>
-        </form>
+        <AuthPage title={t('title')}>
+          <AuthForm onSubmit={noop} submitLabel={t('submit')}>
+            <AlertError message={m('common.errors.generic')} />
+            <Input
+              label={t('email')}
+              type="email"
+              defaultValue="noah@noalhub.dev"
+            />
+            <PasswordField
+              label={t('password')}
+              autoComplete="current-password"
+              error={m('validation.password.tooShort')}
+            />
+          </AuthForm>
+        </AuthPage>
       </AuthScreen>
     )
   },
@@ -162,29 +200,24 @@ export const Register: Story = {
 
     return (
       <AuthScreen>
-        <ScreenHeader title={t('title')} subtitle={t('subtitle')} />
-        <form className="flex flex-col gap-4" noValidate>
-          <Input label={t('displayName')} autoComplete="name" />
-          <Input label={t('email')} type="email" autoComplete="email" />
-          <Input
-            label={t('password')}
-            type="password"
-            autoComplete="new-password"
-          />
-          <Input
-            label={t('confirmPassword')}
-            type="password"
-            autoComplete="new-password"
-          />
-          <Button type="submit">{t('submit')}</Button>
-        </form>
-        <OAuthButtons />
-        <Typography variant="body-3" className="text-center opacity-70">
-          {t('hasAccount')}{' '}
-          <a href="#" className="underline underline-offset-4">
-            {t('login')}
-          </a>
-        </Typography>
+        <AuthPage title={t('title')}>
+          <AuthForm onSubmit={noop} submitLabel={t('submit')}>
+            <Input label={t('displayName')} autoComplete="name" />
+            <Input label={t('email')} type="email" autoComplete="email" />
+            <PasswordField label={t('password')} autoComplete="new-password" />
+            <PasswordField
+              label={t('confirmPassword')}
+              autoComplete="new-password"
+            />
+          </AuthForm>
+          <OAuthButtons />
+          <AuthFooter>
+            {t('hasAccount')}{' '}
+            <a href="#" className={AUTH_LINK_CLASS}>
+              {t('login')}
+            </a>
+          </AuthFooter>
+        </AuthPage>
       </AuthScreen>
     )
   },
@@ -197,16 +230,16 @@ export const ForgotPassword: Story = {
 
     return (
       <AuthScreen>
-        <ScreenHeader title={t('title')} subtitle={t('subtitle')} />
-        <form className="flex flex-col gap-4" noValidate>
-          <Input label={t('email')} type="email" autoComplete="email" />
-          <Button type="submit">{t('submit')}</Button>
-        </form>
-        <Typography variant="body-3" className="text-center opacity-70">
-          <a href="#" className="underline underline-offset-4">
-            {t('backToLogin')}
-          </a>
-        </Typography>
+        <AuthPage title={t('title')}>
+          <AuthForm onSubmit={noop} submitLabel={t('submit')}>
+            <Input label={t('email')} type="email" autoComplete="email" />
+          </AuthForm>
+          <AuthFooter>
+            <a href="#" className={AUTH_LINK_CLASS}>
+              {t('backToLogin')}
+            </a>
+          </AuthFooter>
+        </AuthPage>
       </AuthScreen>
     )
   },
@@ -222,13 +255,14 @@ export const ForgotPasswordSent: Story = {
 
     return (
       <AuthScreen>
-        <ScreenHeader title={t('title')} subtitle={t('subtitle')} />
-        <AlertSuccess message={t('sent')} />
-        <Typography variant="body-3" className="text-center opacity-70">
-          <a href="#" className="underline underline-offset-4">
-            {t('backToLogin')}
-          </a>
-        </Typography>
+        <AuthPage title={t('title')}>
+          <AlertSuccess message={t('sent')} />
+          <AuthFooter>
+            <a href="#" className={AUTH_LINK_CLASS}>
+              {t('backToLogin')}
+            </a>
+          </AuthFooter>
+        </AuthPage>
       </AuthScreen>
     )
   },
@@ -241,20 +275,18 @@ export const ResetPassword: Story = {
 
     return (
       <AuthScreen>
-        <ScreenHeader title={t('title')} subtitle={t('subtitle')} />
-        <form className="flex flex-col gap-4" noValidate>
-          <Input
-            label={t('newPassword')}
-            type="password"
-            autoComplete="new-password"
-          />
-          <Input
-            label={t('confirmPassword')}
-            type="password"
-            autoComplete="new-password"
-          />
-          <Button type="submit">{t('submit')}</Button>
-        </form>
+        <AuthPage title={t('title')}>
+          <AuthForm onSubmit={noop} submitLabel={t('submit')}>
+            <PasswordField
+              label={t('newPassword')}
+              autoComplete="new-password"
+            />
+            <PasswordField
+              label={t('confirmPassword')}
+              autoComplete="new-password"
+            />
+          </AuthForm>
+        </AuthPage>
       </AuthScreen>
     )
   },
@@ -267,13 +299,15 @@ export const ResetPasswordInvalidLink: Story = {
 
     return (
       <AuthScreen>
-        <Typography variant="h3" as="h1">
-          {t('invalidLinkTitle')}
-        </Typography>
-        <AlertError message={t('invalidLink')} />
-        <a href="#" className="text-body-3 underline underline-offset-4">
-          {t('requestNewLink')}
-        </a>
+        <div className="flex flex-col gap-4">
+          <Typography variant="h2" as="h1">
+            {t('invalidLinkTitle')}
+          </Typography>
+          <AlertError message={t('invalidLink')} />
+          <a href="#" className="text-body-3 underline underline-offset-4">
+            {t('requestNewLink')}
+          </a>
+        </div>
       </AuthScreen>
     )
   },
@@ -286,8 +320,9 @@ export const ResetPasswordDone: Story = {
 
     return (
       <AuthScreen>
-        <ScreenHeader title={t('title')} />
-        <AlertSuccess message={t('done')} />
+        <AuthPage title={t('title')}>
+          <AlertSuccess message={t('done')} />
+        </AuthPage>
       </AuthScreen>
     )
   },
@@ -304,7 +339,7 @@ export const OAuthFinishing: Story = {
 
     return (
       <AuthScreen>
-        <Typography variant="body-3" className="opacity-70">
+        <Typography variant="body-3" className="text-muted-foreground">
           {t('finishing')}
         </Typography>
       </AuthScreen>
@@ -319,10 +354,12 @@ export const OAuthFailed: Story = {
 
     return (
       <AuthScreen>
-        <AlertError message={t('missingCode')} />
-        <a href="#" className="text-body-3 underline underline-offset-4">
-          {t('backToLogin')}
-        </a>
+        <div className="flex flex-col gap-4">
+          <AlertError message={t('missingCode')} />
+          <a href="#" className="text-body-3 underline underline-offset-4">
+            {t('backToLogin')}
+          </a>
+        </div>
       </AuthScreen>
     )
   },

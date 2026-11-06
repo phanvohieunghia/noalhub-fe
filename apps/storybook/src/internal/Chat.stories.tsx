@@ -45,8 +45,8 @@ import {
  * The map that ties these together, lanes and all, is `Chat.mdx`; it links to
  * each story by id, so renaming an export breaks a link there.
  *
- * Screens are rebuilt from `@noalhub/ui` primitives (see `chat-parts.tsx` for
- * why). Every state shown is one the backend actually produces; the rules behind
+ * Screens are drawn with the real `@noalhub/ui/chat/*` components, the same ones
+ * the app renders (see `chat-parts.tsx`). Every state shown is one the backend actually produces; the rules behind
  * each are in `docs/chat.md` (§3.1 REST, §3.2 events, §5.5 send).
  */
 

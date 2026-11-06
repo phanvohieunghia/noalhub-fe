@@ -302,7 +302,7 @@
       "legendRequest": "FE gọi đi",
       "legendPush": "BE trả về hoặc tự đẩy xuống",
       "legendAccent": "chỗ phải để ý",
-      "source": "`Chat.stories.tsx`, `Presence.stories.tsx` và `chat-parts.tsx` dựng lại **layout** bằng primitive của `@noalhub/ui` chứ không import `apps/web/components/chat/*`: hai app build và deploy độc lập, không được import chéo, và component thật cần hook `@noalhub/api` cùng một kết nối Socket.IO sống mới render nổi. Sửa component thật mà quên sửa story ở đây thì sơ đồ sẽ lệch. Luật đằng sau từng bước nằm ở `docs/chat.md`.",
+      "source": "`Chat.stories.tsx`, `Presence.stories.tsx` và `chat-parts.tsx` vẽ **layout** bằng component thật `@noalhub/ui/chat/*` — cùng cái mà `apps/web/components/chat/*` render; chỉ dữ liệu (người mẫu, presence, socket) là đồ giả, vì container của app cần hook `@noalhub/api` và một kết nối Socket.IO sống mới render nổi. Đổi luật trạng thái mà quên sửa story ở đây thì sơ đồ sẽ lệch. Luật đằng sau từng bước nằm ở `docs/chat.md`.",
       "expand": "Mở toàn màn hình",
       "zoomIn": "Phóng to",
       "zoomOut": "Thu nhỏ",
@@ -311,7 +311,8 @@
       "cacheSection": "Cache tag — tag nào xoá cái gì",
       "slugSection": "Sơ đồ tuần tự — slug cũ",
       "docsSection": "Luật thật sự nằm ở đâu",
-      "blogSource": "Trang này ghi lại `packages/api/src/blog/server.ts`, `apps/web/app/api/revalidate/route.ts` và `apps/admin/components/posts/post-editor.tsx` — nó không dựng lại chúng. Các ô trong sơ đồ luồng trỏ sang story `UI/Blog`, và đó là component thật của `@noalhub/ui`. Luật đầy đủ, kể cả phần thuộc backend, nằm ở `docs/blog.md`."
+      "blogSource": "Trang này ghi lại `packages/api/src/blog/server.ts`, `apps/web/app/api/revalidate/route.ts` và `apps/admin/components/posts/post-editor.tsx` — nó không dựng lại chúng. Các ô trong sơ đồ luồng trỏ sang story `UI/Blog`, và đó là component thật của `@noalhub/ui`. Luật đầy đủ, kể cả phần thuộc backend, nằm ở `docs/blog.md`.",
+      "qaSource": "`QA.stories.tsx` ghi lại `packages/api/src/qa/api.ts` và `docs/qa-learner.md` — nó không dựng lại màn hình nào, vì hai app admin và web build, deploy độc lập và không được import chéo. Đổi endpoint hay luật trong `packages/api/src/qa` mà quên sửa trang này thì sơ đồ sẽ lệch. Luật phía backend nằm ở `noalhub-be/docs/qa.md`."
     },
     "chat": {
       "title": "Luồng chat",
@@ -648,6 +649,103 @@
         "docBodyB": "Slug cũ vẫn nằm trong cache dưới tag riêng, và vẫn đang phục vụ. Chỉ revalidate slug mới thì URL cũ trả về bản của hôm qua.",
         "docH2B": "Con số sáu mươi giây đến từ đâu",
         "docBodyC": "`revalidate` là mức sàn, không phải kế hoạch. Webhook mất thì site vẫn tự đúng lại; kiểu hỏng ở đây là chậm, không bao giờ là sai dữ liệu."
+      }
+    },
+    "qa": {
+      "title": "Q&A — từ nguồn tài liệu đến người học",
+      "lead": "Q&A có hai nửa gặp nhau ở một điểm: **final set đã publish**. Admin biến nguồn thành outline, sinh câu hỏi, duyệt rồi đưa câu đã duyệt vào final set. Người học chỉ thấy dataset có ít nhất một câu published — set, outline và generation không bao giờ lộ ra phía họ.",
+      "authorSection": "Admin — soạn và publish bộ câu hỏi",
+      "authorCaption": "Bốn bước của workbench admin: nguồn → outline → bộ câu hỏi → final set.",
+      "learnSection": "Người học — làm bài và gửi phản hồi",
+      "learnCaption": "Mỗi lượt làm bài là một attempt đã chốt sẵn danh sách câu; phản hồi của người học quay về hàng đợi của admin.",
+      "authorLanes": {
+        "ui": "Admin UI",
+        "uiNote": "apps/admin · qa-editor-shell",
+        "be": "Backend",
+        "beNote": "/admin/qa",
+        "run": "Generation run",
+        "runNote": "chạy nền",
+        "db": "Final set",
+        "dbNote": "câu published"
+      },
+      "authorSteps": {
+        "1": "addSource — POST /datasets/{id}/sources",
+        "2": "startAnalyze — POST /datasets/{id}/analyze",
+        "3": "trả về run; UI theo dõi qua generations/active",
+        "4": "generateSets — POST /generate-sets (super_admin)",
+        "5": "một lần bấm = một run = nhiều set",
+        "6": "partial/failed → retry cả run hoặc từng chunk",
+        "7": "bulkReviewItems — approved / rejected",
+        "8": "addToFinalSet — POST /datasets/{id}/final-set",
+        "9": "copy câu approved sang final set"
+      },
+      "authorNotes": {
+        "1": "**Chỉ super_admin được sinh câu hỏi.** `generateSets` là một lần bấm sinh nhiều set cùng lúc; các thao tác còn lại dưới `/admin/qa` cần `admin`.",
+        "2": "**Sinh có thể thành công một phần.** Run `partial`/`failed` được chạy lại, cả run hoặc từng chunk (`retry`, `chunks/retry`). Đó là một run mới, được tính phí riêng.",
+        "3": "**Duyệt rồi mới vào final set.** Chỉ câu `approved` được `addToFinalSet` copy sang; bản copy là thứ người học làm, nên sửa bản nháp về sau không đổi lịch sử làm bài (`docs/qa-learner.md` §1).",
+        "4": "**itemIds giới hạn phạm vi copy.** Gọi `addToFinalSet` không kèm danh sách thì copy mọi câu đã duyệt của dataset."
+      },
+      "learnLanes": {
+        "ui": "Learner UI",
+        "uiNote": "apps/web · mobile",
+        "be": "Backend",
+        "beNote": "/qa",
+        "attempt": "Attempt",
+        "attemptNote": "mẫu câu đã chốt",
+        "admin": "Hàng đợi admin",
+        "adminNote": "/admin/qa/feedbacks"
+      },
+      "learnSteps": {
+        "1": "browseDatasets — GET /qa/datasets",
+        "2": "chỉ dataset có câu published",
+        "3": "startAttempt — POST /datasets/{id}/attempts { count? }",
+        "4": "bốc ngẫu nhiên 5/10/20/tất cả, chốt vào attempt",
+        "5": "QaAttempt — idempotent; lượt đang mở thì bỏ qua count",
+        "6": "getAttemptPlay — GET /attempts/{id}",
+        "7": "câu hỏi của attempt, không kèm đáp án",
+        "8": "submitAnswer — POST /attempts/{id}/answers",
+        "9": "kết quả của câu vừa trả lời",
+        "10": "finishAttempt — POST /attempts/{id}/finish",
+        "11": "reviewAttempt — GET /attempts/{id}/answers",
+        "12": "submitItemFeedback — POST /items/{id}/feedback",
+        "13": "vào hàng đợi; admin xử lý bằng PATCH /admin/qa/feedbacks/{id}"
+      },
+      "learnNotes": {
+        "1": "**Mở lại luôn đồng bộ.** Mỗi lần mở màn làm bài gọi `startAttempt`, vốn idempotent, để lấy lượt đang mở — reload hay đổi thiết bị đều tiếp tục đúng chỗ.",
+        "2": "**Mẫu số tiến độ không đổi.** Backend chốt danh sách câu vào attempt lúc bắt đầu, nên admin publish thêm câu giữa chừng không làm 8/10 thành 8/11.",
+        "3": "**Xem lại chỉ có câu đã trả lời.** `reviewAttempt` không trả entry cho câu chưa làm.",
+        "4": "**Phản hồi trùng bị từ chối.** Gửi lần hai cho cùng một câu trả `409 QA_FEEDBACK_DUPLICATE`; câu không tồn tại trả `404 QA_ITEM_NOT_FOUND`."
+      },
+      "flowCaption": "Hàng trên là admin, hàng dưới là người học; hai nửa gặp nhau ở dataset đã publish.",
+      "nodes": {
+        "source": "Nguồn",
+        "sourceNote": "addSource",
+        "outline": "Outline",
+        "outlineNote": "analyze nguồn",
+        "generate": "Sinh câu hỏi",
+        "generateNote": "super_admin · một run",
+        "review": "Duyệt câu",
+        "reviewNote": "approved / rejected",
+        "final": "Final set",
+        "finalNote": "copy câu đã duyệt",
+        "published": "Dataset đã publish",
+        "publishedNote": "người học chỉ thấy phần này",
+        "browse": "Duyệt bộ câu hỏi",
+        "browseNote": "GET /qa/datasets",
+        "start": "Bắt đầu",
+        "startNote": "chọn 5/10/20/tất cả",
+        "answer": "Trả lời",
+        "answerNote": "từng câu",
+        "finish": "Nộp & xem lại",
+        "finishNote": "finish · review",
+        "feedback": "Gửi phản hồi",
+        "feedbackNote": "báo lỗi một câu",
+        "queue": "Hàng đợi admin",
+        "queueNote": "xử lý phản hồi"
+      },
+      "edges": {
+        "onlyPublished": "chỉ câu published",
+        "toQueue": "chờ review"
       }
     }
   },

@@ -14,6 +14,7 @@ import viWebAuth from '../../../packages/i18n/messages/vi/web.auth.json'
 import viWebBlog from '../../../packages/i18n/messages/vi/web.blog.json'
 import viWebChat from '../../../packages/i18n/messages/vi/web.chat.json'
 import viWebDashboard from '../../../packages/i18n/messages/vi/web.dashboard.json'
+import viWebHome from '../../../packages/i18n/messages/vi/web.home.json'
 import viWebFriends from '../../../packages/i18n/messages/vi/web.friends.json'
 import viWebProfile from '../../../packages/i18n/messages/vi/web.profile.json'
 
@@ -28,6 +29,7 @@ import enWebAuth from '../../../packages/i18n/messages/en/web.auth.json'
 import enWebBlog from '../../../packages/i18n/messages/en/web.blog.json'
 import enWebChat from '../../../packages/i18n/messages/en/web.chat.json'
 import enWebDashboard from '../../../packages/i18n/messages/en/web.dashboard.json'
+import enWebHome from '../../../packages/i18n/messages/en/web.home.json'
 import enWebFriends from '../../../packages/i18n/messages/en/web.friends.json'
 import enWebProfile from '../../../packages/i18n/messages/en/web.profile.json'
 
@@ -69,6 +71,7 @@ const messages = {
       chat: viWebChat,
       dashboard: viWebDashboard,
       friends: viWebFriends,
+      home: viWebHome,
       profile: viWebProfile,
     },
   },
@@ -89,6 +92,7 @@ const messages = {
       chat: enWebChat,
       dashboard: enWebDashboard,
       friends: enWebFriends,
+      home: enWebHome,
       profile: enWebProfile,
     },
   },

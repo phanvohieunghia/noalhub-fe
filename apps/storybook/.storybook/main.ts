@@ -64,7 +64,12 @@ const config: StorybookConfig = {
    * static dir before falling back to its own. `public/favicon.svg` is a copy of
    * the apps' `app/icon.svg` — the mark with fixed brand colors.
    */
-  staticDirs: ['../public'],
+  staticDirs: [
+    '../public',
+    // The field and skyline engravings the auth screens mask with (`field.css`),
+    // served at `/images/*` exactly as `apps/web/public` does.
+    {from: '../../web/public/images', to: '/images'},
+  ],
   /**
    * `addon-docs` is what compiles `.mdx` and honours the `autodocs` tag set in
    * `preview.tsx` — without it that tag is a no-op (the index had zero `docs`

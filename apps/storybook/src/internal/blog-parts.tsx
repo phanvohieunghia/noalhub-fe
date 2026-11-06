@@ -2,6 +2,14 @@ import {useDateFormat} from '@noalhub/i18n/use-date-format'
 import {useTranslations} from 'next-intl'
 
 import type {BlogBlockNode, BlogDoc} from '@noalhub/api/blog'
+import {BreadcrumbNav} from '@noalhub/ui/blog/breadcrumb-nav'
+import type {LinkLike} from '@noalhub/ui/blog/link-like'
+import {
+  PostCard as PostCardView,
+  type PostCardVariant,
+} from '@noalhub/ui/blog/post-card'
+import {PostGrid as PostGridView} from '@noalhub/ui/blog/post-grid'
+import {RelatedPosts as RelatedPostsView} from '@noalhub/ui/blog/related-posts'
 import {Typography} from '@noalhub/ui/typography'
 
 /*
@@ -12,17 +20,12 @@ import {Typography} from '@noalhub/ui/typography'
  * `src/internal/` for the same reason the flows do: the public build leaves that
  * directory out entirely (`.storybook/main.ts`).
  *
- * What is rebuilt and what is not:
- *
- * - `apps/web/components/blog/*` (the post card, the listing, the breadcrumb) is
- *   **rebuilt** here. The apps are built and deployed independently and nothing
- *   may import across them (AGENTS.md), and those components hang off
- *   `@noalhub/api/blog/server` — a `server-only` module that cannot even be
- *   imported from a browser bundle.
- * - `PostContent`, `TableOfContents` and `PaginationLinks` are **imported for
- *   real** from `@noalhub/ui`, because a package is exactly what both apps are
- *   allowed to share. Those parts of every screen below are the production
- *   components, not a drawing of them.
+ * The post card, the listing grid, the breadcrumb, the related-posts block,
+ * `PostContent`, `TableOfContents` and `PaginationLinks` are the **real**
+ * components from `@noalhub/ui`, the same ones `apps/web/components/blog/*`
+ * renders. What stays here is what the app gets from its data layer: sample
+ * posts, and a plain `<a>` standing in for the locale-aware `Link` (a real
+ * navigation inside a story would send the preview iframe away from it).
  *
  * The copy comes from the same `web.blog` messages the app reads, so the locale
  * toolbar switches these screens exactly like the app; only the sample posts
@@ -107,43 +110,31 @@ export function BlogScreen({
 export type Crumb = {label: string; current?: boolean}
 
 /**
- * The breadcrumb trail.
- *
- * The crumbs are rendered as plain text rather than links: a real anchor inside
- * a story navigates the preview iframe away from the story it is illustrating.
- * The `aria-current="page"` on the last crumb is kept because it is what the
- * real component does, and it is what a screen reader announces.
- *
- * The app's version also emits `BreadcrumbList` JSON-LD from this same array —
- * one source, because structured data on a page with no visible breadcrumb is a
- * mismatch in Google's eyes (`docs/blog.md` §6.2).
+ * A plain anchor in place of the app's `Link`: it renders the real markup and
+ * styles but does not navigate the preview away.
  */
+const StoryLink: LinkLike = ({href: _href, children, ...props}) => (
+  <a
+    href="#"
+    onClick={(event) => event.preventDefault()}
+    {...props}>
+    {children}
+  </a>
+)
+
+/** The breadcrumb trail — every crumb but the current one is a link, as in the app. */
 export function Breadcrumb({items}: {items: Crumb[]}) {
   const t = useTranslations('web.blog.breadcrumb')
 
   return (
-    <nav aria-label={t('label')} className="text-body-3 opacity-70">
-      <ol className="flex flex-wrap items-center gap-1.5">
-        {items.map((item, index) => (
-          <li key={index} className="flex items-center gap-1.5">
-            {index > 0 ? (
-              <Typography as="span" variant="body-3" aria-hidden>
-                /
-              </Typography>
-            ) : null}
-            <Typography
-              as="span"
-              variant="body-3"
-              {...(item.current ? {'aria-current': 'page' as const} : {})}
-              className={
-                item.current ? undefined : 'underline underline-offset-4'
-              }>
-              {item.label}
-            </Typography>
-          </li>
-        ))}
-      </ol>
-    </nav>
+    <BreadcrumbNav
+      Link={StoryLink}
+      label={t('label')}
+      items={items.map((item) => ({
+        label: item.label,
+        href: item.current ? undefined : '#',
+      }))}
+    />
   )
 }
 
@@ -175,91 +166,70 @@ export function PostMeta({
 }
 
 /**
- * A cover image.
- *
- * `<img>` rather than `next/image`: the story only needs the aspect ratio and
- * the picture, and `next/image`'s loader would have to be configured per host
- * for a decoration. `alt=""` because the title sits right beside it — announcing
- * the picture again is noise, which is exactly what the real card does too.
+ * A cover image. `<img>` rather than `next/image`: the story only needs the
+ * picture, and `next/image`'s loader would have to be configured per host.
  */
 function Cover({className = ''}: {className?: string}) {
   return (
     <span
-      className={`relative block overflow-hidden rounded-lg bg-black/5 dark:bg-white/5 ${className}`}>
+      className={`bg-muted relative block overflow-hidden rounded-lg ${className}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={PHOTO} alt="" className="size-full object-cover" />
     </span>
   )
 }
 
-/**
- * One card in a listing.
- *
- * `h2`, not `h3` or `h1`: a listing page has exactly ONE `h1` — its own title —
- * and every card sits directly beneath it (`docs/blog.md` §6.2).
- */
-export function PostCard({post}: {post: SamplePost}) {
+export function PostCard({
+  post,
+  variant = 'default',
+}: {
+  post: SamplePost
+  variant?: PostCardVariant
+}) {
+  const t = useTranslations('web.blog.post')
   const s = useTranslations('sb.flows.blog.sample')
+  const df = useDateFormat()
 
   return (
-    <article className="flex flex-col gap-3">
-      {post.cover ? <Cover className="aspect-[16/9]" /> : null}
-
-      <div className="flex flex-col gap-2">
-        <Typography
-          as="span"
-          variant="body-4"
-          weight={500}
-          className="w-fit tracking-wide uppercase opacity-60">
-          {s('categoryName')}
-        </Typography>
-
-        <Typography variant="h5" as="h2" className="leading-snug">
-          {post.title}
-        </Typography>
-
-        <Typography variant="body-3" className="leading-relaxed opacity-75">
-          {post.excerpt}
-        </Typography>
-
-        <PostMeta
-          publishedAt={post.publishedAt}
-          minutes={post.readingMinutes}
-        />
-      </div>
-    </article>
+    <PostCardView
+      variant={variant}
+      Link={StoryLink}
+      href="#"
+      categoryHref="#"
+      categoryName={s('categoryName')}
+      title={post.title}
+      description={post.excerpt}
+      cover={
+        post.cover ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={PHOTO} alt="" className="size-full object-cover" />
+        ) : null
+      }
+      author={s('author')}
+      date={df.date(post.publishedAt)}
+      dateTime={post.publishedAt}
+      readingTime={t('readingTime', {minutes: post.readingMinutes})}
+    />
   )
 }
 
-/**
- * The post grid, **plus an empty state with words in it**.
- *
- * An empty list is still a **200**, never a 404: having no posts yet — a brand
- * new category, say — is a valid temporary state of the site, not a bad URL.
- * Only a category or tag that *does not exist* calls `notFound()` (§6.5).
- */
 export function PostGrid({
   posts,
   emptyMessage,
+  variant = 'default',
 }: {
   posts: SamplePost[]
   emptyMessage: string
+  variant?: PostCardVariant
 }) {
-  if (posts.length === 0) {
-    return (
-      <Typography
-        variant="body-3"
-        className="border-border rounded-lg border border-dashed px-4 py-12 text-center opacity-60">
-        {emptyMessage}
-      </Typography>
-    )
-  }
-
   return (
-    <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+    <PostGridView
+      emptyMessage={emptyMessage}
+      layout={variant === 'row' ? 'rows' : 'grid'}>
       {posts.map((post) => (
-        <PostCard key={post.id} post={post} />
+        <PostCard key={post.id} post={post} variant={variant} />
       ))}
-    </div>
+    </PostGridView>
   )
 }
 
@@ -285,54 +255,22 @@ export function ScreenHeader({
   )
 }
 
-/**
- * The "Related posts" block closing every post — three from the **same
- * category**.
- *
- * By category rather than by tag: a post has exactly one category, which makes
- * this a deterministic query, while `tags` is an unordered set where the "first
- * tag" is merely whichever one the author typed first (§2.5, §2.6).
- */
 export function RelatedPosts({posts}: {posts: SamplePost[]}) {
   const t = useTranslations('web.blog.post')
   const df = useDateFormat()
 
-  // The only post in a category has nothing to show — the real component drops
-  // the whole block rather than leaving an empty heading hanging.
-  if (posts.length === 0) return null
-
   return (
-    <section
-      aria-labelledby="related-heading"
-      className="border-border border-t pt-8">
-      <Typography
-        variant="title-4"
-        as="h2"
-        id="related-heading"
-        className="tracking-wide uppercase opacity-60">
-        {t('relatedHeading')}
-      </Typography>
-      <ul className="mt-4 grid gap-4 sm:grid-cols-3">
-        {posts.map((post) => (
-          <li key={post.id} className="flex flex-col gap-1">
-            <Typography
-              as="span"
-              variant="body-2"
-              weight={500}
-              className="leading-snug underline underline-offset-4">
-              {post.title}
-            </Typography>
-            <Typography
-              as="time"
-              variant="body-4"
-              dateTime={post.publishedAt}
-              className="opacity-60">
-              {df.date(post.publishedAt)}
-            </Typography>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <RelatedPostsView
+      Link={StoryLink}
+      heading={t('relatedHeading')}
+      posts={posts.map((post) => ({
+        id: post.id,
+        href: '#',
+        title: post.title,
+        date: df.date(post.publishedAt),
+        dateTime: post.publishedAt,
+      }))}
+    />
   )
 }
 

@@ -154,7 +154,8 @@ Bấm vào ô bất kỳ để mở màn hình tương ứng.
 
 ## Ba màn hình này không có trong app
 
-`Auth.stories.tsx` dựng lại layout bằng primitive của `@noalhub/ui` chứ không
-import `apps/web/components/auth/*`: hai app build và deploy độc lập, không được
-import chéo, và các form thật gọi hook `@noalhub/api` nên cần backend mới render
-nổi. Sửa form thật mà quên sửa story ở đây thì sơ đồ sẽ lệch.
+`Auth.stories.tsx` ghép màn hình từ `@noalhub/ui/auth/auth-form` — cùng bộ khung
+mà `apps/web/components/auth/*` dùng (tiêu đề, form + nút gửi, dòng chân, khối
+OAuth) — cộng các field `Input`/`PasswordInput` thật. Phần form thật có thêm chỉ
+là react-hook-form + zod và lời gọi API, không có gì để nhìn. Riêng khung chia
+đôi `AuthShell` không có ở đây vì nó dựa vào `HomeField` và GSAP của trang chủ.
