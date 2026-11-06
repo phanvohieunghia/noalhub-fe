@@ -36,31 +36,33 @@ export function StatCard({
   return (
     <div
       title={compact ? hint : undefined}
-      className={`border-border bg-surface rounded-xl border ${compact ? 'px-4 py-3' : 'p-5'}`}>
-      <div className="flex items-center justify-between gap-3">
+      className={`bg-muted rounded-lg ${compact ? 'px-4 py-3' : 'p-6'}`}>
+      <div className="flex items-center gap-2">
+        {icon ? (
+          <Icon
+            icon={icon}
+            aria-hidden
+            className="text-muted-foreground size-4 shrink-0"
+          />
+        ) : null}
         <Typography
           variant="title-4"
           weight={500}
-          className="text-muted-foreground uppercase tracking-wide">
+          className="text-muted-foreground">
           {label}
         </Typography>
-        {icon ? (
-          <span
-            aria-hidden
-            className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-lg">
-            <Icon icon={icon} className="size-4" />
-          </span>
-        ) : null}
       </div>
       {isLoading ? (
         <Skeleton className={compact ? 'mt-2 h-7 w-16' : 'mt-3 h-10 w-24'} />
       ) : (
-        <Typography
-          variant={compact ? 'h3' : 'h1'}
-          as="p"
-          className={`${compact ? 'mt-1.5' : 'mt-3'} tabular-nums`}>
+        <p
+          className={`${
+            compact
+              ? 'text-h3 mt-1.5 font-semibold'
+              : 'mt-4 text-5xl leading-none font-semibold tracking-tight'
+          } text-foreground tabular-nums`}>
           {typeof value === 'number' ? value.toLocaleString('vi-VN') : value}
-        </Typography>
+        </p>
       )}
       {progress === undefined ? null : (
         <div
@@ -77,7 +79,7 @@ export function StatCard({
         </div>
       )}
       {hint && !compact ? (
-        <Typography variant="body-4" className="text-muted-foreground mt-2">
+        <Typography variant="body-3" className="text-muted-foreground mt-3">
           {hint}
         </Typography>
       ) : null}

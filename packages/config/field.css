@@ -1,0 +1,129 @@
+/*
+ * The coloured field behind the public panels and the auth screens, shared by
+ * `apps/web` and Storybook so both draw the same thing: the dome engraving, the
+ * aurora keyframes (`HomeField`) and the skyline drawing on the auth brand side.
+ * The images are served at `/images/*` by both apps.
+ *
+ * The wipe's start state (`--reveal: -15%` with a 5s failsafe) is NOT here: it
+ * only makes sense where GSAP runs, so it stays in `apps/web/app/globals.css`.
+ */
+
+/**
+ * The dome engraving behind the home page's panels (`components/home/home-field.tsx`):
+ * a flat colour cut by the drawing's alpha, so the ink follows `--field-ink` in
+ * light and dark. Kept faint: it is texture, not content.
+ */
+.field-dome {
+  background-color: var(--field-ink);
+  opacity: 0.48;
+  -webkit-mask-image: url('/images/dome-field.webp');
+  mask-image: url('/images/dome-field.webp');
+  -webkit-mask-size: cover;
+  mask-size: cover;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/**
+ * Living atmospheric aurora animations for the home field background (`HomeField`).
+ * 4 coprime durations (10s, 14s, 12s, 16s) ensure the flowing waves never align
+ * into an obvious loop.
+ */
+@keyframes field-aurora-1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translate(16%, 12%) scale(1.22) rotate(15deg);
+  }
+}
+
+@keyframes field-aurora-2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1.18) rotate(0deg);
+  }
+  50% {
+    transform: translate(-18%, -12%) scale(0.9) rotate(-20deg);
+  }
+}
+
+@keyframes field-aurora-3 {
+  0%, 100% {
+    transform: translate(0, 0) scale(0.95) rotate(0deg);
+  }
+  50% {
+    transform: translate(14%, -16%) scale(1.18) rotate(25deg);
+  }
+}
+
+@keyframes field-aurora-4 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1.05) rotate(0deg);
+  }
+  50% {
+    transform: translate(-14%, 14%) scale(1.12) rotate(-15deg);
+  }
+}
+
+.animate-field-aurora-1 {
+  animation: field-aurora-1 10s ease-in-out infinite;
+}
+.animate-field-aurora-2 {
+  animation: field-aurora-2 14s ease-in-out infinite;
+}
+.animate-field-aurora-3 {
+  animation: field-aurora-3 12s ease-in-out infinite;
+}
+.animate-field-aurora-4 {
+  animation: field-aurora-4 16s ease-in-out infinite;
+}
+
+/**
+ * The skyline drawing on the auth screens' brand side (`components/auth/auth-shell.tsx`):
+ * the home hero's engraving in the side's own ink (`currentColor`), cut by the
+ * drawing's alpha and a soft left-to-right wipe (`--reveal`, tweened by GSAP) as in
+ * `.hero-sketch`. The start state is CSS and only with script on, so with no
+ * script (or after the 4s failsafe) the drawing is shown whole.
+ */
+.auth-sketch {
+  --reveal: 100%;
+  --feather: 14%;
+  background-color: currentColor;
+  opacity: 0.4;
+  -webkit-mask-image:
+    url('/images/skyline-sketch.webp'),
+    linear-gradient(
+      to right,
+      #000 0%,
+      #000 var(--reveal),
+      transparent calc(var(--reveal) + var(--feather)),
+      transparent 100%
+    );
+  mask-image:
+    url('/images/skyline-sketch.webp'),
+    linear-gradient(
+      to right,
+      #000 0%,
+      #000 var(--reveal),
+      transparent calc(var(--reveal) + var(--feather)),
+      transparent 100%
+    );
+  -webkit-mask-size:
+    cover,
+    100% 100%;
+  mask-size:
+    cover,
+    100% 100%;
+  -webkit-mask-position:
+    bottom center,
+    0 0;
+  mask-position:
+    bottom center,
+    0 0;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}

@@ -9,7 +9,11 @@ import {
 } from 'react'
 
 import {readThemeMode, writeThemeMode} from '@noalhub/core/theme/storage'
-import type {ResolvedTheme, ThemeMode} from '@noalhub/core/theme/types'
+import {
+  isDaytime,
+  type ResolvedTheme,
+  type ThemeMode,
+} from '@noalhub/core/theme/types'
 
 type ThemeContextValue = {
   mode: ThemeMode
@@ -43,25 +47,40 @@ function applyClass(dark: boolean) {
 export function ThemeProvider({children}: {children: React.ReactNode}) {
   // The server cannot read localStorage, so this starts from a static value and
   // is corrected in an effect. That is precisely why `mounted` exists.
-  const [mode, setModeState] = useState<ThemeMode>('system')
+  const [mode, setModeState] = useState<ThemeMode>('auto')
   const [systemDark, setSystemDark] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [daytime, setDaytime] = useState(true)
 
   useEffect(() => {
     const media = window.matchMedia(DARK_QUERY)
     setModeState(readThemeMode())
     setSystemDark(media.matches)
+    setDaytime(isDaytime())
     setMounted(true)
 
     // In `system` mode, changing the OS theme with the tab open must change the
     // page immediately — reading once on mount is not enough.
     const onChange = (e: MediaQueryListEvent) => setSystemDark(e.matches)
     media.addEventListener('change', onChange)
-    return () => media.removeEventListener('change', onChange)
+    // `auto` mode: re-check the clock every minute so the page flips at 06:00 / 18:00 with the tab open.
+    const timer = window.setInterval(() => setDaytime(isDaytime()), 60_000)
+    return () => {
+      media.removeEventListener('change', onChange)
+      window.clearInterval(timer)
+    }
   }, [])
 
   const resolved: ResolvedTheme =
-    mode === 'system' ? (systemDark ? 'dark' : 'light') : mode
+    mode === 'system'
+      ? systemDark
+        ? 'dark'
+        : 'light'
+      : mode === 'auto'
+        ? daytime
+          ? 'light'
+          : 'dark'
+        : mode
 
   useEffect(() => {
     if (mounted) applyClass(resolved === 'dark')

@@ -1,4 +1,5 @@
 import type {BlogPost, BlogPostListItem} from '@noalhub/api/blog'
+import {getPostCoverUrl} from './default-covers'
 
 /**
  * Pure SEO helpers for the blog — no React, no fetching. Used on **both** sides:
@@ -74,9 +75,19 @@ export function postMetaDescription(post: BlogPost): string {
   return post.seo.metaDescription ?? post.excerpt ?? ''
 }
 
-/** `seo.ogImageUrl ?? coverImageUrl`. Returns `null` when there is no image (§6.3). */
-export function postOgImage(post: BlogPost): string | null {
-  return post.seo.ogImageUrl ?? post.coverImageUrl
+/**
+ * `seo.ogImageUrl ?? coverImageUrl ?? defaultTopicCoverUrl`.
+ * Guarantees a visual for social graph cards (§6.3), resolving an absolute URL.
+ */
+export function postOgImage(post: BlogPost): string {
+  const image =
+    post.seo.ogImageUrl?.trim() ||
+    post.coverImageUrl?.trim() ||
+    getPostCoverUrl(post)
+
+  return image.startsWith('http://') || image.startsWith('https://')
+    ? image
+    : absoluteUrl(image)
 }
 
 /**

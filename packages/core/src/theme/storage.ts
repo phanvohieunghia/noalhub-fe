@@ -15,9 +15,9 @@ export function readThemeMode(storage?: {
       : typeof window !== 'undefined'
         ? localStorage.getItem(THEME_STORAGE_KEY)
         : null
-    return isThemeMode(raw) ? raw : 'system'
+    return isThemeMode(raw) ? raw : 'auto'
   } catch {
-    return 'system'
+    return 'auto'
   }
 }
 

@@ -58,7 +58,7 @@ export function Spinner({
         {MARKS.map((mark) => (
           <span
             key={mark}
-            className={`inline-block rounded-full bg-current animate-bounce ${shape.dot}`}
+            className={`inline-block rounded-full bg-current animate-dot ${shape.dot}`}
             style={{animationDelay: `${mark * STAGGER_MS}ms`}}
           />
         ))}

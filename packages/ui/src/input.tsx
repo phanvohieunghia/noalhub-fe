@@ -124,12 +124,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           ref={ref}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? errorId : hint ? hintId : undefined}
-          className={`${box.field} w-full rounded-md border ${box.pl[leadingIcon ? 1 : 0]} ${box.pr[Math.min(rightIcons, 2)]} outline-none transition-colors
-            bg-surface text-surface-foreground border-border
+          className={`${box.field} w-full rounded-lg border ${box.pl[leadingIcon ? 1 : 0]} ${box.pr[Math.min(rightIcons, 2)]} outline-none transition-colors
+            bg-foreground/5 text-surface-foreground border-muted-foreground/80
             placeholder:text-muted-foreground
-            hover:border-muted-foreground
-            focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/40
-            read-only:bg-muted read-only:hover:border-border
+            hover:bg-foreground/8 hover:border-foreground
+            focus-visible:bg-surface focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/40
+            read-only:bg-muted read-only:hover:bg-muted
             disabled:cursor-not-allowed disabled:opacity-50
             aria-[invalid=true]:border-danger aria-[invalid=true]:focus-visible:ring-danger/30
             ${className}`}

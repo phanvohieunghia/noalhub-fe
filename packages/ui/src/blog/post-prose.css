@@ -370,11 +370,13 @@
  * Tailwind's preflight makes every `img` a block, and `text-align` does not move a
  * block — so the image itself takes the auto margin that does.
  */
-.post-prose [data-image-align='center'] > img {
+.post-prose [data-image-align='center'] > img,
+.post-prose [data-image-align='center'] > button > img {
   margin-inline: auto;
 }
 
-.post-prose [data-image-align='right'] > img {
+.post-prose [data-image-align='right'] > img,
+.post-prose [data-image-align='right'] > button > img {
   margin-inline-start: auto;
 }
 

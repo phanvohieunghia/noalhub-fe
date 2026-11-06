@@ -50,7 +50,7 @@ export function MetricsCard({
         <div
           tabIndex={0}
           aria-label={title}
-          className={`${layout === 'row' ? 'flex items-center' : 'grid grid-cols-2'} gap-x-2.5 gap-y-0 rounded border border-border px-1.5 py-px text-[0.625rem] leading-3.5 tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring ${className}`}>
+          className={`${layout === 'row' ? 'flex items-center' : 'grid grid-cols-2'} gap-x-2.5 gap-y-0 rounded border border-border px-1.5 py-px text-body-4 tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring ${className}`}>
           {items.map((item) => (
             <span key={item.key} className="flex items-center gap-0.5">
               <Icon

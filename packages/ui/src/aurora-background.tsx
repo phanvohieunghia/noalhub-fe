@@ -1,5 +1,5 @@
 /**
- * A drifting teal "aurora" for brand surfaces — the auth screens' hero panel.
+ * A drifting blue "aurora" for brand surfaces — the auth screens' hero panel.
  *
  * Three blurred blobs from the `brand` scale on a deep `brand-950` base, with a
  * faint dot grid on top so the glow reads as texture rather than a flat

@@ -91,11 +91,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : hint ? hintId : undefined}
-            className={`peer ${SIZES[size].field} w-full appearance-none rounded-md border
-            bg-surface text-surface-foreground border-border
+            className={`peer ${SIZES[size].field} w-full appearance-none rounded-lg border
+            bg-foreground/5 text-surface-foreground border-muted-foreground/80
             outline-none transition-colors
-            hover:border-muted-foreground
-            focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/40
+            hover:bg-foreground/8 hover:border-foreground
+            focus-visible:bg-surface focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/40
             disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground
             aria-[invalid=true]:border-danger aria-[invalid=true]:focus-visible:ring-danger/30
             ${className}`}>

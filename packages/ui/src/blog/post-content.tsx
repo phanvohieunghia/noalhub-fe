@@ -12,6 +12,7 @@ import type {
 } from '@noalhub/api/blog'
 import {alignClassName} from './align-markdown'
 import {MermaidDiagram} from './mermaid-diagram'
+import {ZoomableImage} from './zoomable-image'
 import {collectHeadings} from '@noalhub/core/blog/headings'
 
 import './post-prose.css'
@@ -211,33 +212,37 @@ function ContentImage({node}: {node: Extract<BlogBlockNode, {type: 'image'}>}) {
   if (width && height) {
     return (
       <figure data-image-align={align}>
-        <Image
-          src={src}
-          alt={alt}
-          width={width}
-          height={height}
-          // A share of the column, with the height following the ratio.
-          style={
-            widthPercent
-              ? {width: `${widthPercent}%`, height: 'auto'}
-              : undefined
-          }
-          sizes="(max-width: 768px) 100vw, 768px"
-        />
+        <ZoomableImage src={src} alt={alt}>
+          <Image
+            src={src}
+            alt={alt}
+            width={width}
+            height={height}
+            // A share of the column, with the height following the ratio.
+            style={
+              widthPercent
+                ? {width: `${widthPercent}%`, height: 'auto'}
+                : undefined
+            }
+            sizes="(max-width: 768px) 100vw, 768px"
+          />
+        </ZoomableImage>
       </figure>
     )
   }
 
   return (
     <figure>
-      <Image
-        src={src}
-        alt={alt}
-        width={0}
-        height={0}
-        style={{width: '100%', height: 'auto'}}
-        sizes="(max-width: 768px) 100vw, 768px"
-      />
+      <ZoomableImage src={src} alt={alt}>
+        <Image
+          src={src}
+          alt={alt}
+          width={0}
+          height={0}
+          style={{width: '100%', height: 'auto'}}
+          sizes="(max-width: 768px) 100vw, 768px"
+        />
+      </ZoomableImage>
     </figure>
   )
 }

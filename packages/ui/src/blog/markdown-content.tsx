@@ -11,6 +11,7 @@ import {
 
 import {alignClassName, parseAlignMarker} from './align-markdown'
 import {MermaidDiagram} from './mermaid-diagram'
+import {ZoomableImage} from './zoomable-image'
 
 import './post-prose.css'
 
@@ -156,31 +157,35 @@ const COMPONENTS: Components = {
     if (width && height) {
       return (
         <span className="block" data-image-align={align ?? undefined}>
-          <Image
-            src={src}
-            alt={alt ?? ''}
-            width={width}
-            height={height}
-            style={
-              widthPercent
-                ? {width: `${widthPercent}%`, height: 'auto'}
-                : undefined
-            }
-            sizes="(max-width: 768px) 100vw, 768px"
-          />
+          <ZoomableImage src={src} alt={alt ?? ''}>
+            <Image
+              src={src}
+              alt={alt ?? ''}
+              width={width}
+              height={height}
+              style={
+                widthPercent
+                  ? {width: `${widthPercent}%`, height: 'auto'}
+                  : undefined
+              }
+              sizes="(max-width: 768px) 100vw, 768px"
+            />
+          </ZoomableImage>
         </span>
       )
     }
     return (
       <span className="block">
-        <Image
-          src={src}
-          alt={alt ?? ''}
-          width={0}
-          height={0}
-          style={{width: '100%', height: 'auto'}}
-          sizes="(max-width: 768px) 100vw, 768px"
-        />
+        <ZoomableImage src={src} alt={alt ?? ''}>
+          <Image
+            src={src}
+            alt={alt ?? ''}
+            width={0}
+            height={0}
+            style={{width: '100%', height: 'auto'}}
+            sizes="(max-width: 768px) 100vw, 768px"
+          />
+        </ZoomableImage>
       </span>
     )
   },

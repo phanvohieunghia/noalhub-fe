@@ -15,6 +15,9 @@ const TONES = {
   warning: 'bg-warning/15 text-warning',
   danger: 'bg-danger/12 text-danger',
   info: 'bg-highlight text-highlight-foreground',
+  // The brand's own tint: a tag or category chip on a public page. Filled (no
+  // outline) so it separates from the card by tone alone.
+  brand: 'bg-primary/10 text-accent',
 } as const
 
 /**
@@ -62,7 +65,7 @@ export function Badge({
   // otherwise squeeze it to the column's min width and break it over two lines.
   return (
     <span
-      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full font-medium ${SIZES[size]} ${TONES[tone]} ${className}`}>
+      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-md font-medium ${SIZES[size]} ${TONES[tone]} ${className}`}>
       {icon ? <Icon icon={icon} className="size-3 shrink-0" /> : null}
       {children}
     </span>

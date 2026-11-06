@@ -28,8 +28,7 @@ export type ToastTone = AlertTone
 
 /**
  * The tinted disc behind each icon. Spelled out in full (no string building) so
- * Tailwind sees every class. `info` uses `text-accent` for the same reason as in
- * `Alert`: `--primary` is too light for text on its own tint.
+ * Tailwind sees every class. `info` uses its own blue `--info` token, as in `Alert`.
  */
 const TONES = {
   error: {
@@ -46,7 +45,7 @@ const TONES = {
   },
   info: {
     icon: ICONS.info,
-    className: 'bg-primary/10 text-accent',
+    className: 'bg-info/10 text-info',
     role: 'status',
     live: 'polite',
   },

@@ -21,29 +21,29 @@ import {keysOf} from './variants'
 const TONES = {
   error: {
     icon: ICONS.error,
-    className: 'border-danger/30 bg-danger/10 text-danger',
+    className: 'border-danger/40 bg-danger/10',
+    iconClass: 'text-danger',
     role: 'alert',
   },
   success: {
     icon: ICONS.success,
-    className: 'border-success/30 bg-success/10 text-success',
+    className: 'border-success/40 bg-success/10',
+    iconClass: 'text-success',
     role: 'status',
   },
   info: {
     icon: ICONS.info,
-    /* `text-accent`, not `text-primary`: on its own /10 tint the brand-600 of
-       `--primary` measures 4.24:1, below the 4.5 AA floor — `--primary` is sized
-       for white-on-button, not for text on a pale wash of itself. `--accent` is
-       the token meant for emphasized TEXT (brand-700 light, brand-300 dark) and
-       gives 6.1:1 / 7.4:1 on the same tint. The other three tones already use a
-       status color picked against its own tint, which is why only `info` was
-       failing the a11y gate. */
-    className: 'border-primary/30 bg-primary/10 text-accent',
+    /* `info` is its own blue token, not the brand teal: a banner in the brand
+       color reads as theme, not as a status. The ratio is checked against the
+       banner's own /10 tint, like the other three tones. */
+    className: 'border-info/40 bg-info/10',
+    iconClass: 'text-info',
     role: 'status',
   },
   warning: {
     icon: ICONS.warning,
-    className: 'border-warning/30 bg-warning/10 text-warning',
+    className: 'border-warning/50 bg-warning/15',
+    iconClass: 'text-warning',
     role: 'status',
   },
 } as const
@@ -81,14 +81,14 @@ export function Alert({tone, message, onDismiss, autoDismissMs}: AlertProps) {
 
   const t = useTranslations('common')
   if (!message) return null
-  const {icon, className, role} = TONES[tone]
+  const {icon, iconClass, className, role} = TONES[tone]
 
   return (
     <Typography
       variant="body-3"
       role={role}
-      className={`flex items-start gap-2 rounded-md border px-3 py-2 ${className}`}>
-      <Icon icon={icon} className="mt-0.5 size-4 shrink-0" />
+      className={`flex items-start gap-3 rounded-lg border px-4 py-3 text-foreground ${className}`}>
+      <Icon icon={icon} className={`mt-0.5 size-4 shrink-0 ${iconClass}`} />
       <Typography as="span" variant="body-3" className="flex-1">
         {message}
       </Typography>

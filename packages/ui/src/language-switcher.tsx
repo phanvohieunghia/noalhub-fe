@@ -45,9 +45,12 @@ const PERSIST_GRACE_MS = 600
 export function LanguageSwitcher({
   onSwitch,
   className = '',
+  compact = false,
 }: {
   onSwitch: (locale: Locale) => void
   className?: string
+  /** Show the locale code ("VI", "EN") instead of the language name, for tight bars. */
+  compact?: boolean
 }) {
   const t = useTranslations('nav.languageSwitcher')
   const active = useLocale()
@@ -90,8 +93,10 @@ export function LanguageSwitcher({
           aria-busy={changeLanguage.isPending}
           // `whitespace-nowrap`: the longest label ("Tiếng Việt") wraps onto two
           // lines inside admin's account dropdown, which is only 16rem wide.
+          aria-label={compact ? t(locale) : undefined}
+          title={compact ? t(locale) : undefined}
           className="whitespace-nowrap">
-          {t(locale)}
+          {compact ? locale.toUpperCase() : t(locale)}
         </Button>
       ))}
     </div>

@@ -23,11 +23,11 @@ const VARIANTS = {
    * the screen reader and to middle-click. Pair it with `size="inline"`; a box
    * size would put a 40px-tall link in the middle of a paragraph.
    */
-  link: 'text-muted-foreground underline underline-offset-2 hover:text-foreground',
+  link: 'text-muted-foreground underline underline-offset-2 hover:text-foreground active:scale-100',
 } as const
 
 const SHAPES = {
-  default: 'rounded-md',
+  default: 'rounded-lg',
   circle: 'rounded-full',
 } as const
 
@@ -67,7 +67,7 @@ type ButtonProps = React.ComponentPropsWithoutRef<'button'> & {
   size?: ButtonSize
   /**
    * Corner rounding. A prop rather than a class passed through `className`: the
-   * base's `rounded-md` and an overriding `rounded-full` have the same
+   * base's corner class and an overriding one have the same
    * specificity, so the order in the class string does not decide the winner —
    * the corners come out square at random.
    */
@@ -103,7 +103,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref,
   ) {
     const base =
-      'inline-flex cursor-pointer items-center justify-center gap-2 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed'
+      'inline-flex cursor-pointer items-center justify-center gap-2 font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-150 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none active:scale-[0.98] motion-reduce:active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100'
 
     const classes = `${base} ${VARIANTS[variant]} ${SIZES[size]} ${SHAPES[shape]} ${className}`
 

@@ -166,9 +166,9 @@ export function TableHeaderCell({
     <Typography
       as="th"
       variant="title-4"
-      weight={600}
+      weight={500}
       scope="col"
-      className={`px-4 py-[18px] whitespace-nowrap text-foreground ${className}`}
+      className={`px-4 py-[18px] whitespace-nowrap text-muted-foreground ${className}`}
       {...props}>
       {children}
     </Typography>
@@ -331,7 +331,7 @@ export function TableRowActions({
       <DropdownMenu
         compact
         trigger={
-          <Button variant="ghost" size="icon-sm" aria-label={label}>
+          <Button variant="ghost" size="icon-md" aria-label={label}>
             <Icon icon={ICONS.more} />
           </Button>
         }>

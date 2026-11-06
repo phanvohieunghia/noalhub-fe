@@ -173,7 +173,7 @@ export function RangeNavigator({
             aria-hidden
             className="pointer-events-none absolute top-0 bottom-0 border-l border-border/60"
             style={{left: `${(n / total) * 100}%`}}>
-            <span className="absolute bottom-0.5 left-1 text-[10px] text-muted-foreground tabular-nums">
+            <span className="absolute bottom-0.5 left-1 text-body-4 text-muted-foreground tabular-nums">
               {n}
             </span>
           </span>
