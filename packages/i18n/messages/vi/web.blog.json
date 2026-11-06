@@ -4,12 +4,14 @@
     "blog": "Blog"
   },
   "list": {
-    "title": "Bài viết",
-    "titleWithPage": "Bài viết — Trang {page}",
+    "title": "Blog",
+    "titleWithPage": "Blog — Trang {page}",
     "metaDescription": "Bài viết về sản phẩm, kỹ thuật và những thứ chúng tôi học được khi xây Noalhub.",
     "subtitle": "Ghi chép về sản phẩm, kỹ thuật và những thứ chúng tôi học được khi xây Noalhub.",
     "empty": "Chưa có bài viết nào được đăng. Quay lại sau nhé.",
-    "pagination": "Phân trang danh sách bài viết"
+    "pagination": "Phân trang danh sách bài viết",
+    "filterLabel": "Lọc bài viết theo chuyên mục",
+    "all": "Tất cả"
   },
   "post": {
     "fallbackTitle": "Bài viết",

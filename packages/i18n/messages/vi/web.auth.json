@@ -1,7 +1,6 @@
 {
   "login": {
     "title": "Đăng nhập",
-    "subtitle": "Chào mừng quay lại.",
     "email": "Email",
     "password": "Mật khẩu",
     "forgot": "Quên mật khẩu?",
@@ -12,7 +11,6 @@
   },
   "register": {
     "title": "Tạo tài khoản",
-    "subtitle": "Chỉ mất chưa tới một phút.",
     "displayName": "Họ tên",
     "email": "Email",
     "password": "Mật khẩu",
@@ -24,7 +22,6 @@
   },
   "forgotPassword": {
     "title": "Quên mật khẩu",
-    "subtitle": "Nhập email, chúng tôi sẽ gửi liên kết đặt lại mật khẩu.",
     "email": "Email",
     "submit": "Gửi liên kết",
     "submitting": "Đang gửi…",
@@ -33,7 +30,6 @@
   },
   "resetPassword": {
     "title": "Đặt lại mật khẩu",
-    "subtitle": "Chọn mật khẩu mới cho tài khoản.",
     "newPassword": "Mật khẩu mới",
     "confirmPassword": "Nhập lại mật khẩu",
     "submit": "Đổi mật khẩu",

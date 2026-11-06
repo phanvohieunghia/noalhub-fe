@@ -77,7 +77,8 @@
     "label": "Appearance",
     "light": "Light",
     "dark": "Dark",
-    "system": "System"
+    "system": "System",
+    "auto": "Auto (by time of day)"
   },
   "guard": {
     "sessionErrorTitle": "Could not load your session",
@@ -88,6 +89,13 @@
   },
   "avatar": {
     "fallback": "User"
+  },
+  "imageViewer": {
+    "title": "Image",
+    "open": "View full size",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "zoomReset": "Reset zoom"
   },
   "tocHeading": "In this post",
   "editor": {

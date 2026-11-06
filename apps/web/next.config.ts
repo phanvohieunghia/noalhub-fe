@@ -1,3 +1,4 @@
+import {routes} from '@noalhub/core/routes'
 import path from 'node:path'
 
 import {
@@ -103,7 +104,7 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        source: '/blogs/rss.xml',
+        source: routes.blogRss,
         destination: '/vi/blogs/rss.xml',
         permanent: true,
       },

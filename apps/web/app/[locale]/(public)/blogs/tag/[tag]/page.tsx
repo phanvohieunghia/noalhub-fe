@@ -1,3 +1,4 @@
+import {routes} from '@noalhub/core/routes'
 import type {Metadata} from 'next'
 import {getTranslations, setRequestLocale} from 'next-intl/server'
 import {notFound} from 'next/navigation'
@@ -75,8 +76,8 @@ export default async function TagPage({params, searchParams}: Props) {
     <div className="flex flex-col gap-8">
       <Breadcrumb
         items={[
-          {label: t('breadcrumb.blog'), href: '/blogs'},
-          {label: t('tag.indexTitle'), href: '/blogs/tag'},
+          {label: t('breadcrumb.blog'), href: routes.blog},
+          {label: t('tag.indexTitle'), href: routes.blogTags},
           {label: `#${tag.name}`},
         ]}
       />
@@ -90,7 +91,7 @@ export default async function TagPage({params, searchParams}: Props) {
       <PostList posts={list.items} emptyMessage={t('tag.empty')} />
 
       <PaginationLinks
-        basePath={`/blogs/tag/${slug}`}
+        basePath={routes.blogTag(slug)}
         page={list.page}
         limit={list.limit}
         total={list.total}

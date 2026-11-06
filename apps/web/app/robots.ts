@@ -1,3 +1,4 @@
+import {routes} from '@noalhub/core/routes'
 import type {MetadataRoute} from 'next'
 
 import {absoluteUrl} from '@noalhub/core/blog/seo'
@@ -16,14 +17,14 @@ import {LOCALES} from '@noalhub/i18n/config'
 
 /** Every route (except `/auth/callback`) now sits behind a locale prefix. */
 const PRIVATE_PATHS = [
-  '/chat',
-  '/friends',
+  routes.chat,
+  routes.friends,
   '/dashboard',
-  '/profile',
-  '/login',
-  '/register',
+  routes.profile,
+  routes.login,
+  routes.register,
   '/reset-password',
-  '/forgot-password',
+  routes.forgotPassword,
 ]
 
 export default function robots(): MetadataRoute.Robots {
@@ -46,6 +47,6 @@ export default function robots(): MetadataRoute.Robots {
         '/api',
       ],
     },
-    sitemap: absoluteUrl('/sitemap.xml'),
+    sitemap: absoluteUrl(routes.sitemap),
   }
 }

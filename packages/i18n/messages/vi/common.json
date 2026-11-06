@@ -77,7 +77,8 @@
     "label": "Giao diện",
     "light": "Sáng",
     "dark": "Tối",
-    "system": "Hệ thống"
+    "system": "Hệ thống",
+    "auto": "Tự động (theo giờ)"
   },
   "guard": {
     "sessionErrorTitle": "Không tải được phiên đăng nhập",
@@ -88,6 +89,13 @@
   },
   "avatar": {
     "fallback": "Người dùng"
+  },
+  "imageViewer": {
+    "title": "Ảnh",
+    "open": "Xem ảnh toàn màn hình",
+    "zoomIn": "Phóng to",
+    "zoomOut": "Thu nhỏ",
+    "zoomReset": "Đặt lại"
   },
   "tocHeading": "Trong bài này",
   "editor": {

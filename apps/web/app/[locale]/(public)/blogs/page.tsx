@@ -1,3 +1,4 @@
+import {routes} from '@noalhub/core/routes'
 import {DEFAULT_LOCALE, LOCALES} from '@noalhub/i18n/config'
 import type {Metadata} from 'next'
 import {getTranslations, setRequestLocale} from 'next-intl/server'
@@ -7,6 +8,7 @@ import {BLOG_PAGE_SIZE, getPublishedPosts} from '@noalhub/api/blog/server'
 import {listCanonical, localeAlternates} from '@noalhub/core/blog/seo'
 import {PaginationLinks} from '@noalhub/ui/pagination-links'
 
+import {CategoryFilter} from '@/components/blog/category-filter'
 import {Breadcrumb} from '@/components/blog/breadcrumb'
 import {isPageOutOfRange, readPageParam} from '@/components/blog/page-param'
 import {PostList} from '@/components/blog/post-list'
@@ -39,7 +41,12 @@ export async function generateMetadata({
   const page = readPageParam((await searchParams).page) ?? 1
   const t = await getTranslations({locale, namespace: 'web.blog.list'})
 
-  const alternates = localeAlternates('/blogs', locale, LOCALES, DEFAULT_LOCALE)
+  const alternates = localeAlternates(
+    routes.blog,
+    locale,
+    LOCALES,
+    DEFAULT_LOCALE,
+  )
 
   return {
     title: page > 1 ? t('titleWithPage', {page}) : t('title'),
@@ -71,22 +78,25 @@ export default async function BlogListPage({params, searchParams}: Props) {
   if (isPageOutOfRange(page, list.total, list.limit)) notFound()
 
   return (
-    <div className="flex flex-col gap-8">
-      <Breadcrumb items={[{label: t('breadcrumb.blog')}]} />
+    <div className="flex flex-col gap-10">
+      {/* JSON-LD only: a lone "Blog" crumb would repeat the h1 right below it. */}
+      <Breadcrumb items={[{label: t('breadcrumb.blog')}]} visible={false} />
 
-      <header className="flex flex-col gap-2">
-        <Typography variant="h3" as="h1">
+      <header className="flex flex-col gap-4">
+        <Typography
+          variant="h1"
+          as="h1"
+          className="max-w-2xl font-serif font-normal text-balance">
           {t('list.title')}
         </Typography>
-        <Typography variant="body-3" className="opacity-70">
-          {t('list.subtitle')}
-        </Typography>
       </header>
+
+      <CategoryFilter />
 
       <PostList posts={list.items} emptyMessage={t('list.empty')} />
 
       <PaginationLinks
-        basePath="/blogs"
+        basePath={routes.blog}
         page={list.page}
         limit={list.limit}
         total={list.total}

@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {zodResolver} from '@hookform/resolvers/zod'
 import {Link} from '@noalhub/i18n/navigation'
 import {useMessage} from '@noalhub/i18n/use-message'
@@ -156,7 +157,7 @@ function SearchResult({
             {name}
           </Typography>
           <Link
-            href={`/profile/${user.username}`}
+            href={routes.profileOf(user.username)}
             className="truncate font-mono text-body-4 opacity-60 underline-offset-4 hover:underline">
             @{user.username}
           </Link>

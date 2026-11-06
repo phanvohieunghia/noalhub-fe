@@ -2,36 +2,123 @@
   "title": "Home",
   "hero": {
     "line1": "Live slowly.",
-    "line2": "Learn deeply. Keep it simple."
+    "line2": "Learn deeply. Keep it simple.",
+    "lead": "A quiet place to read, practise and talk. Notes on what we learn building the product, and a place to keep going.",
+    "cta": "Start reading",
+    "cards": {
+      "reality": {
+        "title": "Current learning reality:",
+        "point1": "Endless feeds and surface skimming leave little lasting retention.",
+        "point2": "Passive consumption without practice is easily forgotten within days."
+      },
+      "solution": {
+        "title": "With Noalhub, you can:",
+        "point1": "Read focused essays and technical notes slowly, in the open.",
+        "point2": "Turn reading into durable knowledge through active recall questions.",
+        "point3": "Keep conversations calm with people exploring the same ideas."
+      },
+      "statement": {
+        "text": "Noalhub provides the bridge between reading deeply and keeping what you learn."
+      }
+    }
   },
   "readingTime": "{minutes} min read",
+  "practice": {
+    "eyebrow": "Active recall",
+    "heading": "Read it once. Remember it for good.",
+    "lead": "After every essay, short questions bring the idea back while it is still fresh. Try three of them right here.",
+    "steps": {
+      "read": {
+        "title": "Read slowly",
+        "body": "Focused essays and notes, no feed."
+      },
+      "ask": {
+        "title": "Answer a few questions",
+        "body": "One idea per question, with the reason behind it."
+      },
+      "keep": {
+        "title": "Come back to it",
+        "body": "Questions return as your memory fades."
+      }
+    },
+    "cta": "Start practising",
+    "demoLabel": "Sample questions",
+    "progress": "Question {current} of {total}",
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "items": {
+      "q1": {
+        "topic": "Learning",
+        "difficulty": "easy",
+        "question": "Which habit helps you remember what you read the longest?",
+        "options": {
+          "o1": "Re-reading the text several times in a row",
+          "o2": "Closing the page and recalling the key idea from memory",
+          "o3": "Highlighting every important sentence",
+          "o4": "Reading faster to cover more pages"
+        },
+        "answer": "1"
+      },
+      "q2": {
+        "topic": "Spacing",
+        "difficulty": "medium",
+        "question": "You learned something today. When is the best time to review it first?",
+        "options": {
+          "o1": "Right away, before you forget",
+          "o2": "After a day or so, just as it starts to fade",
+          "o3": "Only the night before a test",
+          "o4": "Never, if it felt easy"
+        },
+        "answer": "1"
+      },
+      "q3": {
+        "topic": "Focus",
+        "difficulty": "hard",
+        "question": "Why does switching between several tasks make deep reading harder?",
+        "options": {
+          "o1": "It uses more paper",
+          "o2": "Each switch leaves part of your attention on the previous task",
+          "o3": "It lowers the reading speed of the screen",
+          "o4": "It makes the text look smaller"
+        },
+        "answer": "1"
+      }
+    }
+  },
   "empty": "No posts published yet. Check back soon.",
-  "topics": {
-    "heading": "Featured topics",
-    "learning": "Lessons in learning: a year in review",
-    "productLead": "Product experience:",
-    "product": "When UX meets emotion",
-    "slowLead": "Slow living:",
-    "slow": "Minimal digital spaces"
-  },
-  "quote": {
-    "text": "The best technology is the kind that makes our lives slower, deeper and lighter.",
-    "author": "Noah",
-    "role": "Engineer & Learner"
-  },
   "latest": {
     "heading": "Latest posts",
     "filters": "Filter by category",
-    "all": "All"
+    "all": "All",
+    "viewAll": "View all posts",
+    "read": "Read the post",
+    "by": "By {name}"
   },
   "footer": {
     "tagline": "Noalhub's blog and chat space. Notes on what we learn building the product, and a place to keep talking about it.",
-    "posts": "Posts",
+    "blog": "Blog",
     "categories": "Categories",
     "practice": "Practice",
     "knowledge": "Knowledge",
     "messages": "Messages",
+    "friends": "Friends",
+    "about": "About Us",
+    "colRead": "Read",
+    "colLearn": "Learn",
+    "colTalk": "Talk",
+    "colLegal": "Legal",
+    "colMore": "More",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
     "rss": "RSS",
-    "sitemap": "Sitemap"
+    "sitemap": "Sitemap",
+    "rights": "All rights reserved.",
+    "socialX": "X (Twitter)",
+    "socialLinkedIn": "LinkedIn",
+    "socialInstagram": "Instagram",
+    "socialYouTube": "YouTube"
   }
 }

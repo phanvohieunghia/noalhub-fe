@@ -1,5 +1,5 @@
 import type {Metadata} from 'next'
-import {Be_Vietnam_Pro, Geist_Mono} from 'next/font/google'
+import {Be_Vietnam_Pro, Geist_Mono, Newsreader} from 'next/font/google'
 
 /*
  * ⚠️ `globals.css` must be imported HERE, not in the two layout files.
@@ -75,6 +75,13 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
+const newsreader = Newsreader({
+  variable: '--font-newsreader',
+  subsets: ['latin', 'vietnamese'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+})
+
 /**
  * ⚠️ `metadataBase` has been REQUIRED since the blog arrived: every relative URL
  * in `alternates.canonical` and `openGraph.images` is expanded to an absolute
@@ -121,7 +128,7 @@ export function RootHtml({
     <html
       lang={lang}
       suppressHydrationWarning
-      className={`${beVietnamPro.variable} ${beVietnamProItalic.variable} ${geistMono.variable} h-full antialiased`}>
+      className={`${beVietnamPro.variable} ${beVietnamProItalic.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}>
       <head>
         {/* Synchronous, no `defer`/`async`, and it must come before everything
             else — it runs before the first paint so the page does not flash

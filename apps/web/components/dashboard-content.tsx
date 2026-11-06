@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {Link} from '@noalhub/i18n/navigation'
 import {useTranslations} from 'next-intl'
 
@@ -29,19 +30,19 @@ export function DashboardContent() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <Link
-            href="/profile"
+            href={routes.profile}
             className="inline-flex h-10 items-center rounded-md border border-border px-4 text-body-3 font-medium hover:bg-muted">
             {t('profile')}
           </Link>
           <Link
-            href="/chat"
+            href={routes.chat}
             className="inline-flex h-10 items-center rounded-md border border-border px-4 text-body-3 font-medium hover:bg-muted">
             {t('chat')}
           </Link>
           {/* The only entry point to the learner surface — without a link here
               a set is reachable only by someone pasting its URL. */}
           <Link
-            href="/learn"
+            href={routes.practice}
             className="inline-flex h-10 items-center rounded-md border border-border px-4 text-body-3 font-medium hover:bg-muted">
             {t('learn')}
           </Link>

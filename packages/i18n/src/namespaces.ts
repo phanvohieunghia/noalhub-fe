@@ -51,7 +51,7 @@ const WEB_ROUTES: ReadonlyArray<readonly [string, Namespace]> = [
   ['/friends', 'web.friends'],
   ['/profile', 'web.profile'],
   ['/dashboard', 'web.dashboard'],
-  ['/learn', 'web.learn'],
+  ['/practice', 'web.learn'],
   ['/login', 'web.auth'],
   ['/register', 'web.auth'],
   ['/forgot-password', 'web.auth'],

@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {useAuthStore} from '@noalhub/api/auth'
 import {Link} from '@noalhub/i18n/navigation'
 import {Avatar} from '@noalhub/ui/avatar'
@@ -22,7 +23,13 @@ import {WebLanguageSwitcher} from './language-switcher'
  * While the session is still being restored (`idle`/`loading`) it renders
  * nothing rather than flashing the signed-out controls at a signed-in user.
  */
-export function HeaderAccount({showSignIn = true}: {showSignIn?: boolean}) {
+export function HeaderAccount({
+  showSignIn = true,
+  showSearch = false,
+}: {
+  showSignIn?: boolean
+  showSearch?: boolean
+}) {
   const t = useTranslations('nav')
   const status = useAuthStore((s) => s.status)
   const user = useAuthStore((s) => s.user)
@@ -30,9 +37,9 @@ export function HeaderAccount({showSignIn = true}: {showSignIn?: boolean}) {
   const itemClass =
     'flex items-center gap-2 rounded-md px-2 py-1.5 text-body-3 hover:bg-muted'
   const links = [
-    {href: '/blogs', label: t('header.posts'), icon: ICONS.post},
-    {href: '/learn', label: t('header.practice'), icon: ICONS.map},
-    {href: '/chat', label: t('header.chat'), icon: ICONS.chat},
+    {href: routes.blog, label: t('header.blog'), icon: ICONS.post},
+    {href: routes.practice, label: t('header.practice'), icon: ICONS.map},
+    {href: routes.chat, label: t('header.chat'), icon: ICONS.chat},
   ] as const
 
   if (status === 'authenticated') {
@@ -54,7 +61,7 @@ export function HeaderAccount({showSignIn = true}: {showSignIn?: boolean}) {
         }>
         <div className="flex items-center gap-3">
           <Link
-            href="/profile"
+            href={routes.profile}
             className="-m-1 flex min-w-0 flex-1 items-center gap-3 rounded-md p-1 hover:bg-muted">
             <Avatar name={name} src={user?.avatarUrl} size="md" />
             <div className="min-w-0 flex-1">
@@ -100,11 +107,13 @@ export function HeaderAccount({showSignIn = true}: {showSignIn?: boolean}) {
   if (status === 'unauthenticated') {
     return (
       <>
-        <Button asChild variant="ghost" size="icon-sm">
-          <Link href="/blogs" aria-label={t('header.search')}>
-            <Icon icon={ICONS.search} />
-          </Link>
-        </Button>
+        {showSearch && (
+          <Button asChild variant="ghost" size="icon-sm">
+            <Link href={routes.blog} aria-label={t('header.search')}>
+              <Icon icon={ICONS.search} />
+            </Link>
+          </Button>
+        )}
         <ThemeToggle />
         {showSignIn && (
           <Button
@@ -112,7 +121,7 @@ export function HeaderAccount({showSignIn = true}: {showSignIn?: boolean}) {
             variant="ghost"
             size="sm"
             className="shrink-0 whitespace-nowrap">
-            <Link href="/login">{t('login')}</Link>
+            <Link href={routes.login}>{t('login')}</Link>
           </Button>
         )}
       </>

@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {Link} from '@noalhub/i18n/navigation'
 import {useTranslations} from 'next-intl'
 import {useEffect} from 'react'
@@ -48,7 +49,7 @@ export default function BlogError({
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={() => unstable_retry()}>{t('retry')}</Button>
         <Link
-          href="/blogs"
+          href={routes.blog}
           className="text-body-3 underline underline-offset-4">
           {t('backToList')}
         </Link>

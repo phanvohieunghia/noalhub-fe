@@ -1,98 +1,99 @@
 'use client'
 
+import {useGSAP} from '@gsap/react'
+import {Link} from '@noalhub/i18n/navigation'
+import gsap from 'gsap'
 import {useTranslations} from 'next-intl'
+import {useRef} from 'react'
 
-import {AuroraBackground} from '@noalhub/ui/aurora-background'
-import {Icon, LUCIDE} from '@noalhub/ui/icons'
-import {Logo} from '@noalhub/ui/logo'
-import {Typography} from '@noalhub/ui/typography'
+import {HomeField} from '@/components/home/home-field'
+import {WebLanguageSwitcher} from '@/components/layout/language-switcher'
+import {LogoLockup} from '@noalhub/ui/logo-lockup'
+import {AuthFrame} from '@noalhub/ui/auth/auth-frame'
+import {ThemeToggle} from '@noalhub/ui/theme/theme-toggle'
 
-const FEATURES = [
-  {key: 'chat', icon: LUCIDE.messageCircle},
-  {key: 'practice', icon: LUCIDE.graduationCap},
-  {key: 'blog', icon: LUCIDE.newspaper},
-] as const
+gsap.registerPlugin(useGSAP)
 
-function BrandMark({light}: {light?: boolean}) {
-  return (
-    <span className="flex items-center gap-3">
-      <Logo
-        className={`size-10 shadow-lg shadow-brand-950/40 ${light ? 'dark' : ''}`}
-      />
-      <Typography
-        as="span"
-        variant="title-2"
-        className={`tracking-tight ${light ? 'text-brand-50' : 'text-foreground'}`}>
-        Noalhub
-      </Typography>
-    </span>
-  )
-}
+const FEATURES = ['chat', 'practice', 'blog'] as const
 
 /**
- * The frame shared by every sign-in / sign-up / reset screen.
+ * The frame shared by every sign-in / sign-up / reset screen, in the language of
+ * the home page: the coloured field (`HomeField`) with one large `Panel` on it.
  *
- * From `lg` up it is a split screen: a brand panel (the aurora, the mark, what
- * Noalhub is for) on the left and the form on the right. Below `lg` the panel
- * folds into a short banner above the form, so a phone gets the brand without
- * spending half the screen on it.
+ * From `lg` up the panel is split. The brand side is the louder half: the
+ * tagline set large in the serif, the three things Noalhub does, and the home
+ * hero's harbour lithograph wiped in from left to right behind them (the same
+ * `--reveal` mask as the hero, `.auth-sketch` in `globals.css`). The form side stays
+ * quiet: a serif heading, then the fields rising in one after another. Below `lg`
+ * the brand side drops away and the form takes the panel. The form side's top row carries the brand mark and,
+ * on the right, the theme and language switches.
  *
- * A client component: it passes `LUCIDE.*` names into `Icon`, and those names live
- * in a `"use client"` module — read from a Server Component they would be client
- * references, not strings, and every icon would render empty.
+ * With reduced motion the drawing is simply there and the form does not travel.
+ * With no script the start state never applies (it is `scripting: enabled` only).
  *
- * Chat is not in here on purpose — it needs the exact viewport height and has its
- * own layout; this shell is only for the `(auth)` route group.
+ * A client component because of GSAP. Chat is not in here on purpose — it needs
+ * the exact viewport height and has its own layout.
  */
 export function AuthShell({children}: {children: React.ReactNode}) {
   const t = useTranslations('web.auth.shell')
+  const root = useRef<HTMLDivElement>(null)
+
+  useGSAP(
+    () => {
+      const motion = gsap.matchMedia()
+
+      motion.add('(prefers-reduced-motion: no-preference)', () => {
+        const tl = gsap.timeline({defaults: {ease: 'expo.out'}})
+        tl.from('[data-auth="form"] > div > *', {
+          y: 20,
+          opacity: 0,
+          duration: 0.9,
+          stagger: 0.08,
+        })
+          .fromTo(
+            '[data-auth="sketch"]',
+            {'--reveal': '-15%'},
+            {'--reveal': '100%', duration: 2.6, ease: 'power2.inOut'},
+            0.1,
+          )
+          .from(
+            '[data-auth="line"]',
+            {yPercent: 40, opacity: 0, duration: 1, stagger: 0.12},
+            0.15,
+          )
+          .from(
+            '[data-auth="feature"]',
+            {x: -16, opacity: 0, duration: 0.8, stagger: 0.1},
+            0.7,
+          )
+      })
+
+      motion.add('(prefers-reduced-motion: reduce)', () => {
+        gsap.set('[data-auth="sketch"]', {'--reveal': '100%'})
+      })
+    },
+    {scope: root},
+  )
 
   return (
-    <div className="grid min-h-dvh flex-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      {/* Desktop hero panel */}
-      <aside className="relative hidden flex-col justify-between overflow-hidden p-12 text-brand-50 lg:flex">
-        <AuroraBackground />
-        <div className="relative">
-          <BrandMark light />
-        </div>
-
-        <div className="relative max-w-md space-y-8">
-          <Typography variant="h2">{t('tagline')}</Typography>
-          <ul className="space-y-4">
-            {FEATURES.map(({key, icon}) => (
-              <li key={key} className="flex items-start gap-3">
-                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-brand-50/10 ring-1 ring-brand-50/20 backdrop-blur-sm">
-                  <Icon icon={icon} className="size-5 text-brand-300" />
-                </span>
-                <Typography
-                  as="span"
-                  variant="body-2"
-                  className="pt-1.5 text-brand-100">
-                  {t(`features.${key}`)}
-                </Typography>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <Typography variant="body-4" className="relative text-brand-300">
-          © {new Date().getFullYear()} Noalhub
-        </Typography>
-      </aside>
-
-      <div className="flex flex-col">
-        {/* Mobile / tablet banner */}
-        <div className="relative overflow-hidden px-6 py-6 lg:hidden">
-          <AuroraBackground />
-          <div className="relative">
-            <BrandMark light />
-          </div>
-        </div>
-
-        <main className="flex flex-1 items-center justify-center p-6 sm:p-10">
-          <div className="w-full max-w-sm">{children}</div>
-        </main>
-      </div>
-    </div>
+    <AuthFrame
+      rootRef={root}
+      field={<HomeField />}
+      logo={
+        <Link href="/" aria-label="Noalhub" className="w-fit">
+          <LogoLockup className="text-title-3" />
+        </Link>
+      }
+      tools={
+        <>
+          <ThemeToggle />
+          <WebLanguageSwitcher compact />
+        </>
+      }
+      tagline={t('tagline')}
+      features={FEATURES.map((key) => t(`features.${key}`))}
+      copyright={`© ${new Date().getFullYear()} Noalhub`}>
+      {children}
+    </AuthFrame>
   )
 }

@@ -1,8 +1,8 @@
+import {routes} from '@noalhub/core/routes'
 import {Link} from '@noalhub/i18n/navigation'
 import {getDateFormat} from '@noalhub/i18n/date-format-server'
 import type {Metadata} from 'next'
 import {getTranslations, setRequestLocale} from 'next-intl/server'
-import Image from 'next/image'
 import {notFound, permanentRedirect} from 'next/navigation'
 
 import {
@@ -19,6 +19,7 @@ import {
   postOgImage,
 } from '@noalhub/core/blog/seo'
 import {PostContent} from '@noalhub/ui/blog/post-content'
+import {PostCover} from '@noalhub/ui/blog/post-cover'
 import {TableOfContents} from '@noalhub/ui/blog/table-of-contents'
 
 import {Breadcrumb} from '@/components/blog/breadcrumb'
@@ -149,12 +150,12 @@ export default async function BlogPostPage({params}: Props) {
     <article className="flex flex-col gap-8">
       <Breadcrumb
         items={[
-          {label: t('breadcrumb.blog'), href: '/blogs'},
+          {label: t('breadcrumb.blog'), href: routes.blog},
           ...(post.category
             ? [
                 {
                   label: post.category.name,
-                  href: `/blogs/category/${post.category.slug}`,
+                  href: routes.blogCategory(post.category.slug),
                 },
               ]
             : []),
@@ -180,19 +181,15 @@ export default async function BlogPostPage({params}: Props) {
           <span>{t('post.readingTime', {minutes})}</span>
         </Typography>
 
-        {post.coverImageUrl ? (
-          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-black/5 dark:bg-white/5">
-            {/* `priority`: the cover image is almost always the post page's LCP. */}
-            <Image
-              src={post.coverImageUrl}
-              alt=""
-              fill
-              priority
-              className="object-cover"
-              sizes="(max-width: 1024px) 100vw, 1024px"
-            />
-          </div>
-        ) : null}
+        <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-black/5 dark:bg-white/5">
+          {/* `priority`: the cover image is almost always the post page's LCP. */}
+          <PostCover
+            post={post}
+            priority
+            className="object-cover"
+            sizes="(max-width: 1024px) 100vw, 1024px"
+          />
+        </div>
       </header>
 
       {/* From `lg` the contents sit beside the post and stay on screen while it
@@ -217,7 +214,7 @@ export default async function BlogPostPage({params}: Props) {
           {post.tags.map((tag) => (
             <Link
               key={tag.slug}
-              href={`/blogs/tag/${tag.slug}`}
+              href={routes.blogTag(tag.slug)}
               className="rounded-full bg-black/8 px-3 py-1 text-body-4 opacity-80 transition-opacity hover:opacity-100 dark:bg-white/12">
               #{tag.name}
             </Link>
@@ -238,7 +235,7 @@ export default async function BlogPostPage({params}: Props) {
           author: {'@type': 'Person', name: post.author.displayName},
           mainEntityOfPage: {
             '@type': 'WebPage',
-            '@id': absoluteUrl(`/blogs/${post.slug}`),
+            '@id': absoluteUrl(routes.blogPost(post.slug)),
           },
           ...(postOgImage(post) ? {image: [postOgImage(post)]} : {}),
           ...(post.category ? {articleSection: post.category.name} : {}),

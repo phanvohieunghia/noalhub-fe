@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {Link, useRouter} from '@noalhub/i18n/navigation'
 import {useMessage} from '@noalhub/i18n/use-message'
 import {useTranslations} from 'next-intl'
@@ -68,7 +69,7 @@ export function OAuthCallback() {
       <div className="flex w-full max-w-sm flex-col gap-4">
         <ToastError message={m(error)} />
         <Link
-          href="/login"
+          href={routes.login}
           className="text-body-3 underline underline-offset-4">
           {t('backToLogin')}
         </Link>

@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import type {BlogPostListItem} from '@noalhub/api/blog'
 import {Link} from '@noalhub/i18n/navigation'
 import {useTranslations} from 'next-intl'
@@ -34,7 +35,7 @@ export function BlogNotFoundContent({posts}: {posts: BlogPostListItem[]}) {
           {t('message')}
         </Typography>
         <Link
-          href="/blogs"
+          href={routes.blog}
           className="w-fit text-body-3 underline underline-offset-4">
           {t('backToList')}
         </Link>

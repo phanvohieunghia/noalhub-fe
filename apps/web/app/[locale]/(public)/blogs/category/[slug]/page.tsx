@@ -1,3 +1,4 @@
+import {routes} from '@noalhub/core/routes'
 import {DEFAULT_LOCALE, LOCALES} from '@noalhub/i18n/config'
 import type {Metadata} from 'next'
 import {getTranslations, setRequestLocale} from 'next-intl/server'
@@ -11,6 +12,7 @@ import {
 import {listCanonical, localeAlternates} from '@noalhub/core/blog/seo'
 import {PaginationLinks} from '@noalhub/ui/pagination-links'
 
+import {CategoryFilter} from '@/components/blog/category-filter'
 import {Breadcrumb} from '@/components/blog/breadcrumb'
 import {isPageOutOfRange, readPageParam} from '@/components/blog/page-param'
 import {PostList} from '@/components/blog/post-list'
@@ -54,7 +56,7 @@ export async function generateMetadata({
   if (!category) return {title: t('fallbackTitle'), robots: {index: false}}
 
   const alternates = localeAlternates(
-    `/blogs/category/${slug}`,
+    routes.blogCategory(slug),
     locale,
     LOCALES,
     DEFAULT_LOCALE,
@@ -101,7 +103,7 @@ export default async function CategoryPage({params, searchParams}: Props) {
     <div className="flex flex-col gap-8">
       <Breadcrumb
         items={[
-          {label: t('breadcrumb.blog'), href: '/blogs'},
+          {label: t('breadcrumb.blog'), href: routes.blog},
           {label: category.name},
         ]}
       />
@@ -117,10 +119,12 @@ export default async function CategoryPage({params, searchParams}: Props) {
         ) : null}
       </header>
 
+      <CategoryFilter current={slug} />
+
       <PostList posts={list.items} emptyMessage={t('category.empty')} />
 
       <PaginationLinks
-        basePath={`/blogs/category/${slug}`}
+        basePath={routes.blogCategory(slug)}
         page={list.page}
         limit={list.limit}
         total={list.total}

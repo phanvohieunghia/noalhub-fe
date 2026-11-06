@@ -1,7 +1,6 @@
 {
   "login": {
     "title": "Sign in",
-    "subtitle": "Welcome back.",
     "email": "Email",
     "password": "Password",
     "forgot": "Forgot your password?",
@@ -12,7 +11,6 @@
   },
   "register": {
     "title": "Create an account",
-    "subtitle": "It takes less than a minute.",
     "displayName": "Full name",
     "email": "Email",
     "password": "Password",
@@ -24,7 +22,6 @@
   },
   "forgotPassword": {
     "title": "Forgot password",
-    "subtitle": "Enter your email and we'll send you a reset link.",
     "email": "Email",
     "submit": "Send link",
     "submitting": "Sending…",
@@ -33,7 +30,6 @@
   },
   "resetPassword": {
     "title": "Reset password",
-    "subtitle": "Choose a new password for your account.",
     "newPassword": "New password",
     "confirmPassword": "Confirm password",
     "submit": "Change password",

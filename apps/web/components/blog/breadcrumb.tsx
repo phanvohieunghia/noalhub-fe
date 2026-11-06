@@ -3,9 +3,9 @@ import {useTranslations} from 'next-intl'
 
 import {JsonLd} from './json-ld'
 import {absoluteUrl} from '@noalhub/core/blog/seo'
-import {Typography} from '@noalhub/ui/typography'
+import {BreadcrumbNav, type Crumb} from '@noalhub/ui/blog/breadcrumb-nav'
 
-export type Crumb = {label: string; href?: string}
+export type {Crumb}
 
 /**
  * The visible breadcrumb **and** the `BreadcrumbList` JSON-LD, from one array.
@@ -18,34 +18,21 @@ export type Crumb = {label: string; href?: string}
  * Blog → <category> → <post title>. Without that axis there are only two levels
  * and it is close to meaningless (§6.2).
  */
-export function Breadcrumb({items}: {items: Crumb[]}) {
+export function Breadcrumb({
+  items,
+  visible = true,
+}: {
+  items: Crumb[]
+  /** `false` keeps only the JSON-LD — for a lone crumb that repeats the page's `h1`. */
+  visible?: boolean
+}) {
   const t = useTranslations('web.blog.breadcrumb')
 
   return (
     <>
-      <nav aria-label={t('label')} className="text-body-3 opacity-70">
-        <ol className="flex flex-wrap items-center gap-1.5">
-          {items.map((item, index) => (
-            <li key={index} className="flex items-center gap-1.5">
-              {index > 0 ? (
-                <Typography as="span" variant="body-3" aria-hidden>
-                  /
-                </Typography>
-              ) : null}
-              {item.href ? (
-                <Link href={item.href} className="hover:underline">
-                  {item.label}
-                </Link>
-              ) : (
-                // The last item is the current page — it does not link to itself.
-                <Typography as="span" variant="body-3" aria-current="page">
-                  {item.label}
-                </Typography>
-              )}
-            </li>
-          ))}
-        </ol>
-      </nav>
+      {visible ? (
+        <BreadcrumbNav Link={Link} label={t('label')} items={items} />
+      ) : null}
 
       <JsonLd
         data={{

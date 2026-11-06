@@ -24,12 +24,22 @@ import {LanguageSwitcher} from '@noalhub/ui/language-switcher'
  * (which is what Googlebot reads) and lets the theme script run normally.
  * Changing language is a rare action; one reload here is cheap.
  */
-export function WebLanguageSwitcher({className}: {className?: string}) {
+export function WebLanguageSwitcher({
+  className,
+  compact,
+}: {
+  className?: string
+  compact?: boolean
+}) {
   const pathname = usePathname()
 
   const onSwitch = (locale: Locale) => {
     window.location.assign(getPathname({href: pathname, locale}))
   }
 
-  return <LanguageSwitcher onSwitch={onSwitch} className={className} />
+  return <LanguageSwitcher
+      onSwitch={onSwitch}
+      className={className}
+      compact={compact}
+    />
 }

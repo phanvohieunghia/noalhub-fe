@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {useRouter} from 'next/navigation'
 
 import {Avatar} from '@noalhub/ui/avatar'
@@ -126,7 +127,7 @@ function MessageButton({user}: {user: PublicProfile}) {
         onClick={() =>
           createDirect.mutate(user.id, {
             onSuccess: (conversation) =>
-              router.push(`/chat/${conversation.id}`),
+              router.push(routes.chatConversation(conversation.id)),
           })
         }>
         {createDirect.isPending ? t('opening') : t('message')}

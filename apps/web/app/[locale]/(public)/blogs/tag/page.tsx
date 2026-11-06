@@ -1,3 +1,4 @@
+import {routes} from '@noalhub/core/routes'
 import {Link} from '@noalhub/i18n/navigation'
 import type {Metadata} from 'next'
 import {getTranslations, setRequestLocale} from 'next-intl/server'
@@ -53,7 +54,7 @@ export default async function TagIndexPage({
     <div className="flex flex-col gap-8">
       <Breadcrumb
         items={[
-          {label: t('breadcrumb.blog'), href: '/blogs'},
+          {label: t('breadcrumb.blog'), href: routes.blog},
           {label: t('tag.indexTitle')},
         ]}
       />
@@ -78,7 +79,7 @@ export default async function TagIndexPage({
           {tags.map((tag) => (
             <li key={tag.slug}>
               <Link
-                href={`/blogs/tag/${tag.slug}`}
+                href={routes.blogTag(tag.slug)}
                 className="flex items-center gap-1.5 rounded-full bg-black/8 px-3 py-1.5 text-body-3 transition-opacity hover:opacity-80 dark:bg-white/12">
                 <Typography as="span" variant="body-3">
                   #{tag.name}

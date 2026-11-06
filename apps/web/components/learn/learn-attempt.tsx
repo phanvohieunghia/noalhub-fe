@@ -28,7 +28,6 @@ import {Button} from '@noalhub/ui/button'
 import {Dialog} from '@noalhub/ui/dialog'
 import {Icon, LUCIDE} from '@noalhub/ui/icons'
 import {Skeleton} from '@noalhub/ui/skeleton'
-import {Tooltip} from '@noalhub/ui/tooltip'
 import {Typography} from '@noalhub/ui/typography'
 
 import {AnswerInput} from './answer-input'

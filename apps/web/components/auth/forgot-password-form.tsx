@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {zodResolver} from '@hookform/resolvers/zod'
 import {Link} from '@noalhub/i18n/navigation'
 import {useMessage} from '@noalhub/i18n/use-message'
@@ -7,11 +8,15 @@ import {useTranslations} from 'next-intl'
 import {useState} from 'react'
 import {useForm} from 'react-hook-form'
 
-import {Button} from '@noalhub/ui/button'
+import {
+  AUTH_LINK_CLASS,
+  AuthFooter,
+  AuthForm,
+  AuthPage,
+} from '@noalhub/ui/auth/auth-form'
 import {Input} from '@noalhub/ui/input'
 import {useForgotPassword} from '@noalhub/api/auth'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
-import {Typography} from '@noalhub/ui/typography'
 import type {Message} from '@noalhub/api/message'
 import {forgotPasswordSchema, type ForgotPasswordInput} from '@noalhub/api/auth'
 import {ToastError, ToastSuccess} from '@noalhub/ui/toast'
@@ -43,21 +48,15 @@ export function ForgotPasswordForm() {
   })
 
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <Typography variant="h3" as="h1">
-          {t('title')}
-        </Typography>
-        <Typography variant="body-3" className="opacity-70">
-          {t('subtitle')}
-        </Typography>
-      </header>
-
+    <AuthPage title={t('title')}>
       {sent ? (
         // Never reveal whether the email exists — this prevents account enumeration.
         <ToastSuccess message={t('sent')} />
       ) : (
-        <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
+        <AuthForm
+          onSubmit={onSubmit}
+          loading={isSubmitting}
+          submitLabel={isSubmitting ? t('submitting') : t('submit')}>
           <ToastError message={m(formError)} />
 
           <Input
@@ -67,18 +66,14 @@ export function ForgotPasswordForm() {
             error={m(errors.email?.message)}
             {...register('email')}
           />
-
-          <Button type="submit" loading={isSubmitting}>
-            {isSubmitting ? t('submitting') : t('submit')}
-          </Button>
-        </form>
+        </AuthForm>
       )}
 
-      <Typography variant="body-3" className="text-center opacity-70">
-        <Link href="/login" className="underline underline-offset-4">
+      <AuthFooter>
+        <Link href={routes.login} className={AUTH_LINK_CLASS}>
           {t('backToLogin')}
         </Link>
-      </Typography>
-    </div>
+      </AuthFooter>
+    </AuthPage>
   )
 }

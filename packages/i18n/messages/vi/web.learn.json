@@ -28,7 +28,8 @@
     "featured": "Làm tiếp bộ đang dở",
     "countLabel": "Làm bao nhiêu câu?",
     "countOption": "{count} câu",
-    "countAll": "Tất cả ({count})"
+    "countAll": "Tất cả ({count})",
+    "shownOf": "Hiển thị {shown}/{total}"
   },
   "dataset": {
     "title": "Bộ câu hỏi",
@@ -204,5 +205,8 @@
     "toTop": "Lên đầu trang",
     "noSource": "Bộ này chưa có tài liệu để đọc.",
     "back": "Quay lại"
+  },
+  "filters": {
+    "reset": "Xóa lọc"
   }
 }

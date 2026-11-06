@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {useAuthStore} from '@noalhub/api/auth'
 import {usePathname} from '@noalhub/i18n/navigation'
 import {BottomNav} from '@noalhub/ui/bottom-nav'
@@ -18,25 +19,30 @@ export function MobileNav() {
 
   const items = [
     {key: 'home', label: t('header.home'), icon: ICONS.home, href: '/'},
-    {key: 'blogs', label: t('header.posts'), icon: ICONS.post, href: '/blogs'},
+    {
+      key: 'blogs',
+      label: t('header.blog'),
+      icon: ICONS.post,
+      href: routes.blog,
+    },
     {
       key: 'learn',
       label: t('header.practice'),
       icon: ICONS.map,
-      href: '/learn',
+      href: routes.practice,
     },
     {
       key: 'chat',
       label: t('footer.chat'),
       icon: ICONS.chat,
-      href: '/chat',
+      href: routes.chat,
       disabled: !signedIn,
     },
     {
       key: 'profile',
       label: t('header.profile'),
       icon: ICONS.user,
-      href: '/profile',
+      href: routes.profile,
     },
   ]
   // `/` prefixes every path, so Home matches exactly.

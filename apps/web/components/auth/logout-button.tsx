@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {useQueryClient} from '@tanstack/react-query'
 import {useRouter} from '@noalhub/i18n/navigation'
 import {useTranslations} from 'next-intl'
@@ -40,7 +41,7 @@ export function LogoutButton({
     // The cache holds ONE user's data — without clearing it, the next user to
     // sign in on this tab sees the previous one's data for a beat.
     queryClient.clear()
-    router.replace('/login')
+    router.replace(routes.login)
   }
 
   if (iconOnly) {

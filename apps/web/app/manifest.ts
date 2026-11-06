@@ -13,8 +13,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: '/',
     display: 'standalone',
     // Matches the logo tile; the standalone splash and status bar use these.
-    background_color: '#113138',
-    theme_color: '#113138',
+    background_color: '#0c3139',
+    theme_color: '#0c3139',
     icons: [
       {src: '/icon-512.png', sizes: '512x512', type: 'image/png'},
       {

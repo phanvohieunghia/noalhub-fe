@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {zodResolver} from '@hookform/resolvers/zod'
 import {Link, useRouter} from '@noalhub/i18n/navigation'
 import {useMessage} from '@noalhub/i18n/use-message'
@@ -7,7 +8,7 @@ import {useTranslations} from 'next-intl'
 import {useState} from 'react'
 import {useForm} from 'react-hook-form'
 
-import {Button} from '@noalhub/ui/button'
+import {AuthForm, AuthPage} from '@noalhub/ui/auth/auth-form'
 import {PasswordInput} from '@noalhub/ui/password-input'
 import {useResetPassword} from '@noalhub/api/auth'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
@@ -37,7 +38,7 @@ export function ResetPasswordForm({token}: {token: string}) {
     try {
       await resetPassword.mutateAsync(values)
       setDone(true)
-      setTimeout(() => router.replace('/login'), 1500)
+      setTimeout(() => router.replace(routes.login), 1500)
     } catch (error) {
       setFormError(applyApiError(error, setError, ['newPassword', 'token']))
     }
@@ -46,12 +47,12 @@ export function ResetPasswordForm({token}: {token: string}) {
   if (!token) {
     return (
       <div className="flex flex-col gap-4">
-        <Typography variant="h3" as="h1">
+        <Typography variant="h2" as="h1">
           {t('invalidLinkTitle')}
         </Typography>
         <ToastError message={t('invalidLink')} />
         <Link
-          href="/forgot-password"
+          href={routes.forgotPassword}
           className="text-body-3 underline underline-offset-4">
           {t('requestNewLink')}
         </Link>
@@ -60,20 +61,14 @@ export function ResetPasswordForm({token}: {token: string}) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <Typography variant="h3" as="h1">
-          {t('title')}
-        </Typography>
-        <Typography variant="body-3" className="opacity-70">
-          {t('subtitle')}
-        </Typography>
-      </header>
-
+    <AuthPage title={t('title')}>
       {done ? (
         <ToastSuccess message={t('done')} />
       ) : (
-        <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
+        <AuthForm
+          onSubmit={onSubmit}
+          loading={isSubmitting}
+          submitLabel={isSubmitting ? t('submitting') : t('submit')}>
           <ToastError message={m(formError)} />
 
           <PasswordInput
@@ -92,12 +87,8 @@ export function ResetPasswordForm({token}: {token: string}) {
             error={m(errors.confirmPassword?.message)}
             {...register('confirmPassword')}
           />
-
-          <Button type="submit" loading={isSubmitting}>
-            {isSubmitting ? t('submitting') : t('submit')}
-          </Button>
-        </form>
+        </AuthForm>
       )}
-    </div>
+    </AuthPage>
   )
 }

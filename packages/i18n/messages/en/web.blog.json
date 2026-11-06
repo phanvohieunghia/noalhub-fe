@@ -4,12 +4,14 @@
     "blog": "Blog"
   },
   "list": {
-    "title": "Posts",
-    "titleWithPage": "Posts — Page {page}",
+    "title": "Blog",
+    "titleWithPage": "Blog — Page {page}",
     "metaDescription": "Writing about product, engineering, and what we learn building Noalhub.",
     "subtitle": "Notes on product, engineering, and what we learn building Noalhub.",
     "empty": "No posts published yet. Check back soon.",
-    "pagination": "Post list pagination"
+    "pagination": "Post list pagination",
+    "filterLabel": "Filter posts by category",
+    "all": "All"
   },
   "post": {
     "fallbackTitle": "Post",

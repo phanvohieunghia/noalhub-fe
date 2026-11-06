@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {zodResolver} from '@hookform/resolvers/zod'
 import {Link, useRouter} from '@noalhub/i18n/navigation'
 import {useMessage} from '@noalhub/i18n/use-message'
@@ -8,7 +9,12 @@ import {useState} from 'react'
 import {useForm} from 'react-hook-form'
 
 import {OAuthButtons} from './oauth-buttons'
-import {Button} from '@noalhub/ui/button'
+import {
+  AUTH_LINK_CLASS,
+  AuthFooter,
+  AuthForm,
+  AuthPage,
+} from '@noalhub/ui/auth/auth-form'
 import {Input} from '@noalhub/ui/input'
 import {PasswordInput} from '@noalhub/ui/password-input'
 import {applyApiError} from '@noalhub/core/forms/apply-api-error'
@@ -16,7 +22,6 @@ import {DEFAULT_REDIRECT} from '@noalhub/core/auth/redirect'
 import type {Message} from '@noalhub/api/message'
 import {registerSchema, type RegisterInput} from '@noalhub/api/auth'
 import {useRegister} from '@noalhub/api/auth'
-import {Typography} from '@noalhub/ui/typography'
 import {ToastError} from '@noalhub/ui/toast'
 
 export function RegisterForm() {
@@ -47,17 +52,11 @@ export function RegisterForm() {
   })
 
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <Typography variant="h3" as="h1">
-          {t('title')}
-        </Typography>
-        <Typography variant="body-3" className="opacity-70">
-          {t('subtitle')}
-        </Typography>
-      </header>
-
-      <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
+    <AuthPage title={t('title')}>
+      <AuthForm
+        onSubmit={onSubmit}
+        loading={isSubmitting}
+        submitLabel={isSubmitting ? t('submitting') : t('submit')}>
         <ToastError message={m(formError)} />
 
         <Input
@@ -89,20 +88,16 @@ export function RegisterForm() {
           error={m(errors.confirmPassword?.message)}
           {...register('confirmPassword')}
         />
-
-        <Button type="submit" loading={isSubmitting}>
-          {isSubmitting ? t('submitting') : t('submit')}
-        </Button>
-      </form>
+      </AuthForm>
 
       <OAuthButtons />
 
-      <Typography variant="body-3" className="text-center opacity-70">
+      <AuthFooter>
         {t('hasAccount')}{' '}
-        <Link href="/login" className="underline underline-offset-4">
+        <Link href={routes.login} className={AUTH_LINK_CLASS}>
           {t('login')}
         </Link>
-      </Typography>
-    </div>
+      </AuthFooter>
+    </AuthPage>
   )
 }

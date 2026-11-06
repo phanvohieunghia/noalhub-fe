@@ -1,3 +1,4 @@
+import {routes} from '@noalhub/core/routes'
 import {redirect} from 'next/navigation'
 
 /**
@@ -8,5 +9,5 @@ import {redirect} from 'next/navigation'
  * and what they want is the listing, not an error page.
  */
 export default function CategoryIndexPage() {
-  redirect('/blogs')
+  redirect(routes.blog)
 }

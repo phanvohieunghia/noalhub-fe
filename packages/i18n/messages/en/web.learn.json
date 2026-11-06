@@ -28,7 +28,8 @@
     "featured": "Pick up where you left off",
     "countLabel": "How many questions?",
     "countOption": "{count} questions",
-    "countAll": "All ({count})"
+    "countAll": "All ({count})",
+    "shownOf": "Showing {shown} of {total}"
   },
   "dataset": {
     "title": "Question bank",
@@ -204,5 +205,8 @@
     "toTop": "Back to top",
     "noSource": "This bank has no reading material.",
     "back": "Back"
+  },
+  "filters": {
+    "reset": "Clear"
   }
 }

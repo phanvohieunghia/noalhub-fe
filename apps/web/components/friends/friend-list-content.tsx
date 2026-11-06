@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {Link} from '@noalhub/i18n/navigation'
 import {useDateFormat} from '@noalhub/i18n/use-date-format'
 import {useTranslations} from 'next-intl'
@@ -37,7 +38,7 @@ export function FriendListContent() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon-sm" asChild>
-            <Link href="/chat" aria-label={t('back')}>
+            <Link href={routes.chat} aria-label={t('back')}>
               <Icon icon={ICONS.arrowLeft} />
             </Link>
           </Button>
@@ -86,7 +87,7 @@ export function FriendListContent() {
             return (
               <li key={friend.user.id}>
                 <Link
-                  href={`/profile/${friend.user.username}`}
+                  href={routes.profileOf(friend.user.username)}
                   className="flex items-center gap-3 p-3 transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06]">
                   <Avatar name={name} src={friend.user.avatarUrl} />
                   <span className="flex min-w-0 flex-1 flex-col">

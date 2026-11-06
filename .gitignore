@@ -55,3 +55,13 @@ dist/
 # fatal exit 128 và VSCode Source Control hiện rỗng. Đã dính một lần ở 8ba3451.
 .claude/worktrees/
 
+
+# skill của AI agent (cài bằng `npx skills` / impeccable): giữ ở máy, không đẩy lên GitHub.
+# PRODUCT.md, DESIGN.md và .impeccable/design.json thì vẫn commit.
+.agents/
+.claude/skills/
+.claude/agents/
+skills-lock.json
+.taste-skill/
+.archify/
+.impeccable/config.local.json

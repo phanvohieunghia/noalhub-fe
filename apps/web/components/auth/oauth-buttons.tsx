@@ -2,17 +2,10 @@
 
 import {useTranslations} from 'next-intl'
 
-import {Button} from '@noalhub/ui/button'
-import {Icon, ICONS} from '@noalhub/ui/icons'
+import {OAUTH_PROVIDERS, OAuthButtons as OAuthButtonsView} from '@noalhub/ui/auth/auth-form'
 import {rememberOAuthNext} from '@noalhub/core/auth/redirect'
 import {oauthStartUrl} from '@noalhub/api/auth'
 import type {OAuthProvider} from '@noalhub/api/auth'
-import {Typography} from '@noalhub/ui/typography'
-
-const PROVIDERS: {id: OAuthProvider; label: string; icon: string}[] = [
-  {id: 'google', label: 'Google', icon: ICONS.google},
-  {id: 'github', label: 'GitHub', icon: ICONS.github},
-]
 
 export function OAuthButtons({next}: {next?: string}) {
   const t = useTranslations('web.auth.oauth')
@@ -24,27 +17,10 @@ export function OAuthButtons({next}: {next?: string}) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* `text-muted-foreground` rather than `opacity-50`: opacity on small text
-          gives a 3.94:1 contrast ratio, below the WCAG AA threshold of 4.5:1. The
-          muted token exists for exactly this and switches with light/dark. */}
-      <Typography
-        as="div"
-        variant="body-4"
-        className="flex items-center gap-3 uppercase tracking-wide text-muted-foreground">
-        <span className="h-px flex-1 bg-current" />
-        {t('divider')}
-        <span className="h-px flex-1 bg-current" />
-      </Typography>
-
-      <div className="grid grid-cols-2 gap-3">
-        {PROVIDERS.map(({id, label, icon}) => (
-          <Button key={id} variant="outline" onClick={() => go(id)}>
-            <Icon icon={icon} />
-            {label}
-          </Button>
-        ))}
-      </div>
-    </div>
+    <OAuthButtonsView
+      dividerLabel={t('divider')}
+      providers={OAUTH_PROVIDERS}
+      onSelect={(id) => go(id as OAuthProvider)}
+    />
   )
 }

@@ -1,9 +1,10 @@
+import {routes} from '@noalhub/core/routes'
 import {Link} from '@noalhub/i18n/navigation'
 import {useDateFormat} from '@noalhub/i18n/use-date-format'
 import {useTranslations} from 'next-intl'
 
 import type {BlogPostListItem} from '@noalhub/api/blog'
-import {Typography} from '@noalhub/ui/typography'
+import {RelatedPosts as RelatedPostsView} from '@noalhub/ui/blog/related-posts'
 
 /**
  * The "Related posts" block at the end of each post — 3 posts from the **same
@@ -18,39 +19,17 @@ export function RelatedPosts({posts}: {posts: BlogPostListItem[]}) {
   const t = useTranslations('web.blog.post')
   const df = useDateFormat()
 
-  // The only post in a category has nothing to show — drop the whole block
-  // rather than leaving an empty heading hanging.
-  if (posts.length === 0) return null
-
   return (
-    <section
-      aria-labelledby="related-heading"
-      className="border-t border-black/10 pt-8 dark:border-white/15">
-      <Typography
-        variant="title-4"
-        as="h2"
-        id="related-heading"
-        className="uppercase tracking-wide opacity-60">
-        {t('relatedHeading')}
-      </Typography>
-      <ul className="mt-4 grid gap-4 sm:grid-cols-3">
-        {posts.map((post) => (
-          <li key={post.id} className="flex flex-col gap-1">
-            <Link
-              href={`/blogs/${post.slug}`}
-              className="font-medium leading-snug hover:underline">
-              {post.title}
-            </Link>
-            <Typography
-              as="time"
-              variant="body-4"
-              dateTime={post.publishedAt}
-              className="opacity-60">
-              {df.date(post.publishedAt)}
-            </Typography>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <RelatedPostsView
+      Link={Link}
+      heading={t('relatedHeading')}
+      posts={posts.map((post) => ({
+        id: post.id,
+        href: routes.blogPost(post.slug),
+        title: post.title,
+        date: df.date(post.publishedAt),
+        dateTime: post.publishedAt,
+      }))}
+    />
   )
 }

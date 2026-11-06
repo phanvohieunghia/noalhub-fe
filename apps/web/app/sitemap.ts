@@ -1,3 +1,4 @@
+import {routes} from '@noalhub/core/routes'
 import type {MetadataRoute} from 'next'
 
 import {
@@ -67,13 +68,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         : new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.8,
-      alternates: languagesFor('/blogs'),
+      alternates: languagesFor(routes.blog),
     },
     ...categories.map((category) => ({
       url: absoluteUrl(`/${locale}/blogs/category/${category.slug}`),
       changeFrequency: 'weekly' as const,
       priority: 0.6,
-      alternates: languagesFor(`/blogs/category/${category.slug}`),
+      alternates: languagesFor(routes.blogCategory(category.slug)),
     })),
     ...entries.map((entry) => ({
       url: absoluteUrl(`/${locale}/blogs/${entry.slug}`),

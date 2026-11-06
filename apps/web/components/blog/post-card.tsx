@@ -1,11 +1,15 @@
+import {routes} from '@noalhub/core/routes'
 import {Link} from '@noalhub/i18n/navigation'
 import {useDateFormat} from '@noalhub/i18n/use-date-format'
 import {useTranslations} from 'next-intl'
-import Image from 'next/image'
 
 import type {BlogPostListItem} from '@noalhub/api/blog'
 import {listItemDescription} from '@noalhub/core/blog/seo'
-import {Typography} from '@noalhub/ui/typography'
+import {
+  PostCard as PostCardView,
+  type PostCardVariant,
+} from '@noalhub/ui/blog/post-card'
+import {PostCover} from '@noalhub/ui/blog/post-cover'
 
 /**
  * A post card in a listing.
@@ -15,58 +19,44 @@ import {Typography} from '@noalhub/ui/typography'
  * do not weigh hundreds of KB, leaving the frontend nothing to compute from
  * (`docs/blog.md` §2.3a).
  */
-export function PostCard({post}: {post: BlogPostListItem}) {
+export function PostCard({
+  post,
+  featured = false,
+  variant,
+}: {
+  post: BlogPostListItem
+  featured?: boolean
+  variant?: PostCardVariant
+}) {
   const t = useTranslations('web.blog.post')
   const df = useDateFormat()
 
   return (
-    <article className="flex flex-col gap-3">
-      {post.coverImageUrl ? (
-        <Link
-          href={`/blogs/${post.slug}`}
-          tabIndex={-1}
-          aria-hidden
-          className="block">
-          <span className="relative block aspect-[16/9] overflow-hidden rounded-lg bg-black/5 dark:bg-white/5">
-            <Image
-              src={post.coverImageUrl}
-              alt=""
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 380px"
-            />
-          </span>
-        </Link>
-      ) : null}
-
-      <div className="flex flex-col gap-2">
-        <Link
-          href={`/blogs/category/${post.category.slug}`}
-          className="w-fit text-body-4 font-medium uppercase tracking-wide opacity-60 hover:underline hover:opacity-100">
-          {post.category.name}
-        </Link>
-
-        {/* h2: a listing page has exactly ONE h1, the page title (§6.2). */}
-        <Typography variant="h5" as="h2" className="leading-snug">
-          <Link href={`/blogs/${post.slug}`} className="hover:underline">
-            {post.title}
-          </Link>
-        </Typography>
-
-        <Typography variant="body-3" className="leading-relaxed opacity-75">
-          {listItemDescription(post)}
-        </Typography>
-
-        <Typography
-          variant="body-4"
-          className="flex flex-wrap items-center gap-x-2 gap-y-1 opacity-60">
-          <span>{post.author.displayName}</span>
-          <span aria-hidden>·</span>
-          <time dateTime={post.publishedAt}>{df.date(post.publishedAt)}</time>
-          <span aria-hidden>·</span>
-          <span>{t('readingTime', {minutes: post.readingMinutes})}</span>
-        </Typography>
-      </div>
-    </article>
+    <PostCardView
+      Link={Link}
+      featured={featured}
+      variant={variant}
+      href={routes.blogPost(post.slug)}
+      categoryHref={routes.blogCategory(post.category.slug)}
+      categoryName={post.category.name}
+      title={post.title}
+      description={listItemDescription(post)}
+      cover={
+        <PostCover
+          post={post}
+          sizes={
+            variant === 'row'
+              ? '(max-width: 640px) 100vw, 280px'
+              : featured
+                ? '(max-width: 768px) 100vw, 520px'
+                : '(max-width: 768px) 100vw, 380px'
+          }
+        />
+      }
+      author={post.author.displayName}
+      date={df.date(post.publishedAt)}
+      dateTime={post.publishedAt}
+      readingTime={t('readingTime', {minutes: post.readingMinutes})}
+    />
   )
 }

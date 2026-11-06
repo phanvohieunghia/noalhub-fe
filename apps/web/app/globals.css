@@ -7,6 +7,7 @@
  * resolves `@import` by file path.
  */
 @import '../../../packages/config/theme.css';
+@import '../../../packages/config/field.css';
 
 /**
  * Tailwind v4 only auto-scans the directory tree containing this CSS file, and
@@ -26,6 +27,7 @@
 @theme inline {
   --font-sans: var(--font-be-vietnam-pro);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-newsreader);
 }
 
 body {
@@ -79,13 +81,181 @@ body {
   }
 }
 
-/* In-page search on the knowledge page (CSS Custom Highlight API): every hit, and the
-   one the arrows are on. The ranges are painted, never wrapped in elements. */
-::highlight(knowledge-search) {
-  background-color: color-mix(in srgb, var(--color-warning) 35%, transparent);
-  color: inherit;
+/**
+ * Home hero choreography (`components/home/home-hero.tsx`, GSAP). The start state
+ * lives here, not in JS, so there is no flash of finished content before the
+ * timeline takes over. It applies whenever script is on; without script the page
+ * simply shows, the sketch fully drawn.
+ *
+ * Reduced motion keeps the choreography but drops the travel: the text and cards
+ * only fade (no `translateY`), and the sketch is still wiped in, because it is a
+ * soft reveal rather than a move across the screen. The JS picks the matching
+ * timeline with `gsap.matchMedia`.
+ *
+ * `hero-failsafe` is the safety net: if the bundle never loads, the hidden parts
+ * appear on their own after a few seconds. It animates from the start state's end
+ * only (no backwards fill), so GSAP's inline values win while the timeline runs.
+ */
+.hero-sketch {
+  --reveal: 100%;
+  --feather: 14%;
+  /* The ink is the theme's accent colour, shaped by TWO stacked masks and
+     intersected: the engraving's own alpha (the lines) and the left-to-right wipe
+     with a soft edge. A coloured bitmap would stay one colour in both themes. */
+  background-color: var(--accent);
+  -webkit-mask-image:
+    url('/images/skyline-sketch.webp'),
+    linear-gradient(
+      to right,
+      #000 0%,
+      #000 var(--reveal),
+      transparent calc(var(--reveal) + var(--feather)),
+      transparent 100%
+    );
+  mask-image:
+    url('/images/skyline-sketch.webp'),
+    linear-gradient(
+      to right,
+      #000 0%,
+      #000 var(--reveal),
+      transparent calc(var(--reveal) + var(--feather)),
+      transparent 100%
+    );
+  -webkit-mask-size:
+    100% 100%,
+    100% 100%;
+  mask-size:
+    100% 100%,
+    100% 100%;
+  -webkit-mask-position:
+    0 0,
+    0 0;
+  mask-position:
+    0 0,
+    0 0;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
 }
-::highlight(knowledge-search-active) {
-  background-color: var(--color-warning);
-  color: var(--color-background);
+
+@media (scripting: enabled) {
+  .hero-reveal {
+    opacity: 0;
+    animation: hero-failsafe 0.01s 4s forwards;
+  }
+  /* The birds move by a transform GSAP keeps writing, so their failsafe may only
+     touch opacity: an animation with fill-mode forwards beats inline styles. */
+  .hero-bird {
+    opacity: 0;
+    animation: hero-fade-failsafe 0.01s 5s forwards;
+  }
+  /* Starts past the feather (-15% against a 14% feather): at 0% the soft edge of
+     the wipe is already a strip of drawing, so the page would open with a piece
+     showing instead of nothing. The tween in the component starts from this. */
+  .hero-sketch {
+    --reveal: -15%;
+    animation: hero-sketch-failsafe 0.01s 5s forwards;
+  }
+  @keyframes hero-failsafe {
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes hero-fade-failsafe {
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes hero-sketch-failsafe {
+    to {
+      --reveal: 100%;
+    }
+  }
+}
+
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .hero-reveal {
+    transform: translateY(24px);
+  }
+}
+
+/* The home preview panel: the post in focus eases in when it changes. */
+@keyframes story-swap {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.story-swap {
+  animation: story-swap 0.35s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-swap {
+    animation: none;
+  }
+}
+
+/* The home practice demo: a right answer pops, a wrong one shakes once. */
+@keyframes demo-pop {
+  0% {
+    transform: scale(0.94);
+  }
+  60% {
+    transform: scale(1.025);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes demo-shake {
+  20%,
+  60% {
+    transform: translateX(-5px);
+  }
+  40%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+.pop {
+  animation: demo-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.shake {
+  animation: demo-shake 0.4s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pop,
+  .shake {
+    animation: none;
+  }
+}
+
+/* The home practice deck: the top card's progress bar fills over its time on top. */
+@keyframes deck-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.deck-fill {
+  width: 100%;
+  animation: deck-fill linear forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .deck-fill {
+    animation: none;
+  }
+}
+
+/* The skyline's wipe starts hidden only where GSAP will run it (`AuthShell`); with no
+   script, or after the 4s failsafe, the base rule in `field.css` shows it whole. */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .auth-sketch {
+    --reveal: -15%;
+    animation: hero-sketch-failsafe 0.01s 5s forwards;
+  }
 }

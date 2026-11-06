@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "@hookform/resolvers": "^5.4.2",
     "@noalhub/api": "workspace:*",
     "@noalhub/config": "workspace:*",
@@ -18,6 +19,7 @@
     "@noalhub/ui": "workspace:*",
     "@tanstack/react-query": "^5.101.4",
     "date-fns": "^4.4.0",
+    "gsap": "^3.15.1",
     "next": "16.2.11",
     "next-intl": "^4.14.2",
     "react": "19.2.4",

@@ -2,36 +2,123 @@
   "title": "Trang chủ",
   "hero": {
     "line1": "Sống chậm.",
-    "line2": "Học sâu. Giữ mọi thứ đơn giản."
+    "line2": "Học sâu. Giữ mọi thứ đơn giản.",
+    "lead": "Một nơi yên tĩnh để đọc, luyện tập và trò chuyện. Ghi chép về những gì chúng tôi học được khi làm sản phẩm, và chỗ để đi tiếp.",
+    "cta": "Bắt đầu đọc",
+    "cards": {
+      "reality": {
+        "title": "Thực trạng đọc và học:",
+        "point1": "Cuộn lướt vô tận và đọc lướt khiến kiến thức khó đọng lại.",
+        "point2": "Tiếp nhận thụ động mà không thực hành sẽ nhanh chóng bị lãng quên."
+      },
+      "solution": {
+        "title": "Với Noalhub, bạn có thể:",
+        "point1": "Đọc chậm các ghi chép và bài viết chuyên sâu, công khai và cởi mở.",
+        "point2": "Biến điều vừa đọc thành trí nhớ bền vững qua câu hỏi phản xạ.",
+        "point3": "Duy trì trao đổi tĩnh lặng với những người cùng đào sâu một chủ đề."
+      },
+      "statement": {
+        "text": "Noalhub là cầu nối giữa việc đọc sâu và lưu giữ những gì bạn học được."
+      }
+    }
   },
   "readingTime": "{minutes} phút đọc",
+  "practice": {
+    "eyebrow": "Chủ động ghi nhớ",
+    "heading": "Đọc một lần. Nhớ thật lâu.",
+    "lead": "Sau mỗi bài viết, vài câu hỏi ngắn gọi ý tưởng quay lại khi nó còn mới. Thử ngay ba câu ngay tại đây.",
+    "steps": {
+      "read": {
+        "title": "Đọc chậm",
+        "body": "Bài viết và ghi chép tập trung, không có bảng tin."
+      },
+      "ask": {
+        "title": "Trả lời vài câu hỏi",
+        "body": "Mỗi câu một ý, kèm lý do đằng sau."
+      },
+      "keep": {
+        "title": "Quay lại đúng lúc",
+        "body": "Câu hỏi quay lại khi trí nhớ bắt đầu phai."
+      }
+    },
+    "cta": "Bắt đầu luyện tập",
+    "demoLabel": "Câu hỏi mẫu",
+    "progress": "Câu {current} / {total}",
+    "difficulty": {
+      "easy": "Dễ",
+      "medium": "Vừa",
+      "hard": "Khó"
+    },
+    "items": {
+      "q1": {
+        "topic": "Học tập",
+        "difficulty": "easy",
+        "question": "Thói quen nào giúp bạn nhớ lâu nhất những gì đã đọc?",
+        "options": {
+          "o1": "Đọc lại văn bản nhiều lần liên tiếp",
+          "o2": "Gập trang lại và nhớ lại ý chính từ trí nhớ",
+          "o3": "Tô sáng mọi câu quan trọng",
+          "o4": "Đọc nhanh hơn để qua nhiều trang hơn"
+        },
+        "answer": "1"
+      },
+      "q2": {
+        "topic": "Giãn cách",
+        "difficulty": "medium",
+        "question": "Hôm nay bạn vừa học một điều mới. Khi nào nên ôn lại lần đầu?",
+        "options": {
+          "o1": "Ngay lập tức, trước khi quên",
+          "o2": "Sau khoảng một ngày, khi nó bắt đầu phai",
+          "o3": "Chỉ vào đêm trước kỳ thi",
+          "o4": "Không cần, nếu thấy dễ"
+        },
+        "answer": "1"
+      },
+      "q3": {
+        "topic": "Tập trung",
+        "difficulty": "hard",
+        "question": "Vì sao chuyển qua lại giữa nhiều việc làm việc đọc sâu khó hơn?",
+        "options": {
+          "o1": "Tốn nhiều giấy hơn",
+          "o2": "Mỗi lần chuyển, một phần chú ý vẫn ở lại việc trước",
+          "o3": "Làm màn hình đọc chậm đi",
+          "o4": "Làm chữ trông nhỏ lại"
+        },
+        "answer": "1"
+      }
+    }
+  },
   "empty": "Chưa có bài viết nào. Hãy quay lại sau nhé.",
-  "topics": {
-    "heading": "Chủ đề nổi bật",
-    "learning": "Bài học về học tập: nhìn lại một năm",
-    "productLead": "Trải nghiệm sản phẩm:",
-    "product": "Khi UX gặp cảm xúc",
-    "slowLead": "Sống chậm:",
-    "slow": "Không gian số tối giản"
-  },
-  "quote": {
-    "text": "Công nghệ tốt nhất là thứ khiến cuộc sống của chúng ta chậm hơn, sâu hơn và nhẹ hơn.",
-    "author": "Noah",
-    "role": "Kỹ sư & người học"
-  },
   "latest": {
     "heading": "Bài viết mới nhất",
     "filters": "Lọc theo danh mục",
-    "all": "Tất cả"
+    "all": "Tất cả",
+    "viewAll": "Xem tất cả bài viết",
+    "read": "Đọc bài viết",
+    "by": "Bởi {name}"
   },
   "footer": {
     "tagline": "Không gian blog và trò chuyện của Noalhub. Những ghi chép khi xây dựng sản phẩm, và nơi để tiếp tục trao đổi về nó.",
-    "posts": "Bài viết",
+    "blog": "Blog",
     "categories": "Danh mục",
     "practice": "Luyện tập",
     "knowledge": "Kiến thức",
     "messages": "Tin nhắn",
+    "friends": "Bạn bè",
+    "about": "Giới thiệu",
+    "colRead": "Đọc",
+    "colLearn": "Học",
+    "colTalk": "Trò chuyện",
+    "colLegal": "Pháp lý",
+    "colMore": "Khác",
+    "terms": "Điều khoản dịch vụ",
+    "privacy": "Chính sách bảo mật",
     "rss": "RSS",
-    "sitemap": "Sơ đồ trang"
+    "sitemap": "Sơ đồ trang",
+    "rights": "Đã đăng ký bản quyền.",
+    "socialX": "X (Twitter)",
+    "socialLinkedIn": "LinkedIn",
+    "socialInstagram": "Instagram",
+    "socialYouTube": "YouTube"
   }
 }
