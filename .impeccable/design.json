@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-04T13:46:51.138243Z",
+  "title": "Design System: Noalhub",
+  "extensions": {
+    "colorMeta": {
+      "brand-600": {
+        "role": "primary",
+        "displayName": "Deep Lagoon",
+        "canonical": "#067b7f",
+        "tonalRamp": [
+          "#001a1f",
+          "#002e35",
+          "#02464d",
+          "#006066",
+          "#067b7f",
+          "#009a9a",
+          "#0abab5",
+          "#56dfcf"
+        ]
+      },
+      "neutral-50": {
+        "role": "neutral",
+        "displayName": "Mist",
+        "canonical": "#f6fbfc",
+        "tonalRamp": [
+          "#0a1414",
+          "#172323",
+          "#2c3839",
+          "#5a6868",
+          "#95a1a2",
+          "#d8e2e2",
+          "#eaf2f2",
+          "#f6fbfc"
+        ]
+      },
+      "blush-100": {
+        "role": "secondary",
+        "displayName": "Blush",
+        "canonical": "#ffedf3",
+        "tonalRamp": [
+          "#562f3f",
+          "#7f3b58",
+          "#ffedf3"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "h1": {
+        "displayName": "Heading 1",
+        "purpose": "Page title."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default reading text."
+      }
+    },
+    "shadows": [
+      {
+        "name": "overlay",
+        "value": "shadow-lg / shadow-xl",
+        "purpose": "Popover, dialog, drawer, toast only."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-popup",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Overlay entrances (220ms)."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main action.",
+      "html": "<button class=\"ds-btn-primary\">Start</button>",
+      "css": ".ds-btn-primary{background:#067b7f;color:#fff;height:40px;padding:0 16px;border:0;border-radius:8px;font:500 .875rem 'Be Vietnam Pro',system-ui,sans-serif;transition:background-color 150ms}.ds-btn-primary:hover{background:#006066}.ds-btn-primary:focus-visible{outline:2px solid #0abab5;outline-offset:2px}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action.",
+      "html": "<button class=\"ds-btn-outline\">Cancel</button>",
+      "css": ".ds-btn-outline{background:transparent;color:#002e35;height:40px;padding:0 16px;border:1px solid #d8e2e2;border-radius:8px;font:500 .875rem 'Be Vietnam Pro',system-ui,sans-serif}.ds-btn-outline:hover{background:#eaf2f2}.ds-btn-outline:focus-visible{outline:2px solid #0abab5;outline-offset:2px}"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Flat bordered container.",
+      "html": "<div class=\"ds-card\"><strong>Practice</strong><p>12 questions</p></div>",
+      "css": ".ds-card{background:#fff;border:1px solid #d8e2e2;border-radius:12px;padding:20px;color:#002e35;font-family:'Be Vietnam Pro',system-ui,sans-serif}.ds-card p{margin:4px 0 0;color:#5a6868;font-size:.875rem}"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Text field.",
+      "html": "<input class=\"ds-input\" placeholder=\"Search\">",
+      "css": ".ds-input{height:40px;padding:0 12px;background:#fff;border:1px solid #d8e2e2;border-radius:8px;font:.875rem 'Be Vietnam Pro',system-ui,sans-serif;color:#002e35}.ds-input:focus-visible{outline:2px solid #0abab5;outline-offset:1px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Study",
+    "overview": "A quiet reading room: pale teal-grey ground, content first, decoration receding. Flat, 1px borders, shadows only for overlays.",
+    "keyCharacteristics": [
+      "Flat at rest, 1px hairlines",
+      "Teal voice, blush only as soft emphasis",
+      "Type scale carries line-height and letter-spacing",
+      "Semantic tokens only"
+    ],
+    "rules": [
+      {
+        "name": "The Semantic-Only Rule",
+        "body": "Components use semantic tokens, never scale steps.",
+        "section": "colors"
+      },
+      {
+        "name": "The Not-For-Text Rule",
+        "body": "Tiffany #0abab5 never carries text on a light background.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tighter-As-Larger Rule",
+        "body": "Larger type gets tighter line-height and more negative letter-spacing.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Cards, tables and inputs have no shadow at rest.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use semantic tokens and the text-h*/title-*/body-* scale.",
+      "Do design empty, loading, error and success states.",
+      "Do reuse packages/ui before writing new components."
+    ],
+    "donts": [
+      "Don't use hex, text-white, bg-gray-* or hand-written dark: variants.",
+      "Don't put text on #0abab5 on light backgrounds.",
+      "Don't add resting shadows to cards or tables."
+    ]
+  }
+}

@@ -300,3 +300,65 @@ pnpm --filter @noalhub/storybook build   # storybook-static/
 ```
 
 Trên toolbar có hai công cụ: đổi **theme** (light/dark, gắn class `dark` lên `<html>` đúng như app thật) và đổi **ngôn ngữ** (vi/en, nạp đủ mọi namespace trong `packages/i18n/messages`). Addon `@storybook/addon-a11y` chạy kiểm tra accessibility ở tab "Accessibility".
+
+## 8. Prompt mẫu để tạo story tốt hơn
+
+Story là nơi Noah **nhìn thấy component thật**. Một prompt thiếu ngữ cảnh thường
+cho ra story "trông giống" chứ không phải chính component đó (chép lại markup,
+giả dữ liệu, thiếu provider). Cho nên prompt nên nêu rõ các điểm dưới đây.
+
+### 8.1. Nguyên tắc cốt lõi
+
+1. **Story phải render đúng component đang chạy trong app — không chép markup.**
+   Bản sao sẽ lệch ngay khi component gốc đổi, và người xem tưởng đang thấy
+   sản phẩm thật. Thứ tự xử lý:
+   * Component đã nằm trong `packages/ui` → import thẳng `@noalhub/ui/<tên>`.
+   * Component nằm trong `apps/web` hoặc `apps/admin` → app không import chéo
+     được, nên **tách phần trình bày sang `packages/ui`** (nhận chữ, link, dữ liệu
+     qua props; không ghim namespace i18n, không fetch, không đọc store), rồi để
+     app bọc lại bằng lớp lấy dữ liệu. Ví dụ đã làm: `SiteHeader`, `SiteFooter`
+     (web chỉ còn `site-header.tsx`, `home-header.tsx`, `home-footer.tsx` làm
+     việc lấy dữ liệu).
+   * Phần phụ thuộc store/API (ví dụ `HeaderAccount`) được **giả ở story**, chỉ
+     phần đó; ghi rõ trong JSDoc của story là phần nào được giả.
+2. **Dữ liệu đi qua `args`** để đổi được trên bảng Controls (xem §4).
+3. **Không hex, không `dark:` tay** — dùng token trong `packages/config/theme.css`.
+4. **Chữ đến từ i18n**: dùng `useTranslations`, không hardcode. Namespace nào
+   chưa có trong `.storybook/preview.tsx` thì thêm vào **cả hai** locale
+   (`web.home` từng thiếu nên Footer báo lỗi key).
+
+### 8.2. Việc phải kiểm tra trước khi viết
+
+| Câu hỏi | Nếu có thì |
+| --- | --- |
+| Component dùng `ThemeToggle`/`useTheme`? | Bọc `ThemeProvider` bằng decorator (không có sẽ ném `useTheme must be used inside <ThemeProvider>`). |
+| Dùng React Query / `LanguageSwitcher` / hook gọi API? | Bọc `QueryProvider`. |
+| Dùng `Link` từ `@noalhub/i18n/navigation`? | Chạy được sẵn (xem `BottomNav`); truyền href tương đối như `/blogs`. |
+| Dùng `next/image` hoặc ảnh trong `apps/web/public/images`? | Đã được `staticDirs` phục vụ ở `/images/*`. |
+| Không có nền riêng (header `home`)? | Bọc `div` có `bg-background text-foreground` để chữ không chìm trên canvas tối. |
+| Server Component async (`getTranslations`, fetch)? | Không render được trong Storybook — tách phần trình bày ra `packages/ui` như trên. |
+| Chữ nhỏ dưới `md` bị ẩn? | Nói rõ trong JSDoc là phải đổi viewport trên toolbar. |
+
+### 8.3. Mẫu prompt
+
+```text
+Tạo story cho <Component> (file: <đường dẫn>).
+
+- Dùng ĐÚNG component thật. Nếu nó nằm trong apps/*, tách phần trình bày sang
+  packages/ui rồi cho app dùng lại, đừng chép markup vào story.
+- Đặt title: UI/<Nhóm>/<Tên>. Story gồm: Playground (mọi control), và mỗi biến
+  thể/trạng thái quan trọng một story riêng (<liệt kê: signed in, empty, disabled…>).
+- Dữ liệu qua args; phần phụ thuộc store/API thì giả và ghi chú trong JSDoc.
+- Chữ qua useTranslations, thêm key vi + en nếu thiếu (pnpm check-messages).
+- Theme token, không hex. Kiểm tra cả light và dark.
+- Sau khi viết: pnpm typecheck && pnpm lint, mở story trong Storybook và đọc
+  console — không được có lỗi render. Không báo xong nếu chưa xem.
+```
+
+### 8.4. Phím tắt & lưu ý khi dev
+
+* Toolbar viewport có phím tắt `Alt+0…4` (reset / Small mobile / Large mobile /
+  Tablet / Desktop), khai ở `.storybook/manager.tsx`. Bấm khi focus ở sidebar hoặc
+  toolbar — nếu focus nằm trong khung preview, phím không tới được manager.
+* `.storybook/manager.tsx` **chỉ build lúc khởi động**: sửa xong phải dừng và
+  chạy lại `pnpm dev:storybook`. Story và component thì hot reload bình thường.

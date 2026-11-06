@@ -181,7 +181,7 @@ Mỗi màn hình = 3 breakpoint (Laptop 1280 / Tablet 768 / Mobile 375–390).
 |:---:|---|---|---|---|---|---|
 | [ ] | W08 | Learn › Browse: danh sách bộ câu hỏi + bộ lọc | ✅ Q&A › Browse, Browse — Study companion | 2026-10-18 |  | `apps/web/app/[locale]/(protected)/learn/(shell)/page.tsx` (+1 file) |
 | [ ] | W09 | Dialog bắt đầu / tiếp tục bộ câu hỏi | ✅ Q&A › Start a set — dialog · 2 frame | 2026-10-18 |  | `apps/web/components/learn/learn-browse.tsx` |
-| [ ] | W10 | Practice (kho câu làm sai) | ✅ Q&A › Practice — mistakes · 2 frame | 2026-10-18 |  | `apps/web/app/[locale]/(protected)/learn/(shell)/practice/page.tsx` (+1 file) |
+| [ ] | W10 | Practice (kho câu làm sai) | ✅ Q&A › Practice — mistakes · 2 frame | 2026-10-18 |  | `apps/web/app/[locale]/(protected)/practice/(shell)/mistakes/page.tsx` (+1 file) |
 | [ ] | W11 | Stats | ✅ Q&A › Statistics | 2026-10-18 |  | `apps/web/app/[locale]/(protected)/learn/(shell)/stats/page.tsx` (+1 file) |
 | [ ] | W12 | Attempt: làm bài, 7 trạng thái | ✅ Q&A › Attempt — answering a set · 7 frame | 🔶 2026-10-21 |  | `apps/web/app/[locale]/(protected)/learn/(focus)/attempts/[id]/page.tsx` (+2 file) |
 | [ ] | W13 | Review | ✅ Q&A › Review | 2026-10-20 |  | `apps/web/app/[locale]/(protected)/learn/(shell)/attempts/[id]/review/page.tsx` (+1 file) |

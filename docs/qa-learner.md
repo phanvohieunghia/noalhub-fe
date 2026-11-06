@@ -63,10 +63,10 @@ câu lúc người học đang làm dở. Nếu không snapshot, FE chấp nhậ
 
 | Màn hình | Route (web) | Route (mobile) |
 |---|---|---|
-| Danh sách bộ câu hỏi | `/learn` | `/learn` |
-| Giới thiệu bộ + chọn số câu + Start/Continue | modal trên `/learn` (không có route riêng) | `/learn/datasets/[id]` |
-| Làm bài | `/learn/sets/[id]` (id của **bộ câu hỏi**; mỗi lần mở gọi `startAttempt` — idempotent — để lấy lượt đang mở, nên reload hoặc đổi thiết bị luôn đồng bộ) | `/learn/attempts/[id]` |
-| Xem lại | `/learn/attempts/[id]/review` | `/learn/attempts/[id]` |
+| Danh sách bộ câu hỏi | `/practice` | `/learn` |
+| Giới thiệu bộ + chọn số câu + Start/Continue | modal trên `/practice` (không có route riêng) | `/learn/datasets/[id]` |
+| Làm bài | `/practice/sets/[id]` (id của **bộ câu hỏi**; mỗi lần mở gọi `startAttempt` — idempotent — để lấy lượt đang mở, nên reload hoặc đổi thiết bị luôn đồng bộ) | `/learn/attempts/[id]` |
+| Xem lại | `/practice/attempts/[id]/review` | `/learn/attempts/[id]` |
 
 - Hook: `useBrowseQaDatasets`, `usePlayQaDataset`, `useQaAttempts(datasetId?)`, `useStartQaAttempt`.
 - `AnswerInput` (web) lấy `templateKey` từ item. Câu trả lời dạng "tự chấm" (flashcard) hiển thị bằng wording "đã biết"

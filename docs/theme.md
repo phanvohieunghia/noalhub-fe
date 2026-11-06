@@ -136,52 +136,50 @@ re-export nó từ `theme-provider.tsx`. Chọn **re-export**, không đẻ thê
 
 ### 5.1 Hai thang màu + một màu nhấn
 
-**Điều quan trọng nhất về bộ màu này: cả bốn màu đều nằm ở nửa SÁNG.** Màu tối nhất
-(`#0ABAB5`) chỉ đạt **2.4:1** trên nền trắng — không màu nào trong bốn màu làm được chữ hay
-nút ở chế độ sáng. Khác hẳn hai bộ trước, ở đây **nửa dưới của thang là do mình dựng ra**:
-giữ hue teal, kéo độ sáng và chroma xuống. Đó mới là chỗ lấy màu chữ và màu nút cho light.
+> Thang `brand` từng là teal (hue ~199°); hiện là **xanh lơ-dương (hue ~214°)**, chỉ ngả xanh hơn
+> teal cũ một chút, và **giữ nguyên độ sáng OKLCH của từng bậc** nên primary gần như y màu cũ
+> (`brand-600` `#00798D` so với `#067B7F` cũ). Bảng màu navy của tham chiếu không được dùng, chỉ
+> lấy style. Dark dùng lại cùng token nên tự đổi theo.
 
-Ba màu teal là điểm neo, giữ nguyên tuyệt đối; nội suy/ngoại suy trong **OKLCH**:
-
-`brand-200` = `#ADEED9` · `brand-300` = `#56DFCF` · `brand-400` = `#0ABAB5`
+Cách dựng: lấy độ sáng L của từng bậc teal, đổi hue sang ~214°, giữ chroma (x1,1) rồi kẹp vào
+gamut sRGB. Vì L giữ nguyên nên các vai trò cũ còn đúng: `600` mang chữ trắng, `700` làm link,
+`400` làm primary ở dark. Muốn xanh dương hơn thì tăng hue (255° ≈ xanh dương, nhưng phải nâng
+chroma ~1,6 lần để khỏi bị xám); muốn về teal đúng nghĩa thì hạ về ~199°.
 
 | Bậc | Hex | vs `#fff` | vs `brand-900` | Dùng để |
 | --- | --- | --- | --- | --- |
-| `brand-50`  | `#E9FCF4` | 1.06 | 13.7 | Nền vùng nhấn ở light |
-| `brand-100` | `#D0F7E8` | 1.17 | 12.4 | Nền badge/hover ở light |
-| **`brand-200`** | **`#ADEED9`** | 1.31 | 11.1 | ⚑ gốc — chữ phụ trên nền tối |
-| **`brand-300`** | **`#56DFCF`** | 1.63 | 8.91 | ⚑ gốc — **link & accent ở dark**, hover primary |
-| **`brand-400`** | **`#0ABAB5`** | 2.41 | 6.03 | ⚑ gốc — **primary ở dark**, ring ở light |
-| `brand-500` | `#009A9A` | 3.45 | 4.35 | Bậc chuyển; chữ trắng trên nó **trượt AA** |
-| `brand-600` | `#067B7F` | 5.06 | 3.00 | **Primary ở light** (chữ trắng 5.1:1) |
-| `brand-700` | `#006066` | 7.33 | 2.07 | Link ở light, hover primary, viền ở dark |
-| `brand-800` | `#02464D` | 9.89 | 1.38 | Surface ở dark |
-| `brand-900` | `#002E35` | 13.0 | — | Nền dark, chữ chính ở light |
-| `brand-950` | `#001A1F` | 15.7 | 1.16 | Chữ trên nút primary ở dark; nền lún |
+| `brand-50` | `#E9FBFF` | 1.07 | 13.63 | Nền vùng nhấn ở light |
+| `brand-100` | `#CCF5FF` | 1.16 | 12.50 | Nền badge/hover ở light |
+| `brand-200` | `#A0ECFE` | 1.32 | 11.01 | Chữ phụ trên nền tối |
+| `brand-300` | `#3CDBFA` | 1.65 | 8.79 | **Link & accent ở dark**, hover primary ở dark |
+| `brand-400` | `#00B6D2` | 2.44 | 5.96 | **Primary ở dark**, ring |
+| `brand-500` | `#0097AF` | 3.47 | 4.18 | Bậc chuyển; chữ trắng trên nó **trượt AA** |
+| `brand-600` | `#00798D` | 5.10 | 2.85 | **Primary ở light** (chữ trắng 5.1:1) |
+| `brand-700` | `#005F6E` | 7.34 | 1.98 | Link ở light, hover primary, viền ở dark |
+| `brand-800` | `#004552` | 10.64 | 1.36 | Surface ở dark |
+| `brand-900` | `#002E37` | 14.52 | — | Nền dark, chữ chính ở light |
+| `brand-950` | `#001A20` | 17.97 | 1.24 | Chữ trên nút primary ở dark; nền lún |
 
-Chroma của nửa dưới phải hạ dần mới nằm trong gamut sRGB — teal bão hoà ở độ sáng thấp tràn ra
-ngoài màn hình hiển thị được.
-
-**Thang `neutral`** — xám cùng hue 200° với `brand-900`, chroma 0.006–0.016:
+**Thang `neutral`** — xám cùng hue ~214° với `brand`, giữ độ sáng của thang xám teal cũ:
 
 | Bậc | Hex | | Bậc | Hex |
 | --- | --- | --- | --- | --- |
-| `neutral-50`  | `#F6FBFC` | | `neutral-500` | `#768384` |
-| `neutral-100` | `#EAF2F2` | | `neutral-600` | `#5A6868` |
-| `neutral-200` | `#D8E2E2` | | `neutral-700` | `#435050` |
-| `neutral-300` | `#BFCACA` | | `neutral-800` | `#2C3839` |
-| `neutral-400` | `#95A1A2` | | `neutral-900` | `#172323` |
-| | | | `neutral-950` | `#0A1414` |
+| `neutral-50`  | `#F6FBFC` | | `neutral-500` | `#758386` |
+| `neutral-100` | `#EAF2F4` | | `neutral-600` | `#59686B` |
+| `neutral-200` | `#D7E2E4` | | `neutral-700` | `#425053` |
+| `neutral-300` | `#BECACD` | | `neutral-800` | `#2B383B` |
+| `neutral-400` | `#94A1A4` | | `neutral-900` | `#162326` |
+| | | | `neutral-950` | `#091416` |
 
 `neutral-600` trên `neutral-50` = **5.6:1**; `neutral-400` trên `brand-900` = **5.5:1**.
 
-**`#FFEDF3` không phải một bậc của thang brand.** Hue của nó là 355° (hồng), trong khi cả thang
-teal nằm ở 173–212° — nhét vào thang thì bậc đó lệch hẳn khỏi dải màu, mọi phép nội suy quanh
-nó đều ra màu bùn. Nó là **màu nhấn thứ hai**, đứng riêng:
+**`#FFEDF3` không phải một bậc của thang brand.** Hue của nó là 355° (hồng), trong khi thang
+brand nằm quanh 214° — nhét vào thang thì bậc đó lệch khỏi dải màu. Nó là **màu nhấn thứ hai**,
+đứng riêng:
 
 | Token | Hex | Dùng |
 | --- | --- | --- |
-| `blush-100` | `#FFEDF3` | ⚑ gốc — nền highlight/callout ở light |
+| `blush-100` | `#FFEDF3` | Nền highlight/callout ở light |
 | `blush-600` | `#7F3B58` | Chữ trên nền hồng đó (7.0:1) |
 | `blush-900` | `#562F3F` | Nền highlight ở dark (chữ `blush-100`, 10.0:1) |
 
@@ -199,15 +197,13 @@ một dải màu chứ không phải một vai trò.
 
 ### 5.3 Chốt primary
 
-Cả bốn màu gốc đều quá sáng để làm nút ở **light** — kể cả `#0ABAB5`, chữ trắng trên nó chỉ
-2.4:1. Nên primary ở light là `brand-600` `#067B7F`, một bậc mình kéo dài ra từ trục teal
-(chữ trắng 5.1:1, qua AA), hover `brand-700`.
+Ở **light**, primary là `brand-600` `#00798D` (chữ trắng 5.1:1, qua AA), hover `brand-700`.
+Link và chữ nhấn là `brand-700` (7.3:1).
 
-Ở **dark** thì ngược lại, `#0ABAB5` gốc lên làm primary đúng bản chất của nó — và nút đó mang
-**chữ gần-đen** (`brand-950`, 7.5:1), không phải chữ trắng.
+Ở **dark**, primary là `brand-400` `#00B6D2` mang **chữ gần-đen** (`brand-950`, 7.4:1), vì chữ
+trắng trên nó chỉ 2.4:1. Hover đi **sáng lên** sang `brand-300`.
 
-Ở light, `#0ABAB5` vẫn có chỗ đứng: nó là `--ring` (viền focus). Viền không phải chữ nên không
-chịu ngưỡng 4.5:1, mà độ tươi của nó thì rất hợp để đánh dấu ô đang focus.
+`--ring` là `brand-400` ở cả hai chế độ: viền focus không phải chữ nên không chịu ngưỡng 4.5:1.
 
 Primary vẫn là một **token**: đổi ý thì sửa hai dòng trong `theme.css`, không đụng component.
 
@@ -237,13 +233,17 @@ nền brand-600 đặc). Đặt chính brand-600 làm CHỮ trên `bg-primary/10
 
 ### 5.5 Ba màu trạng thái
 
-**Không** lấy từ thang brand, và `success` phải là xanh **lá** rõ rệt, đừng ngả teal — thang
-brand giờ là teal, một `success` teal nữa thì "thành công" và "màu thương hiệu" nhìn như nhau:
+**Không** lấy từ thang brand, và `success` phải là xanh **lá** rõ rệt, đừng ngả xanh — thang
+brand giờ là xanh dương, một `success` ngả xanh thì "thành công" và "màu thương hiệu" nhìn như nhau:
 
 ```css
 :root { --danger: #b42318; --success: #15703a; --warning: #a03f07; }
 .dark { --danger: #f97066; --success: #4ade80; --warning: #f79009; }
 ```
+
+**`info`** là màu thứ tư, và là **xanh dương trung tính** (hue ~255°), xanh dương hơn hẳn thang brand
+(~214°), nên hai màu vẫn tách được; icon và nhãn vẫn là thứ mang nghĩa. `--info: #1d5fa8` (sáng,
+5.2:1 trên tint 12% của chính nó) và `#a5d0fa` (tối, 5.3:1 trên `--surface`). `Alert` và `Toast` dùng nó.
 
 Ba màu light đậm hơn mức thường thấy là **cố ý**. Chỗ một màu trạng thái bị đọc ở kích
 thước nhỏ nhất là trên Badge — 12px, weight thường, nền là chính nó pha loãng 12–15% —
@@ -561,3 +561,7 @@ trong `TypographyProps`.
 ⚠️ **Repo format ở `printWidth: 100`, không phải mặc định 80 của Prettier**, và **không có
 `.prettierrc`** để ép điều đó. Chạy `npx prettier --write` trần sẽ ngắt lại hàng loạt dòng
 không liên quan và làm diff phình gấp đôi. Nên thêm một `.prettierrc` để lần sau không ai vấp.
+
+## Chế độ `auto` (theo giờ máy)
+
+Mode thứ 4 trong `ThemeToggle` (icon `sun-moon`): theo đồng hồ của thiết bị thay vì theme của hệ điều hành — sáng từ 06:00 đến 17:59, tối còn lại. `THEME_INIT_SCRIPT` tính ngay trước first paint (giờ được lặp lại dạng literal 6/18, cùng nguồn với `AUTO_LIGHT_FROM_HOUR`/`AUTO_DARK_FROM_HOUR` trong `core/theme/types.ts`); `ThemeProvider` kiểm tra lại mỗi phút nên trang tự đổi khi qua mốc giờ mà không cần reload.
