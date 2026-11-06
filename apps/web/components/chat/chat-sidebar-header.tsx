@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {Link} from '@noalhub/i18n/navigation'
 import {useTranslations} from 'next-intl'
 
@@ -26,7 +27,7 @@ export function ChatSidebarHeader() {
 
       {/* Friends is a sub-page of chat; its page has the back button. */}
       <Button variant="ghost" size="icon-sm" asChild>
-        <Link href="/friends" aria-label={t('friends')}>
+        <Link href={routes.friends} aria-label={t('friends')}>
           <Icon icon={ICONS.users} />
         </Link>
       </Button>

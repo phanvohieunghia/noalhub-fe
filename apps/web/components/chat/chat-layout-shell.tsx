@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {usePathname} from '@noalhub/i18n/navigation'
 
 import {MobileNav} from '@/components/layout/mobile-nav'
@@ -23,7 +24,7 @@ import {ConnectionBanner} from './connection-banner'
  */
 export function ChatLayoutShell({children}: {children: React.ReactNode}) {
   const pathname = usePathname()
-  const hasSelection = pathname !== '/chat'
+  const hasSelection = pathname !== routes.chat
 
   return (
     /* Chat occupies EXACTLY one screen and never lets the page scroll: only with

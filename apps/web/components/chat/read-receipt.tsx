@@ -3,7 +3,7 @@
 import {useTranslations} from 'next-intl'
 
 import type {ConversationMember} from '@noalhub/api/chat'
-import {Typography} from '@noalhub/ui/typography'
+import {ReadReceipt as ReadReceiptView} from '@noalhub/ui/chat/read-receipt'
 
 /**
  * `✓` sent · `✓✓` read by someone.
@@ -30,10 +30,5 @@ export function ReadReceipt({
       member.lastReadMessageId.localeCompare(messageId) >= 0,
   )
 
-  return (
-    <Typography as="span" variant="body-4" className="leading-none opacity-70">
-      <span aria-hidden>{readByOther ? '✓✓' : '✓'}</span>
-      <span className="sr-only">{t(readByOther ? 'read' : 'sent')}</span>
-    </Typography>
-  )
+  return <ReadReceiptView read={readByOther} label={t(readByOther ? 'read' : 'sent')} />
 }

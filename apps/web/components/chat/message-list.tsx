@@ -3,6 +3,7 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 
 import {Spinner} from '@noalhub/ui/spinner'
+import {MessageLog} from '@noalhub/ui/chat/message-log'
 import {DateSeparator} from './date-separator'
 import {MessageGroup} from './message-group'
 import {MessageListSkeleton} from './message-list-skeleton'
@@ -193,16 +194,7 @@ export function MessageList({
 
   return (
     <div className="relative flex min-h-0 flex-1">
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        // `role="log"` + `aria-live="polite"`: a screen reader announces new
-        // messages without interrupting the user mid-typing.
-        role="log"
-        aria-live="polite"
-        aria-relevant="additions"
-        aria-label={t('label')}
-        className="flex-1 overflow-y-auto px-4 py-3">
+      <MessageLog ref={scrollRef} onScroll={handleScroll} label={t('label')}>
         <div ref={sentinelRef} className="flex justify-center py-1">
           {isFetchingOlder ? <Spinner /> : null}
           {!hasOlder && ordered.length > 0 ? (
@@ -234,7 +226,7 @@ export function MessageList({
             )
           })}
         </div>
-      </div>
+      </MessageLog>
 
       {atBottom ? null : (
         <ScrollToBottomButton

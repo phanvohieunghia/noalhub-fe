@@ -3,6 +3,7 @@
 import {usePresence} from '@noalhub/api/chat'
 import {useTranslations} from 'next-intl'
 
+import {PresenceDot as PresenceDotView} from '@noalhub/ui/chat/presence-dot'
 import {Typography} from '@noalhub/ui/typography'
 
 import {useChatFormat} from './use-chat-format'
@@ -40,17 +41,7 @@ export function PresenceDot({
     ? t('online')
     : (cf.lastSeenLabel(presence?.lastSeenAt ?? null) ?? t('offline'))
 
-  const color = online ? 'bg-green-500' : 'bg-black/25 dark:bg-white/30'
-
-  return (
-    <span className={`inline-flex items-center ${className}`}>
-      <span
-        title={label}
-        className={`size-2.5 rounded-full ring-2 ring-background ${color}`}
-      />
-      <span className="sr-only">{label}</span>
-    </span>
-  )
+  return <PresenceDotView online={online} label={label} className={className} />
 }
 
 /**

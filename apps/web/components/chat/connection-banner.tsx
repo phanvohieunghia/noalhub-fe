@@ -2,16 +2,10 @@
 
 import {useTranslations} from 'next-intl'
 
-import {Button} from '@noalhub/ui/button'
-import {Spinner} from '@noalhub/ui/spinner'
+import {ConnectionBanner as ConnectionBannerView} from '@noalhub/ui/chat/connection-banner'
 import {useChatRealtime} from './chat-realtime-provider'
-import {Typography} from '@noalhub/ui/typography'
 
-/**
- * Shown only while the socket is NOT online. Messages go over the socket, so a
- * lost connection means losing the ability to send — the user has to see that,
- * not guess it.
- */
+/** Shown only while the socket is NOT online. */
 export function ConnectionBanner() {
   const t = useTranslations('web.chat.connection')
   const tc = useTranslations('common')
@@ -21,30 +15,11 @@ export function ConnectionBanner() {
   const connecting = status === 'connecting'
 
   return (
-    <div
-      role="status"
-      className="flex shrink-0 items-center justify-center gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-amber-800 dark:text-amber-200">
-      {connecting ? (
-        <Spinner />
-      ) : (
-        <Typography as="span" variant="body-3" aria-hidden>
-          ⚠
-        </Typography>
-      )}
-      <Typography as="span" variant="body-3">
-        {connecting ? t('reconnecting') : t('offline')}
-      </Typography>
-      {connecting ? null : (
-        // `border-current` on purpose: the banner is amber, and a
-        // `border-border` button inside it reads as a foreign element.
-        <Button
-          variant="outline"
-          size="xs"
-          onClick={reconnect}
-          className="border-current/30 hover:bg-current/10">
-          {tc('actions.retry')}
-        </Button>
-      )}
-    </div>
+    <ConnectionBannerView
+      connecting={connecting}
+      label={connecting ? t('reconnecting') : t('offline')}
+      retryLabel={tc('actions.retry')}
+      onRetry={reconnect}
+    />
   )
 }

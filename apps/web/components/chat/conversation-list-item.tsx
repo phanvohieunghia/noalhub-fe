@@ -1,16 +1,16 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {Link} from '@noalhub/i18n/navigation'
 import {useTranslations} from 'next-intl'
 
-import {Avatar} from '@noalhub/ui/avatar'
+import {ConversationRow} from '@noalhub/ui/chat/conversation-row'
 import {PresenceDot} from './presence-dot'
 import {UnreadBadge} from './unread-badge'
 import {useChatFormat} from './use-chat-format'
 import {useAuthStore} from '@noalhub/api/auth'
 import {otherMember} from '@noalhub/core/chat/format'
 import type {Conversation} from '@noalhub/api/chat'
-import {Typography} from '@noalhub/ui/typography'
 
 export function ConversationListItem({
   conversation,
@@ -34,51 +34,27 @@ export function ConversationListItem({
       : last.body
 
   return (
-    <li>
-      <Link
-        href={`/chat/${conversation.id}`}
-        // `aria-current="page"` is how a screen reader knows which item is open —
-        // a background color alone says nothing.
-        aria-current={active ? 'page' : undefined}
-        className={`flex items-center gap-3 rounded-lg p-2 transition-colors ${
-          active
-            ? 'bg-black/[0.07] dark:bg-white/10'
-            : 'hover:bg-black/[0.04] dark:hover:bg-white/[0.06]'
-        }`}>
-        <span className="relative shrink-0">
-          <Avatar name={name} src={peer?.avatarUrl} />
-          {conversation.type === 'direct' ? (
-            <PresenceDot
-              userId={peer?.userId}
-              className="absolute -right-0.5 -bottom-0.5"
-            />
-          ) : null}
-        </span>
-
-        <span className="flex min-w-0 flex-1 flex-col">
-          <span className="flex items-baseline justify-between gap-2">
-            <Typography variant="title-4" as="span" className="truncate">
-              {name}
-            </Typography>
-            <Typography
-              as="span"
-              variant="body-4"
-              className="shrink-0 opacity-50">
-              {cf.conversationTimestamp(last?.createdAt ?? null)}
-            </Typography>
-          </span>
-          <span className="flex items-center justify-between gap-2">
-            <Typography
-              as="span"
-              variant="body-4"
-              weight={conversation.unreadCount > 0 ? 500 : 400}
-              className={`truncate ${conversation.unreadCount > 0 ? '' : 'opacity-60'}`}>
-              {preview}
-            </Typography>
-            <UnreadBadge count={conversation.unreadCount} />
-          </span>
-        </span>
-      </Link>
-    </li>
+    <ConversationRow
+      active={active}
+      name={name}
+      avatarUrl={peer?.avatarUrl}
+      time={cf.conversationTimestamp(last?.createdAt ?? null)}
+      preview={preview}
+      presence={
+        conversation.type === 'direct' ? (
+          <PresenceDot userId={peer?.userId} />
+        ) : null
+      }
+      unread={
+        conversation.unreadCount > 0 ? (
+          <UnreadBadge count={conversation.unreadCount} />
+        ) : null
+      }
+      link={({children, ...props}) => (
+        <Link href={routes.chatConversation(conversation.id)} {...props}>
+          {children}
+        </Link>
+      )}
+    />
   )
 }

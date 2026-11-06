@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {Link} from '@noalhub/i18n/navigation'
 import {useTranslations} from 'next-intl'
 
@@ -122,7 +123,7 @@ export function MemberProfileDrawer({
           </dl>
 
           <Link
-            href={`/profile/${member.username}`}
+            href={routes.profileOf(member.username)}
             className="inline-flex h-10 items-center justify-center rounded-md border border-black/15 px-4 text-body-3 font-medium hover:bg-black/5 dark:border-white/20 dark:hover:bg-white/10">
             {t('profile.viewFull')}
           </Link>

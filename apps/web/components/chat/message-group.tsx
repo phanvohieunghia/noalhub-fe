@@ -2,10 +2,9 @@
 
 import {useTranslations} from 'next-intl'
 
-import {Avatar} from '@noalhub/ui/avatar'
+import {MessageGroup as MessageGroupView} from '@noalhub/ui/chat/message-group'
 import {MessageBubble} from './message-bubble'
 import type {ConversationMember, Message} from '@noalhub/api/chat'
-import {Typography} from '@noalhub/ui/typography'
 
 /**
  * A run of consecutive messages from one person: the avatar and name appear
@@ -41,29 +40,21 @@ export function MessageGroup({
   const memberList = [...members.values()]
 
   return (
-    <div className={`flex gap-2 ${mine ? 'flex-row-reverse' : ''}`}>
-      {mine ? null : <Avatar name={name} src={sender?.avatarUrl} size="sm" />}
-
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        {mine ? null : (
-          <Typography
-            as="span"
-            variant="body-4"
-            className={`px-1 opacity-60 ${senderId === null ? 'italic' : ''}`}>
-            {name}
-          </Typography>
-        )}
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id}
-            message={message}
-            mine={mine}
-            members={memberList}
-            currentUserId={currentUserId}
-            onRetry={onRetry}
-          />
-        ))}
-      </div>
-    </div>
+    <MessageGroupView
+      mine={mine}
+      name={name}
+      avatarUrl={sender?.avatarUrl}
+      italicName={senderId === null}>
+      {messages.map((message) => (
+        <MessageBubble
+          key={message.id}
+          message={message}
+          mine={mine}
+          members={memberList}
+          currentUserId={currentUserId}
+          onRetry={onRetry}
+        />
+      ))}
+    </MessageGroupView>
   )
 }

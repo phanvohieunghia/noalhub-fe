@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {Link} from '@noalhub/i18n/navigation'
 import {useTranslations} from 'next-intl'
 import {useCallback, useEffect, useMemo, useRef} from 'react'
@@ -76,7 +77,9 @@ export function ChatPane({conversationId}: {conversationId: string}) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
         <Typography variant="title-4">{t('notFound')}</Typography>
-        <Link href="/chat" className="text-body-3 underline underline-offset-2">
+        <Link
+          href={routes.chat}
+          className="text-body-3 underline underline-offset-2">
           {t('backToList')}
         </Link>
       </div>
