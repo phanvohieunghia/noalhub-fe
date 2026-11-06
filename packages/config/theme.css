@@ -210,7 +210,7 @@
   --logo-a: #218194;
   --logo-b: #0c3139;
   --logo-word: #0c3139;
-  --logo-word-accent: #218194;
+  --logo-word-accent: #1e7b8d; /* 4.7:1 on the page background (was 4.34) */
 
   /* The Home page's three background glows (Figma "Aurora blob 1–3"): blurred
      circles, so the alpha is part of the color. Dimmed in dark mode, where pale

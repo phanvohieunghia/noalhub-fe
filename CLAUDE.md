@@ -28,6 +28,12 @@ pnpm --filter @noalhub/storybook exec test-storybook -- Button  # single story f
 
 Requires the backend at `http://localhost:3101` (OpenAPI `/docs`, JSON `/docs-json`).
 
+**Before every commit (or before handing over commit commands), run the checks and fix failures first:**
+`pnpm lint`, `pnpm typecheck`, `pnpm check-messages`, and the Storybook tests. Never commit on red.
+`test-storybook:ci` does **not** build, so run `pnpm --filter @noalhub/storybook build` first or it tests a stale
+`storybook-static`; if port 6006 is taken (a dev Storybook), serve the build on another port and pass
+`test-storybook --url http://127.0.0.1:<port>` instead of killing the process. Report what failed if anything is skipped.
+
 ## Ports and env
 
 Each app has its **own** `.env.local` (copy from `.env.example`), and `PORT` lives there — not in the
