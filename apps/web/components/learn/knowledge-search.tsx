@@ -10,6 +10,16 @@ import {Typography} from '@noalhub/ui/typography'
 
 const HIGHLIGHT = 'knowledge-search'
 const HIGHLIGHT_ACTIVE = 'knowledge-search-active'
+/** Painted ranges: every hit, and the one the arrows are on (CSS Custom Highlight API). */
+const HIGHLIGHT_CSS = `
+::highlight(${HIGHLIGHT}) {
+  background-color: color-mix(in srgb, var(--color-warning) 35%, transparent);
+  color: inherit;
+}
+::highlight(${HIGHLIGHT_ACTIVE}) {
+  background-color: var(--color-warning);
+  color: var(--color-background);
+}`
 /** Past this many hits the count stops being useful and painting gets slow. */
 const MAX_MATCHES = 500
 const DEBOUNCE_MS = 200
@@ -138,6 +148,8 @@ export function KnowledgeSearchBar({
 
   return (
     <div className="flex min-w-0 flex-1 items-center gap-2">
+      {/* Inline, not in globals.css: the build's CSS parser rejects ::highlight(). */}
+      <style>{HIGHLIGHT_CSS}</style>
       <div className="min-w-0 flex-1">
         <Input
           ref={inputRef}

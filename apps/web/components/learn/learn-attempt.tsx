@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {useTranslations} from 'next-intl'
 import Link from 'next/link'
 import {useRouter} from 'next/navigation'
@@ -167,7 +168,7 @@ function LearnAttemptRun({attemptId}: {attemptId: string}) {
       // A finished attempt answers 409 to a second finish; there is nothing to
       // close, so go straight to the review.
       if (attempt?.status === 'in_progress') await finish.mutateAsync(attemptId)
-      router.push(`/learn/attempts/${attemptId}/review`)
+      router.push(routes.practiceReview(attemptId))
     } catch (err) {
       setError(applyApiError(err, () => undefined, []))
     }
@@ -333,7 +334,7 @@ function LearnAttemptRun({attemptId}: {attemptId: string}) {
             <Button variant="outline" onClick={() => setConfirmLeave(false)}>
               {t('attempt.leaveStay')}
             </Button>
-            <Button onClick={() => router.push('/learn')}>
+            <Button onClick={() => router.push(routes.practice)}>
               {t('attempt.leaveConfirm')}
             </Button>
           </div>
@@ -571,7 +572,7 @@ function Summary({
           {t('attempt.finish')}
         </Button>
         <Button variant="outline" asChild>
-          <Link href="/learn">{t('attempt.backToBrowse')}</Link>
+          <Link href={routes.practice}>{t('attempt.backToBrowse')}</Link>
         </Button>
       </div>
     </section>

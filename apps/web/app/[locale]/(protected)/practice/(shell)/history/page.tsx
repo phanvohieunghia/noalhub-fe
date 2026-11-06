@@ -2,25 +2,25 @@ import {IntlProvider} from '@noalhub/i18n/provider'
 import type {Metadata} from 'next'
 import {getTranslations, setRequestLocale} from 'next-intl/server'
 
-import {LearnPractice} from '@/components/learn/learn-practice'
+import {LearnHistory} from '@/components/learn/learn-history'
 
 export async function generateMetadata({
   params,
-}: PageProps<'/[locale]/learn/practice'>): Promise<Metadata> {
+}: PageProps<'/[locale]/practice/history'>): Promise<Metadata> {
   const {locale} = await params
   const t = await getTranslations({locale, namespace: 'web.learn'})
-  return {title: t('practice.title')}
+  return {title: t('history.title')}
 }
 
 export default async function Page({
   params,
-}: PageProps<'/[locale]/learn/practice'>) {
+}: PageProps<'/[locale]/practice/history'>) {
   const {locale} = await params
   setRequestLocale(locale)
 
   return (
     <IntlProvider namespace="web.learn">
-      <LearnPractice />
+      <LearnHistory />
     </IntlProvider>
   )
 }

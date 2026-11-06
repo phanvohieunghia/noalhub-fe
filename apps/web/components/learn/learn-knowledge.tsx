@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {MarkdownContent} from '@noalhub/ui/blog/markdown-content'
 import {PostContent} from '@noalhub/ui/blog/post-content'
 import {useTranslations} from 'next-intl'
@@ -129,7 +130,7 @@ export function LearnKnowledge() {
   return (
     <main className="mx-auto w-full max-w-3xl space-y-5 p-4 sm:p-6">
       <BackHeader
-        href={fromLearn ? '/learn' : undefined}
+        href={fromLearn ? routes.practice : undefined}
         title={t('knowledge.title')}
         actions={<InfoTip text={t('knowledge.intro')} />}
       />
@@ -149,7 +150,7 @@ export function LearnKnowledge() {
           {rows.map((dataset) => (
             <li key={dataset.id}>
               <Link
-                href={`/knowledge/${dataset.id}`}
+                href={routes.knowledgeItem(dataset.id)}
                 className="flex items-center gap-3 rounded-xl border border-border bg-surface p-4 transition-colors hover:border-primary/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
                 <Typography
                   variant="title-3"
@@ -395,7 +396,7 @@ export function LearnKnowledgeDetail({datasetId}: {datasetId: string}) {
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-3 p-4 sm:p-6">
       <BackHeader
         pinned
-        href="/knowledge"
+        href={routes.knowledge}
         title={knowledge.data?.title ?? t('knowledge.title')}
         overlay={
           search.open ? <KnowledgeSearchBar search={search} /> : undefined

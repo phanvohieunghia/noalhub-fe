@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {useTranslations} from 'next-intl'
 import Link from 'next/link'
 import {useMemo} from 'react'
@@ -58,7 +59,7 @@ export function LearnHistory() {
           asChild
           aria-label={t('attempt.back')}
           className="-ml-2 shrink-0">
-          <Link href="/learn">
+          <Link href={routes.practice}>
             <Icon icon={LUCIDE.arrowLeft} />
           </Link>
         </Button>
@@ -109,7 +110,7 @@ function HistoryItem({
   return (
     <li>
       <Link
-        href={`/learn/attempts/${attempt.id}/review`}
+        href={routes.practiceReview(attempt.id)}
         className="flex items-center gap-3 rounded-xl border border-border bg-surface p-4 transition-colors hover:border-primary/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
         <div className="min-w-0 flex-1 space-y-1">
           <Typography variant="title-3" as="p" className="truncate">

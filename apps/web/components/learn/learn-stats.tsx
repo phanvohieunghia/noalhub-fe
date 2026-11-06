@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {useTranslations} from 'next-intl'
 import Link from 'next/link'
 import {useMemo} from 'react'
@@ -34,7 +35,7 @@ export function LearnStats() {
           shape="circle"
           asChild
           className="-ml-2 shrink-0">
-          <Link href="/learn" aria-label={t('attempt.backToBrowse')}>
+          <Link href={routes.practice} aria-label={t('attempt.backToBrowse')}>
             <Icon icon={LUCIDE.arrowLeft} />
           </Link>
         </Button>

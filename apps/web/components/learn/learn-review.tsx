@@ -1,5 +1,6 @@
 'use client'
 
+import {routes} from '@noalhub/core/routes'
 import {useTranslations} from 'next-intl'
 import Link from 'next/link'
 
@@ -46,7 +47,7 @@ export function LearnReview({attemptId}: {attemptId: string}) {
           asChild
           aria-label={t('attempt.back')}
           className="-ml-2 shrink-0">
-          <Link href="/learn/history">
+          <Link href={routes.practiceHistory}>
             <Icon icon={LUCIDE.arrowLeft} />
           </Link>
         </Button>
